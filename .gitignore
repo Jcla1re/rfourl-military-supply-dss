@@ -1,0 +1,45 @@
+# ==============================
+# CodeIgniter 4 / PHP (backend-ci4/)
+# ==============================
+backend-ci4/vendor/
+backend-ci4/.env
+backend-ci4/writable/cache/*
+backend-ci4/writable/logs/*
+backend-ci4/writable/session/*
+backend-ci4/writable/uploads/*
+!backend-ci4/writable/cache/index.html
+!backend-ci4/writable/logs/index.html
+!backend-ci4/writable/session/index.html
+!backend-ci4/writable/uploads/index.html
+backend-ci4/composer.lock
+
+# ==============================
+# Python / Flask (ml-service/)
+# ==============================
+ml-service/venv/
+ml-service/__pycache__/
+ml-service/*.pyc
+ml-service/.env
+ml-service/*.pkl
+ml-service/instance/
+ml-service/.pytest_cache/
+
+# ==============================
+# Database
+# ==============================
+database/*.sql.bak
+*.sqlite3
+
+# ==============================
+# OS / Editor
+# ==============================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ==============================
+# Docs (compiled outputs, keep source)
+# ==============================
+docs/*.docx#
