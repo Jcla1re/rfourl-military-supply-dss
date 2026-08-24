@@ -12,7 +12,7 @@ inventory segmentation.
 |James L. Onia | |
 |Jasmin Claire C. Bonilla |Lead Developer |
 |Cyr Michael Josef | System Analyst |
-|Diana P. Pariñas |Documentation Lead |
+|Diana D. Pariñas |Documentation Lead |
 |Kenneth Gatus | |
 
 **Adviser:**
