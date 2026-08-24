@@ -10,7 +10,7 @@ inventory segmentation.
 | Name | Role |
 |---|---|
 |James L. Onia | |
-|Jasmin Claire C. Bonilla | |
+|Jasmin Claire C. Bonilla |Lead Developer |
 |Cyr Michael Josef | |
 |Diana p. Pariñas | |
 |Kenneth Gatus | |
