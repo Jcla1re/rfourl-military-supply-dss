@@ -9,9 +9,11 @@ inventory segmentation.
 
 | Name | Role |
 |---|---|
-| | |
-| | |
-| | |
+|James L. Onia | |
+|Jasmin Claire C. Bonilla | |
+|Cyr Michael Josef | |
+|Diana p. Pariñas | |
+|Kenneth Gatus | |
 
 **Adviser:**
 **Panel:**
