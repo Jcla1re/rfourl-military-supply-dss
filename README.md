@@ -13,7 +13,7 @@ inventory segmentation.
 |Jasmin Claire C. Bonilla |Lead Developer |
 |Cyr Michael Josef | System Analyst |
 |Diana D. Pariñas |Documentation Lead |
-|Kenneth Gatus | |
+|Kenneth Gatus |Tester|
 
 **Adviser:**
 **Panel:**
