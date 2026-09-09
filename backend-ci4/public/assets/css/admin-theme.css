@@ -1,101 +1,54 @@
-/* public/assets/css/admin-theme.css */
-
-:root {
-    --sidebar-bg: #2f3b24;
-    --sidebar-text: #d9dcd1;
-    --sidebar-active-bg: #ffffff;
-    --sidebar-active-text: #2f3b24;
-    --content-bg: #f4f2ee;
-    --card-bg: #ffffff;
-    --accent-maroon: #7a2020;
-    --alert-bg: #efe9e3;
-    --alert-border: #7a2020;
-    --text-dark: #1c1c1c;
-}
-
-body {
-    background-color: var(--content-bg);
-    font-family: 'Segoe UI', sans-serif;
-    color: var(--text-dark);
-}
-
-.sidebar {
-    background-color: var(--sidebar-bg);
+/* public/assets/css/auth-theme.css */
+body.auth-body {
+    background: #f0ede6;
     min-height: 100vh;
-    color: var(--sidebar-text);
-    padding: 1rem 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.sidebar .brand {
-    padding: 0 1.25rem 1.5rem;
-    font-weight: 700;
-    color: #fff;
-}
-
-.sidebar .nav-section-label {
-    padding: 0.5rem 1.25rem 0.25rem;
-    font-size: 0.7rem;
-    letter-spacing: 0.05em;
-    color: #9aa08c;
-}
-
-.sidebar .nav-link {
-    color: var(--sidebar-text);
-    padding: 0.6rem 1.25rem;
-    border-radius: 0;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    justify-content: center;
+    font-family: 'Segoe UI', sans-serif;
 }
-
-.sidebar .nav-link.active,
-.sidebar .nav-link:hover {
-    background-color: var(--sidebar-active-bg);
-    color: var(--sidebar-active-text);
-    border-radius: 8px;
-    margin: 0 0.5rem;
+.auth-frame {
+    background: #fff;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 900px;
+    width: 100%;
 }
-
-.sidebar .user-footer {
-    border-top: 1px solid rgba(255,255,255,0.1);
-    padding: 1rem 1.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.auth-card {
+    background: #efe9df;
+    border-radius: 16px;
+    padding: 2.5rem;
+    max-width: 420px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
 }
-
-.topbar {
-    background-color: var(--sidebar-bg);
-    color: #fff;
-    padding: 1.25rem 1.5rem;
+.auth-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url('/assets/img/rifles-watermark.png') center/60% no-repeat;
+    opacity: 0.08;
+    pointer-events: none;
 }
-
-.alert-banner {
-    background-color: var(--alert-bg);
-    border-left: 4px solid var(--alert-border);
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.auth-card h2 { text-align: center; font-weight: 700; margin-bottom: 2rem; }
+.auth-card label { font-size: 0.85rem; margin-bottom: 0.25rem; display: block; }
+.auth-card input {
+    width: 100%; padding: 0.6rem 0.75rem; margin-bottom: 1rem;
+    border: 1px solid #ccc; border-radius: 6px; background: #fff;
 }
-
-.btn-maroon {
-    background-color: var(--accent-maroon);
-    color: #fff;
-    border: none;
+.auth-card .forgot-link { text-align: right; font-size: 0.8rem; margin-top: -0.5rem; margin-bottom: 1rem; }
+.btn-login {
+    width: 100%; background: #6b8f4e; color: #fff; border: none;
+    padding: 0.7rem; border-radius: 8px; font-weight: 600;
 }
-.btn-maroon:hover {
-    background-color: #5e1818;
-    color: #fff;
+.auth-error { color: #a33; text-align: center; font-size: 0.85rem; margin-top: 1rem; }
+.role-select-card {
+    background: #efe9df; border-radius: 16px; padding: 2rem;
+    max-width: 320px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem;
 }
-
-.stat-card, .panel-card {
-    background-color: var(--card-bg);
-    border-radius: 10px;
-    padding: 1.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+.role-select-card a {
+    background: #1c1c1c; color: #fff; text-align: center;
+    padding: 0.9rem; border-radius: 8px; text-decoration: none; font-weight: 600;
 }

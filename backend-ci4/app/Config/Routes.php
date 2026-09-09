@@ -1,15 +1,15 @@
 <?php
-// app/Config/Routes.php  (add inside the existing file, don't replace it)
+// app/Config/Routes.php
 
-$routes->get('/login', 'AuthController::login');
-$routes->post('/login', 'AuthController::attemptLogin');
+$routes->get('/', 'AuthController::landing');
+
+$routes->get('/login/admin', 'AuthController::showAdminLogin');
+$routes->post('/login/admin', 'AuthController::attemptAdminLogin');
+
+$routes->get('/login/staff', 'AuthController::showStaffLogin');
+$routes->post('/login/staff', 'AuthController::attemptStaffLogin');
+
+$routes->get('/login/supplier', 'AuthController::showSupplierLogin');
+$routes->post('/login/supplier', 'AuthController::attemptSupplierLogin');
+
 $routes->get('/logout', 'AuthController::logout');
-
-// Placeholder dashboard routes — just to confirm redirects work for now
-$routes->get('/admin/dashboard', 'Admin\DashboardController::index');
-$routes->get('/staff/dashboard', static function () {
-    return 'Staff dashboard placeholder — logged in as: ' . session()->get('full_name');
-});
-$routes->get('/supplier/dashboard', static function () {
-    return 'Supplier dashboard placeholder — logged in as: ' . session()->get('full_name');
-});
