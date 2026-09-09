@@ -1,0 +1,55 @@
+name: PHPUnit
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  main:
+    name: Build and test
+
+    strategy:
+      matrix:
+        php-versions: ['8.2', '8.5']
+
+    runs-on: ubuntu-24.04
+    if: (! contains(github.event.pull_request.title, '[ci skip]'))
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP, with composer and extensions
+        uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # 2.36.0
+        with:
+          php-version: ${{ matrix.php-versions }}
+          tools: composer, pecl, phpunit
+          extensions: intl, json, mbstring, mysqlnd, xdebug, xml, sqlite3
+          coverage: xdebug
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "COMPOSER_CACHE_DIR=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.composer-cache.outputs.COMPOSER_CACHE_DIR }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --no-progress --no-interaction
+        # To prevent rate limiting you may need to supply an OAuth token in Settings > Secrets
+        # env:
+          # https://getcomposer.org/doc/articles/troubleshooting.md#api-rate-limit-and-oauth-tokens
+          # COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+
+      - name: Test with phpunit
+        run: vendor/bin/phpunit --coverage-text

@@ -1,0 +1,101 @@
+/* public/assets/css/admin-theme.css */
+
+:root {
+    --sidebar-bg: #2f3b24;
+    --sidebar-text: #d9dcd1;
+    --sidebar-active-bg: #ffffff;
+    --sidebar-active-text: #2f3b24;
+    --content-bg: #f4f2ee;
+    --card-bg: #ffffff;
+    --accent-maroon: #7a2020;
+    --alert-bg: #efe9e3;
+    --alert-border: #7a2020;
+    --text-dark: #1c1c1c;
+}
+
+body {
+    background-color: var(--content-bg);
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text-dark);
+}
+
+.sidebar {
+    background-color: var(--sidebar-bg);
+    min-height: 100vh;
+    color: var(--sidebar-text);
+    padding: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.sidebar .brand {
+    padding: 0 1.25rem 1.5rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.sidebar .nav-section-label {
+    padding: 0.5rem 1.25rem 0.25rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    color: #9aa08c;
+}
+
+.sidebar .nav-link {
+    color: var(--sidebar-text);
+    padding: 0.6rem 1.25rem;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.sidebar .nav-link.active,
+.sidebar .nav-link:hover {
+    background-color: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
+    border-radius: 8px;
+    margin: 0 0.5rem;
+}
+
+.sidebar .user-footer {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.topbar {
+    background-color: var(--sidebar-bg);
+    color: #fff;
+    padding: 1.25rem 1.5rem;
+}
+
+.alert-banner {
+    background-color: var(--alert-bg);
+    border-left: 4px solid var(--alert-border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.btn-maroon {
+    background-color: var(--accent-maroon);
+    color: #fff;
+    border: none;
+}
+.btn-maroon:hover {
+    background-color: #5e1818;
+    color: #fff;
+}
+
+.stat-card, .panel-card {
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
