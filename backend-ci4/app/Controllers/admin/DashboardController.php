@@ -14,7 +14,9 @@ class DashboardController extends BaseController
 
         $data = [
             'title'          => 'Dashboard',
+            'pageTitle'      => 'Dashboard',
             'active'         => 'dashboard',
+            'unreadNotifications' => 4,
             'totalStock'     => array_sum(array_column($productModel->findAll(), 'current_stock')),
             'lowStockCount'  => count($productModel->getLowStock()),
             'salesToday'     => 0,      // wire this to sales_transaction once POS is built
