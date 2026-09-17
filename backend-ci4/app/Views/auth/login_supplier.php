@@ -14,11 +14,14 @@
             <input type="text" name="username" required>
             <label>Password:</label>
             <input type="password" name="password" required>
-            <div class="forgot-link"><a href="#">forgot password?</a></div>
+            <div class="forgot-link"><a href="<?= site_url('login/supplier/forgot') ?>">forgot password?</a></div>
             <button type="submit" class="btn-login">Login</button>
         </form>
         <?php if (session()->getFlashdata('error')): ?>
             <div class="auth-error"><?= esc(session()->getFlashdata('error')) ?></div>
+        <?php endif; ?>
+        <?php if (session()->getFlashdata('success')): ?>
+            <div class="auth-success"><?= esc(session()->getFlashdata('success')) ?></div>
         <?php endif; ?>
     </div>
 </body>

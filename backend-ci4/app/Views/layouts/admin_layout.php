@@ -1,4 +1,6 @@
-<?php // app/Views/layouts/admin_layout.php ?>
+<?php // app/Views/layouts/admin_layout.php
+$__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Admin');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,30 +45,30 @@
                     <span class="nav-label">Reorder Alerts</span>
                 </a>
 
-                <a href="#" class="nav-link">
+                <a href="<?= site_url('admin/trend-analysis') ?>" class="nav-link <?= ($active ?? '') === 'trend_analysis' ? 'active' : '' ?>">
                     <i class="bi bi-graph-up"></i>
                     <span class="nav-label">Trend Analysis</span>
                 </a>
             </nav>
 
             <div class="nav-section-label">SALES</div>
-            <a href="/admin/pos" class="nav-link <?= $active === 'pos' ? 'active' : '' ?>">
-                <i class="bi bi-receipt"></i> <span class="nav-label">POS & Sales</span>
+            <a href="<?= site_url('admin/sales') ?>" class="nav-link <?= ($active ?? '') === 'sales' ? 'active' : '' ?>">
+                <i class="bi bi-receipt"></i> <span class="nav-label">POS &amp; Sales</span>
             </a>
 
             <div class="nav-section-label">PROCUREMENT</div>
-            <a href="/admin/orders" class="nav-link <?= $active === 'orders' ? 'active' : '' ?>">
+            <a href="<?= site_url('admin/orders') ?>" class="nav-link <?= ($active ?? '') === 'orders' ? 'active' : '' ?>">
                 <i class="bi bi-box2"></i> <span class="nav-label">Orders</span>
             </a>
-            <a href="/admin/suppliers" class="nav-link <?= $active === 'suppliers' ? 'active' : '' ?>">
+            <a href="<?= site_url('admin/suppliers') ?>" class="nav-link <?= ($active ?? '') === 'suppliers' ? 'active' : '' ?>">
                 <i class="bi bi-truck"></i> <span class="nav-label">Suppliers</span>
             </a>
 
             <div class="nav-section-label">SYSTEM</div>
-            <a href="/admin/settings" class="nav-link <?= $active === 'settings' ? 'active' : '' ?>">
+            <a href="<?= site_url('admin/settings') ?>" class="nav-link <?= ($active ?? '') === 'settings' ? 'active' : '' ?>">
                 <i class="bi bi-gear"></i> <span class="nav-label">Settings</span>
             </a>
-            <a href="/admin/notifications" class="nav-link <?= $active === 'notifications' ? 'active' : '' ?>">
+            <a href="<?= site_url('admin/notifications') ?>" class="nav-link <?= ($active ?? '') === 'notifications' ? 'active' : '' ?>">
                 <i class="bi bi-bell-fill"></i> <span class="nav-label">Notifications</span>
             </a>
         </div>
@@ -91,9 +93,12 @@
             <div class="d-flex align-items-center gap-3">
                 <?= $this->renderSection('header_actions') ?>
 
-                <button class="notification-button" type="button">
+                <a href="<?= site_url('admin/notifications') ?>" class="notification-button position-relative" style="text-decoration:none;">
                     <i class="bi bi-bell"></i>
-                </button>
+                    <?php if ($__unreadNotifications > 0): ?>
+                        <span class="notif-badge"><?= esc($__unreadNotifications) ?></span>
+                    <?php endif; ?>
+                </a>
             </div>
         </div>
         <?= $this->renderSection('content') ?>

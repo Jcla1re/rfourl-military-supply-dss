@@ -28,8 +28,9 @@ body.auth-body {
     content: "";
     position: absolute;
     inset: 0;
-    background: url('/assets/img/rifles-watermark.png') center/60% no-repeat;
-    opacity: 0.08;
+    background: url('/assets/img/RfourL_Logo.jpg') center/65% no-repeat;
+    opacity: 0.1;
+    filter: grayscale(1);
     pointer-events: none;
 }
 .auth-card h2 { text-align: center; font-weight: 700; margin-bottom: 2rem; }
@@ -44,6 +45,21 @@ body.auth-body {
     padding: 0.7rem; border-radius: 8px; font-weight: 600;
 }
 .auth-error { color: #a33; text-align: center; font-size: 0.85rem; margin-top: 1rem; }
+.auth-success { color: #2f6431; text-align: center; font-size: 0.85rem; margin-top: 1rem; }
+.auth-notice {
+    background: #fdf3d6; border: 1px solid #e6cf8a; color: #6b5510;
+    border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.85rem; text-align: center; margin-bottom: 1rem;
+}
+.auth-hint { text-align: center; font-size: 0.85rem; color: #555; margin-bottom: 1.5rem; }
+.otp-boxes { display: flex; justify-content: center; gap: 0.6rem; margin: 1.5rem 0; }
+.otp-boxes input {
+    width: 3rem; height: 3.4rem; text-align: center; font-size: 1.4rem; font-weight: 700;
+    border: 1px solid #ccc; border-radius: 8px; background: #fff;
+}
+.auth-resend { text-align: center; font-size: 0.85rem; margin-top: 1rem; }
+.auth-resend button { border: none; background: none; color: #4a7a3a; font-weight: 700; cursor: pointer; padding: 0; }
+.auth-back { text-align: center; font-size: 0.8rem; margin-top: 1rem; }
+.auth-back a { color: #666; }
 .role-select-card {
     background: #efe9df; border-radius: 16px; padding: 2rem;
     max-width: 320px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem;

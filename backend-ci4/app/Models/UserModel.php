@@ -22,12 +22,15 @@ class UserModel extends Model
         'full_name',
         'is_active',
         'last_login',
+        'reset_otp_hash',
+        'reset_otp_expires',
     ];
 
     protected $useTimestamps = false; // schema only has created_at, no updated_at
     protected $createdField  = 'created_at';
 
     protected $validationRules = [
+        'user_id'   => 'permit_empty|integer',
         'username'  => 'required|is_unique[users.username,user_id,{user_id}]',
         'full_name' => 'required',
         'role'      => 'required|in_list[Admin,Staff,Supplier]',

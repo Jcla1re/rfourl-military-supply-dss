@@ -26,6 +26,8 @@ class ProductModel extends Model
         'is_active',
     ];
 
+    public const CATEGORIES = ['Ready-to-Wear', 'Cloth / Custom', 'Footwear', 'Accessories'];
+
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
@@ -62,7 +64,7 @@ class ProductModel extends Model
             return ['label' => 'Reorder Now', 'class' => 'status-reorder'];
         }
         if ($stock <= $rop * 1.5) {
-            return ['label' => 'Low Stock', 'class' => 'status-low'];
+            return ['label' => 'Low Stock', 'class' => 'status-low-stock'];
         }
         return ['label' => 'In Stock', 'class' => 'status-in-stock'];
     }

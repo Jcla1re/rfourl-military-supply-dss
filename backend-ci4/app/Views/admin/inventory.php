@@ -14,261 +14,107 @@ $filterCategory = $category ?? 'All';
 $filterSize = $size ?? '';
 $filterStatus = $status ?? '';
 $filterSearch = $search ?? '';
-$categories = $categories ?? ['Clothing', 'Accessories', 'Military gear'];
+$categories = $categories ?? \App\Models\ProductModel::CATEGORIES;
 $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
+$suppliers = $suppliers ?? [];
 ?>
 
 <style>
-.inventory-page {
-    padding: 24px;
-    background: #f3f1ed;
-    min-height: calc(100vh - 85px);
-}
-
-.inventory-panel {
-    background: #fff;
-    border-radius: 14px;
-    padding: 22px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.06);
-}
-
-.inventory-stats {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-bottom: 22px;
-}
-
-.inventory-stat {
-    padding: 14px 20px;
-    border: 1px solid #d4d4d4;
-    border-radius: 10px;
-    background: #fafafa;
-    font-weight: 600;
-}
-
-.inventory-toolbar {
+.inv-toolbar {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
-    margin-bottom: 18px;
+    margin: 18px 0;
 }
-
-.inventory-toolbar input,
-.inventory-toolbar select {
-    min-height: 42px;
-    padding: 8px 12px;
-    border: 1px solid #c9c9c9;
-    border-radius: 8px;
+.inv-toolbar input, .inv-toolbar select {
+    min-height: 46px;
+    padding: 8px 14px;
+    border: 1px solid #d8d5cd;
+    border-radius: 10px;
     background: #fff;
 }
+.inv-toolbar input { flex: 1; min-width: 220px; }
+.inv-toolbar select { min-width: 150px; }
 
-.inventory-toolbar input {
-    flex: 1;
-    min-width: 220px;
-}
-
-.inventory-toolbar select {
-    min-width: 150px;
-}
-
-.inventory-tabs {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
-    border-bottom: 1px solid #ddd;
-}
-
-.inventory-tab {
+.inv-action-btn {
     border: 0;
-    background: transparent;
-    padding: 10px 14px;
-    cursor: pointer;
-    color: #555;
-}
-
-.inventory-tab.active {
-    color: #2f5138;
-    border-bottom: 3px solid #5d965c;
-    font-weight: 700;
-}
-
-.inventory-table-wrap {
-    overflow-x: auto;
-}
-
-.inventory-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 850px;
-}
-
-.inventory-table th {
-    background: #e6e1da;
-    padding: 13px 10px;
-    text-align: left;
-    font-size: 12px;
-    text-transform: uppercase;
-}
-
-.inventory-table td {
-    padding: 13px 10px;
-    border-bottom: 1px solid #e2e2e2;
-}
-
-.inventory-status {
-    display: inline-block;
-    padding: 6px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.status-in-stock {
-    color: #256b35;
-    background: #ddf1df;
-}
-
-.status-low-stock {
-    color: #8a6417;
-    background: #f8edc9;
-}
-
-.status-reorder {
-    color: #a52e2e;
-    background: #f7dddd;
-}
-
-.inventory-action {
-    border: 0;
-    border-radius: 7px;
-    padding: 7px 12px;
+    border-radius: 8px;
+    padding: 8px 14px;
     background: #dcecdf;
     color: #24472d;
     font-weight: 700;
     cursor: pointer;
+    white-space: nowrap;
 }
-
-.inventory-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,.35);
-}
-
-.inventory-modal.show {
-    display: flex;
-}
-
-.inventory-modal-card {
-    width: min(680px, 92vw);
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 24px;
-    border-radius: 14px;
-    background: #fff;
-}
-
-.inventory-form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-.inventory-form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.inventory-form-field input,
-.inventory-form-field select {
-    padding: 11px;
-    border: 1px solid #ccc;
-    border-radius: 7px;
-}
-
-.inventory-modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 22px;
-}
-
-@media (max-width: 700px) {
-    .inventory-form-grid {
-        grid-template-columns: 1fr;
-    }
+.inv-more-btn {
+    border: 0;
+    background: transparent;
+    font-size: 20px;
+    color: #666;
+    cursor: pointer;
+    padding: 0 6px;
 }
 </style>
 
-<div class="inventory-page">
-    <div class="inventory-panel">
-        <div class="inventory-stats">
-            <div class="inventory-stat">✓ In Stock: <?= esc($inStockCount ?? 0) ?></div>
-            <div class="inventory-stat">⚡ Low Stock: <?= esc($lowStockCount ?? 0) ?></div>
-            <div class="inventory-stat">⚠ Reorder Now: <?= esc($reorderCount ?? 0) ?></div>
+<div class="page-wrap">
+    <div class="page-panel">
+
+        <?php if (!empty($success)): ?><div class="alert alert-success"><?= esc($success) ?></div><?php endif; ?>
+        <?php if (!empty($error)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
+
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+            <div class="d-flex flex-wrap gap-3">
+                <span class="stat-pill green"><i class="bi bi-check-square-fill"></i> In Stock: <?= esc($inStockCount ?? 0) ?></span>
+                <span class="stat-pill amber"><i class="bi bi-lightning-fill"></i> Low Stock: <?= esc($lowStockCount ?? 0) ?></span>
+                <span class="stat-pill red"><i class="bi bi-exclamation-triangle-fill"></i> Reorder Now: <?= esc($reorderCount ?? 0) ?></span>
+            </div>
         </div>
 
-        <div class="inventory-toolbar">
-            <input id="searchInput" type="search" value="<?= esc($filterSearch) ?>" placeholder="Search inventory...">
+        <div class="inv-toolbar">
+            <input id="searchInput" type="search" value="<?= esc($filterSearch) ?>" placeholder="Search...">
 
             <select id="categoryFilter">
-                <option value="All">All Categories</option>
+                <option value="All">Category</option>
                 <?php foreach ($categories as $itemCategory): ?>
-                    <option value="<?= esc($itemCategory) ?>" <?= $filterCategory === $itemCategory ? 'selected' : '' ?>>
-                        <?= esc($itemCategory) ?>
-                    </option>
+                    <option value="<?= esc($itemCategory) ?>" <?= $filterCategory === $itemCategory ? 'selected' : '' ?>><?= esc($itemCategory) ?></option>
                 <?php endforeach; ?>
             </select>
 
             <select id="sizeFilter">
-                <option value="">All Sizes</option>
+                <option value="">Size</option>
                 <?php foreach (($sizes ?? []) as $itemSize): ?>
-                    <option value="<?= esc($itemSize) ?>" <?= $filterSize === $itemSize ? 'selected' : '' ?>>
-                        <?= esc($itemSize) ?>
-                    </option>
+                    <option value="<?= esc($itemSize) ?>" <?= $filterSize === $itemSize ? 'selected' : '' ?>><?= esc($itemSize) ?></option>
                 <?php endforeach; ?>
             </select>
 
             <select id="statusFilter">
-                <option value="">All Statuses</option>
+                <option value="">Status</option>
                 <?php foreach ($statuses as $itemStatus): ?>
-                    <option value="<?= esc($itemStatus) ?>" <?= $filterStatus === $itemStatus ? 'selected' : '' ?>>
-                        <?= esc($itemStatus) ?>
-                    </option>
+                    <option value="<?= esc($itemStatus) ?>" <?= $filterStatus === $itemStatus ? 'selected' : '' ?>><?= esc($itemStatus) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
 
-        <div class="inventory-tabs">
-            <button class="inventory-tab active" type="button">
-                All Items (<?= esc($totalItems ?? 0) ?>)
-            </button>
-
+        <div class="underline-tabs">
+            <a href="<?= site_url('admin/inventory') ?>" class="<?= $filterCategory === 'All' ? 'active' : '' ?>">All Items (<?= esc($totalItems ?? 0) ?>)</a>
             <?php foreach ($categories as $itemCategory): ?>
-                <button class="inventory-tab" type="button" data-category="<?= esc($itemCategory) ?>">
-                    <?= esc($itemCategory) ?>
-                </button>
+                <a href="<?= site_url('admin/inventory') . '?category=' . urlencode($itemCategory) ?>" class="<?= $filterCategory === $itemCategory ? 'active' : '' ?>"><?= esc($itemCategory) ?></a>
             <?php endforeach; ?>
         </div>
 
-        <div class="inventory-table-wrap">
-            <table class="inventory-table">
+        <div class="data-table-wrap">
+            <table class="data-table" style="min-width: 980px;">
                 <thead>
                     <tr>
                         <th>Item Name</th>
                         <th>Size</th>
-                        <th>Category</th>
+                        <th>Type</th>
                         <th>On Hand</th>
-                        <th>ROP</th>
+                        <th>Rop</th>
+                        <th>Stock Level</th>
                         <th>Status</th>
                         <th>Last Updated</th>
-                        <th>Action</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -276,110 +122,154 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
                         <?php foreach ($products as $product): ?>
                             <?php
                             $itemStatus = $product['status']['label'] ?? 'In Stock';
-                            $statusClass = match ($itemStatus) {
-                                'Low Stock' => 'status-low-stock',
-                                'Reorder Now' => 'status-reorder',
-                                default => 'status-in-stock',
+                            $pillClass = match ($itemStatus) {
+                                'Low Stock' => 'amber',
+                                'Reorder Now' => 'red',
+                                default => 'green',
                             };
+                            $rop = max((int) ($product['manual_rop_warning'] ?? 0), 1);
+                            $pct = min(100, round(((int) $product['current_stock'] / ($rop * 2)) * 100));
                             ?>
                             <tr data-category="<?= esc($product['category'] ?? '') ?>">
                                 <td>
                                     <strong><?= esc($product['item_name'] ?? 'Unknown item') ?></strong>
                                 </td>
-                                <td><?= esc($product['size'] ?? '') ?></td>
+                                <td><?= esc($product['size'] ?? '—') ?></td>
                                 <td><?= esc($product['category'] ?? '') ?></td>
                                 <td><?= esc($product['current_stock'] ?? 0) ?></td>
                                 <td><?= esc($product['manual_rop_warning'] ?? 0) ?></td>
                                 <td>
-                                    <span class="inventory-status <?= $statusClass ?>">
-                                        <?= esc($itemStatus) ?>
-                                    </span>
+                                    <div class="stock-bar <?= $pillClass ?>"><span style="width: <?= $pct ?>%"></span></div>
                                 </td>
+                                <td><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span></td>
                                 <td><?= esc(date('M j, Y', strtotime($product['updated_at'] ?? 'now'))) ?></td>
-                                <td>
-                                    <button
-                                        type="button"
-                                        class="inventory-action edit-row"
-                                        data-item="<?= esc(json_encode($product), 'attr') ?>">
-                                        Edit
-                                    </button>
+                                <td class="text-end">
+                                    <?php if ($itemStatus === 'Reorder Now'): ?>
+                                        <a href="<?= site_url('admin/reorder-alerts') ?>" class="inv-action-btn">Order</a>
+                                    <?php endif; ?>
+                                    <button type="button" class="inv-more-btn edit-row" data-item="<?= esc(json_encode($product), 'attr') ?>">&hellip;</button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr>
-                            <td colspan="8" class="text-center py-4">No inventory items found.</td>
-                        </tr>
+                        <tr><td colspan="9" class="text-center py-4">No inventory items found.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <span class="text-muted small">Showing <?= count($products ?? []) ?> of <?= esc($totalItems ?? 0) ?> Items</span>
+            <?php if (($totalPages ?? 1) > 1): ?>
+                <div class="admin-pagination">
+                    <?php
+                    $prevPage = max(1, (int) $currentPage - 1);
+                    $nextPage = min((int) $totalPages, (int) $currentPage + 1);
+                    $params = $_GET;
+                    $params['page'] = $prevPage;
+                    ?>
+                    <a href="<?= site_url('admin/inventory') . '?' . http_build_query($params) ?>">&larr; Prev</a>
+                    <?php for ($i = 1; $i <= $totalPages; $i++): $params['page'] = $i; ?>
+                        <a href="<?= site_url('admin/inventory') . '?' . http_build_query($params) ?>" class="<?= $i === (int) $currentPage ? 'active' : '' ?>"><?= $i ?></a>
+                    <?php endfor; ?>
+                    <?php $params['page'] = $nextPage; ?>
+                    <a href="<?= site_url('admin/inventory') . '?' . http_build_query($params) ?>">Next &rarr;</a>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
-<div class="inventory-modal" id="itemModal">
-    <div class="inventory-modal-card">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 id="modalTitle">Add Item</h3>
+<div class="inv-modal" id="itemModal">
+    <div class="inv-modal-card">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h3 id="modalTitle" class="mb-0">Add Item</h3>
+                <div class="subtitle" id="modalSubtitle"></div>
+            </div>
             <button type="button" class="btn-close" id="closeItemModal"></button>
         </div>
 
-        <form id="itemForm">
-            <div class="inventory-form-grid">
-                <div class="inventory-form-field">
+        <form id="itemForm" method="post" action="<?= site_url('admin/inventory/store') ?>">
+            <?= csrf_field() ?>
+            <div class="inv-form-grid">
+                <div class="inv-form-field">
                     <label>Item Name</label>
                     <input id="item_name" name="item_name" required>
                 </div>
-
-                <div class="inventory-form-field">
+                <div class="inv-form-field">
                     <label>Size</label>
-                    <input id="size" name="size">
+                    <input id="size" name="size" placeholder="e.g. S, M, L">
                 </div>
-
-                <div class="inventory-form-field">
-                    <label>Category</label>
+                <div class="inv-form-field">
+                    <label>Type</label>
                     <select id="category" name="category" required>
                         <?php foreach ($categories as $itemCategory): ?>
                             <option value="<?= esc($itemCategory) ?>"><?= esc($itemCategory) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-
-                <div class="inventory-form-field">
-                    <label>On Hand</label>
+                <div class="inv-form-field">
+                    <label>On hand</label>
                     <input id="current_stock" name="current_stock" type="number" min="0" value="0">
                 </div>
-
-                <div class="inventory-form-field">
+                <div class="inv-form-field">
                     <label>ROP Warning</label>
                     <input id="manual_rop_warning" name="manual_rop_warning" type="number" min="0" value="0">
                 </div>
-
-                <div class="inventory-form-field">
-                    <label>Status</label>
-                    <select id="status" name="status">
-                        <?php foreach ($statuses as $itemStatus): ?>
-                            <option value="<?= esc($itemStatus) ?>"><?= esc($itemStatus) ?></option>
+                <div class="inv-form-field">
+                    <label>Supplier</label>
+                    <select id="supplier_id" name="supplier_id">
+                        <option value="">— Unassigned —</option>
+                        <?php foreach ($suppliers as $s): ?>
+                            <option value="<?= esc($s['supplier_id']) ?>"><?= esc($s['company_name']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <div class="inv-form-field">
+                    <label>Unit Cost (₱)</label>
+                    <input id="unit_cost" name="unit_cost" type="number" step="0.01" min="0" value="0" required>
+                </div>
+                <div class="inv-form-field">
+                    <label>Selling Price (₱)</label>
+                    <input id="selling_price" name="selling_price" type="number" step="0.01" min="0" value="0" required>
+                </div>
             </div>
 
-            <div class="inventory-modal-actions">
+            <hr class="inv-hr">
+
+            <div class="danger-zone" id="deleteZone" style="display:none;">
+                <div>
+                    <strong>Archive this item</strong>
+                    <small>It will be hidden from active inventory. This can be reversed in the database.</small>
+                </div>
+                <button type="button" class="btn btn-maroon" id="archiveBtn">Archive</button>
+            </div>
+
+            <div class="inv-modal-actions">
                 <button type="button" class="btn btn-secondary" id="cancelItemModal">Cancel</button>
-                <button type="submit" class="btn btn-success">Save</button>
+                <button type="submit" class="btn btn-success" id="submitItemBtn">Add Item</button>
             </div>
         </form>
     </div>
 </div>
 
+<form id="deleteForm" method="post" style="display:none;">
+    <?= csrf_field() ?>
+</form>
+
 <script>
 const itemModal = document.getElementById('itemModal');
 const itemForm = document.getElementById('itemForm');
+const storeUrl = "<?= site_url('admin/inventory/store') ?>";
 
 document.getElementById('openAddModal').addEventListener('click', () => {
     itemForm.reset();
+    itemForm.action = storeUrl;
     document.getElementById('modalTitle').textContent = 'Add Item';
+    document.getElementById('modalSubtitle').textContent = '';
+    document.getElementById('submitItemBtn').textContent = 'Add Item';
+    document.getElementById('deleteZone').style.display = 'none';
     itemModal.classList.add('show');
 });
 
@@ -388,63 +278,58 @@ document.querySelectorAll('.edit-row').forEach(button => {
         const item = JSON.parse(button.dataset.item || '{}');
 
         document.getElementById('modalTitle').textContent = 'Edit Item';
+        document.getElementById('modalSubtitle').textContent = `${item.item_name || ''} — Size ${item.size || '—'}`;
+        document.getElementById('submitItemBtn').textContent = 'Save Changes';
         document.getElementById('item_name').value = item.item_name || '';
         document.getElementById('size').value = item.size || '';
         document.getElementById('category').value = item.category || '';
+        document.getElementById('supplier_id').value = item.supplier_id || '';
+        document.getElementById('unit_cost').value = item.unit_cost || 0;
+        document.getElementById('selling_price').value = item.selling_price || 0;
         document.getElementById('current_stock').value = item.current_stock || 0;
         document.getElementById('manual_rop_warning').value = item.manual_rop_warning || 0;
-        document.getElementById('status').value = item.status?.label || 'In Stock';
+
+        itemForm.action = "<?= site_url('admin/inventory/update') ?>/" + item.item_id;
+
+        const deleteZone = document.getElementById('deleteZone');
+        deleteZone.style.display = 'flex';
+        document.getElementById('archiveBtn').onclick = () => {
+            if (!confirm(`Archive "${item.item_name}"?`)) return;
+            const form = document.getElementById('deleteForm');
+            form.action = "<?= site_url('admin/inventory/delete') ?>/" + item.item_id;
+            form.submit();
+        };
 
         itemModal.classList.add('show');
     });
 });
 
-document.getElementById('closeItemModal').addEventListener('click', () => {
-    itemModal.classList.remove('show');
-});
-
-document.getElementById('cancelItemModal').addEventListener('click', () => {
-    itemModal.classList.remove('show');
-});
-
-itemForm.addEventListener('submit', event => {
-    event.preventDefault();
-    itemModal.classList.remove('show');
-});
-
-document.querySelectorAll('.inventory-tab[data-category]').forEach(tab => {
-    tab.addEventListener('click', () => {
-        document.getElementById('categoryFilter').value = tab.dataset.category;
-        document.getElementById('categoryFilter').dispatchEvent(new Event('change'));
-    });
-});
+document.getElementById('closeItemModal').addEventListener('click', () => itemModal.classList.remove('show'));
+document.getElementById('cancelItemModal').addEventListener('click', () => itemModal.classList.remove('show'));
 
 ['categoryFilter', 'sizeFilter', 'statusFilter'].forEach(id => {
     document.getElementById(id).addEventListener('change', event => {
         const url = new URL(window.location.href);
         const parameter = id.replace('Filter', '').toLowerCase();
-
         if (event.target.value && event.target.value !== 'All') {
             url.searchParams.set(parameter, event.target.value);
         } else {
             url.searchParams.delete(parameter);
         }
-
+        url.searchParams.delete('page');
         window.location.href = url.toString();
     });
 });
 
 document.getElementById('searchInput').addEventListener('keydown', event => {
     if (event.key !== 'Enter') return;
-
     const url = new URL(window.location.href);
-
     if (event.target.value.trim()) {
         url.searchParams.set('search', event.target.value.trim());
     } else {
         url.searchParams.delete('search');
     }
-
+    url.searchParams.delete('page');
     window.location.href = url.toString();
 });
 </script>
