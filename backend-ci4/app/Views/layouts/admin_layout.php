@@ -17,14 +17,14 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
         <div>
             <div class="brand d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
-                    <img src="/assets/img/RfourL_Logo.jpg" alt="" style="width:36px; height:36px; border-radius:6px;">
+                    <img src="/assets/img/RfourL_Logo.jpg" alt="" class="brand-logo" style="width:36px; height:36px; border-radius:6px;">
                     <div class="brand-text">
                         <div style="font-weight:700; line-height:1;">RfourL</div>
                         <small style="font-weight:400; font-size:0.65rem; letter-spacing:0.05em;">MILITARY SUPPLY</small>
                     </div>
                 </div>
                 <button id="sidebarToggle" class="btn btn-sm text-white border-0" style="background:none;">
-                    <i class="bi bi-list fs-5"></i>
+                    <i class="bi bi-layout-sidebar fs-5"></i>
                 </button>
             </div>
 
@@ -76,12 +76,12 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
         <div class="user-footer">
             <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-person-circle fs-4"></i>
-                <div>
+                <div class="user-text">
                     <div style="font-weight:600; color:#fff; font-size:0.9rem;"><?= esc(session()->get('full_name')) ?></div>
                     <small><?= esc(session()->get('role')) ?></small>
                 </div>
             </div>
-            <a href="/logout" style="color:#d9dcd1;" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
+            <a href="/logout" class="logout-link" style="color:#d9dcd1;" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
         </div>
     </div>
 

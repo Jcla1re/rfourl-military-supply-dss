@@ -1,6 +1,8 @@
 :root {
     --sidebar-bg: #263319;
     --sidebar-text: #d9dcd1;
+    --sidebar-hover-bg: #1a220f;
+    --sidebar-hover-text: #ffffff;
     --sidebar-active-bg: #ffffff;
     --sidebar-active-text: #263319;
     --topbar-bg: #4b6a3f;
@@ -43,9 +45,11 @@ body {
 }
 
 .sidebar.collapsed .brand-text,
+.sidebar.collapsed .brand-logo,
 .sidebar.collapsed .nav-label,
 .sidebar.collapsed .nav-section-label,
-.sidebar.collapsed .user-footer > div:first-child {
+.sidebar.collapsed .user-text,
+.sidebar.collapsed .logout-link {
     display: none;
 }
 
@@ -64,6 +68,8 @@ body {
 
 .sidebar .brand {
     padding: 0 1.25rem 1.5rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
     font-weight: 700;
     color: #fff;
 }
@@ -83,14 +89,28 @@ body {
     align-items: center;
     gap: 0.6rem;
     text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.sidebar .nav-link.active,
+.sidebar .nav-link > i {
+    width: 1.1rem;
+    flex-shrink: 0;
+    text-align: center;
+}
+
 .sidebar .nav-link:hover {
+    background-color: var(--sidebar-hover-bg);
+    color: var(--sidebar-hover-text);
+    border-radius: 8px;
+    margin: 0 0.5rem;
+}
+
+.sidebar .nav-link.active {
     background-color: var(--sidebar-active-bg);
     color: var(--sidebar-active-text);
     border-radius: 8px;
     margin: 0 0.5rem;
+    font-weight: 600;
 }
 
 .sidebar .user-footer {
@@ -104,8 +124,8 @@ body {
 .topbar {
     background-color: var(--topbar-bg);
     color: #fff;
-    padding: 1.25rem 1.5rem;
-    min-height: 88px;
+    padding: 1rem 1.5rem;
+    min-height: 80px;
 }
 
 .topbar h1 {
