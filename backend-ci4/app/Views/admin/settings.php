@@ -19,39 +19,6 @@ $tabs = [
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
-/* Header (title row) — height matched to the sidebar's own (untouched)
-   brand block so the two horizontal lines land at the same height:
-   sidebar has 16px top padding + ~60px brand block = ~76px. */
-.topbar {
-    background: #4B6B42;
-    padding: 0 32px 0 48px;
-    height: 76px;
-    min-height: 76px;
-    box-sizing: border-box;
-}
-.topbar h1 {
-    font-family: 'Poppins', sans-serif;
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: normal;
-    line-height: 1;
-    color: #fff;
-    margin: 0;
-}
-.notification-button {
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
-    background: #6AAB5A;
-    color: #fff;
-    font-size: 22px;
-}
-.notification-button:hover {
-    background: #6AAB5A;
-    filter: brightness(1.08);
-    color: #fff;
-}
-
 /* Tabs row (bottom of header) */
 .set-tabs {
     display: flex;

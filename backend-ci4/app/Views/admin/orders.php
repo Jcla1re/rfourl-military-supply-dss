@@ -16,9 +16,44 @@ $tab = $tab ?? 'status';
 ?>
 
 <style>
-.ord-tabs { display: flex; border-bottom: 3px solid var(--sidebar-bg); margin-bottom: 20px; border-radius: 10px 10px 0 0; overflow: hidden; }
-.ord-tabs a { flex: 1; text-align: center; padding: 16px; font-weight: 700; text-decoration: none; color: #fff; background: var(--sidebar-bg); }
-.ord-tabs a.active { background: var(--content-bg); color: #1c1c1c; }
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+.ord-tabs {
+    display: flex;
+    gap: 2px;
+    background: #4B6B42;
+    padding: 0;
+    margin: -24px -24px 20px -24px;
+}
+.ord-tabs a {
+    flex: 1;
+    height: 44px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: #fff;
+    background: #4B6B42;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    transition: background-color 0.15s ease;
+}
+.ord-tabs a:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.08);
+}
+.ord-tabs a.active {
+    background: #F3F1EB;
+    color: #1E2616;
+    font-weight: 500;
+    border: none;
+}
 
 .ord-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; align-items: start; }
 @media (max-width: 1100px) { .ord-grid { grid-template-columns: 1fr; } }

@@ -11,7 +11,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
     <link href="/assets/css/admin-theme.css" rel="stylesheet">
 </head>
 <body>
-<div class="d-flex">
+<div class="d-flex app-shell">
     <!-- SIDEBAR -->
     <div class="sidebar" id="adminSidebar">
         <script>
@@ -55,9 +55,18 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
 
                 <a href="<?= site_url('admin/reorder-alerts') ?>" class="nav-link <?= ($active ?? '') === 'reorder_alerts' ? 'active' : '' ?>" data-tooltip="Reorder Alerts">
                     <span class="nav-icon">
-                        <i class="bi bi-box2 icon-outline"></i>
-                        <i class="bi bi-box2-fill icon-fill"></i>
-                        <i class="bi bi-exclamation-triangle-fill nav-icon-badge"></i>
+                        <svg class="icon-outline" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg">
+                            <g fill="currentColor">
+                                <path d="M124 245.5V427l-30 51.1-30 51.2 13.6 23.3L91.2 576h241.6l12.4-21.2c6.9-11.7 13-22.3 13.7-23.5.9-1.9.6-3.1-2.4-8.2-1.9-3.2-3.5-6.2-3.5-6.5s50.2-.6 111.5-.6H576V64H124zm161-90.6v60.9l13.2 9.8c7.2 5.3 13.7 9.7 14.2 9.8.6.1 5.4-2.1 10.6-4.8l9.5-4.9 8.1 4.6c4.5 2.6 8.7 4.7 9.4 4.7s4.8-2 9.1-4.5 8.2-4.5 8.7-4.5 5.1 2.3 10.1 5c5.1 2.8 9.8 4.7 10.4 4.3.7-.3 6.9-4.9 14-10.1l12.7-9.4V94h131v392H440.3l-105.8-.1-47.5-81.2-47.5-81.2h-54.9L170.3 348c-7.9 13.5-14.8 25.2-15.3 26-.6.9-1-54-1-139.3V94h131zm100-7.9c0 29.1-.3 53-.7 53-.3 0-4.3-2-8.7-4.4l-8.1-4.3-8.8 4.9-8.7 4.9-8.6-4.9-8.7-5-8.1 4.4c-4.4 2.4-8.4 4.4-8.8 4.4-.5 0-.8-23.9-.8-53V94h70zM272.7 439.5c27.8 47.3 50.9 86.9 51.5 88.1.8 1.7.1 3.6-3.7 10.3l-4.8 8.1H108.4l-4.5-7.7c-2.4-4.3-4.5-8.1-4.7-8.5-.3-.5 20.8-36.8 102.5-176.1.3-.4 5-.6 10.5-.5l10.1.3z"/>
+                                <path d="M371 405v50h145V355H371zm115 0v20h-85v-40h85zm-289 33v35h30v-70h-30zm10 56.1c-3.2 1.3-6.8 4.7-8.6 8.1-4.5 8.6 3.6 20.8 13.7 20.8 4.7 0 10.8-3.8 13-8 6.3-11.7-6-25.7-18.1-20.9"/>
+                            </g>
+                        </svg>
+                        <svg class="icon-fill" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg">
+                            <g fill="currentColor" stroke="currentColor" stroke-width="14" stroke-linejoin="round">
+                                <path d="M124 245.5V427l-30 51.1-30 51.2 13.6 23.3L91.2 576h241.6l12.4-21.2c6.9-11.7 13-22.3 13.7-23.5.9-1.9.6-3.1-2.4-8.2-1.9-3.2-3.5-6.2-3.5-6.5s50.2-.6 111.5-.6H576V64H124zm161-90.6v60.9l13.2 9.8c7.2 5.3 13.7 9.7 14.2 9.8.6.1 5.4-2.1 10.6-4.8l9.5-4.9 8.1 4.6c4.5 2.6 8.7 4.7 9.4 4.7s4.8-2 9.1-4.5 8.2-4.5 8.7-4.5 5.1 2.3 10.1 5c5.1 2.8 9.8 4.7 10.4 4.3.7-.3 6.9-4.9 14-10.1l12.7-9.4V94h131v392H440.3l-105.8-.1-47.5-81.2-47.5-81.2h-54.9L170.3 348c-7.9 13.5-14.8 25.2-15.3 26-.6.9-1-54-1-139.3V94h131zm100-7.9c0 29.1-.3 53-.7 53-.3 0-4.3-2-8.7-4.4l-8.1-4.3-8.8 4.9-8.7 4.9-8.6-4.9-8.7-5-8.1 4.4c-4.4 2.4-8.4 4.4-8.8 4.4-.5 0-.8-23.9-.8-53V94h70zM272.7 439.5c27.8 47.3 50.9 86.9 51.5 88.1.8 1.7.1 3.6-3.7 10.3l-4.8 8.1H108.4l-4.5-7.7c-2.4-4.3-4.5-8.1-4.7-8.5-.3-.5 20.8-36.8 102.5-176.1.3-.4 5-.6 10.5-.5l10.1.3z"/>
+                                <path d="M371 405v50h145V355H371zm115 0v20h-85v-40h85zm-289 33v35h30v-70h-30zm10 56.1c-3.2 1.3-6.8 4.7-8.6 8.1-4.5 8.6 3.6 20.8 13.7 20.8 4.7 0 10.8-3.8 13-8 6.3-11.7-6-25.7-18.1-20.9"/>
+                            </g>
+                        </svg>
                     </span>
                     <span class="nav-label">Reorder Alerts</span>
                 </a>
@@ -126,7 +135,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
     </div>
 
     <!-- MAIN CONTENT -->
-    <div class="flex-grow-1">
+    <div class="flex-grow-1 main-panel">
         <div class="topbar d-flex justify-content-between align-items-center">
             <h1><?= esc($title ?? 'Dashboard') ?></h1>
 

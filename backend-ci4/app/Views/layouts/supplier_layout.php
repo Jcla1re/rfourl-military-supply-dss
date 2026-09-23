@@ -11,7 +11,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
     <link href="/assets/css/admin-theme.css" rel="stylesheet">
 </head>
 <body>
-<div class="d-flex">
+<div class="d-flex app-shell">
     <!-- SIDEBAR -->
     <div class="sidebar" id="adminSidebar">
         <script>
@@ -90,7 +90,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
     </div>
 
     <!-- MAIN CONTENT -->
-    <div class="flex-grow-1">
+    <div class="flex-grow-1 main-panel">
         <div class="topbar d-flex justify-content-between align-items-center">
             <div>
                 <h1><?= esc($title ?? 'Dashboard') ?></h1>

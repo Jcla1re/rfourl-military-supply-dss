@@ -13,12 +13,24 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
 ?>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
 .inv-toolbar { display: flex; gap: 12px; flex-wrap: wrap; margin: 18px 0; }
-.inv-toolbar input, .inv-toolbar select {
+.inv-toolbar select {
+    min-height: 46px; padding: 8px 34px 8px 14px; border: 1px solid #d8d5cd; border-radius: 10px; background: #fff; min-width: 150px;
+    font-family: 'Poppins', sans-serif; color: #888;
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23888888' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+}
+.inv-toolbar select.has-value { color: var(--text-dark); }
+.inv-search {
+    flex: 1; min-width: 220px; display: flex; align-items: center; gap: 8px;
     min-height: 46px; padding: 8px 14px; border: 1px solid #d8d5cd; border-radius: 10px; background: #fff;
 }
-.inv-toolbar input { flex: 1; min-width: 220px; }
-.inv-toolbar select { min-width: 150px; }
+.inv-search i { color: #888; font-size: 16px; flex-shrink: 0; }
+.inv-search input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; padding: 0; }
 .notify-btn { border: 0; border-radius: 8px; padding: 8px 14px; background: #1c1c1c; color: #fff; font-weight: 700; cursor: pointer; white-space: nowrap; }
 </style>
 
@@ -35,23 +47,26 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
         </div>
 
         <div class="inv-toolbar">
-            <input id="searchInput" type="search" value="<?= esc($filterSearch) ?>" placeholder="Search...">
+            <div class="inv-search">
+                <i class="bi bi-search"></i>
+                <input id="searchInput" type="search" value="<?= esc($filterSearch) ?>" placeholder="Search...">
+            </div>
 
-            <select id="categoryFilter">
+            <select id="categoryFilter" class="<?= $filterCategory !== 'All' ? 'has-value' : '' ?>">
                 <option value="All">Category</option>
                 <?php foreach ($categories as $itemCategory): ?>
                     <option value="<?= esc($itemCategory) ?>" <?= $filterCategory === $itemCategory ? 'selected' : '' ?>><?= esc($itemCategory) ?></option>
                 <?php endforeach; ?>
             </select>
 
-            <select id="sizeFilter">
+            <select id="sizeFilter" class="<?= $filterSize !== '' ? 'has-value' : '' ?>">
                 <option value="">Size</option>
                 <?php foreach (($sizes ?? []) as $itemSize): ?>
                     <option value="<?= esc($itemSize) ?>" <?= $filterSize === $itemSize ? 'selected' : '' ?>><?= esc($itemSize) ?></option>
                 <?php endforeach; ?>
             </select>
 
-            <select id="statusFilter">
+            <select id="statusFilter" class="<?= $filterStatus !== '' ? 'has-value' : '' ?>">
                 <option value="">Status</option>
                 <?php foreach ($statuses as $itemStatus): ?>
                     <option value="<?= esc($itemStatus) ?>" <?= $filterStatus === $itemStatus ? 'selected' : '' ?>><?= esc($itemStatus) ?></option>
@@ -71,7 +86,7 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
                 <thead>
                     <tr>
                         <th>Item Name</th><th>Size</th><th>Type</th><th>On Hand</th><th>Rop</th>
-                        <th>Stock Level</th><th>Status</th><th>Last Updated</th><th></th>
+                        <th>Stock Level</th><th>Status</th><th>Last Updated</th><th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>

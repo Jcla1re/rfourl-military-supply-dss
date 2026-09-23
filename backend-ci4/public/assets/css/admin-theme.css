@@ -27,6 +27,23 @@ body {
     margin: 0;
 }
 
+/* App shell: keeps the sidebar fixed in place and scrolls only the main
+   content pane, regardless of how long a page's content is. */
+.app-shell {
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-shell .sidebar {
+    height: 100vh;
+    overflow: visible;
+}
+
+.app-shell .main-panel {
+    height: 100vh;
+    overflow-y: auto;
+}
+
 .sidebar {
     background-color: var(--sidebar-bg);
     min-height: 100vh;
@@ -188,6 +205,11 @@ body {
     justify-content: center;
 }
 
+.sidebar .nav-link .nav-icon svg {
+    width: 2rem;
+    height: 2rem;
+}
+
 .sidebar .nav-link .icon-fill {
     display: none;
 }
@@ -282,6 +304,21 @@ body {
     background-color: var(--accent-maroon);
     color: #fff;
     border: none;
+}
+
+.btn-success {
+    background-color: #71AA60;
+    border-color: #71AA60;
+    color: #fff;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active,
+.btn-check:checked + .btn-success {
+    background-color: #5f9650;
+    border-color: #5f9650;
+    color: #fff;
 }
 
 .btn-maroon:hover {
