@@ -108,7 +108,7 @@ class StockOrderModel extends Model
             $inventoryLogModel->record(
                 $line['item_id'],
                 $userId,
-                'Restock',
+                'RESTOCK',
                 (int) $line['order_quantity'],
                 $newStock,
                 $soId,

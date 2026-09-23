@@ -26,7 +26,7 @@ class ProductModel extends Model
         'is_active',
     ];
 
-    public const CATEGORIES = ['Ready-to-Wear', 'Cloth / Custom', 'Footwear', 'Accessories'];
+    public const CATEGORIES = ['Clothes', 'Shoes', 'Equipment', 'Patches', 'Metal', 'Accessories'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';

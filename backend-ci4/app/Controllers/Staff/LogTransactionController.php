@@ -11,10 +11,10 @@ use App\Models\UserModel;
 class LogTransactionController extends BaseController
 {
     private const TYPES = [
-        'restock'      => ['label' => 'Restock', 'log_type' => 'Restock'],
-        'return'       => ['label' => 'Customer Return', 'log_type' => 'Return'],
-        'damaged'      => ['label' => 'Damaged / Lost', 'log_type' => 'Damaged'],
-        'adjustment'   => ['label' => 'Manual Adjustment', 'log_type' => 'Adjustment'],
+        'restock'      => ['label' => 'Restock', 'log_type' => 'RESTOCK'],
+        'return'       => ['label' => 'Customer Return', 'log_type' => 'RETURN'],
+        'damaged'      => ['label' => 'Damaged / Lost', 'log_type' => 'DAMAGED_LOST'],
+        'adjustment'   => ['label' => 'Manual Adjustment', 'log_type' => 'MANUAL_ADJUSTMENT'],
     ];
 
     protected $productModel;

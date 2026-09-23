@@ -1,0 +1,11 @@
+user_id,supplier_id,username,email,password_hash,role,full_name,is_active,last_login,created_at
+1,,admin1,admin1@rfourl.local,$2y$10$PLACEHOLDER_DO_NOT_USE_REPLACE_VIA_APP_REGISTRATION,Admin,System Administrator,1,,2024-01-01 00:00:00
+2,,staff1,staff1@rfourl.local,$2y$10$PLACEHOLDER_DO_NOT_USE_REPLACE_VIA_APP_REGISTRATION,Staff,Staff Cashier 1,1,,2024-01-01 00:00:00
+3,,staff2,staff2@rfourl.local,$2y$10$PLACEHOLDER_DO_NOT_USE_REPLACE_VIA_APP_REGISTRATION,Staff,Staff Cashier 2,1,,2024-01-01 00:00:00
+4,,staff3,staff3@rfourl.local,$2y$10$PLACEHOLDER_DO_NOT_USE_REPLACE_VIA_APP_REGISTRATION,Staff,Staff Cashier 3,1,,2024-01-01 00:00:00
+5,1.0,supplier1,supplier1@rfourl.local,$2y$10$PLACEHOLDER_DO_NOT_USE_REPLACE_VIA_APP_REGISTRATION,Supplier,Manila Field Uniforms Trading (Portal Account),1,,2024-01-01 00:00:00
+6,2.0,supplier2,supplier2@rfourl.local,$2y$10$PLACEHOLDER_DO_NOT_USE_REPLACE_VIA_APP_REGISTRATION,Supplier,Tactical Gear Philippines Inc. (Portal Account),1,,2024-01-01 00:00:00
+7,3.0,supplier3,supplier3@rfourl.local,$2y$10$PLACEHOLDER_DO_NOT_USE_REPLACE_VIA_APP_REGISTRATION,Supplier,Precision Metalcraft Supply (Portal Account),1,,2024-01-01 00:00:00
+8,4.0,supplier4,supplier4@rfourl.local,$2y$10$PLACEHOLDER_DO_NOT_USE_REPLACE_VIA_APP_REGISTRATION,Supplier,Quiapo Embroidery & Patches Co. (Portal Account),1,,2024-01-01 00:00:00
+9,5.0,supplier5,supplier5@rfourl.local,$2y$10$PLACEHOLDER_DO_NOT_USE_REPLACE_VIA_APP_REGISTRATION,Supplier,Metro Duty Gear Accessories (Portal Account),1,,2024-01-01 00:00:00
+10,6.0,supplier6,supplier6@rfourl.local,$2y$10$PLACEHOLDER_DO_NOT_USE_REPLACE_VIA_APP_REGISTRATION,Supplier,Marikina Combat Footwear Co. (Portal Account),1,,2024-01-01 00:00:00

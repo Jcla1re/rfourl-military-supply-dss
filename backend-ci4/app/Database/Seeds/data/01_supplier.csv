@@ -1,0 +1,7 @@
+supplier_id,company_name,category,lead_time_days,contact_person,contact_email,contact_number,is_active,created_at,updated_at
+1,Manila Field Uniforms Trading,Clothes,7,Ana Reyes,contact1@manila.example.com,09170111111,1,2024-01-01 00:00:00,2024-01-01 00:00:00
+2,Tactical Gear Philippines Inc.,Equipment,12,Mark Villanueva,contact2@tactical.example.com,09170222222,1,2024-01-01 00:00:00,2024-01-01 00:00:00
+3,Precision Metalcraft Supply,Metal,5,Liza Santos,contact3@precision.example.com,09170333333,1,2024-01-01 00:00:00,2024-01-01 00:00:00
+4,Quiapo Embroidery & Patches Co.,Patches,4,Noel Cruz,contact4@quiapo.example.com,09170444444,1,2024-01-01 00:00:00,2024-01-01 00:00:00
+5,Metro Duty Gear Accessories,Accessories,6,Grace Fernandez,contact5@metro.example.com,09170555555,1,2024-01-01 00:00:00,2024-01-01 00:00:00
+6,Marikina Combat Footwear Co.,Shoes,14,Ramon Dela Cruz,contact6@marikina.example.com,09170666666,1,2024-01-01 00:00:00,2024-01-01 00:00:00

@@ -17,12 +17,13 @@ backend-ci4/composer.lock
 # Python / Flask (ml-service/)
 # ==============================
 ml-service/venv/
-ml-service/__pycache__/
+ml-service/**/__pycache__/
 ml-service/*.pyc
 ml-service/.env
 ml-service/*.pkl
 ml-service/instance/
-ml-service/.pytest_cache/
+ml-service/**/.pytest_cache/
+ml-service/*.log
 
 # ==============================
 # Database

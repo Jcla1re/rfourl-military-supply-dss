@@ -24,7 +24,7 @@ class InventoryLogModel extends Model
 
     protected $useTimestamps = false;
 
-    public const LOG_TYPES = ['Restock', 'Return', 'Damaged', 'Adjustment'];
+    public const LOG_TYPES = ['MANUAL_ADJUSTMENT', 'RESTOCK', 'SALE', 'RETURN', 'DAMAGED_LOST'];
 
     public function record(string $itemId, ?int $userId, string $logType, int $quantityChanged, int $stockAfter, ?string $referenceSoId = null, ?string $notes = null): void
     {
