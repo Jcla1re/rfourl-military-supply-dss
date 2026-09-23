@@ -141,7 +141,7 @@ class InventoryController extends BaseController
             $this->inventoryLogModel->record(
                 $newId,
                 session()->get('user_id'),
-                'Adjustment',
+                'MANUAL_ADJUSTMENT',
                 (int) $this->request->getPost('current_stock'),
                 (int) $this->request->getPost('current_stock'),
                 null,
@@ -190,7 +190,7 @@ class InventoryController extends BaseController
             $this->inventoryLogModel->record(
                 $itemId,
                 session()->get('user_id'),
-                'Adjustment',
+                'MANUAL_ADJUSTMENT',
                 $delta,
                 $newStock,
                 null,

@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Models\InventoryLogModel;
 use App\Models\ProductModel;
 use App\Models\SalesItemModel;
 use App\Models\SalesTransactionModel;
@@ -12,12 +13,14 @@ class SalesController extends BaseController
     protected $salesTransactionModel;
     protected $salesItemModel;
     protected $productModel;
+    protected $inventoryLogModel;
 
     public function __construct()
     {
         $this->salesTransactionModel = new SalesTransactionModel();
         $this->salesItemModel        = new SalesItemModel();
         $this->productModel          = new ProductModel();
+        $this->inventoryLogModel     = new InventoryLogModel();
     }
 
     public function index()
@@ -122,9 +125,20 @@ class SalesController extends BaseController
                 'selling_price' => $line['product']['selling_price'],
             ]);
 
+            $newStock = (int) $line['product']['current_stock'] - $line['qty'];
             $this->productModel->update($line['product']['item_id'], [
-                'current_stock' => (int) $line['product']['current_stock'] - $line['qty'],
+                'current_stock' => $newStock,
             ]);
+
+            $this->inventoryLogModel->record(
+                $line['product']['item_id'],
+                session()->get('user_id'),
+                'SALE',
+                -$line['qty'],
+                $newStock,
+                null,
+                'Ref: sales_id=' . $salesId
+            );
         }
 
         return redirect()->to('/admin/sales')->with('success', 'Sale completed and receipt printed.');
