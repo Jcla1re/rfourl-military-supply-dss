@@ -44,18 +44,72 @@ body {
     width: 72px;
 }
 
+.sidebar .nav-label {
+    opacity: 1;
+    max-width: 200px;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: opacity 0.15s ease, max-width 0.2s ease;
+}
+
+.sidebar.collapsed .nav-label {
+    opacity: 0;
+    max-width: 0;
+    pointer-events: none;
+}
+
 .sidebar.collapsed .brand-text,
 .sidebar.collapsed .brand-logo,
-.sidebar.collapsed .nav-label,
-.sidebar.collapsed .nav-section-label,
 .sidebar.collapsed .user-text,
 .sidebar.collapsed .logout-link {
+    display: none;
+}
+
+.sidebar.collapsed .nav-section-label {
+    width: 32px;
+    height: 0;
+    margin: 0.75rem auto;
+    padding: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    font-size: 0;
+    overflow: hidden;
+}
+
+.sidebar.collapsed .brand + .nav-section-label {
     display: none;
 }
 
 .sidebar.collapsed .nav-link {
     justify-content: center;
     padding: 0.6rem;
+    gap: 0;
+    position: relative;
+}
+
+.sidebar.collapsed .nav-link::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 0.75rem);
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #1a220f;
+    color: #fff;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.sidebar.collapsed .nav-link:hover::after {
+    opacity: 1;
+    visibility: visible;
 }
 
 .sidebar.collapsed .user-footer {
@@ -74,6 +128,37 @@ body {
     color: #fff;
 }
 
+.sidebar #sidebarToggle {
+    position: relative;
+}
+
+.sidebar #sidebarToggle::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 0.5rem;
+    background-color: #1a220f;
+    color: #fff;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.sidebar #sidebarToggle:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
 .sidebar .nav-section-label {
     padding: 0.5rem 1.25rem 0.25rem;
     font-size: 0.7rem;
@@ -89,13 +174,42 @@ body {
     align-items: center;
     gap: 0.6rem;
     text-decoration: none;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    transition: background-color 0.15s ease, color 0.15s ease, padding 0.2s ease, gap 0.2s ease;
 }
 
-.sidebar .nav-link > i {
+.sidebar .nav-link > i,
+.sidebar .nav-link .nav-icon {
     width: 1.1rem;
     flex-shrink: 0;
     text-align: center;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar .nav-link .icon-fill {
+    display: none;
+}
+
+.sidebar .nav-link.active .icon-outline {
+    display: none;
+}
+
+.sidebar .nav-link.active .icon-fill {
+    display: inline-block;
+}
+
+.sidebar .nav-link .nav-icon-badge {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    font-size: 0.5rem;
+    line-height: 1;
+    color: #f0ad4e;
+    background-color: var(--sidebar-bg);
+    border-radius: 50%;
+    padding: 1px;
 }
 
 .sidebar .nav-link:hover {
@@ -105,12 +219,31 @@ body {
     margin: 0 0.5rem;
 }
 
+.sidebar .nav-link:hover .nav-icon-badge {
+    background-color: var(--sidebar-hover-bg);
+}
+
 .sidebar .nav-link.active {
     background-color: var(--sidebar-active-bg);
     color: var(--sidebar-active-text);
     border-radius: 8px;
     margin: 0 0.5rem;
     font-weight: 600;
+}
+
+.sidebar .nav-link.active .nav-icon-badge {
+    background-color: var(--sidebar-active-bg);
+    color: #a5580a;
+}
+
+.sidebar .logout-link {
+    color: #ef4444;
+    font-size: 1.1rem;
+    transition: color 0.15s ease;
+}
+
+.sidebar .logout-link:hover {
+    color: #ff6b6b;
 }
 
 .sidebar .user-footer {

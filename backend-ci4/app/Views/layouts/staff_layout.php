@@ -14,6 +14,13 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
 <div class="d-flex">
     <!-- SIDEBAR -->
     <div class="sidebar" id="adminSidebar">
+        <script>
+            try {
+                if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                    document.getElementById('adminSidebar').classList.add('collapsed');
+                }
+            } catch (e) {}
+        </script>
         <div>
             <div class="brand d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
@@ -23,34 +30,51 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
                         <small style="font-weight:400; font-size:0.65rem; letter-spacing:0.05em;">MILITARY SUPPLY</small>
                     </div>
                 </div>
-                <button id="sidebarToggle" class="btn btn-sm text-white border-0" style="background:none;">
+                <button id="sidebarToggle" class="btn btn-sm text-white border-0" style="background:none;" data-tooltip="Hide sidebar">
                     <i class="bi bi-layout-sidebar fs-5"></i>
                 </button>
             </div>
 
             <div class="nav-section-label">MAIN</div>
             <nav class="sidebar-nav">
-                <a href="<?= site_url('staff/dashboard') ?>" class="nav-link <?= ($active ?? '') === 'dashboard' ? 'active' : '' ?>">
-                    <i class="bi bi-grid"></i>
+                <a href="<?= site_url('staff/dashboard') ?>" class="nav-link <?= ($active ?? '') === 'dashboard' ? 'active' : '' ?>" data-tooltip="Dashboard">
+                    <span class="nav-icon">
+                        <i class="bi bi-grid icon-outline"></i>
+                        <i class="bi bi-grid-fill icon-fill"></i>
+                    </span>
                     <span class="nav-label">Dashboard</span>
                 </a>
-                <a href="<?= site_url('staff/inventory') ?>" class="nav-link <?= ($active ?? '') === 'inventory' ? 'active' : '' ?>">
-                    <i class="bi bi-box-seam"></i>
+                <a href="<?= site_url('staff/inventory') ?>" class="nav-link <?= ($active ?? '') === 'inventory' ? 'active' : '' ?>" data-tooltip="Inventory">
+                    <span class="nav-icon">
+                        <i class="bi bi-box-seam icon-outline"></i>
+                        <i class="bi bi-box-seam-fill icon-fill"></i>
+                    </span>
                     <span class="nav-label">Inventory</span>
                 </a>
-                <a href="<?= site_url('staff/log-transaction') ?>" class="nav-link <?= ($active ?? '') === 'log_transaction' ? 'active' : '' ?>">
-                    <i class="bi bi-clipboard-data"></i>
+                <a href="<?= site_url('staff/log-transaction') ?>" class="nav-link <?= ($active ?? '') === 'log_transaction' ? 'active' : '' ?>" data-tooltip="Log Transaction">
+                    <span class="nav-icon">
+                        <i class="bi bi-clipboard-data icon-outline"></i>
+                        <i class="bi bi-clipboard-data-fill icon-fill"></i>
+                    </span>
                     <span class="nav-label">Log Transaction</span>
                 </a>
-                <a href="<?= site_url('staff/reorder-alerts') ?>" class="nav-link <?= ($active ?? '') === 'reorder_alerts' ? 'active' : '' ?>">
-                    <i class="bi bi-bell"></i>
+                <a href="<?= site_url('staff/reorder-alerts') ?>" class="nav-link <?= ($active ?? '') === 'reorder_alerts' ? 'active' : '' ?>" data-tooltip="Reorder Alerts">
+                    <span class="nav-icon">
+                        <i class="bi bi-box2 icon-outline"></i>
+                        <i class="bi bi-box2-fill icon-fill"></i>
+                        <i class="bi bi-exclamation-triangle-fill nav-icon-badge"></i>
+                    </span>
                     <span class="nav-label">Reorder Alerts</span>
                 </a>
             </nav>
 
             <div class="nav-section-label">SALES</div>
-            <a href="<?= site_url('staff/sales') ?>" class="nav-link <?= ($active ?? '') === 'sales' ? 'active' : '' ?>">
-                <i class="bi bi-receipt"></i> <span class="nav-label">POS &amp; Sales</span>
+            <a href="<?= site_url('staff/sales') ?>" class="nav-link <?= ($active ?? '') === 'sales' ? 'active' : '' ?>" data-tooltip="POS & Sales">
+                <span class="nav-icon">
+                    <i class="bi bi-cart icon-outline"></i>
+                    <i class="bi bi-cart-fill icon-fill"></i>
+                </span>
+                <span class="nav-label">POS &amp; Sales</span>
             </a>
         </div>
 
@@ -62,7 +86,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
                     <small><?= esc(session()->get('role')) ?></small>
                 </div>
             </div>
-            <a href="/logout" class="logout-link" style="color:#d9dcd1;" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
+            <a href="/logout" class="logout-link" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
         </div>
     </div>
 
@@ -91,14 +115,13 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
     const sidebar = document.getElementById('adminSidebar');
     const toggleBtn = document.getElementById('sidebarToggle');
 
-    localStorage.removeItem('sidebarCollapsed');
+    toggleBtn.setAttribute('data-tooltip', sidebar.classList.contains('collapsed') ? 'Show sidebar' : 'Hide sidebar');
 
     toggleBtn.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
-        localStorage.setItem(
-            'sidebarCollapsed',
-            sidebar.classList.contains('collapsed')
-        );
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        toggleBtn.setAttribute('data-tooltip', isCollapsed ? 'Show sidebar' : 'Hide sidebar');
+        localStorage.setItem('sidebarCollapsed', isCollapsed);
     });
 </script>
 </body>

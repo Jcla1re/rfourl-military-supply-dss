@@ -14,6 +14,13 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
 <div class="d-flex">
     <!-- SIDEBAR -->
     <div class="sidebar" id="adminSidebar">
+        <script>
+            try {
+                if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                    document.getElementById('adminSidebar').classList.add('collapsed');
+                }
+            } catch (e) {}
+        </script>
         <div>
             <div class="brand d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
@@ -23,34 +30,50 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
                         <small style="font-weight:400; font-size:0.65rem; letter-spacing:0.05em;">MILITARY SUPPLY</small>
                     </div>
                 </div>
-                <button id="sidebarToggle" class="btn btn-sm text-white border-0" style="background:none;">
+                <button id="sidebarToggle" class="btn btn-sm text-white border-0" style="background:none;" data-tooltip="Hide sidebar">
                     <i class="bi bi-layout-sidebar fs-5"></i>
                 </button>
             </div>
 
             <div class="nav-section-label">MAIN</div>
             <nav class="sidebar-nav">
-                <a href="<?= site_url('supplier/dashboard') ?>" class="nav-link <?= ($active ?? '') === 'dashboard' ? 'active' : '' ?>">
-                    <i class="bi bi-grid"></i>
+                <a href="<?= site_url('supplier/dashboard') ?>" class="nav-link <?= ($active ?? '') === 'dashboard' ? 'active' : '' ?>" data-tooltip="Dashboard">
+                    <span class="nav-icon">
+                        <i class="bi bi-grid icon-outline"></i>
+                        <i class="bi bi-grid-fill icon-fill"></i>
+                    </span>
                     <span class="nav-label">Dashboard</span>
                 </a>
-                <a href="<?= site_url('supplier/new-orders') ?>" class="nav-link <?= ($active ?? '') === 'new_orders' ? 'active' : '' ?>">
-                    <i class="bi bi-clipboard"></i>
+                <a href="<?= site_url('supplier/new-orders') ?>" class="nav-link <?= ($active ?? '') === 'new_orders' ? 'active' : '' ?>" data-tooltip="New Orders">
+                    <span class="nav-icon">
+                        <i class="bi bi-clipboard icon-outline"></i>
+                        <i class="bi bi-clipboard-fill icon-fill"></i>
+                    </span>
                     <span class="nav-label">New Orders</span>
                 </a>
-                <a href="<?= site_url('supplier/deliveries') ?>" class="nav-link <?= ($active ?? '') === 'deliveries' ? 'active' : '' ?>">
-                    <i class="bi bi-truck"></i>
+                <a href="<?= site_url('supplier/deliveries') ?>" class="nav-link <?= ($active ?? '') === 'deliveries' ? 'active' : '' ?>" data-tooltip="Deliveries">
+                    <span class="nav-icon">
+                        <i class="bi bi-truck-front icon-outline"></i>
+                        <i class="bi bi-truck-front-fill icon-fill"></i>
+                    </span>
                     <span class="nav-label">Deliveries</span>
                 </a>
-                <a href="<?= site_url('supplier/completed') ?>" class="nav-link <?= ($active ?? '') === 'completed' ? 'active' : '' ?>">
-                    <i class="bi bi-clipboard-check"></i>
+                <a href="<?= site_url('supplier/completed') ?>" class="nav-link <?= ($active ?? '') === 'completed' ? 'active' : '' ?>" data-tooltip="Completed">
+                    <span class="nav-icon">
+                        <i class="bi bi-clipboard-check icon-outline"></i>
+                        <i class="bi bi-clipboard-check-fill icon-fill"></i>
+                    </span>
                     <span class="nav-label">Completed</span>
                 </a>
             </nav>
 
             <div class="nav-section-label">UPDATES</div>
-            <a href="<?= site_url('supplier/notifications') ?>" class="nav-link <?= ($active ?? '') === 'notifications' ? 'active' : '' ?>">
-                <i class="bi bi-bell"></i> <span class="nav-label">Notifications</span>
+            <a href="<?= site_url('supplier/notifications') ?>" class="nav-link <?= ($active ?? '') === 'notifications' ? 'active' : '' ?>" data-tooltip="Notifications">
+                <span class="nav-icon">
+                    <i class="bi bi-bell icon-outline"></i>
+                    <i class="bi bi-bell-fill icon-fill"></i>
+                </span>
+                <span class="nav-label">Notifications</span>
             </a>
         </div>
 
@@ -62,7 +85,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
                     <small><?= esc(session()->get('role')) ?></small>
                 </div>
             </a>
-            <a href="/logout" class="logout-link" style="color:#d9dcd1;" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
+            <a href="/logout" class="logout-link" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
         </div>
     </div>
 
@@ -95,14 +118,13 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
     const sidebar = document.getElementById('adminSidebar');
     const toggleBtn = document.getElementById('sidebarToggle');
 
-    localStorage.removeItem('sidebarCollapsed');
+    toggleBtn.setAttribute('data-tooltip', sidebar.classList.contains('collapsed') ? 'Show sidebar' : 'Hide sidebar');
 
     toggleBtn.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
-        localStorage.setItem(
-            'sidebarCollapsed',
-            sidebar.classList.contains('collapsed')
-        );
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        toggleBtn.setAttribute('data-tooltip', isCollapsed ? 'Show sidebar' : 'Hide sidebar');
+        localStorage.setItem('sidebarCollapsed', isCollapsed);
     });
 </script>
 </body>
