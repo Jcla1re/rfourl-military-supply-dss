@@ -19,6 +19,9 @@ class DashboardController extends BaseController
         $salesItemModel        = new SalesItemModel();
         $reorderAlertModel     = new ReorderAlertModel();
 
+        // Keep alerts in sync with live inventory (see ReorderAlertModel).
+        $reorderAlertModel->syncFromLiveInventory();
+
         $products    = $productModel->where('is_active', 1)->findAll();
         $totalStock  = array_sum(array_column($products, 'current_stock'));
         $salesToday  = $salesTransactionModel->totalForToday();
@@ -37,7 +40,7 @@ class DashboardController extends BaseController
             ->orderBy('line_total', 'DESC')
             ->findAll(4);
 
-        $maxLine = $itemsSoldToday ? max(array_column($itemsSoldToday, 'line_total')) ?: 1 : 1;
+        $maxLine = $itemsSoldToday ? (max(array_column($itemsSoldToday, 'line_total')) ?: 1) : 1;
 
         $lowStockItems = array_values(array_filter($products, function ($p) use ($productModel) {
             return in_array($productModel->getStatus($p)['label'], ['Low Stock', 'Reorder Now'], true);

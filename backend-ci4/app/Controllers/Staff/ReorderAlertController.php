@@ -4,6 +4,7 @@
 namespace App\Controllers\Staff;
 
 use App\Controllers\BaseController;
+use App\Models\ClusterSegmentModel;
 use App\Models\DssParameterModel;
 use App\Models\NotificationModel;
 use App\Models\PdssComputationModel;
@@ -12,10 +13,11 @@ use App\Models\SupplierModel;
 
 class ReorderAlertController extends BaseController
 {
-    protected $reorderAlertModel;
-    protected $supplierModel;
-    protected $pdssComputationModel;
-    protected $dssParameterModel;
+    protected ReorderAlertModel $reorderAlertModel;
+    protected SupplierModel $supplierModel;
+    protected PdssComputationModel $pdssComputationModel;
+    protected DssParameterModel $dssParameterModel;
+    protected ClusterSegmentModel $clusterSegmentModel;
 
     public function __construct()
     {
@@ -23,10 +25,15 @@ class ReorderAlertController extends BaseController
         $this->supplierModel        = new SupplierModel();
         $this->pdssComputationModel = new PdssComputationModel();
         $this->dssParameterModel    = new DssParameterModel();
+        $this->clusterSegmentModel  = new ClusterSegmentModel();
     }
 
     public function index()
     {
+        // Same live-inventory reconciliation as the admin page, so staff
+        // and admin always see the identical set of critical items.
+        $this->reorderAlertModel->syncFromLiveInventory();
+
         $alerts = $this->reorderAlertModel->openAlerts();
         $dss    = $this->dssParameterModel->current();
 
@@ -36,10 +43,13 @@ class ReorderAlertController extends BaseController
                 : $this->pdssComputationModel->latestFor($alert['item_id']);
 
             $supplier = $alert['supplier_id'] ? $this->supplierModel->find($alert['supplier_id']) : null;
+            $cluster  = $this->clusterSegmentModel->find($alert['item_id']);
 
             $alert['computation']    = $computation;
             $alert['supplier_name']  = $supplier['company_name'] ?? 'Unassigned';
             $alert['lead_time_days'] = $computation['lead_time_days'] ?? ($supplier['lead_time_days'] ?? null);
+            $alert['service_level']  = $cluster['service_level'] ?? ($dss['service_level_target'] ?? null);
+            $alert['abc_class']      = $cluster['abc_class'] ?? null;
         }
         unset($alert);
 
@@ -61,7 +71,7 @@ class ReorderAlertController extends BaseController
         return view('staff/reorder_alerts', $data);
     }
 
-    public function notifyAdmin($alertId)
+    public function notifyAdmin(string $alertId)
     {
         $alert = $this->reorderAlertModel->find((int) $alertId);
 

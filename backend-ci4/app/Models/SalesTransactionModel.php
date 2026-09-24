@@ -43,8 +43,34 @@ class SalesTransactionModel extends Model
 
     public function weeklyTotals(): array
     {
+        return $this->dailyTotalsRange(6, 0);
+    }
+
+    /**
+     * Same 7-day shape as weeklyTotals(), but for the 7 days before that —
+     * feeds the "Last Week" comparison line on the dashboard's weekly chart
+     * (previously hardcoded to zeros and never actually computed).
+     */
+    public function lastWeekTotals(): array
+    {
+        return $this->dailyTotalsRange(13, 7);
+    }
+
+    /**
+     * Daily revenue totals for the range [today - $fromDaysAgo, today - $toDaysAgo],
+     * inclusive, oldest first. Uses DateTime arithmetic throughout (rather
+     * than concatenating possibly-negative numbers into strtotime()
+     * strings) so the upper bound can't silently land on the wrong day.
+     */
+    private function dailyTotalsRange(int $fromDaysAgo, int $toDaysAgo): array
+    {
+        $rangeStart = (new \DateTime('today'))->modify("-{$fromDaysAgo} days");
+        $rangeEnd   = (new \DateTime('today'))->modify("-{$toDaysAgo} days");
+        $upperBound = (clone $rangeEnd)->modify('+1 day');
+
         $rows = $this->select("DATE(sale_date) as d, SUM(total_amount) as total")
-            ->where('sale_date >=', date('Y-m-d', strtotime('-6 days')))
+            ->where('sale_date >=', $rangeStart->format('Y-m-d'))
+            ->where('sale_date <', $upperBound->format('Y-m-d'))
             ->groupBy('d')
             ->orderBy('d', 'ASC')
             ->findAll();
@@ -56,10 +82,12 @@ class SalesTransactionModel extends Model
 
         $labels = [];
         $data   = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = date('Y-m-d', strtotime("-{$i} days"));
-            $labels[] = date('D', strtotime($date));
+        $cursor = clone $rangeStart;
+        while ($cursor <= $rangeEnd) {
+            $date = $cursor->format('Y-m-d');
+            $labels[] = $cursor->format('D');
             $data[]   = $totals[$date] ?? 0;
+            $cursor->modify('+1 day');
         }
 
         return ['labels' => $labels, 'data' => $data];

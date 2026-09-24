@@ -57,6 +57,14 @@ class ProductModel extends Model
         $stock = (int) $product['current_stock'];
         $rop   = (int) ($product['manual_rop_warning'] ?? 0);
 
+        // Zero (or negative) on-hand stock is always a reorder condition,
+        // regardless of ROP — an item that has never sold gets ROP=0 from
+        // the DSS engine, but that must never be read as "safe to be at
+        // zero units." Checking this first prevents a literal stockout
+        // from ever being displayed as "In Stock".
+        if ($stock <= 0) {
+            return ['label' => 'Reorder Now', 'class' => 'status-reorder'];
+        }
         if ($rop <= 0) {
             return ['label' => 'In Stock', 'class' => 'status-in-stock'];
         }

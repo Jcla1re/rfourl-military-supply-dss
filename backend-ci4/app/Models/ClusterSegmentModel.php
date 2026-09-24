@@ -16,6 +16,9 @@ class ClusterSegmentModel extends Model
         'item_id',
         'cluster_label',
         'cluster_name',
+        'abc_class',
+        'service_level',
+        'z_score',
     ];
 
     protected $useTimestamps = false;

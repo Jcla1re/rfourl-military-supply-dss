@@ -31,6 +31,27 @@ def fast_slow_items():
     return fast + slow
 
 
+def three_tier_items():
+    # Three tight, well-separated groups so K=3 clustering is unambiguous
+    # regardless of KMeans' random initialization.
+    fast = [
+        {"item_id": f"ITM-F{i}", "unit_cost": 100, "avg_daily_demand": 20 + i * 0.1,
+         "demand_std_dev": 4, "lead_time_days": 5}
+        for i in range(3)
+    ]
+    medium = [
+        {"item_id": f"ITM-M{i}", "unit_cost": 100, "avg_daily_demand": 5 + i * 0.1,
+         "demand_std_dev": 1, "lead_time_days": 7}
+        for i in range(3)
+    ]
+    slow = [
+        {"item_id": f"ITM-S{i}", "unit_cost": 100, "avg_daily_demand": 0.1 + i * 0.01,
+         "demand_std_dev": 0.05, "lead_time_days": 10}
+        for i in range(3)
+    ]
+    return fast + medium + slow
+
+
 def test_health(client):
     resp = client.get("/health")
     assert resp.status_code == 200
@@ -66,3 +87,34 @@ def test_cluster_separates_fast_and_slow_movers(client):
     assert len(slow_names) == 1
     assert fast_names != slow_names
     assert len(body["centers"]) == 2
+
+
+def test_cluster_assigns_abc_class_and_z_score_for_three_tiers(client):
+    resp = client.post("/cluster", json={"items": three_tier_items(), "n_clusters": 3})
+    assert resp.status_code == 200
+
+    clusters = {c["item_id"]: c for c in resp.get_json()["clusters"]}
+
+    # Highest-demand tier -> Class A / 95% service level / Z=1.645, and so on.
+    for i in range(3):
+        assert clusters[f"ITM-F{i}"]["abc_class"] == "A"
+        assert clusters[f"ITM-F{i}"]["service_level"] == 0.95
+        assert clusters[f"ITM-F{i}"]["z_score"] == 1.645
+
+        assert clusters[f"ITM-M{i}"]["abc_class"] == "B"
+        assert clusters[f"ITM-M{i}"]["service_level"] == 0.90
+        assert clusters[f"ITM-M{i}"]["z_score"] == 1.282
+
+        assert clusters[f"ITM-S{i}"]["abc_class"] == "C"
+        assert clusters[f"ITM-S{i}"]["service_level"] == 0.85
+        assert clusters[f"ITM-S{i}"]["z_score"] == 1.036
+
+
+def test_cluster_leaves_abc_class_null_when_not_three_clusters(client):
+    resp = client.post("/cluster", json={"items": fast_slow_items(), "n_clusters": 2})
+    assert resp.status_code == 200
+
+    for c in resp.get_json()["clusters"]:
+        assert c["abc_class"] is None
+        assert c["service_level"] is None
+        assert c["z_score"] is None

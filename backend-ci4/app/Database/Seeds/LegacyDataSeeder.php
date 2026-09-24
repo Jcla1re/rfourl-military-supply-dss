@@ -306,6 +306,7 @@ class LegacyDataSeeder extends Seeder
             'service_level_target'  => 95.00,
             'z_score'               => 1.645,
             'demand_lookback_days'  => 90,
+            'minimum_order_qty'     => 5,
             'updated_by'            => 1,
         ]);
     }

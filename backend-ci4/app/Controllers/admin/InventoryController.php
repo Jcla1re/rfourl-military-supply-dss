@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\InventoryLogModel;
+use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
 use App\Models\SupplierModel;
 
@@ -12,12 +13,14 @@ class InventoryController extends BaseController
     protected $productModel;
     protected $supplierModel;
     protected $inventoryLogModel;
+    protected $pdssComputationModel;
 
     public function __construct()
     {
         $this->productModel     = new ProductModel();
         $this->supplierModel    = new SupplierModel();
         $this->inventoryLogModel = new InventoryLogModel();
+        $this->pdssComputationModel = new PdssComputationModel();
     }
 
     public function index()
@@ -64,8 +67,16 @@ class InventoryController extends BaseController
             ->orderBy('item_name', 'ASC')
             ->findAll($perPage, ($page - 1) * $perPage);
 
+        $eoqByItem = [];
+        if ($products) {
+            foreach ($this->pdssComputationModel->latestPerItem() as $c) {
+                $eoqByItem[$c['item_id']] = $c['eoq_value'];
+            }
+        }
+
         foreach ($products as &$p) {
-            $p['status'] = $this->productModel->getStatus($p);
+            $p['status']    = $this->productModel->getStatus($p);
+            $p['eoq_value'] = $eoqByItem[$p['item_id']] ?? null;
         }
         unset($p);
 

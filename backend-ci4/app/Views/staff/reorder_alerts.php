@@ -47,11 +47,11 @@
         <div class="ra-summary">
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-exclamation-triangle"></i></span>
-                <div><span>Critical (At ROP)</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
+                <div><span>Out of Stock (Critical)</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-lightning-fill"></i></span>
-                <div><span>Low Stock Warning</span><strong><?= esc($lowStockCount ?? 0) ?></strong></div>
+                <div><span>Still In Stock, At Reorder Point</span><strong><?= esc($lowStockCount ?? 0) ?></strong></div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-check-lg"></i></span>
@@ -102,7 +102,7 @@
                         <strong class="title">Probabilistic Basis</strong>
                         <div class="ra-basis-grid">
                             <span>Avg Daily Demand:<b><?= esc($computation['avg_daily_demand'] ?? '—') ?></b></span>
-                            <span>Service Level:<b><?= esc($dss['service_level_target'] ?? '—') ?>%</b></span>
+                            <span>Service Level:<b><?= esc($alert['service_level'] ?? $dss['service_level_target'] ?? '—') ?>%<?= $alert['abc_class'] ? ' (Class ' . esc($alert['abc_class']) . ')' : '' ?></b></span>
                             <span>Safety Stock:<b><?= esc($computation['safety_stock'] ?? '—') ?></b></span>
                         </div>
                     </div>

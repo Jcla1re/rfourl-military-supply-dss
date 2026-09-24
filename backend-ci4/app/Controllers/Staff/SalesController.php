@@ -112,6 +112,9 @@ class SalesController extends BaseController
 
         $receiptNo = $this->salesTransactionModel->generateReceiptNo();
 
+        $db = db_connect();
+        $db->transStart();
+
         $salesId = $this->salesTransactionModel->insert([
             'receipt_no'     => $receiptNo,
             'user_id'        => session()->get('user_id'),
@@ -144,6 +147,12 @@ class SalesController extends BaseController
                 null,
                 'Ref: sales_id=' . $salesId
             );
+        }
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return redirect()->to('/staff/sales')->with('error', 'Checkout failed and was rolled back. Please try again.');
         }
 
         $vat = round($total - ($total / 1.03), 2);

@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Models\ClusterSegmentModel;
 use App\Models\DssParameterModel;
 use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
@@ -16,6 +17,7 @@ class ReorderAlertController extends BaseController
     protected $supplierModel;
     protected $pdssComputationModel;
     protected $dssParameterModel;
+    protected $clusterSegmentModel;
 
     public function __construct()
     {
@@ -24,10 +26,16 @@ class ReorderAlertController extends BaseController
         $this->supplierModel        = new SupplierModel();
         $this->pdssComputationModel = new PdssComputationModel();
         $this->dssParameterModel    = new DssParameterModel();
+        $this->clusterSegmentModel  = new ClusterSegmentModel();
     }
 
     public function index()
     {
+        // Reconcile against live inventory first so this page always
+        // matches what Inventory shows right now, not whatever dss:run
+        // last computed (stock changes constantly via POS/restocks).
+        $this->reorderAlertModel->syncFromLiveInventory();
+
         $alerts = $this->reorderAlertModel->openAlerts();
         $dss    = $this->dssParameterModel->current();
 
@@ -37,10 +45,15 @@ class ReorderAlertController extends BaseController
                 : $this->pdssComputationModel->latestFor($alert['item_id']);
 
             $supplier = $alert['supplier_id'] ? $this->supplierModel->find($alert['supplier_id']) : null;
+            $cluster  = $this->clusterSegmentModel->find($alert['item_id']);
 
             $alert['computation']    = $computation;
             $alert['supplier_name']  = $supplier['company_name'] ?? 'Unassigned';
             $alert['lead_time_days'] = $computation['lead_time_days'] ?? ($supplier['lead_time_days'] ?? null);
+            // This item's own Class A/B/C service level, not the admin's
+            // global default — items are no longer all on one shared Z-score.
+            $alert['service_level']  = $cluster['service_level'] ?? ($dss['service_level_target'] ?? null);
+            $alert['abc_class']      = $cluster['abc_class'] ?? null;
         }
         unset($alert);
 
@@ -67,6 +80,8 @@ class ReorderAlertController extends BaseController
 
     public function report()
     {
+        $this->reorderAlertModel->syncFromLiveInventory();
+
         $products = $this->productModel->where('is_active', 1)->orderBy('item_name', 'ASC')->findAll();
         $computations = [];
         foreach ($this->pdssComputationModel->latestPerItem() as $c) {
@@ -85,6 +100,9 @@ class ReorderAlertController extends BaseController
                 'status'       => $status['label'],
                 'safety_stock' => $computations[$p['item_id']]['safety_stock'] ?? null,
                 'eoq'          => $computations[$p['item_id']]['eoq_value'] ?? null,
+                'z_score'      => $computations[$p['item_id']]['service_level_z'] ?? null,
+                'supplier_id'  => $p['supplier_id'] ?? null,
+                'unit_cost'    => $p['unit_cost'] ?? 0,
             ];
         }
 
@@ -94,6 +112,7 @@ class ReorderAlertController extends BaseController
             'title'         => 'Procurement Report',
             'active'        => 'reorder_alerts',
             'rows'          => $rows,
+            'suppliers'     => $this->supplierModel->where('is_active', 1)->findAll(),
             'dss'           => $this->dssParameterModel->current(),
             'criticalCount' => count(array_filter($alerts, fn ($a) => (int) $a['stock_at_trigger'] <= 0)),
             'lowStockCount' => count($alerts),
@@ -104,17 +123,38 @@ class ReorderAlertController extends BaseController
         return view('admin/procurement_report', $data);
     }
 
+    /**
+     * Bulk-dismisses every currently pending (Active/Acknowledged) alert
+     * without creating a stock order for it — for false positives or
+     * stock the admin already corrected by hand.
+     */
     public function resolveAll()
     {
-        $this->reorderAlertModel->where('status', 'Open')->set(['status' => 'Resolved'])->update();
-        session()->setFlashdata('success', 'All reorder alerts resolved.');
+        $this->reorderAlertModel->whereIn('status', ReorderAlertModel::PENDING_STATUSES)->set(['status' => 'Dismissed'])->update();
+        session()->setFlashdata('success', 'All pending reorder alerts dismissed.');
         return redirect()->to('/admin/reorder-alerts');
     }
 
-    public function resolve($alertId)
+    /**
+     * Marks a single alert seen/acknowledged without ordering or
+     * dismissing it yet.
+     */
+    public function acknowledge($alertId)
     {
-        $this->reorderAlertModel->update((int) $alertId, ['status' => 'Resolved']);
-        session()->setFlashdata('success', 'Alert resolved.');
+        $this->reorderAlertModel->update((int) $alertId, ['status' => 'Acknowledged']);
+        session()->setFlashdata('success', 'Alert acknowledged.');
+        return redirect()->to('/admin/reorder-alerts');
+    }
+
+    /**
+     * Closes a single alert without ordering (false positive, stock
+     * corrected manually, etc.) — distinct from Fulfilled, which only
+     * happens when a linked stock order is actually delivered.
+     */
+    public function dismiss($alertId)
+    {
+        $this->reorderAlertModel->update((int) $alertId, ['status' => 'Dismissed']);
+        session()->setFlashdata('success', 'Alert dismissed.');
         return redirect()->to('/admin/reorder-alerts');
     }
 

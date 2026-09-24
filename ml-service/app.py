@@ -1,6 +1,13 @@
 from flask import Flask, jsonify, request
 
-from config import CLUSTER_NAMES_BY_RANK, FEATURES, K
+from config import (
+    ABC_CLASS_BY_RANK,
+    CLUSTER_NAMES_BY_RANK,
+    FEATURES,
+    K,
+    SERVICE_LEVEL_BY_CLASS,
+    Z_SCORE_MAP,
+)
 from kmeans_model import KMeansClusterModel
 from preprocessing import normalize_features, to_feature_frame
 
@@ -27,6 +34,12 @@ def cluster_inventory():
     Returns each item's cluster assignment, ranked and named by demand
     level (highest-demand cluster = "Fast-Moving", etc.), plus the
     cluster centroids in original (unscaled) units.
+
+    When n_clusters == 3 (the standard scheme), each item also gets an
+    ABC policy tier (abc_class), its target service_level, and the
+    corresponding z_score — i.e. the K-Means output directly drives the
+    service level used downstream in Safety Stock / Reorder Point, not
+    just a descriptive label.
     """
     payload = request.get_json(silent=True) or {}
     items = payload.get("items", [])
@@ -51,16 +64,24 @@ def cluster_inventory():
     order = sorted(range(n_clusters), key=lambda c: centers_scaled[c][demand_idx], reverse=True)
     rank_of_cluster = {cluster_id: rank for rank, cluster_id in enumerate(order)}
 
-    names = CLUSTER_NAMES_BY_RANK if n_clusters == len(CLUSTER_NAMES_BY_RANK) else None
+    names        = CLUSTER_NAMES_BY_RANK if n_clusters == len(CLUSTER_NAMES_BY_RANK) else None
+    abc_classes  = ABC_CLASS_BY_RANK if n_clusters == len(ABC_CLASS_BY_RANK) else None
 
     clusters = []
     for idx, label in enumerate(labels):
         rank = rank_of_cluster[int(label)]
+        abc_class     = abc_classes[rank] if abc_classes else None
+        service_level = SERVICE_LEVEL_BY_CLASS.get(abc_class) if abc_class else None
+        z_score       = Z_SCORE_MAP.get(service_level) if service_level is not None else None
+
         clusters.append({
             "item_id": items[idx].get("item_id"),
             "cluster_label": int(label),
             "cluster_rank": rank,
             "cluster_name": names[rank] if names else f"Cluster {rank}",
+            "abc_class": abc_class,
+            "service_level": service_level,
+            "z_score": z_score,
         })
 
     centers_original = scaler.inverse_transform(centers_scaled)

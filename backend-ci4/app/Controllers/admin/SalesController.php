@@ -107,6 +107,9 @@ class SalesController extends BaseController
 
         $total = max(0, $subtotal - $discount);
 
+        $db = db_connect();
+        $db->transStart();
+
         $salesId = $this->salesTransactionModel->insert([
             'receipt_no'     => $this->salesTransactionModel->generateReceiptNo(),
             'user_id'        => session()->get('user_id'),
@@ -139,6 +142,12 @@ class SalesController extends BaseController
                 null,
                 'Ref: sales_id=' . $salesId
             );
+        }
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return redirect()->to('/admin/sales')->with('error', 'Checkout failed and was rolled back. Please try again.');
         }
 
         return redirect()->to('/admin/sales')->with('success', 'Sale completed and receipt printed.');

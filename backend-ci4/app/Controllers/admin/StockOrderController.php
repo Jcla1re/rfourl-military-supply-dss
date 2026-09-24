@@ -179,7 +179,7 @@ class StockOrderController extends BaseController
         }
 
         if ($alertId) {
-            $this->reorderAlertModel->update((int) $alertId, ['status' => 'Resolved']);
+            $this->reorderAlertModel->update((int) $alertId, ['status' => 'Ordered', 'so_id' => $soId]);
         }
 
         return redirect()->to('/admin/orders')->with('success', "Stock order {$soId} created and sent to supplier.");

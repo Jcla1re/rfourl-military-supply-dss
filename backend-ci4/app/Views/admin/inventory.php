@@ -17,6 +17,8 @@ $filterSearch = $search ?? '';
 $categories = $categories ?? \App\Models\ProductModel::CATEGORIES;
 $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
 $suppliers = $suppliers ?? [];
+$lowStockCount = $lowStockCount ?? 0;
+$totalItems = $totalItems ?? 0;
 ?>
 
 <style>
@@ -97,9 +99,9 @@ $suppliers = $suppliers ?? [];
 
         <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
             <div class="d-flex flex-wrap gap-3">
-                <span class="stat-pill green"><i class="bi bi-check-square-fill"></i> In Stock: <?= esc($inStockCount ?? 0) ?></span>
-                <span class="stat-pill amber"><i class="bi bi-lightning-fill"></i> Low Stock: <?= esc($lowStockCount ?? 0) ?></span>
-                <span class="stat-pill red"><i class="bi bi-exclamation-triangle-fill"></i> Reorder Now: <?= esc($reorderCount ?? 0) ?></span>
+                <span class="stat-pill green"><i class="bi bi-check-square-fill"></i> In Stock: <?= esc((string) ($inStockCount ?? 0)) ?></span>
+                <span class="stat-pill amber"><i class="bi bi-lightning-fill"></i> Low Stock: <?= esc((string) (is_array($lowStockCount ?? null) ? count((array) ($lowStockCount ?? [])) : ($lowStockCount ?? 0))) ?></span>
+                <span class="stat-pill red"><i class="bi bi-exclamation-triangle-fill"></i> Reorder Now: <?= esc((string) (isset($reorderCount) ? (is_array($reorderCount) ? count($reorderCount) : $reorderCount) : 0)) ?></span>
             </div>
         </div>
 
@@ -132,7 +134,7 @@ $suppliers = $suppliers ?? [];
         </div>
 
         <div class="underline-tabs">
-            <a href="<?= site_url('admin/inventory') ?>" class="<?= $filterCategory === 'All' ? 'active' : '' ?>">All Items (<?= esc($totalItems ?? 0) ?>)</a>
+            <a href="<?= site_url('admin/inventory') ?>" class="<?= $filterCategory === 'All' ? 'active' : '' ?>">All Items (<?= esc((string) (is_array($totalItems ?? null) ? count((array) $totalItems) : ($totalItems ?? 0))) ?>)</a>
             <?php foreach ($categories as $itemCategory): ?>
                 <a href="<?= site_url('admin/inventory') . '?category=' . urlencode($itemCategory) ?>" class="<?= $filterCategory === $itemCategory ? 'active' : '' ?>"><?= esc($itemCategory) ?></a>
             <?php endforeach; ?>
@@ -147,6 +149,7 @@ $suppliers = $suppliers ?? [];
                         <th>Type</th>
                         <th>On Hand</th>
                         <th>Rop</th>
+                        <th>EOQ</th>
                         <th>Stock Level</th>
                         <th>Status</th>
                         <th>Last Updated</th>
@@ -174,6 +177,7 @@ $suppliers = $suppliers ?? [];
                                 <td><?= esc($product['category'] ?? '') ?></td>
                                 <td><?= esc($product['current_stock'] ?? 0) ?></td>
                                 <td><?= esc($product['manual_rop_warning'] ?? 0) ?></td>
+                                <td><?= $product['eoq_value'] !== null ? esc($product['eoq_value']) : '—' ?></td>
                                 <td>
                                     <div class="stock-bar <?= $pillClass ?>"><span style="width: <?= $pct ?>%"></span></div>
                                 </td>
@@ -181,25 +185,35 @@ $suppliers = $suppliers ?? [];
                                 <td><?= esc(date('M j, Y', strtotime($product['updated_at'] ?? 'now'))) ?></td>
                                 <td class="text-end">
                                     <?php if ($itemStatus === 'Reorder Now'): ?>
-                                        <a href="<?= site_url('admin/reorder-alerts') ?>" class="inv-action-btn">Order</a>
+                                        <button type="button"
+                                                class="inv-action-btn open-order-modal"
+                                                data-item-id="<?= esc($product['item_id']) ?>"
+                                                data-item-name="<?= esc($product['item_name'] ?? '') ?>"
+                                                data-supplier-id="<?= esc($product['supplier_id'] ?? '') ?>"
+                                                data-unit-cost="<?= esc($product['unit_cost'] ?? 0) ?>"
+                                                data-recommended-eoq="<?= esc($product['eoq_value'] ?? 1) ?>">
+                                            Order
+                                        </button>
                                     <?php endif; ?>
                                     <button type="button" class="inv-more-btn edit-row" data-item="<?= esc(json_encode($product), 'attr') ?>">&hellip;</button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="9" class="text-center py-4">No inventory items found.</td></tr>
+                        <tr><td colspan="10" class="text-center py-4">No inventory items found.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
 
+        <?php $totalPages = max(1, (int) ($totalPages ?? 1)); ?>
         <div class="d-flex justify-content-between align-items-center mt-3">
-            <span class="text-muted small">Showing <?= count($products ?? []) ?> of <?= esc($totalItems ?? 0) ?> Items</span>
+            <span class="text-muted small">Showing <?= count($products ?? []) ?> of <?= esc((string) ($totalItems ?? 0)) ?> Items</span>
             <?php if (($totalPages ?? 1) > 1): ?>
                 <div class="admin-pagination">
                     <?php
-                    $prevPage = max(1, (int) $currentPage - 1);
+                    $currentPage = max(1, (int) ($currentPage ?? 1));
+                    $prevPage = max(1, $currentPage - 1);
                     $nextPage = min((int) $totalPages, (int) $currentPage + 1);
                     $params = $_GET;
                     $params['page'] = $prevPage;
@@ -293,6 +307,98 @@ $suppliers = $suppliers ?? [];
 <form id="deleteForm" method="post" style="display:none;">
     <?= csrf_field() ?>
 </form>
+
+<div class="order-modal" id="orderModal">
+    <div class="order-modal-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0">New Stock Order</h3>
+            <button type="button" class="btn-close close-order-modal"></button>
+        </div>
+
+        <form method="post" action="<?= site_url('admin/orders/store') ?>">
+            <?= csrf_field() ?>
+            <input type="hidden" name="item_id[]" id="orderItemId">
+
+            <div class="order-form-grid">
+                <div class="order-field">
+                    <label>Item</label>
+                    <input id="orderItemName" readonly>
+                </div>
+
+                <div class="order-field">
+                    <label>Supplier</label>
+                    <select name="supplier_id" id="orderSupplierId" required>
+                        <option value="">Select Supplier...</option>
+                        <?php foreach ($suppliers as $s): ?>
+                            <option value="<?= esc($s['supplier_id']) ?>"><?= esc($s['company_name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="order-field">
+                    <label>Item Quantity</label>
+                    <input name="quantity[]" id="orderQuantity" type="number" min="1" value="1" required>
+                </div>
+
+                <div class="order-field">
+                    <label>Price Per Item (₱)</label>
+                    <input name="unit_price[]" id="orderUnitPrice" type="number" min="0" step="0.01" value="0" required>
+                </div>
+
+                <div class="order-field">
+                    <label>Priority</label>
+                    <select name="priority">
+                        <option value="Urgent">Urgent</option>
+                        <option value="Order" selected>Order</option>
+                        <option value="Planned">Planned</option>
+                    </select>
+                </div>
+
+                <div class="order-field">
+                    <label>Expected Delivery Date</label>
+                    <input name="expected_delivery_date" type="date">
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-secondary close-order-modal">Cancel</button>
+                <button type="submit" class="btn btn-success">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.order-modal {
+    position: fixed; inset: 0; z-index: 1000; display: none;
+    align-items: center; justify-content: center; background: rgba(0,0,0,.4);
+}
+.order-modal.show { display: flex; }
+.order-modal-card { width: min(760px, 92vw); max-height: 90vh; overflow-y: auto; padding: 26px; border-radius: 14px; background: #fff; }
+.order-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.order-field { display: flex; flex-direction: column; gap: 6px; }
+.order-field input, .order-field select { padding: 12px; border: 1px solid #ccc; border-radius: 7px; }
+@media (max-width: 700px) { .order-form-grid { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+const orderModal = document.getElementById('orderModal');
+
+document.querySelectorAll('.open-order-modal').forEach(button => {
+    button.addEventListener('click', () => {
+        document.getElementById('orderItemId').value = button.dataset.itemId || '';
+        document.getElementById('orderItemName').value = button.dataset.itemName || '';
+        document.getElementById('orderSupplierId').value = button.dataset.supplierId || '';
+        document.getElementById('orderQuantity').value = button.dataset.recommendedEoq || 1;
+        document.getElementById('orderUnitPrice').value = button.dataset.unitCost || 0;
+        orderModal.classList.add('show');
+    });
+});
+
+document.querySelectorAll('.close-order-modal').forEach(button => {
+    button.addEventListener('click', () => orderModal.classList.remove('show'));
+});
+</script>
 
 <script>
 const itemModal = document.getElementById('itemModal');

@@ -18,6 +18,7 @@ class DssParameterModel extends Model
         'service_level_target',
         'z_score',
         'demand_lookback_days',
+        'minimum_order_qty',
         'updated_by',
     ];
 
@@ -29,6 +30,7 @@ class DssParameterModel extends Model
         'service_level_target'   => 'required|numeric',
         'z_score'                => 'required|numeric',
         'demand_lookback_days'   => 'required|integer',
+        'minimum_order_qty'      => 'required|integer|greater_than[0]',
     ];
 
     /**
@@ -44,6 +46,7 @@ class DssParameterModel extends Model
             'service_level_target'   => 95,
             'z_score'                => 1.645,
             'demand_lookback_days'   => 90,
+            'minimum_order_qty'      => 5,
         ];
     }
 }

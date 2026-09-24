@@ -45,6 +45,10 @@ $dss = $dss ?? [];
 .ra-basis-grid { display: flex; flex-wrap: wrap; gap: 24px; font-size: 14px; }
 .ra-basis-grid b { margin-left: 6px; }
 
+.ra-card-actions { display: flex; gap: 8px; padding: 12px 20px 0; }
+.ra-card-actions form { margin: 0; }
+.ra-status-badge { display: inline-flex; align-items: center; background: #eef3ee; color: #3d5230; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+
 @media (max-width: 700px) { .ra-stats { grid-template-columns: 1fr; } }
 </style>
 
@@ -56,22 +60,23 @@ $dss = $dss ?? [];
         <div class="ra-summary">
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-exclamation-triangle"></i></span>
-                <div><span>Critical (At ROP)</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
+                <div><span>Out of Stock (Critical)</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-lightning-fill"></i></span>
-                <div><span>Low Stock Warning</span><strong><?= esc($lowStockCount ?? 0) ?></strong></div>
+                <div><span>Still In Stock, At Reorder Point</span><strong><?= esc($lowStockCount ?? 0) ?></strong></div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-check-lg"></i></span>
                 <div><span>Received This Week</span><strong><?= esc($receivedCount ?? 0) ?></strong></div>
             </div>
         </div>
+        <p class="text-muted small mb-3">Out of Stock + Still In Stock, At Reorder Point together equal Inventory's "Reorder Now" count. This page's "At Reorder Point" is unrelated to Inventory's separate "Low Stock" tier (items above ROP but within a 1.5&times; buffer) — those don't raise an alert yet.</p>
 
         <?php if (!empty($alerts)): ?>
-            <form method="post" action="<?= site_url('admin/reorder-alerts/resolve-all') ?>">
+            <form method="post" action="<?= site_url('admin/reorder-alerts/resolve-all') ?>" onsubmit="return confirm('Dismiss every pending alert without creating orders for them?');">
                 <?= csrf_field() ?>
-                <button type="submit" class="btn btn-success">Mark All Resolved</button>
+                <button type="submit" class="btn btn-success">Dismiss All Pending</button>
             </form>
         <?php endif; ?>
 
@@ -101,6 +106,21 @@ $dss = $dss ?? [];
                         </button>
                     </div>
 
+                    <div class="ra-card-actions">
+                        <?php if (($alert['status'] ?? 'Active') === 'Acknowledged'): ?>
+                            <span class="ra-status-badge">Acknowledged</span>
+                        <?php else: ?>
+                            <form method="post" action="<?= site_url('admin/reorder-alerts/acknowledge/' . $alert['alert_id']) ?>">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Acknowledge</button>
+                            </form>
+                        <?php endif; ?>
+                        <form method="post" action="<?= site_url('admin/reorder-alerts/dismiss/' . $alert['alert_id']) ?>" onsubmit="return confirm('Dismiss this alert without ordering?');">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-sm btn-outline-dark">Dismiss</button>
+                        </form>
+                    </div>
+
                     <div class="ra-stats">
                         <div class="ra-stat-box stock">
                             <span>Current Stock</span>
@@ -123,7 +143,7 @@ $dss = $dss ?? [];
                         <strong class="title">Probabilistic Basis</strong>
                         <div class="ra-basis-grid">
                             <span>Avg Daily Demand:<b><?= esc($computation['avg_daily_demand'] ?? '—') ?></b></span>
-                            <span>Service Level:<b><?= esc($dss['service_level_target'] ?? '—') ?>%</b></span>
+                            <span>Service Level:<b><?= esc($alert['service_level'] ?? $dss['service_level_target'] ?? '—') ?>%<?= $alert['abc_class'] ? ' (Class ' . esc($alert['abc_class']) . ')' : '' ?></b></span>
                             <span>Safety Stock:<b><?= esc($computation['safety_stock'] ?? '—') ?></b></span>
                         </div>
                     </div>

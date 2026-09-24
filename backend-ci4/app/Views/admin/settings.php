@@ -289,18 +289,24 @@ $tabs = [
                     <div class="set-card">
                         <h5 class="fw-bold mb-3">ROP Parameters</h5>
                         <div class="set-field mb-3">
-                            <label>Service Level Target (%)</label>
+                            <label>Default Service Level Target (%)</label>
                             <input name="service_level_target" type="number" step="0.01" min="0" max="100" value="<?= esc($dss['service_level_target'] ?? 95) ?>" required>
-                            <small class="text-muted">Probability of not stocking out (Z = <?= esc($dss['z_score'] ?? 1.645) ?> at <?= esc($dss['service_level_target'] ?? 95) ?>%)</small>
+                            <small class="text-muted">Probability of not stocking out (Z = <?= esc($dss['z_score'] ?? 1.645) ?> at <?= esc($dss['service_level_target'] ?? 95) ?>%). Used only as a fallback — each item normally gets its own service level (95% / 90% / 85%) from its K-Means Class A/B/C.</small>
                         </div>
                         <div class="set-field mb-2">
-                            <label>Z-Score</label>
+                            <label>Default Z-Score</label>
                             <input name="z_score" type="number" step="0.001" value="<?= esc($dss['z_score'] ?? 1.645) ?>" required>
+                            <small class="text-muted">Applied when an item has no K-Means classification yet (e.g. clustering service unreachable and no cached assignment).</small>
                         </div>
                         <div class="set-field">
                             <label>Demand Lookback Period</label>
                             <input name="demand_lookback_days" type="number" min="1" value="<?= esc($dss['demand_lookback_days'] ?? 90) ?>" required>
                             <small class="text-muted">How many days of past sales are used to compute avg demand.</small>
+                        </div>
+                        <div class="set-field">
+                            <label>Minimum Order Quantity</label>
+                            <input name="minimum_order_qty" type="number" min="1" value="<?= esc($dss['minimum_order_qty'] ?? 5) ?>" required>
+                            <small class="text-muted">EOQ floor. An item with no recorded demand (e.g. out of stock all period, or newly added) computes EOQ = 0 by formula alone — this ensures a reorder is still recommended.</small>
                         </div>
                         <div class="dss-formula">ROP = d × L + Safety stock &middot; SS = Z × &sigma;d × √L</div>
                     </div>

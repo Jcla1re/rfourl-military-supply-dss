@@ -18,7 +18,12 @@ class DashboardController extends BaseController
         $salesItemModel        = new SalesItemModel();
         $reorderAlertModel     = new ReorderAlertModel();
 
-        $weekly = $salesTransactionModel->weeklyTotals();
+        // Keep the "low stock" count in sync with live inventory rather
+        // than whatever dss:run last computed (see ReorderAlertModel).
+        $reorderAlertModel->syncFromLiveInventory();
+
+        $weekly     = $salesTransactionModel->weeklyTotals();
+        $lastWeekly = $salesTransactionModel->lastWeekTotals();
 
         $categoryCounts = $productModel
             ->select('category, COUNT(*) as total')
@@ -31,11 +36,11 @@ class DashboardController extends BaseController
             'pageTitle'      => 'Dashboard',
             'active'         => 'dashboard',
             'totalStock'     => array_sum(array_column($productModel->where('is_active', 1)->findAll(), 'current_stock')),
-            'lowStockCount'  => $reorderAlertModel->where('status', 'Open')->countAllResults(),
+            'lowStockCount'  => $reorderAlertModel->pendingCount(),
             'salesToday'     => $salesTransactionModel->totalForToday(),
             'weekLabels'     => $weekly['labels'],
             'weekData'       => $weekly['data'],
-            'lastWeekData'   => array_fill(0, 7, 0),
+            'lastWeekData'   => $lastWeekly['data'],
             'stockTrendPct'  => '0%',
             'salesTrendPct'  => '0%',
             'seasonLabels'   => array_column($categoryCounts, 'category'),

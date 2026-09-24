@@ -43,6 +43,7 @@ class SettingsController extends BaseController
             'service_level_target'  => 'required|numeric|greater_than[0]|less_than_equal_to[100]',
             'z_score'               => 'required|numeric',
             'demand_lookback_days'  => 'required|integer|greater_than[0]',
+            'minimum_order_qty'     => 'required|integer|greater_than[0]',
         ];
 
         if (! $this->validate($rules)) {
@@ -55,6 +56,7 @@ class SettingsController extends BaseController
             'service_level_target'  => (float) $this->request->getPost('service_level_target'),
             'z_score'               => (float) $this->request->getPost('z_score'),
             'demand_lookback_days'  => (int) $this->request->getPost('demand_lookback_days'),
+            'minimum_order_qty'     => (int) $this->request->getPost('minimum_order_qty'),
             'updated_by'            => session()->get('user_id'),
         ];
 

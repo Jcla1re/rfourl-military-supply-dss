@@ -32,8 +32,13 @@ class PdssComputationModel extends Model
      */
     public function latestFor(string $itemId): ?array
     {
+        // Secondary sort on computation_id: a batched dss:run insert can
+        // give many rows the exact same computed_at (one CURRENT_TIMESTAMP
+        // per INSERT statement, not per row), so computed_at alone doesn't
+        // reliably break ties to the row that was actually written last.
         return $this->where('item_id', $itemId)
             ->orderBy('computed_at', 'DESC')
+            ->orderBy('computation_id', 'DESC')
             ->first();
     }
 

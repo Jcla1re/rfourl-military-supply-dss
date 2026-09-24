@@ -82,8 +82,9 @@ class StockOrderModel extends Model
 
     /**
      * Marks an order Delivered, adds the received quantities to on-hand stock,
-     * and writes an inventory_log entry per line. Shared by the Admin and
-     * Supplier portals so delivery receiving only lives in one place.
+     * writes an inventory_log entry per line, and Fulfills any reorder_alert
+     * that this order was created from. Shared by the Admin and Supplier
+     * portals so delivery receiving only lives in one place.
      */
     public function markDelivered(string $soId, ?int $userId): void
     {
@@ -115,5 +116,11 @@ class StockOrderModel extends Model
                 'Received from stock order ' . $soId
             );
         }
+
+        (new ReorderAlertModel())
+            ->where('so_id', $soId)
+            ->where('status', 'Ordered')
+            ->set(['status' => 'Fulfilled'])
+            ->update();
     }
 }
