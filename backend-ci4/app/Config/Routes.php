@@ -58,6 +58,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
 
     $routes->get('sales', 'SalesController::index');
     $routes->post('sales/checkout', 'SalesController::checkout');
+    $routes->get('sales/export-pdf', 'SalesController::exportPdf');
 
     $routes->get('settings', 'SettingsController::index');
     $routes->post('settings/dss-parameters', 'SettingsController::updateDssParameters');
@@ -88,6 +89,7 @@ $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'ro
 
     $routes->get('sales', 'SalesController::index');
     $routes->post('sales/checkout', 'SalesController::checkout');
+    $routes->get('sales/export-pdf', 'SalesController::exportPdf');
 
     $routes->get('notifications', 'NotificationController::index');
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');

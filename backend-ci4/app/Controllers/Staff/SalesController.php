@@ -53,27 +53,69 @@ class SalesController extends BaseController
             $data['products']   = $products;
             $data['categories'] = ProductModel::CATEGORIES;
         } else {
-            $month = $this->request->getGet('month') ?: date('Y-m');
-
-            $transactions = $this->salesTransactionModel
-                ->where("DATE_FORMAT(sale_date, '%Y-%m')", $month)
-                ->orderBy('sale_date', 'DESC')
-                ->findAll();
-
-            foreach ($transactions as &$t) {
-                $t['items'] = $this->salesItemModel->forSale($t['sales_id']);
-            }
-            unset($t);
+            $date         = $this->request->getGet('date') ?: date('Y-m-d');
+            $transactions = $this->transactionsForDate($date);
+            $weekRange    = $this->salesTransactionModel->weeklyTotals();
 
             $data['transactions'] = $transactions;
-            $data['month']        = $month;
+            $data['date']         = $date;
             $data['salesToday']   = $this->salesTransactionModel->totalForToday();
-            $data['salesWeek']    = array_sum($this->salesTransactionModel->weeklyTotals()['data']);
+            $data['salesWeek']    = array_sum($weekRange['data']);
             $data['salesMonth']   = (float) ($this->salesTransactionModel->selectSum('total_amount')
                 ->where("DATE_FORMAT(sale_date, '%Y-%m')", date('Y-m'))->first()['total_amount'] ?? 0);
+            $data['txnToday']     = $this->salesTransactionModel->countForToday();
+            $data['txnWeek']      = $this->salesTransactionModel->countInRange(
+                (new \DateTime('-6 days'))->format('Y-m-d'),
+                date('Y-m-d')
+            );
+            $data['txnMonth']     = $this->salesTransactionModel
+                ->where("DATE_FORMAT(sale_date, '%Y-%m')", date('Y-m'))
+                ->countAllResults();
         }
 
         return view('staff/sales', $data);
+    }
+
+    /**
+     * Transactions (with line items) for one calendar day, newest first —
+     * shared by the receipts tab and PDF export so both always agree on
+     * exactly which day is being shown.
+     */
+    private function transactionsForDate(string $date): array
+    {
+        $transactions = $this->salesTransactionModel
+            ->where('DATE(sale_date)', $date)
+            ->orderBy('sale_date', 'DESC')
+            ->findAll();
+
+        foreach ($transactions as &$t) {
+            $t['items'] = $this->salesItemModel->forSale($t['sales_id']);
+        }
+        unset($t);
+
+        return $transactions;
+    }
+
+    public function exportPdf()
+    {
+        $date         = $this->request->getGet('date') ?: date('Y-m-d');
+        $transactions = $this->transactionsForDate($date);
+
+        $html = view('staff/sales_pdf', [
+            'date'         => $date,
+            'transactions' => $transactions,
+            'totalSales'   => array_sum(array_column($transactions, 'total_amount')),
+        ]);
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->setPaper('a4', 'landscape');
+        $dompdf->loadHtml($html);
+        $dompdf->render();
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="sales-' . $date . '.pdf"')
+            ->setBody($dompdf->output());
     }
 
     public function checkout()
@@ -86,6 +128,10 @@ class SalesController extends BaseController
 
         if (empty($itemIds)) {
             return redirect()->to('/staff/sales')->with('error', 'Cart is empty.');
+        }
+
+        if (! in_array($method, ['Cash', 'GCash', 'Split'], true)) {
+            $method = 'Cash';
         }
 
         $subtotal = 0;
@@ -110,6 +156,20 @@ class SalesController extends BaseController
 
         $total = max(0, $subtotal - $discount);
 
+        if ($method === 'Split') {
+            $cashAmount  = round((float) ($this->request->getPost('cash_amount') ?: 0), 2);
+            $gcashAmount = round((float) ($this->request->getPost('gcash_amount') ?: 0), 2);
+            if (abs(($cashAmount + $gcashAmount) - $total) > 0.01) {
+                return redirect()->to('/staff/sales')->with('error', 'Cash + GCash amounts must add up to the total.');
+            }
+        } elseif ($method === 'GCash') {
+            $cashAmount  = 0.0;
+            $gcashAmount = $total;
+        } else {
+            $cashAmount  = $total;
+            $gcashAmount = 0.0;
+        }
+
         $receiptNo = $this->salesTransactionModel->generateReceiptNo();
 
         $db = db_connect();
@@ -120,6 +180,8 @@ class SalesController extends BaseController
             'user_id'        => session()->get('user_id'),
             'sale_date'      => date('Y-m-d H:i:s'),
             'payment_method' => $method,
+            'cash_amount'    => $cashAmount,
+            'gcash_amount'   => $gcashAmount,
             'subtotal'       => $subtotal,
             'discount'       => $discount,
             'total_amount'   => $total,
@@ -157,6 +219,10 @@ class SalesController extends BaseController
 
         $vat = round($total - ($total / 1.03), 2);
 
+        // Change only really applies to cash tendering; GCash/Split are
+        // exact amounts with no concept of "change".
+        $effectiveAmountPaid = $method === 'Cash' ? max($amountPaid, $total) : $total;
+
         $receipt = [
             'receipt_no'     => $receiptNo,
             'sale_date'      => date('Y-m-d H:i:s'),
@@ -169,9 +235,11 @@ class SalesController extends BaseController
             'subtotal_ex_vat' => round($total - $vat, 2),
             'vat'             => $vat,
             'total'           => $total,
-            'amount_paid'     => $amountPaid,
-            'change'          => max(0, $amountPaid - $total),
+            'amount_paid'     => $effectiveAmountPaid,
+            'change'          => max(0, $effectiveAmountPaid - $total),
             'payment_method'  => $method,
+            'cash_amount'     => $cashAmount,
+            'gcash_amount'    => $gcashAmount,
             'staff_name'      => session()->get('full_name'),
         ];
 

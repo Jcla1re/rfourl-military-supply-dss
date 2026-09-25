@@ -87,9 +87,14 @@
 
 .rec-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
 @media (max-width: 800px) { .rec-stats { grid-template-columns: 1fr; } }
-.rec-stat { background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
-.rec-stat .value { font-size: 24px; font-weight: 800; }
+.rec-stat { background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); display: flex; align-items: center; gap: 14px; }
+.rec-stat .rec-stat-icon { width: 42px; height: 42px; border-radius: 10px; background: #eef0ea; color: #3d5230; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.rec-stat .value { font-size: 22px; font-weight: 800; }
+.rec-stat .trend { color: #3d5230; font-size: 12px; font-weight: 600; }
 .line-item-chip { display:inline-block; background:#eef0ea; border-radius: 999px; padding: 3px 10px; font-size: 12px; margin: 2px 4px 2px 0; }
+.split-fields { display: none; }
+.item-line { padding: 2px 0; }
+.item-line:not(:last-child) { border-bottom: 1px dashed #eee; }
 </style>
 
 <div class="page-wrap">
@@ -153,15 +158,25 @@
                     </div>
 
                     <label class="fw-bold mt-2 mb-1 d-block">Payment Method</label>
-                    <select name="payment_method" class="form-select mb-2">
-                        <option value="GCash">GCash</option>
+                    <select name="payment_method" id="paymentMethod" class="form-select mb-2">
                         <option value="Cash">Cash</option>
+                        <option value="GCash">GCash</option>
+                        <option value="Split">Split (Cash + GCash)</option>
                     </select>
 
-                    <label class="fw-bold mb-1 d-block">Amount Paid</label>
-                    <input type="number" name="amount_paid" id="amountPaid" class="form-control mb-2" min="0" placeholder="₱0">
+                    <div id="singleMethodFields">
+                        <label class="fw-bold mb-1 d-block">Amount Paid</label>
+                        <input type="number" name="amount_paid" id="amountPaid" class="form-control mb-2" min="0" placeholder="₱0">
+                        <div class="cart-change"><span>Change</span><strong id="cartChange">₱0</strong></div>
+                    </div>
 
-                    <div class="cart-change"><span>Change</span><strong id="cartChange">₱0</strong></div>
+                    <div id="splitFields" class="split-fields">
+                        <label class="fw-bold mb-1 d-block">Cash Amount</label>
+                        <input type="number" name="cash_amount" id="splitCash" class="form-control mb-2" min="0" step="0.01" placeholder="₱0">
+                        <label class="fw-bold mb-1 d-block">GCash Amount</label>
+                        <input type="number" name="gcash_amount" id="splitGcash" class="form-control mb-2" min="0" step="0.01" placeholder="₱0">
+                        <div class="text-muted small mb-2">Cash + GCash must add up to the total (<span id="splitTargetTotal">₱0</span>).</div>
+                    </div>
 
                     <button type="submit" class="btn btn-success w-100" id="checkoutBtn" disabled>
                         <i class="bi bi-check-lg"></i> Checkout &amp; Print Receipt
@@ -172,35 +187,74 @@
     <?php else: ?>
         <?php $transactions = $transactions ?? []; ?>
         <div class="rec-stats">
-            <div class="rec-stat"><div class="text-muted small">Today's Sales</div><div class="value">₱<?= number_format($salesToday ?? 0, 0) ?></div></div>
-            <div class="rec-stat"><div class="text-muted small">This week</div><div class="value">₱<?= number_format($salesWeek ?? 0, 0) ?></div></div>
-            <div class="rec-stat"><div class="text-muted small">This Month</div><div class="value">₱<?= number_format($salesMonth ?? 0, 0) ?></div></div>
+            <div class="rec-stat">
+                <div class="rec-stat-icon"><i class="bi bi-cash-coin"></i></div>
+                <div>
+                    <div class="text-muted small">Total Sales Today</div>
+                    <div class="value">₱<?= number_format($salesToday ?? 0, 0) ?></div>
+                    <div class="trend"><i class="bi bi-arrow-up-short"></i> <?= (int) ($txnToday ?? 0) ?> transactions</div>
+                </div>
+            </div>
+            <div class="rec-stat">
+                <div class="rec-stat-icon"><i class="bi bi-cash-coin"></i></div>
+                <div>
+                    <div class="text-muted small">This week</div>
+                    <div class="value">₱<?= number_format($salesWeek ?? 0, 0) ?></div>
+                    <div class="trend"><i class="bi bi-arrow-up-short"></i> <?= (int) ($txnWeek ?? 0) ?> transactions</div>
+                </div>
+            </div>
+            <div class="rec-stat">
+                <div class="rec-stat-icon"><i class="bi bi-graph-up"></i></div>
+                <div>
+                    <div class="text-muted small">This Month</div>
+                    <div class="value">₱<?= number_format($salesMonth ?? 0, 0) ?></div>
+                    <div class="trend"><i class="bi bi-arrow-up-short"></i> <?= (int) ($txnMonth ?? 0) ?> transactions</div>
+                </div>
+            </div>
         </div>
 
         <div class="page-panel">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-bold mb-0">Transaction History</h5>
-                <form method="get" class="d-flex gap-2">
-                    <input type="hidden" name="tab" value="receipts">
-                    <input type="month" name="month" value="<?= esc($month ?? date('Y-m')) ?>" class="form-control" onchange="this.form.submit()">
-                </form>
+                <div class="d-flex gap-2 align-items-center">
+                    <form method="get" class="d-flex gap-2">
+                        <input type="hidden" name="tab" value="receipts">
+                        <input type="date" name="date" value="<?= esc($date ?? date('Y-m-d')) ?>" class="form-control" onchange="this.form.submit()">
+                    </form>
+                    <a href="<?= site_url('admin/sales/export-pdf') . '?date=' . esc($date ?? date('Y-m-d')) ?>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-pdf"></i> Export PDF</a>
+                </div>
             </div>
             <div class="data-table-wrap">
                 <table class="data-table">
-                    <thead><tr><th>Receipt #</th><th>Time</th><th>Items</th><th>Payment</th><th>Total</th></tr></thead>
+                    <thead><tr><th>Receipt #</th><th>Date &amp; Time</th><th>Items</th><th>Quantity</th><th>Price</th><th>Cash</th><th>GCash</th><th>Total</th></tr></thead>
                     <tbody>
                         <?php if (!empty($transactions)): ?>
                             <?php foreach ($transactions as $t): ?>
                                 <tr>
                                     <td><strong>#<?= esc($t['receipt_no']) ?></strong></td>
-                                    <td><?= esc(date('g:i A', strtotime($t['sale_date']))) ?></td>
-                                    <td><?php foreach (($t['items'] ?? []) as $line): ?><span class="line-item-chip"><?= esc($line['item_name'] ?? $line['item_id']) ?> ×<?= esc($line['quantity_sold']) ?></span><?php endforeach; ?></td>
-                                    <td><span class="status-pill <?= $t['payment_method'] === 'GCash' ? 'blue' : 'green' ?>"><?= esc($t['payment_method']) ?></span></td>
+                                    <td><?= esc(date('M j, Y g:i A', strtotime($t['sale_date']))) ?></td>
+                                    <td>
+                                        <?php foreach (($t['items'] ?? []) as $line): ?>
+                                            <div class="item-line"><?= esc($line['item_name'] ?? $line['item_id']) ?></div>
+                                        <?php endforeach; ?>
+                                    </td>
+                                    <td>
+                                        <?php foreach (($t['items'] ?? []) as $line): ?>
+                                            <div class="item-line"><?= esc($line['quantity_sold']) ?></div>
+                                        <?php endforeach; ?>
+                                    </td>
+                                    <td>
+                                        <?php foreach (($t['items'] ?? []) as $line): ?>
+                                            <div class="item-line">₱<?= number_format((float) $line['selling_price'], 2) ?></div>
+                                        <?php endforeach; ?>
+                                    </td>
+                                    <td><?= (float) ($t['cash_amount'] ?? 0) > 0 ? '₱' . number_format((float) $t['cash_amount'], 2) : '—' ?></td>
+                                    <td><?= (float) ($t['gcash_amount'] ?? 0) > 0 ? '₱' . number_format((float) $t['gcash_amount'], 2) : '—' ?></td>
                                     <td>₱<?= number_format((float) $t['total_amount'], 2) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr><td colspan="5" class="text-center py-4">No sales transactions recorded this month.</td></tr>
+                            <tr><td colspan="8" class="text-center py-4">No sales transactions recorded this month.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -208,6 +262,76 @@
         </div>
     <?php endif; ?>
 </div>
+
+<?php $receipt = $receipt ?? null; ?>
+<?php if (!empty($receipt)): ?>
+<style>
+.receipt-modal { position: fixed; inset: 0; z-index: 1100; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.45); }
+.receipt-card { width: min(420px, 92vw); max-height: 92vh; overflow-y: auto; background: #fff; border-radius: 14px; padding: 24px; font-family: 'Courier New', monospace; }
+.receipt-card .rc-close { float: right; background: none; border: none; font-size: 20px; cursor: pointer; }
+.receipt-card h5 { text-align: center; font-weight: 800; margin-bottom: 4px; }
+.receipt-card .rc-sub { text-align: center; font-size: 11px; color: #444; margin-bottom: 4px; }
+.receipt-card hr { border-top: 1px dashed #999; }
+.receipt-card table { width: 100%; font-size: 13px; margin: 10px 0; }
+.receipt-card table th { text-align: left; border-bottom: 1px solid #333; padding-bottom: 4px; }
+.receipt-card table td { padding: 3px 0; }
+.receipt-card .rc-totals div { display: flex; justify-content: space-between; font-size: 13px; }
+.receipt-card .rc-totals .grand { font-weight: 800; font-size: 15px; }
+.rc-barcode { text-align: center; font-size: 22px; letter-spacing: 2px; margin: 14px 0 4px; }
+.rc-barcode-no { text-align: center; font-size: 11px; letter-spacing: 3px; margin-bottom: 10px; }
+.rc-footer { text-align: center; font-size: 11px; color: #444; margin-top: 10px; }
+.rc-actions { display: flex; gap: 10px; margin-top: 16px; }
+.rc-actions button, .rc-actions a { flex: 1; text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; border: 1px solid #ccc; background: #fff; cursor: pointer; text-decoration: none; color: #1c1c1c; }
+</style>
+<div class="receipt-modal" id="receiptModal">
+    <div class="receipt-card">
+        <button type="button" class="rc-close" id="closeReceipt">&times;</button>
+        <h5>RFOURL MILITARY SUPPLY</h5>
+        <div class="rc-sub">#5 3rd Ave., Bagong Lipunan ng Crame,<br>1111 Quezon City NCR, 2nd Dist., Phils.</div>
+        <div class="rc-sub">Receipt No: #<?= esc($receipt['receipt_no']) ?><br>Non-VAT Reg.</div>
+        <hr>
+        <table>
+            <thead><tr><th>ITEM</th><th>QTY</th><th style="text-align:right;">Total</th></tr></thead>
+            <tbody>
+                <?php foreach ($receipt['lines'] as $l): ?>
+                    <tr>
+                        <td><?= esc($l['item_name']) ?><?= !empty($l['size']) ? ' ' . esc($l['size']) : '' ?></td>
+                        <td>x<?= esc($l['qty']) ?></td>
+                        <td style="text-align:right;">₱<?= number_format($l['total'], 0) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <hr>
+        <div class="rc-totals">
+            <div><span>SUBTOTAL</span><span>₱<?= number_format($receipt['subtotal_ex_vat'], 2) ?></span></div>
+            <div><span>VAT (3%)</span><span>₱<?= number_format($receipt['vat'], 2) ?></span></div>
+            <div class="grand"><span>TOTAL</span><span>₱<?= number_format($receipt['total'], 2) ?></span></div>
+            <?php if ($receipt['payment_method'] === 'Split'): ?>
+                <div><span>Paid via Cash</span><span>₱<?= number_format($receipt['cash_amount'], 2) ?></span></div>
+                <div><span>Paid via GCash</span><span>₱<?= number_format($receipt['gcash_amount'], 2) ?></span></div>
+            <?php else: ?>
+                <div><span>Cash Tendered</span><span>₱<?= number_format($receipt['amount_paid'], 2) ?></span></div>
+                <div><span>CHANGE</span><span>₱<?= number_format($receipt['change'], 2) ?></span></div>
+            <?php endif; ?>
+            <div><span>Payment</span><span><?= esc(strtoupper($receipt['payment_method'])) ?></span></div>
+        </div>
+        <div class="rc-barcode">| | | | | | | | | | | | |</div>
+        <div class="rc-barcode-no">RFL-<?= esc($receipt['receipt_no']) ?>-<?= esc(date('His', strtotime($receipt['sale_date']))) ?></div>
+        <div class="rc-footer">Thank you for your purchase!<br>All sales are final.<br>Concerns: rfourlmilitary@gmail.com</div>
+        <div class="rc-actions">
+            <button type="button" onclick="window.print()">Print</button>
+            <a href="<?= site_url('admin/sales') ?>">+ New Sale</a>
+        </div>
+    </div>
+</div>
+<script>
+document.getElementById('closeReceipt')?.addEventListener('click', () => {
+    document.getElementById('receiptModal').classList.remove('show');
+    document.getElementById('receiptModal').style.display = 'none';
+});
+</script>
+<?php endif; ?>
 
 <script>
 if (document.getElementById('posGrid')) {
@@ -276,6 +400,7 @@ if (document.getElementById('posGrid')) {
         const total = Math.max(0, subtotal - discount);
         document.getElementById('cartSubtotal').textContent = '₱' + subtotal.toLocaleString();
         document.getElementById('cartTotal').textContent = '₱' + total.toLocaleString();
+        document.getElementById('splitTargetTotal').textContent = '₱' + total.toLocaleString();
         document.getElementById('checkoutBtn').disabled = ids.length === 0;
         updateChange();
     }
@@ -295,6 +420,12 @@ if (document.getElementById('posGrid')) {
         Object.keys(cart).forEach(id => cart[id].qty = 0);
         document.querySelectorAll('.pos-card').forEach(c => c.classList.remove('selected'));
         renderCart();
+    });
+
+    document.getElementById('paymentMethod').addEventListener('change', function () {
+        const isSplit = this.value === 'Split';
+        document.getElementById('singleMethodFields').style.display = isSplit ? 'none' : '';
+        document.getElementById('splitFields').style.display = isSplit ? '' : 'none';
     });
 }
 </script>

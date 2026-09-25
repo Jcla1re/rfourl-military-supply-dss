@@ -17,6 +17,8 @@ class SalesTransactionModel extends Model
         'user_id',
         'sale_date',
         'payment_method',
+        'cash_amount',
+        'gcash_amount',
         'subtotal',
         'discount',
         'total_amount',
@@ -34,6 +36,18 @@ class SalesTransactionModel extends Model
         return (float) ($this->selectSum('total_amount')
             ->where('DATE(sale_date)', date('Y-m-d'))
             ->first()['total_amount'] ?? 0);
+    }
+
+    public function countForToday(): int
+    {
+        return $this->where('DATE(sale_date)', date('Y-m-d'))->countAllResults();
+    }
+
+    public function countInRange(string $startDate, string $endDate): int
+    {
+        return $this->where('DATE(sale_date) >=', $startDate)
+            ->where('DATE(sale_date) <=', $endDate)
+            ->countAllResults();
     }
 
     public function recent(int $limit = 20): array

@@ -33,6 +33,7 @@ class SalesController extends BaseController
             'tab'    => $tab,
             'success'=> session()->getFlashdata('success'),
             'error'  => session()->getFlashdata('error'),
+            'receipt' => session()->getFlashdata('receipt'),
         ];
 
         if ($tab === 'pos') {
@@ -51,38 +52,85 @@ class SalesController extends BaseController
             $data['products']   = $products;
             $data['categories'] = ProductModel::CATEGORIES;
         } else {
-            $month = $this->request->getGet('month') ?: date('Y-m');
-
-            $transactions = $this->salesTransactionModel
-                ->where("DATE_FORMAT(sale_date, '%Y-%m')", $month)
-                ->orderBy('sale_date', 'DESC')
-                ->findAll();
-
-            foreach ($transactions as &$t) {
-                $t['items'] = $this->salesItemModel->forSale($t['sales_id']);
-            }
-            unset($t);
+            $date         = $this->request->getGet('date') ?: date('Y-m-d');
+            $transactions = $this->transactionsForDate($date);
+            $weekRange    = $this->salesTransactionModel->weeklyTotals();
 
             $data['transactions'] = $transactions;
-            $data['month']        = $month;
+            $data['date']         = $date;
             $data['salesToday']   = $this->salesTransactionModel->totalForToday();
-            $data['salesWeek']    = array_sum($this->salesTransactionModel->weeklyTotals()['data']);
+            $data['salesWeek']    = array_sum($weekRange['data']);
             $data['salesMonth']   = (float) ($this->salesTransactionModel->selectSum('total_amount')
                 ->where("DATE_FORMAT(sale_date, '%Y-%m')", date('Y-m'))->first()['total_amount'] ?? 0);
+            $data['txnToday']     = $this->salesTransactionModel->countForToday();
+            $data['txnWeek']      = $this->salesTransactionModel->countInRange(
+                (new \DateTime('-6 days'))->format('Y-m-d'),
+                date('Y-m-d')
+            );
+            $data['txnMonth']     = $this->salesTransactionModel
+                ->where("DATE_FORMAT(sale_date, '%Y-%m')", date('Y-m'))
+                ->countAllResults();
         }
 
         return view('admin/sales', $data);
     }
 
+    /**
+     * Transactions (with line items) for one calendar day, newest first —
+     * shared by the receipts tab and PDF export so both always agree on
+     * exactly which day is being shown.
+     */
+    private function transactionsForDate(string $date): array
+    {
+        $transactions = $this->salesTransactionModel
+            ->where('DATE(sale_date)', $date)
+            ->orderBy('sale_date', 'DESC')
+            ->findAll();
+
+        foreach ($transactions as &$t) {
+            $t['items'] = $this->salesItemModel->forSale($t['sales_id']);
+        }
+        unset($t);
+
+        return $transactions;
+    }
+
+    public function exportPdf()
+    {
+        $date         = $this->request->getGet('date') ?: date('Y-m-d');
+        $transactions = $this->transactionsForDate($date);
+
+        $html = view('admin/sales_pdf', [
+            'date'         => $date,
+            'transactions' => $transactions,
+            'totalSales'   => array_sum(array_column($transactions, 'total_amount')),
+        ]);
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->setPaper('a4', 'landscape');
+        $dompdf->loadHtml($html);
+        $dompdf->render();
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="sales-' . $date . '.pdf"')
+            ->setBody($dompdf->output());
+    }
+
     public function checkout()
     {
-        $itemIds   = $this->request->getPost('item_id') ?? [];
-        $quantities= $this->request->getPost('quantity') ?? [];
-        $method    = $this->request->getPost('payment_method') ?: 'Cash';
-        $discount  = (float) ($this->request->getPost('discount') ?: 0);
+        $itemIds    = $this->request->getPost('item_id') ?? [];
+        $quantities = $this->request->getPost('quantity') ?? [];
+        $method     = $this->request->getPost('payment_method') ?: 'Cash';
+        $discount   = (float) ($this->request->getPost('discount') ?: 0);
+        $amountPaid = (float) ($this->request->getPost('amount_paid') ?: 0);
 
         if (empty($itemIds)) {
             return redirect()->to('/admin/sales')->with('error', 'Cart is empty.');
+        }
+
+        if (! in_array($method, ['Cash', 'GCash', 'Split'], true)) {
+            $method = 'Cash';
         }
 
         $subtotal = 0;
@@ -98,7 +146,7 @@ class SalesController extends BaseController
             }
             $lineTotal = $qty * (float) $product['selling_price'];
             $subtotal += $lineTotal;
-            $lines[] = ['product' => $product, 'qty' => $qty];
+            $lines[] = ['product' => $product, 'qty' => $qty, 'line_total' => $lineTotal];
         }
 
         if (empty($lines)) {
@@ -107,14 +155,32 @@ class SalesController extends BaseController
 
         $total = max(0, $subtotal - $discount);
 
+        if ($method === 'Split') {
+            $cashAmount  = round((float) ($this->request->getPost('cash_amount') ?: 0), 2);
+            $gcashAmount = round((float) ($this->request->getPost('gcash_amount') ?: 0), 2);
+            if (abs(($cashAmount + $gcashAmount) - $total) > 0.01) {
+                return redirect()->to('/admin/sales')->with('error', 'Cash + GCash amounts must add up to the total.');
+            }
+        } elseif ($method === 'GCash') {
+            $cashAmount  = 0.0;
+            $gcashAmount = $total;
+        } else {
+            $cashAmount  = $total;
+            $gcashAmount = 0.0;
+        }
+
+        $receiptNo = $this->salesTransactionModel->generateReceiptNo();
+
         $db = db_connect();
         $db->transStart();
 
         $salesId = $this->salesTransactionModel->insert([
-            'receipt_no'     => $this->salesTransactionModel->generateReceiptNo(),
+            'receipt_no'     => $receiptNo,
             'user_id'        => session()->get('user_id'),
             'sale_date'      => date('Y-m-d H:i:s'),
             'payment_method' => $method,
+            'cash_amount'    => $cashAmount,
+            'gcash_amount'   => $gcashAmount,
             'subtotal'       => $subtotal,
             'discount'       => $discount,
             'total_amount'   => $total,
@@ -150,6 +216,29 @@ class SalesController extends BaseController
             return redirect()->to('/admin/sales')->with('error', 'Checkout failed and was rolled back. Please try again.');
         }
 
-        return redirect()->to('/admin/sales')->with('success', 'Sale completed and receipt printed.');
+        $vat = round($total - ($total / 1.03), 2);
+        $effectiveAmountPaid = $method === 'Cash' ? max($amountPaid, $total) : $total;
+
+        $receipt = [
+            'receipt_no'     => $receiptNo,
+            'sale_date'      => date('Y-m-d H:i:s'),
+            'lines'          => array_map(fn ($l) => [
+                'item_name' => $l['product']['item_name'],
+                'size'      => $l['product']['size'] ?? null,
+                'qty'       => $l['qty'],
+                'total'     => $l['line_total'],
+            ], $lines),
+            'subtotal_ex_vat' => round($total - $vat, 2),
+            'vat'             => $vat,
+            'total'           => $total,
+            'amount_paid'     => $effectiveAmountPaid,
+            'change'          => max(0, $effectiveAmountPaid - $total),
+            'payment_method'  => $method,
+            'cash_amount'     => $cashAmount,
+            'gcash_amount'    => $gcashAmount,
+            'staff_name'      => session()->get('full_name'),
+        ];
+
+        return redirect()->to('/admin/sales')->with('success', 'Sale completed and receipt printed.')->with('receipt', $receipt);
     }
 }
