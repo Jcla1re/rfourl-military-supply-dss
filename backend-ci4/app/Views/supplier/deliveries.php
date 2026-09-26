@@ -13,7 +13,7 @@
 .dv-head .dispatched { margin-left: auto; color: #888; font-size: 12px; }
 .dv-body { padding: 0 20px 20px; }
 
-.dv-stepper-track { height: 8px; background: #f0dede; border-radius: 4px; margin: 14px 0 8px; overflow: hidden; }
+.dv-stepper-track { height: 8px; background: #e4e2dc; border-radius: 4px; margin: 14px 0 8px; overflow: hidden; }
 .dv-stepper-track > span { display: block; height: 100%; background: var(--green-text); }
 .dv-stepper-labels { display: flex; justify-content: space-between; font-size: 12px; color: #555; }
 .dv-stepper-labels .done { color: var(--green-text); font-weight: 700; }

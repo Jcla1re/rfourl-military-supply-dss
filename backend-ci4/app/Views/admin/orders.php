@@ -70,22 +70,22 @@ $tab = $tab ?? 'status';
 .ord-stepper { display: flex; align-items: center; margin: 22px 6px 6px; }
 .ord-step { flex: 1; text-align: center; position: relative; }
 .ord-step .dot {
-    width: 30px; height: 30px; border-radius: 50%; background: #f0dede; color: var(--accent-maroon);
+    width: 30px; height: 30px; border-radius: 50%; background: #e4e2dc; color: #6b6b6b;
     display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 14px;
-    border: 2px solid #f0dede;
+    border: 2px solid #e4e2dc;
 }
-.ord-step.done .dot, .ord-step.current .dot { background: #e8938e; color: #fff; border-color: #e8938e; }
+.ord-step.done .dot, .ord-step.current .dot { background: var(--green-text); color: #fff; border-color: var(--green-text); }
 .ord-step span.label { font-size: 12px; color: #555; }
 .ord-step.current span.label { color: #1c1c1c; font-weight: 700; }
 .ord-line {
-    position: absolute; top: 15px; left: -50%; width: 100%; height: 3px; background: #f0dede; z-index: -1;
+    position: absolute; top: 15px; left: -50%; width: 100%; height: 3px; background: #e4e2dc; z-index: -1;
 }
 .ord-step:first-child .ord-line { display: none; }
-.ord-step.done .ord-line, .ord-step.current .ord-line { background: #e8938e; }
+.ord-step.done .ord-line, .ord-step.current .ord-line { background: var(--green-text); }
 
 .ord-info-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
-.ord-info-box { background: #fbeeee; border-radius: 8px; padding: 10px 14px; }
-.ord-info-box span { display: block; font-size: 12px; color: #8a5a5a; }
+.ord-info-box { background: #eef0ea; border-radius: 8px; padding: 10px 14px; }
+.ord-info-box span { display: block; font-size: 12px; color: #3d5230; }
 .ord-info-box strong { font-size: 14px; }
 
 .ord-actions { display: flex; gap: 10px; }

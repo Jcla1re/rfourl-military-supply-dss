@@ -70,6 +70,14 @@ class InventoryController extends BaseController
         $lowStockCount = count(array_filter($allProducts, fn ($p) => ($this->productModel->getStatus($p)['label'] ?? 'In Stock') === 'Low Stock'));
         $reorderCount  = count(array_filter($allProducts, fn ($p) => ($this->productModel->getStatus($p)['label'] ?? 'In Stock') === 'Reorder Now'));
 
+        // Total stock on hand per category, shown next to each category tab
+        // (e.g. "Clothes (780)") so stock levels are visible before filtering.
+        $categoryStockTotals = [];
+        foreach ($allProducts as $p) {
+            $cat = $p['category'] ?? 'Uncategorized';
+            $categoryStockTotals[$cat] = ($categoryStockTotals[$cat] ?? 0) + (int) $p['current_stock'];
+        }
+
         $sizes = $this->productModel
             ->select('size')
             ->where('is_active', 1)
@@ -93,6 +101,7 @@ class InventoryController extends BaseController
             'status'        => $status ?? '',
             'search'        => $search ?? '',
             'categories'    => ProductModel::CATEGORIES,
+            'categoryStockTotals' => $categoryStockTotals,
             'sizes'         => array_map(fn ($s) => $s['size'], $sizes),
             'statuses'      => ['In Stock', 'Low Stock', 'Reorder Now'],
             'success'       => session()->getFlashdata('success'),

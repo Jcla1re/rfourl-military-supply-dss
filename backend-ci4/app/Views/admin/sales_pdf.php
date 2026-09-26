@@ -26,6 +26,7 @@
                 <th>Items</th>
                 <th>Qty</th>
                 <th>Unit Price</th>
+                <th>Discount</th>
                 <th>Cash</th>
                 <th>GCash</th>
                 <th>Total</th>
@@ -33,7 +34,7 @@
         </thead>
         <tbody>
             <?php if (empty($transactions)): ?>
-                <tr><td colspan="8">No sales transactions recorded this period.</td></tr>
+                <tr><td colspan="9">No sales transactions recorded this period.</td></tr>
             <?php else: ?>
                 <?php foreach ($transactions as $t): ?>
                     <tr>
@@ -54,8 +55,18 @@
                                 ₱<?= number_format((float) $line['selling_price'], 2) ?><br>
                             <?php endforeach; ?>
                         </td>
+                        <td class="num"><?= (float) ($t['discount'] ?? 0) > 0 ? '- ₱' . number_format((float) $t['discount'], 2) : '—' ?></td>
                         <td class="num"><?= (float) ($t['cash_amount'] ?? 0) > 0 ? '₱' . number_format((float) $t['cash_amount'], 2) : '—' ?></td>
-                        <td class="num"><?= (float) ($t['gcash_amount'] ?? 0) > 0 ? '₱' . number_format((float) $t['gcash_amount'], 2) : '—' ?></td>
+                        <td class="num">
+                            <?php if ((float) ($t['gcash_amount'] ?? 0) > 0): ?>
+                                ₱<?= number_format((float) $t['gcash_amount'], 2) ?>
+                                <?php if (!empty($t['gcash_reference_no'])): ?>
+                                    <br><span style="color:#666;font-size:9px;">Ref: <?= esc($t['gcash_reference_no']) ?></span>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                —
+                            <?php endif; ?>
+                        </td>
                         <td class="num">₱<?= number_format((float) $t['total_amount'], 2) ?></td>
                     </tr>
                 <?php endforeach; ?>

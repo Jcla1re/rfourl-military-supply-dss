@@ -135,8 +135,9 @@ $totalItems = $totalItems ?? 0;
 
         <div class="underline-tabs">
             <a href="<?= site_url('admin/inventory') ?>" class="<?= $filterCategory === 'All' ? 'active' : '' ?>">All Items (<?= esc((string) (is_array($totalItems ?? null) ? count((array) $totalItems) : ($totalItems ?? 0))) ?>)</a>
+            <?php $categoryStockTotals = $categoryStockTotals ?? []; ?>
             <?php foreach ($categories as $itemCategory): ?>
-                <a href="<?= site_url('admin/inventory') . '?category=' . urlencode($itemCategory) ?>" class="<?= $filterCategory === $itemCategory ? 'active' : '' ?>"><?= esc($itemCategory) ?></a>
+                <a href="<?= site_url('admin/inventory') . '?category=' . urlencode($itemCategory) ?>" class="<?= $filterCategory === $itemCategory ? 'active' : '' ?>"><?= esc($itemCategory) ?> (<?= number_format($categoryStockTotals[$itemCategory] ?? 0) ?>)</a>
             <?php endforeach; ?>
         </div>
 
@@ -216,10 +217,19 @@ $totalItems = $totalItems ?? 0;
                     $prevPage = max(1, $currentPage - 1);
                     $nextPage = min((int) $totalPages, (int) $currentPage + 1);
                     $params = $_GET;
+
+                    // Only ever show a sliding window of PAGER_WINDOW page
+                    // buttons (centered on the current page) instead of one
+                    // link per page — with 562 items that was 57 buttons wide.
+                    $pagerWindow = 10;
+                    $windowStart = max(1, $currentPage - intdiv($pagerWindow, 2));
+                    $windowEnd   = min($totalPages, $windowStart + $pagerWindow - 1);
+                    $windowStart = max(1, $windowEnd - $pagerWindow + 1);
+
                     $params['page'] = $prevPage;
                     ?>
                     <a href="<?= site_url('admin/inventory') . '?' . http_build_query($params) ?>">&larr; Prev</a>
-                    <?php for ($i = 1; $i <= $totalPages; $i++): $params['page'] = $i; ?>
+                    <?php for ($i = $windowStart; $i <= $windowEnd; $i++): $params['page'] = $i; ?>
                         <a href="<?= site_url('admin/inventory') . '?' . http_build_query($params) ?>" class="<?= $i === (int) $currentPage ? 'active' : '' ?>"><?= $i ?></a>
                     <?php endfor; ?>
                     <?php $params['page'] = $nextPage; ?>

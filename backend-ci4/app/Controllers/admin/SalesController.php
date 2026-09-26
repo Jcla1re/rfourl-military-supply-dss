@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\PosPricing;
 use App\Models\InventoryLogModel;
 use App\Models\ProductModel;
 use App\Models\SalesItemModel;
@@ -122,8 +123,6 @@ class SalesController extends BaseController
         $itemIds    = $this->request->getPost('item_id') ?? [];
         $quantities = $this->request->getPost('quantity') ?? [];
         $method     = $this->request->getPost('payment_method') ?: 'Cash';
-        $discount   = (float) ($this->request->getPost('discount') ?: 0);
-        $amountPaid = (float) ($this->request->getPost('amount_paid') ?: 0);
 
         if (empty($itemIds)) {
             return redirect()->to('/admin/sales')->with('error', 'Cart is empty.');
@@ -133,8 +132,8 @@ class SalesController extends BaseController
             $method = 'Cash';
         }
 
-        $subtotal = 0;
-        $lines = [];
+        $products = [];
+        $cartLines = [];
         foreach ($itemIds as $i => $itemId) {
             $product = $this->productModel->find($itemId);
             if (! $product) {
@@ -144,29 +143,58 @@ class SalesController extends BaseController
             if ($qty > (int) $product['current_stock']) {
                 return redirect()->to('/admin/sales')->with('error', "Not enough stock for {$product['item_name']}.");
             }
-            $lineTotal = $qty * (float) $product['selling_price'];
-            $subtotal += $lineTotal;
-            $lines[] = ['product' => $product, 'qty' => $qty, 'line_total' => $lineTotal];
+            $products[] = $product;
+            $cartLines[] = [
+                'item_id'    => $product['item_id'],
+                'item_name'  => $product['item_name'],
+                'unit_price' => (float) $product['selling_price'],
+                'qty'        => $qty,
+            ];
         }
 
-        if (empty($lines)) {
+        if (empty($cartLines)) {
             return redirect()->to('/admin/sales')->with('error', 'Cart is empty.');
         }
 
-        $total = max(0, $subtotal - $discount);
+        $pricing  = PosPricing::priceCart($cartLines);
+        $subtotal = $pricing['subtotal'];
+        $discount = $pricing['discount'];
+        $total    = $pricing['total'];
+
+        $gcashRef = trim((string) ($this->request->getPost('gcash_reference_no') ?: ''));
 
         if ($method === 'Split') {
-            $cashAmount  = round((float) ($this->request->getPost('cash_amount') ?: 0), 2);
             $gcashAmount = round((float) ($this->request->getPost('gcash_amount') ?: 0), 2);
-            if (abs(($cashAmount + $gcashAmount) - $total) > 0.01) {
-                return redirect()->to('/admin/sales')->with('error', 'Cash + GCash amounts must add up to the total.');
+            if ($gcashAmount <= 0 || $gcashAmount >= $total) {
+                return redirect()->to('/admin/sales')->with('error', 'GCash amount must be between ₱0 and the total for a split payment.');
             }
+            if ($gcashRef === '') {
+                return redirect()->to('/admin/sales')->with('error', 'GCash reference number is required.');
+            }
+            $cashDue      = round($total - $gcashAmount, 2);
+            $cashReceived = round((float) ($this->request->getPost('cash_received') ?: 0), 2);
+            if ($cashReceived < $cashDue) {
+                return redirect()->to('/admin/sales')->with('error', 'Insufficient cash received for the remaining balance.');
+            }
+            $cashAmount = $cashDue;
+            $changeDue  = round($cashReceived - $cashDue, 2);
         } elseif ($method === 'GCash') {
-            $cashAmount  = 0.0;
             $gcashAmount = $total;
+            $cashAmount  = 0.0;
+            if ($gcashRef === '') {
+                return redirect()->to('/admin/sales')->with('error', 'GCash reference number is required.');
+            }
+            $cashReceived = $total;
+            $changeDue    = 0.0;
         } else {
+            $cashReceived = round((float) ($this->request->getPost('cash_received') ?: 0), 2);
+            if ($cashReceived < $total) {
+                return redirect()->to('/admin/sales')->with('error', 'Insufficient cash received.');
+            }
             $cashAmount  = $total;
             $gcashAmount = 0.0;
+            $gcashRef    = null;
+            $changeDue   = round($cashReceived - $total, 2);
         }
 
         $receiptNo = $this->salesTransactionModel->generateReceiptNo();
@@ -175,32 +203,35 @@ class SalesController extends BaseController
         $db->transStart();
 
         $salesId = $this->salesTransactionModel->insert([
-            'receipt_no'     => $receiptNo,
-            'user_id'        => session()->get('user_id'),
-            'sale_date'      => date('Y-m-d H:i:s'),
-            'payment_method' => $method,
-            'cash_amount'    => $cashAmount,
-            'gcash_amount'   => $gcashAmount,
-            'subtotal'       => $subtotal,
-            'discount'       => $discount,
-            'total_amount'   => $total,
+            'receipt_no'          => $receiptNo,
+            'user_id'             => session()->get('user_id'),
+            'sale_date'           => date('Y-m-d H:i:s'),
+            'payment_method'      => $method,
+            'cash_amount'         => $cashAmount,
+            'gcash_amount'        => $gcashAmount,
+            'gcash_reference_no'  => $gcashRef,
+            'subtotal'            => $subtotal,
+            'discount'            => $discount,
+            'total_amount'        => $total,
         ], true);
 
-        foreach ($lines as $line) {
+        foreach ($pricing['lines'] as $i => $line) {
+            $product = $products[$i];
+
             $this->salesItemModel->insert([
                 'sales_id'      => $salesId,
-                'item_id'       => $line['product']['item_id'],
+                'item_id'       => $product['item_id'],
                 'quantity_sold' => $line['qty'],
-                'selling_price' => $line['product']['selling_price'],
+                'selling_price' => $line['unit_price'],
             ]);
 
-            $newStock = (int) $line['product']['current_stock'] - $line['qty'];
-            $this->productModel->update($line['product']['item_id'], [
+            $newStock = (int) $product['current_stock'] - $line['qty'];
+            $this->productModel->update($product['item_id'], [
                 'current_stock' => $newStock,
             ]);
 
             $this->inventoryLogModel->record(
-                $line['product']['item_id'],
+                $product['item_id'],
                 session()->get('user_id'),
                 'SALE',
                 -$line['qty'],
@@ -216,27 +247,29 @@ class SalesController extends BaseController
             return redirect()->to('/admin/sales')->with('error', 'Checkout failed and was rolled back. Please try again.');
         }
 
-        $vat = round($total - ($total / 1.03), 2);
-        $effectiveAmountPaid = $method === 'Cash' ? max($amountPaid, $total) : $total;
-
         $receipt = [
-            'receipt_no'     => $receiptNo,
-            'sale_date'      => date('Y-m-d H:i:s'),
-            'lines'          => array_map(fn ($l) => [
-                'item_name' => $l['product']['item_name'],
-                'size'      => $l['product']['size'] ?? null,
-                'qty'       => $l['qty'],
-                'total'     => $l['line_total'],
-            ], $lines),
-            'subtotal_ex_vat' => round($total - $vat, 2),
-            'vat'             => $vat,
-            'total'           => $total,
-            'amount_paid'     => $effectiveAmountPaid,
-            'change'          => max(0, $effectiveAmountPaid - $total),
-            'payment_method'  => $method,
-            'cash_amount'     => $cashAmount,
-            'gcash_amount'    => $gcashAmount,
-            'staff_name'      => session()->get('full_name'),
+            'receipt_no'         => $receiptNo,
+            'sale_date'          => date('Y-m-d H:i:s'),
+            'lines'              => array_map(fn ($l) => [
+                'item_name'  => $l['item_name'],
+                'qty'        => $l['qty'],
+                'unit_price' => $l['unit_price'],
+                'total'      => $l['line_total'],
+                'discount'   => $l['discount'],
+                'badge'      => $l['badge'],
+            ], $pricing['lines']),
+            'subtotal'           => $subtotal,
+            'discount'           => $discount,
+            'vatable'            => $pricing['vatable'],
+            'vat'                => $pricing['vat'],
+            'total'              => $total,
+            'cash_received'      => $cashReceived,
+            'change'             => max(0, $changeDue),
+            'payment_method'     => $method,
+            'cash_amount'        => $cashAmount,
+            'gcash_amount'       => $gcashAmount,
+            'gcash_reference_no' => $gcashRef,
+            'staff_name'         => session()->get('full_name'),
         ];
 
         return redirect()->to('/admin/sales')->with('success', 'Sale completed and receipt printed.')->with('receipt', $receipt);

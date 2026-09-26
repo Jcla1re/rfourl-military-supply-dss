@@ -76,8 +76,9 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
 
         <div class="underline-tabs">
             <a href="<?= site_url('staff/inventory') ?>" class="<?= $filterCategory === 'All' ? 'active' : '' ?>">All Items (<?= esc($totalItems ?? 0) ?>)</a>
+            <?php $categoryStockTotals = $categoryStockTotals ?? []; ?>
             <?php foreach ($categories as $itemCategory): ?>
-                <a href="<?= site_url('staff/inventory') . '?category=' . urlencode($itemCategory) ?>" class="<?= $filterCategory === $itemCategory ? 'active' : '' ?>"><?= esc($itemCategory) ?></a>
+                <a href="<?= site_url('staff/inventory') . '?category=' . urlencode($itemCategory) ?>" class="<?= $filterCategory === $itemCategory ? 'active' : '' ?>"><?= esc($itemCategory) ?> (<?= number_format($categoryStockTotals[$itemCategory] ?? 0) ?>)</a>
             <?php endforeach; ?>
         </div>
 
@@ -135,13 +136,23 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
             <?php if (($totalPages ?? 1) > 1): ?>
                 <div class="admin-pagination">
                     <?php
-                    $prevPage = max(1, (int) $currentPage - 1);
-                    $nextPage = min((int) $totalPages, (int) $currentPage + 1);
+                    $currentPage = max(1, (int) ($currentPage ?? 1));
+                    $prevPage = max(1, $currentPage - 1);
+                    $nextPage = min((int) $totalPages, $currentPage + 1);
                     $params = $_GET;
+
+                    // Only ever show a sliding window of PAGER_WINDOW page
+                    // buttons (centered on the current page) instead of one
+                    // link per page — with 562 items that was 57 buttons wide.
+                    $pagerWindow = 10;
+                    $windowStart = max(1, $currentPage - intdiv($pagerWindow, 2));
+                    $windowEnd   = min((int) $totalPages, $windowStart + $pagerWindow - 1);
+                    $windowStart = max(1, $windowEnd - $pagerWindow + 1);
+
                     $params['page'] = $prevPage;
                     ?>
                     <a href="<?= site_url('staff/inventory') . '?' . http_build_query($params) ?>">&larr; Prev</a>
-                    <?php for ($i = 1; $i <= $totalPages; $i++): $params['page'] = $i; ?>
+                    <?php for ($i = $windowStart; $i <= $windowEnd; $i++): $params['page'] = $i; ?>
                         <a href="<?= site_url('staff/inventory') . '?' . http_build_query($params) ?>" class="<?= $i === (int) $currentPage ? 'active' : '' ?>"><?= $i ?></a>
                     <?php endfor; ?>
                     <?php $params['page'] = $nextPage; ?>

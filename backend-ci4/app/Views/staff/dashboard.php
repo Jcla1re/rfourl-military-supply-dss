@@ -22,8 +22,10 @@
 
 .dash-stat {
     background: #fff; border-radius: 14px; padding: 20px 22px; display: flex; align-items: center; gap: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; text-decoration: none; color: inherit;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
+a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-1px); cursor: pointer; }
 .dash-stat .icon { font-size: 26px; flex-shrink: 0; }
 .dash-stat .label { color: #444; font-size: 14px; }
 .dash-stat .value { font-size: 26px; font-weight: 800; line-height: 1.15; }
@@ -77,17 +79,17 @@
 
     <div class="row g-3 mb-3">
         <div class="col-md-4">
-            <div class="dash-stat">
+            <a href="<?= site_url('staff/inventory') ?>" class="dash-stat">
                 <span class="icon"><i class="bi bi-box-seam"></i></span>
                 <div><div class="label">Total Stock on hand</div><div class="value"><?= number_format($totalStock ?? 0) ?></div></div>
-            </div>
+            </a>
         </div>
         <div class="col-md-4">
-            <div class="dash-stat">
+            <a href="<?= site_url('staff/sales') . '?tab=receipts' ?>" class="dash-stat">
                 <span class="icon"><i class="bi bi-cash-coin"></i></span>
                 <div><div class="label">Sales Today</div><div class="value">₱<?= number_format($salesToday ?? 0, 0) ?></div></div>
                 <div class="trend"><span class="pct">▲ <?= esc($salesTrendPct ?? '0%') ?></span><br>vs yesterday</div>
-            </div>
+            </a>
         </div>
         <div class="col-md-4">
             <div class="dash-stat">

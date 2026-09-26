@@ -19,6 +19,7 @@ class SalesTransactionModel extends Model
         'payment_method',
         'cash_amount',
         'gcash_amount',
+        'gcash_reference_no',
         'subtotal',
         'discount',
         'total_amount',

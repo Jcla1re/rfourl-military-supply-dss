@@ -27,7 +27,11 @@
     gap: 16px;
     box-shadow: 0 1px 3px rgba(0,0,0,.06);
     height: 100%;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
+a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-1px); cursor: pointer; }
 .dash-stat .icon { font-size: 28px; flex-shrink: 0; }
 .dash-stat .label { color: #444; font-size: 15px; }
 .dash-stat .value { font-size: 30px; font-weight: 800; line-height: 1.15; }
@@ -65,7 +69,7 @@
 
     <div class="row g-3 mb-3">
         <div class="col-md-6">
-            <div class="dash-stat">
+            <a href="<?= site_url('admin/inventory') ?>" class="dash-stat">
                 <span class="icon"><i class="bi bi-box-seam"></i></span>
                 <div>
                     <div class="label">Total Stock on hand</div>
@@ -74,10 +78,10 @@
                 <div class="trend">
                     <span class="pct">▲ <?= esc($stockTrendPct ?? '0%') ?></span><br>this week
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-md-6">
-            <div class="dash-stat">
+            <a href="<?= site_url('admin/sales') . '?tab=receipts' ?>" class="dash-stat">
                 <span class="icon"><i class="bi bi-cash-coin"></i></span>
                 <div>
                     <div class="label">Sales Today</div>
@@ -86,7 +90,7 @@
                 <div class="trend">
                     <span class="pct">▲ <?= esc($salesTrendPct ?? '0%') ?></span><br>vs yesterday
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -161,7 +165,7 @@ new Chart(document.getElementById('seasonChart'), {
         labels: <?= json_encode($seasonLabels ?? []) ?>,
         datasets: [{
             data: <?= json_encode($seasonData ?? []) ?>,
-            backgroundColor: '#1c1c1c',
+            backgroundColor: '#3d5230',
             borderRadius: 4
         }]
     },
