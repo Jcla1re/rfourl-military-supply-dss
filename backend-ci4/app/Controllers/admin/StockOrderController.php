@@ -100,7 +100,10 @@ class StockOrderController extends BaseController
             'Admin',
             'Order Status',
             "Order {$soId} flagged as delayed",
-            "The expected delivery for {$soId} has passed. Follow up with the supplier."
+            "The expected delivery for {$soId} has passed. Follow up with the supplier.",
+            null,
+            'order_status',
+            "/admin/orders/{$soId}"
         );
 
         return redirect()->to('/admin/orders')->with('success', "Order {$soId} flagged as delayed. Supplier will be followed up.");

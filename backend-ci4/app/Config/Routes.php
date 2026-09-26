@@ -62,6 +62,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
 
     $routes->get('settings', 'SettingsController::index');
     $routes->post('settings/dss-parameters', 'SettingsController::updateDssParameters');
+    $routes->post('settings/notification-preference', 'SettingsController::updateNotificationPreference');
     $routes->post('settings/account', 'SettingsController::updateAccount');
     $routes->post('settings/owner-password', 'SettingsController::changeOwnerPassword');
     $routes->post('settings/staff-password', 'SettingsController::changeStaffPassword');
@@ -71,6 +72,9 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->get('notifications', 'NotificationController::index');
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');
     $routes->post('notifications/mark-all-read', 'NotificationController::markAllRead');
+    $routes->post('notifications/open/(:segment)', 'NotificationController::open/$1');
+    $routes->post('notifications/approve/(:segment)', 'NotificationController::approve/$1');
+    $routes->post('notifications/decline/(:segment)', 'NotificationController::decline/$1');
 });
 
 $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'roleauth:Staff'], static function ($routes) {

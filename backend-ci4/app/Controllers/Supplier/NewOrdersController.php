@@ -65,7 +65,7 @@ class NewOrdersController extends BaseController
 
         $this->stockOrderModel->update($soId, ['status' => 'Preparing']);
 
-        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} accepted by supplier", session()->get('full_name') . " accepted order {$soId} and has started preparing it.");
+        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} accepted by supplier", session()->get('full_name') . " accepted order {$soId} and has started preparing it.", null, 'order_status', "/admin/orders/{$soId}");
 
         return redirect()->to('/supplier/new-orders')->with('success', "Order {$soId} accepted. It now appears under Deliveries.");
     }
@@ -80,7 +80,7 @@ class NewOrdersController extends BaseController
 
         $this->stockOrderModel->update($soId, ['status' => 'Cancelled']);
 
-        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} declined by supplier", session()->get('full_name') . " declined order {$soId}. Please reassign or follow up.");
+        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} declined by supplier", session()->get('full_name') . " declined order {$soId}. Please reassign or follow up.", null, 'order_status', "/admin/orders/{$soId}");
 
         return redirect()->to('/supplier/new-orders')->with('success', "Order {$soId} declined.");
     }

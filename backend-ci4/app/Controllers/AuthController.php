@@ -293,7 +293,9 @@ class AuthController extends BaseController
             'Admin',
             'Access Request',
             "Password reset requested by {$staffName}",
-            $reason !== '' ? $reason : 'No reason provided.'
+            $reason !== '' ? $reason : 'No reason provided.',
+            null,
+            'access_request'
         );
 
         return redirect()->to('/login/staff/forgot')->with('sent', true);

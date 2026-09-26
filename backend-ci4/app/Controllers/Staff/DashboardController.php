@@ -5,6 +5,7 @@ namespace App\Controllers\Staff;
 
 use App\Controllers\BaseController;
 use App\Models\NotificationModel;
+use App\Models\NotificationPreferenceModel;
 use App\Models\ProductModel;
 use App\Models\ReorderAlertModel;
 use App\Models\SalesItemModel;
@@ -86,12 +87,16 @@ class DashboardController extends BaseController
         $itemId   = $this->request->getPost('item_id');
         $itemName = $this->request->getPost('item_name') ?: 'an item';
 
-        (new NotificationModel())->push(
-            'Admin',
-            'Reorder Point Notice',
-            "Staff flagged {$itemName} as needing reorder attention.",
-            $itemId ? "Item ID: {$itemId}" : null
-        );
+        if ((new NotificationPreferenceModel())->isEnabled('rop_alerts')) {
+            (new NotificationModel())->push(
+                'Admin',
+                'Reorder Point Notice',
+                "Staff flagged {$itemName} as needing reorder attention.",
+                $itemId ? "Item ID: {$itemId}" : null,
+                null,
+                'staff_activity'
+            );
+        }
 
         return redirect()->to('/staff/dashboard')->with('success', 'Notify Sent! Reorder Point Notice');
     }

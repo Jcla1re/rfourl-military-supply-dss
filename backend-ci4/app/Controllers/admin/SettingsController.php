@@ -4,17 +4,20 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\DssParameterModel;
+use App\Models\NotificationPreferenceModel;
 use App\Models\UserModel;
 
 class SettingsController extends BaseController
 {
     protected $dssParameterModel;
     protected $userModel;
+    protected $notificationPreferenceModel;
 
     public function __construct()
     {
-        $this->dssParameterModel = new DssParameterModel();
-        $this->userModel         = new UserModel();
+        $this->dssParameterModel          = new DssParameterModel();
+        $this->userModel                  = new UserModel();
+        $this->notificationPreferenceModel = new NotificationPreferenceModel();
     }
 
     public function index()
@@ -26,6 +29,7 @@ class SettingsController extends BaseController
             'active'        => 'settings',
             'tab'           => $tab,
             'dss'           => $this->dssParameterModel->current(),
+            'notifPrefs'    => $this->notificationPreferenceModel->current(),
             'admin'         => $this->userModel->find(session()->get('user_id')),
             'staffAccounts' => $this->userModel->where('role', 'Staff')->findAll(),
             'success'       => session()->getFlashdata('success'),
@@ -33,6 +37,20 @@ class SettingsController extends BaseController
         ];
 
         return view('admin/settings', $data);
+    }
+
+    public function updateNotificationPreference()
+    {
+        $key = (string) $this->request->getPost('pref_key');
+
+        if (! in_array($key, NotificationPreferenceModel::KEYS, true)) {
+            return redirect()->to('/admin/settings?tab=notif')->with('error', 'Unknown notification preference.');
+        }
+
+        $enabled = (bool) $this->request->getPost('enabled');
+        $this->notificationPreferenceModel->setEnabled($key, $enabled, (int) session()->get('user_id'));
+
+        return redirect()->to('/admin/settings?tab=notif')->with('success', 'Notification preferences updated.');
     }
 
     public function updateDssParameters()

@@ -7,6 +7,7 @@ use App\Controllers\BaseController;
 use App\Models\ClusterSegmentModel;
 use App\Models\DssParameterModel;
 use App\Models\NotificationModel;
+use App\Models\NotificationPreferenceModel;
 use App\Models\PdssComputationModel;
 use App\Models\ReorderAlertModel;
 use App\Models\SupplierModel;
@@ -75,12 +76,16 @@ class ReorderAlertController extends BaseController
     {
         $alert = $this->reorderAlertModel->find((int) $alertId);
 
-        (new NotificationModel())->push(
-            'Admin',
-            'Reorder Point Notice',
-            'Staff flagged ' . ($alert['item_name'] ?? "alert #{$alertId}") . ' as needing reorder attention.',
-            'Reason: ' . ($alert['trigger_reason'] ?? '—')
-        );
+        if ((new NotificationPreferenceModel())->isEnabled('rop_alerts')) {
+            (new NotificationModel())->push(
+                'Admin',
+                'Reorder Point Notice',
+                'Staff flagged ' . ($alert['item_name'] ?? "alert #{$alertId}") . ' as needing reorder attention.',
+                'Reason: ' . ($alert['trigger_reason'] ?? '—'),
+                null,
+                'staff_activity'
+            );
+        }
 
         return redirect()->to('/staff/reorder-alerts')->with('success', 'Notify Sent! Reorder Point Notice');
     }

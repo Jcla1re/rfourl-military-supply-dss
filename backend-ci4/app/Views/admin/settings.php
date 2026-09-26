@@ -242,20 +242,28 @@ $tabs = [
 
             <div class="set-card">
                 <?php
+                $notifPrefs = $notifPrefs ?? [];
                 $prefs = [
-                    ['Reorder Point (ROP) Alerts', "Notify when an item reaches its calculated ROP threshold", true],
-                    ['Low Stock Warnings (Approaching ROP)', 'Early warning when stock drops to 120% of the ROP value', true],
-                    ['Daily Sales Summary', "Receive a summary of the day's transactions every night at 9 PM", true],
-                    ['Procurement Schedule Reminders', 'Alert 2 days before a scheduled restock date', true],
-                    ['Weekly Trend Report', 'Auto-generate and display a demand summary every Monday', false],
+                    ['rop_alerts', 'Reorder Point (ROP) Alerts', 'Notify when an item reaches its calculated ROP threshold'],
+                    ['low_stock_warnings', 'Low Stock Warnings (Approaching ROP)', 'Early warning when stock drops to 120% of the ROP value'],
+                    ['daily_sales_summary', 'Daily Sales Summary', "Receive a summary of the day's transactions every night at 9 PM"],
+                    ['procurement_reminders', 'Procurement Schedule Reminders', 'Alert 2 days before a scheduled restock date'],
+                    ['weekly_trend_report', 'Weekly Trend Report', 'Auto-generate and display a demand summary every Monday'],
                 ];
                 ?>
-                <?php foreach ($prefs as $p): ?>
+                <?php foreach ($prefs as [$key, $label, $desc]): ?>
+                    <?php $isOn = !empty($notifPrefs[$key]); ?>
                     <div class="notif-pref-row">
-                        <div><strong><?= esc($p[0]) ?></strong><span class="desc"><?= esc($p[1]) ?></span></div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" style="width:2.5em;height:1.4em;" <?= $p[2] ? 'checked' : '' ?> disabled>
-                        </div>
+                        <div><strong><?= esc($label) ?></strong><span class="desc"><?= esc($desc) ?></span></div>
+                        <form method="post" action="<?= site_url('admin/settings/notification-preference') ?>">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="pref_key" value="<?= esc($key) ?>">
+                            <input type="hidden" name="enabled" value="0">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" style="width:2.5em;height:1.4em;"
+                                       name="enabled" value="1" <?= $isOn ? 'checked' : '' ?> onchange="this.form.submit()">
+                            </div>
+                        </form>
                     </div>
                 <?php endforeach; ?>
             </div>

@@ -5,6 +5,7 @@ namespace App\Controllers\Staff;
 
 use App\Controllers\BaseController;
 use App\Models\NotificationModel;
+use App\Models\NotificationPreferenceModel;
 use App\Models\ProductModel;
 
 class InventoryController extends BaseController
@@ -114,12 +115,16 @@ class InventoryController extends BaseController
     {
         $product = $this->productModel->find($itemId);
 
-        (new NotificationModel())->push(
-            'Admin',
-            'Reorder Point Notice',
-            'Staff flagged ' . ($product['item_name'] ?? $itemId) . ' as needing reorder attention.',
-            'Current stock: ' . ($product['current_stock'] ?? '—')
-        );
+        if ((new NotificationPreferenceModel())->isEnabled('rop_alerts')) {
+            (new NotificationModel())->push(
+                'Admin',
+                'Reorder Point Notice',
+                'Staff flagged ' . ($product['item_name'] ?? $itemId) . ' as needing reorder attention.',
+                'Current stock: ' . ($product['current_stock'] ?? '—'),
+                null,
+                'staff_activity'
+            );
+        }
 
         return redirect()->to('/staff/inventory')->with('success', 'Notify Sent! Reorder Point Notice');
     }
