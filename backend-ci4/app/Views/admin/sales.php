@@ -118,7 +118,7 @@
 .receipt-card .rc-close { float: right; background: none; border: none; font-size: 20px; cursor: pointer; font-family: Arial, sans-serif; }
 .inv-title { text-align: center; font-weight: 800; font-size: 25px; letter-spacing: .01em; margin: 0 0 8px; }
 .inv-sub { text-align: center; font-size: 12px; color: #333; line-height: 1.5; }
-.inv-heading-row { display: flex; justify-content: space-between; align-items: baseline; border-top: 2px solid #1c1c1c; border-bottom: 2px solid #1c1c1c; margin: 18px 0 14px; padding: 8px 2px; }
+.inv-heading-row { display: flex; justify-content: space-between; align-items: baseline; margin: 18px 0 14px; padding: 8px 2px; }
 .inv-heading { font-weight: 800; font-size: 15px; letter-spacing: .05em; }
 .inv-no { font-weight: 800; font-size: 19px; color: var(--accent-maroon); }
 .inv-no .inv-no-label { font-size: 13px; margin-right: 8px; }
@@ -127,7 +127,7 @@
 .inv-field .inv-line { display: inline-block; border-bottom: 1px solid #999; min-width: 55%; padding-bottom: 1px; margin-left: 4px; }
 .inv-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 16px 0 6px; }
 .inv-table th, .inv-table td { border: 1px solid #999; padding: 5px 8px; text-align: left; }
-.inv-table th { text-align: center; font-weight: 700; background: #f2f0e9; }
+.inv-table th { text-align: center; font-weight: 700; }
 .inv-table td.num, .inv-table th.num { text-align: right; }
 .inv-table .blank-row td { height: 20px; }
 .inv-totals { margin-left: auto; width: 62%; margin-top: 4px; }
@@ -135,8 +135,18 @@
 .inv-totals div.grand { font-weight: 800; font-size: 14px; border-top: 2px solid #1c1c1c; border-bottom: 2px solid #1c1c1c; margin-top: 2px; padding: 6px; }
 .inv-payment { margin-top: 14px; font-size: 12.5px; border-top: 1px dashed #ccc; padding-top: 10px; }
 .inv-payment div { display: flex; justify-content: space-between; padding: 2px 0; }
-.inv-signature { margin-top: 46px; text-align: center; font-size: 12px; border-top: 1px solid #1c1c1c; padding-top: 4px; width: 62%; margin-left: auto; margin-right: 0; font-weight: 700; }
-.rc-footer { text-align: center; font-size: 10.5px; color: #666; margin-top: 18px; font-family: Arial, sans-serif; }
+
+/* Printing-house / BIR boilerplate that's pre-printed on the shop's real
+   invoice booklets — static on every receipt, so it's plain markup rather
+   than anything computed per-sale. */
+.inv-print-footer { display: flex; justify-content: space-between; gap: 20px; margin-top: 28px; font-size: 9.5px; line-height: 1.5; color: #1c1c1c; font-family: Arial, sans-serif; }
+.inv-print-footer .pf-left { max-width: 58%; }
+.inv-print-footer .pf-bold { font-weight: 700; }
+.inv-print-footer .pf-right { text-align: center; min-width: 190px; }
+.inv-print-footer .pf-sig-line { border-top: 1px solid #1c1c1c; margin-bottom: 4px; margin-top: 16px; }
+.inv-print-footer .pf-sig-name { font-family: Georgia, 'Times New Roman', serif; font-size: 12px; margin-bottom: 2px; }
+.inv-print-footer .pf-sig-label { font-weight: 700; margin-bottom: 6px; font-family: Georgia, 'Times New Roman', serif; font-size: 12px; }
+.inv-disclaimer { text-align: center; font-size: 10px; font-weight: 700; text-decoration: underline; margin-top: 18px; font-family: Arial, sans-serif; }
 .rc-actions { display: flex; gap: 10px; margin-top: 16px; }
 .rc-actions button, .rc-actions a { flex: 1; text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; border: 1px solid #ccc; background: #fff; cursor: pointer; text-decoration: none; color: #1c1c1c; font-family: Arial, sans-serif; }
 
@@ -207,10 +217,8 @@
                         <div class="row-line"><span>Subtotal</span><span id="cartSubtotal">₱0</span></div>
                         <div class="row-line discount-row" id="discountRow" style="display:none;"><span>Discount</span><span id="cartDiscountOut">- ₱0</span></div>
                         <div class="row-line total"><span>TOTAL</span><span id="cartTotal">₱0</span></div>
-                        <div class="row-line muted"><span>VATable Sales</span><span id="cartVatable">₱0</span></div>
-                        <div class="row-line muted"><span>VAT (12%)</span><span id="cartVat">₱0</span></div>
                     </div>
-                    <div class="cart-note">Prices include 12% VAT. Buy 10 or more of the same item for 5% off, or a matching set (e.g. Upper + Lower) for 2% off.</div>
+                    <div class="cart-note">Buy 10 or more of the same item for 5% off, or a matching set (e.g. Upper + Lower) for 2% off.</div>
 
                     <label class="fw-bold mt-2 mb-1 d-block">Payment Method</label>
                     <input type="hidden" name="payment_method" id="paymentMethod" value="Cash">
@@ -316,6 +324,7 @@
                                         'cash_amount'        => (float) $t['cash_amount'],
                                         'gcash_amount'       => (float) $t['gcash_amount'],
                                         'gcash_reference_no' => $t['gcash_reference_no'] ?? null,
+                                        'staff_name'         => ($t['cashier_role'] ?? null) === 'Admin' ? 'Owner' : ($t['cashier_name'] ?? null),
                                     ];
                                 ?>
                                 <tr>
@@ -396,12 +405,12 @@
                     <tr>
                         <td style="text-align:center;"><?= esc($l['qty']) ?></td>
                         <td style="text-align:center;">pc</td>
-                        <td><?= esc($l['item_name']) ?><?php if (!empty($l['badge'])): ?> <span style="font-size:10px;color:#8a6300;">(<?= esc($l['badge']) ?>)</span><?php endif; ?></td>
+                        <td><?= esc($l['item_name']) ?><?php if (!empty($l['badge'])): ?> <span style="font-size:10px;">(<?= esc($l['badge']) ?>)</span><?php endif; ?></td>
                         <td class="num">₱<?= number_format($l['unit_price'], 2) ?></td>
                         <td class="num">₱<?= number_format($l['total'], 2) ?></td>
                     </tr>
                 <?php endforeach; ?>
-                <?php for ($i = count($receipt['lines']); $i < 5; $i++): ?>
+                <?php for ($i = count($receipt['lines']); $i < 12; $i++): ?>
                     <tr class="blank-row"><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>
                 <?php endfor; ?>
             </tbody>
@@ -410,7 +419,6 @@
         <div class="inv-totals">
             <div><span>Subtotal</span><span>₱<?= number_format($receipt['subtotal'], 2) ?></span></div>
             <div><span>Less: Discount</span><span>₱<?= number_format($receipt['discount'], 2) ?></span></div>
-            <div><span>Add: VAT (12%)</span><span>₱<?= number_format($receipt['vat'], 2) ?></span></div>
             <div class="grand"><span>TOTAL AMOUNT DUE</span><span>₱<?= number_format($receipt['total'], 2) ?></span></div>
         </div>
 
@@ -429,9 +437,24 @@
             <div><span>Payment Method</span><span><?= esc(strtoupper($receipt['payment_method'] === 'Split' ? 'CASH + GCASH' : $receipt['payment_method'])) ?></span></div>
         </div>
 
-        <div class="inv-signature">Cashier/Authorized Representative</div>
-
-        <div class="rc-footer">This receipt is system-generated. Not valid for claim of input taxes.<br>Concerns: rfourlmilitary@gmail.com</div>
+        <div class="inv-print-footer">
+            <div class="pf-left">
+                <div>50 Bklts. (50 &times; 2) 1001-3500</div>
+                <div>BIR Authority to Print No.: 040AU20230000001797</div>
+                <div>Date Issued: 03-24-2023</div>
+                <div class="pf-bold">VICKIES PRINTING HOUSE (VICTOR S. OCAMPO)</div>
+                <div>1124-A T. Mapua St., Brgy 335 Zone 33, Sta. Cruz, Manila</div>
+                <div class="pf-bold">TIN: 255-258-227-00000 Non-VAT</div>
+            </div>
+            <div class="pf-right">
+                <div class="pf-sig-line"></div>
+                <div class="pf-sig-name"><?= esc($receipt['staff_name'] ?? '') ?></div>
+                <div class="pf-sig-label">Cashier/Authorized Representative</div>
+                <div>Printer's Accreditation No. 031MP20190000000028</div>
+                <div>Date Issued: 06-19-2019 Expiry date: 06-18-2024</div>
+            </div>
+        </div>
+        <div class="inv-disclaimer">&quot;THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAXES&quot;</div>
 
         <div class="rc-actions">
             <button type="button" onclick="window.print()">Print</button>
@@ -479,8 +502,26 @@ document.getElementById('closeReceipt')?.addEventListener('click', () => {
 
         <div class="inv-totals" id="hrTotals"></div>
         <div class="inv-payment" id="hrPayment"></div>
-        <div class="inv-signature">Cashier/Authorized Representative</div>
-        <div class="rc-footer">This receipt is system-generated. Not valid for claim of input taxes.<br>Concerns: rfourlmilitary@gmail.com</div>
+
+        <div class="inv-print-footer">
+            <div class="pf-left">
+                <div>50 Bklts. (50 &times; 2) 1001-3500</div>
+                <div>BIR Authority to Print No.: 040AU20230000001797</div>
+                <div>Date Issued: 03-24-2023</div>
+                <div class="pf-bold">VICKIES PRINTING HOUSE (VICTOR S. OCAMPO)</div>
+                <div>1124-A T. Mapua St., Brgy 335 Zone 33, Sta. Cruz, Manila</div>
+                <div class="pf-bold">TIN: 255-258-227-00000 Non-VAT</div>
+            </div>
+            <div class="pf-right">
+                <div class="pf-sig-line"></div>
+                <div class="pf-sig-name" id="hrSigName"></div>
+                <div class="pf-sig-label">Cashier/Authorized Representative</div>
+                <div>Printer's Accreditation No. 031MP20190000000028</div>
+                <div>Date Issued: 06-19-2019 Expiry date: 06-18-2024</div>
+            </div>
+        </div>
+        <div class="inv-disclaimer">&quot;THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAXES&quot;</div>
+
         <div class="rc-actions">
             <button type="button" onclick="window.print()">Print</button>
             <button type="button" id="closeHistoryReceipt2">Close</button>
@@ -503,16 +544,13 @@ document.getElementById('closeReceipt')?.addEventListener('click', () => {
         const rowsHtml = r.items.map(l =>
             `<tr><td style="text-align:center;">${l.qty}</td><td style="text-align:center;">pc</td><td>${escapeHtml(l.item_name)}</td><td class="num">₱${l.unit_price.toFixed(2)}</td><td class="num">₱${l.total.toFixed(2)}</td></tr>`
         );
-        for (let i = r.items.length; i < 5; i++) {
+        for (let i = r.items.length; i < 12; i++) {
             rowsHtml.push('<tr class="blank-row"><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>');
         }
         document.getElementById('hrItemsBody').innerHTML = rowsHtml.join('');
 
-        const vat = Math.round((r.total - r.total / 1.12) * 100) / 100;
-
         let totalsHtml = `<div><span>Subtotal</span><span>₱${r.subtotal.toFixed(2)}</span></div>`;
         totalsHtml += `<div><span>Less: Discount</span><span>₱${r.discount.toFixed(2)}</span></div>`;
-        totalsHtml += `<div><span>Add: VAT (12%)</span><span>₱${vat.toFixed(2)}</span></div>`;
         totalsHtml += `<div class="grand"><span>TOTAL AMOUNT DUE</span><span>₱${r.total.toFixed(2)}</span></div>`;
         document.getElementById('hrTotals').innerHTML = totalsHtml;
 
@@ -527,6 +565,7 @@ document.getElementById('closeReceipt')?.addEventListener('click', () => {
         const methodLabel = r.payment_method === 'Split' ? 'CASH + GCASH' : r.payment_method.toUpperCase();
         paymentHtml += `<div><span>Payment Method</span><span>${escapeHtml(methodLabel)}</span></div>`;
         document.getElementById('hrPayment').innerHTML = paymentHtml;
+        document.getElementById('hrSigName').textContent = r.staff_name || '';
 
         document.getElementById('historyReceiptModal').classList.add('show');
     }
@@ -584,7 +623,6 @@ if (document.getElementById('posGrid')) {
     const BULK_QTY_THRESHOLD = 10;
     const BULK_DISCOUNT_RATE = 0.05;
     const SET_DISCOUNT_RATE = 0.02;
-    const VAT_RATE = 0.12;
     const UPPER_WORDS = ['upper', 'top', 'shirt', 'blouse', 'jacket', 'polo'];
     const LOWER_WORDS = ['lower', 'bottom', 'pants', 'trousers', 'shorts', 'skirt'];
 
@@ -642,10 +680,8 @@ if (document.getElementById('posGrid')) {
         subtotal = Math.round(subtotal * 100) / 100;
         discount = Math.round(discount * 100) / 100;
         const total = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
-        const vat = Math.round((total - total / (1 + VAT_RATE)) * 100) / 100;
-        const vatable = Math.round((total - vat) * 100) / 100;
 
-        return { lines, subtotal, discount, total, vatable, vat };
+        return { lines, subtotal, discount, total };
     }
 
     function renderCart() {
@@ -681,8 +717,6 @@ if (document.getElementById('posGrid')) {
         document.getElementById('discountRow').style.display = pricing.discount > 0 ? '' : 'none';
         document.getElementById('cartDiscountOut').textContent = '- ₱' + pricing.discount.toLocaleString();
         document.getElementById('cartTotal').textContent = '₱' + pricing.total.toLocaleString();
-        document.getElementById('cartVatable').textContent = '₱' + pricing.vatable.toLocaleString();
-        document.getElementById('cartVat').textContent = '₱' + pricing.vat.toLocaleString();
         document.getElementById('checkoutBtn').disabled = ids.length === 0;
 
         renderChips('cashChips', pricing.total, 'cashReceived');

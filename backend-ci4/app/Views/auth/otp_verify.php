@@ -1,3 +1,9 @@
+<?php
+$role     = $role ?? 'admin';
+$email    = $email ?? '';
+$noticeMsg = session()->getFlashdata('notice');
+$errorMsg  = session()->getFlashdata('error');
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,8 +15,8 @@
         <h2>Forgot Password</h2>
         <p class="auth-hint">Verification code has been sent to your email<?= !empty($email) ? ' (' . esc($email) . ')' : '' ?>. Please check it</p>
 
-        <?php if (session()->getFlashdata('notice')): ?>
-            <div class="auth-notice"><?= esc(session()->getFlashdata('notice')) ?></div>
+        <?php if ($noticeMsg): ?>
+            <div class="auth-notice"><?= esc((string) $noticeMsg) ?></div>
         <?php endif; ?>
 
         <form action="<?= site_url('login/' . $role . '/otp') ?>" method="post">
@@ -20,8 +26,8 @@
             <button type="submit" class="btn-login">Confirm</button>
         </form>
 
-        <?php if (session()->getFlashdata('error')): ?>
-            <div class="auth-error"><?= esc(session()->getFlashdata('error')) ?></div>
+        <?php if ($errorMsg): ?>
+            <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
         <?php endif; ?>
 
         <div class="auth-resend">

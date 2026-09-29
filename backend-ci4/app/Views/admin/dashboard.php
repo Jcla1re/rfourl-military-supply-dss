@@ -37,6 +37,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
 .dash-stat .value { font-size: 30px; font-weight: 800; line-height: 1.15; }
 .dash-stat .trend { margin-left: auto; text-align: right; font-size: 12px; color: #666; }
 .dash-stat .trend .pct { color: #2f6431; font-weight: 700; }
+.dash-stat .trend .pct.down { color: var(--accent-maroon); }
 
 .chart-card {
     background: #fff;
@@ -67,8 +68,13 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
     </div>
     <?php endif; ?>
 
+    <?php
+        $salesTrendPct  = $salesTrendPct ?? '0%';
+        $salesTrendUp   = strpos($salesTrendPct, '-') !== 0;
+        $salesTrendAbs  = ltrim($salesTrendPct, '-');
+    ?>
     <div class="row g-3 mb-3">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <a href="<?= site_url('admin/inventory') ?>" class="dash-stat">
                 <span class="icon"><i class="bi bi-box-seam"></i></span>
                 <div>
@@ -80,7 +86,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
                 </div>
             </a>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <a href="<?= site_url('admin/sales') . '?tab=receipts' ?>" class="dash-stat">
                 <span class="icon"><i class="bi bi-cash-coin"></i></span>
                 <div>
@@ -88,7 +94,16 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
                     <div class="value">₱<?= number_format($salesToday ?? 0, 0) ?></div>
                 </div>
                 <div class="trend">
-                    <span class="pct">▲ <?= esc($salesTrendPct ?? '0%') ?></span><br>vs yesterday
+                    <span class="pct <?= $salesTrendUp ? '' : 'down' ?>"><?= $salesTrendUp ? '▲' : '▼' ?> <?= esc($salesTrendAbs) ?></span><br>vs yesterday
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="<?= site_url('admin/sales') . '?tab=receipts&date=' . date('Y-m-d', strtotime('-1 day')) ?>" class="dash-stat">
+                <span class="icon"><i class="bi bi-calendar2-minus"></i></span>
+                <div>
+                    <div class="label">Sales Yesterday</div>
+                    <div class="value">₱<?= number_format($salesYesterday ?? 0, 0) ?></div>
                 </div>
             </a>
         </div>

@@ -1,4 +1,8 @@
-<?php $roleLabel = $role === 'supplier' ? 'Supplier' : 'Admin'; ?>
+<?php
+$role      = $role ?? 'admin';
+$roleLabel = $role === 'supplier' ? 'Supplier' : 'Admin';
+$errorMsg  = session()->getFlashdata('error');
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -14,11 +18,12 @@
             <?= csrf_field() ?>
             <label>Email:</label>
             <input type="email" name="email" required autofocus>
+
             <button type="submit" class="btn-login">Send Code</button>
         </form>
 
-        <?php if (session()->getFlashdata('error')): ?>
-            <div class="auth-error"><?= esc(session()->getFlashdata('error')) ?></div>
+        <?php if ($errorMsg): ?>
+            <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
         <?php endif; ?>
 
         <div class="auth-back"><a href="<?= site_url('login/' . $role) ?>">&larr; Back to login</a></div>

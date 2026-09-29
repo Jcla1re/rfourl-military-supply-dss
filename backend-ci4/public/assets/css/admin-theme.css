@@ -375,19 +375,53 @@ body {
     text-align: center;
 }
 
-.alert-success {
-    background: #e3f1e3;
-    border: 1px solid #bfe0bf;
-    color: #235a23;
-    border-radius: 10px;
+/* Flash messages: a quick, auto-dismissing toast card that floats near the
+   top of the header instead of a boxed banner sitting in the page flow.
+   The JS in each layout rewrites the element's contents into an
+   icon + title + message card on load, then slides/fades it in (toastIn).
+   After 3s it adds .toast-hide, which plays toastOut — the exact reverse
+   of toastIn, same duration and easing — before removing the element. */
+@keyframes toastIn {
+    from { opacity: 0; transform: translate(-50%, -14px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+}
+@keyframes toastOut {
+    from { opacity: 1; transform: translate(-50%, 0); }
+    to   { opacity: 0; transform: translate(-50%, -14px); }
 }
 
-.alert-danger {
-    background: var(--alert-bg);
-    border: 1px solid var(--accent-maroon);
-    color: var(--accent-maroon);
-    border-radius: 10px;
+.alert-success,
+.alert-danger,
+.toast-success {
+    position: fixed;
+    top: 48px;
+    left: 50%;
+    z-index: 2000;
+    background: #fff;
+    border: none;
+    box-shadow: 0 10px 28px rgba(0,0,0,.18);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin: 0;
+    min-width: 300px;
+    max-width: 420px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: toastIn 0.4s cubic-bezier(.21, 1.02, .73, 1) forwards;
 }
+
+.alert-success.toast-hide,
+.alert-danger.toast-hide,
+.toast-success.toast-hide {
+    animation: toastOut 0.4s cubic-bezier(.21, 1.02, .73, 1) forwards;
+}
+
+.toast-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.toast-icon.success { background: var(--green-bg); color: var(--green-text); }
+.toast-icon.error { background: var(--red-bg); color: var(--accent-maroon); }
+.toast-title { font-weight: 800; font-size: 15px; color: var(--text-dark); }
+.toast-msg { font-size: 13px; color: #555; margin-top: 2px; }
 
 /* ===== Shared admin page shell ===== */
 .page-wrap {

@@ -14,11 +14,17 @@ $filterCategory = $category ?? 'All';
 $filterSize = $size ?? '';
 $filterStatus = $status ?? '';
 $filterSearch = $search ?? '';
-$categories = $categories ?? \App\Models\ProductModel::CATEGORIES;
-$statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
-$suppliers = $suppliers ?? [];
-$lowStockCount = $lowStockCount ?? 0;
-$totalItems = $totalItems ?? 0;
+$categories ??= \App\Models\ProductModel::CATEGORIES;
+$statuses ??= ['In Stock', 'Low Stock', 'Reorder Now'];
+$suppliers ??= [];
+$lowStockCount ??= 0;
+$totalItems ??= 0;
+$success ??= null;
+$error ??= null;
+$inStockCount ??= 0;
+$reorderCount ??= 0;
+$sizes ??= [];
+$products ??= [];
 ?>
 
 <style>
@@ -160,6 +166,7 @@ $totalItems = $totalItems ?? 0;
             <table class="data-table" style="min-width: 980px;">
                 <thead>
                     <tr>
+                        <th>Item ID</th>
                         <th>Item Name</th>
                         <th>Size</th>
                         <th>Type</th>
@@ -186,6 +193,7 @@ $totalItems = $totalItems ?? 0;
                             $pct = min(100, round(((int) $product['current_stock'] / ($rop * 2)) * 100));
                             ?>
                             <tr data-category="<?= esc($product['category'] ?? '') ?>">
+                                <td><?= esc($product['item_id'] ?? '—') ?></td>
                                 <td>
                                     <strong><?= esc($product['item_name'] ?? 'Unknown item') ?></strong>
                                 </td>
@@ -216,7 +224,7 @@ $totalItems = $totalItems ?? 0;
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="10" class="text-center py-4">No inventory items found.</td></tr>
+                        <tr><td colspan="11" class="text-center py-4">No inventory items found.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

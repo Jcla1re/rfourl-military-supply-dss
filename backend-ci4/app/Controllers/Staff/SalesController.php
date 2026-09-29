@@ -85,6 +85,8 @@ class SalesController extends BaseController
     private function transactionsForDate(string $date): array
     {
         $transactions = $this->salesTransactionModel
+            ->select('sales_transaction.*, users.full_name as cashier_name, users.role as cashier_role')
+            ->join('users', 'users.user_id = sales_transaction.user_id', 'left')
             ->where('DATE(sale_date)', $date)
             ->orderBy('sale_date', 'DESC')
             ->findAll();
@@ -261,8 +263,6 @@ class SalesController extends BaseController
             ], $pricing['lines']),
             'subtotal'           => $subtotal,
             'discount'           => $discount,
-            'vatable'            => $pricing['vatable'],
-            'vat'                => $pricing['vat'],
             'total'              => $total,
             'cash_received'      => $cashReceived,
             'change'             => max(0, $changeDue),
@@ -270,7 +270,7 @@ class SalesController extends BaseController
             'cash_amount'        => $cashAmount,
             'gcash_amount'       => $gcashAmount,
             'gcash_reference_no' => $gcashRef,
-            'staff_name'         => session()->get('full_name'),
+            'staff_name'         => session()->get('role') === 'Admin' ? 'Owner' : session()->get('full_name'),
         ];
 
         return redirect()->to('/staff/sales')->with('success', 'Sale completed and receipt printed.')->with('receipt', $receipt);

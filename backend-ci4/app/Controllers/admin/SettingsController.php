@@ -101,6 +101,7 @@ class SettingsController extends BaseController
         $update = [
             'full_name' => $this->request->getPost('full_name'),
             'email'     => $this->request->getPost('email') ?: null,
+            'phone'     => $this->request->getPost('phone') ?: null,
         ];
 
         $this->userModel->update($userId, $update);

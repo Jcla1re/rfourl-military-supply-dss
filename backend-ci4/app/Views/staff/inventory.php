@@ -86,7 +86,7 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
             <table class="data-table" style="min-width: 980px;">
                 <thead>
                     <tr>
-                        <th>Item Name</th><th>Size</th><th>Type</th><th>On Hand</th><th>Rop</th>
+                        <th>Item ID</th><th>Item Name</th><th>Size</th><th>Type</th><th>On Hand</th><th>Rop</th>
                         <th>Stock Level</th><th>Status</th><th>Last Updated</th><th class="text-center">Actions</th>
                     </tr>
                 </thead>
@@ -104,6 +104,7 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
                             $pct = min(100, round(((int) $product['current_stock'] / ($rop * 2)) * 100));
                             ?>
                             <tr>
+                                <td><?= esc($product['item_id'] ?? '—') ?></td>
                                 <td><strong><?= esc($product['item_name'] ?? 'Unknown item') ?></strong></td>
                                 <td><?= esc($product['size'] ?? '—') ?></td>
                                 <td><?= esc($product['category'] ?? '') ?></td>
@@ -125,7 +126,7 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="9" class="text-center py-4">No inventory items found.</td></tr>
+                        <tr><td colspan="10" class="text-center py-4">No inventory items found.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

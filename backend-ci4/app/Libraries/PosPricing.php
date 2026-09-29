@@ -3,18 +3,19 @@
 namespace App\Libraries;
 
 /**
- * Shared POS cart pricing: bulk-quantity discount, matching-"set" discount,
- * and VAT-inclusive breakdown. Used identically by both the admin and
- * staff SalesController so their checkout math can never drift apart, and
- * computed server-side (not trusted from the client) since it directly
- * affects money.
+ * Shared POS cart pricing: bulk-quantity discount and matching-"set"
+ * discount. Used identically by both the admin and staff SalesController
+ * so their checkout math can never drift apart, and computed server-side
+ * (not trusted from the client) since it directly affects money.
+ *
+ * The shop is a Non-VAT registered business, so no VAT is computed or
+ * added anywhere in this pipeline.
  */
 class PosPricing
 {
     public const BULK_QTY_THRESHOLD = 10;
     public const BULK_DISCOUNT_RATE = 0.05;
     public const SET_DISCOUNT_RATE  = 0.02;
-    public const VAT_RATE           = 0.12;
 
     private const UPPER_WORDS = ['upper', 'top', 'shirt', 'blouse', 'jacket', 'polo'];
     private const LOWER_WORDS = ['lower', 'bottom', 'pants', 'trousers', 'shorts', 'skirt'];
@@ -23,7 +24,7 @@ class PosPricing
      * @param array<int, array{item_id:string, item_name:string, unit_price:float, qty:int}> $lines
      * @return array{
      *     lines: array<int, array{item_id:string, item_name:string, unit_price:float, qty:int, line_subtotal:float, discount:float, badge:?string, line_total:float}>,
-     *     subtotal: float, discount: float, total: float, vatable: float, vat: float
+     *     subtotal: float, discount: float, total: float
      * }
      */
     public static function priceCart(array $lines): array
@@ -69,17 +70,11 @@ class PosPricing
         $discount = round($discount, 2);
         $total    = max(0, round($subtotal - $discount, 2));
 
-        // Prices are VAT-inclusive: back out the VAT portion of the final total.
-        $vat     = round($total - ($total / (1 + self::VAT_RATE)), 2);
-        $vatable = round($total - $vat, 2);
-
         return [
             'lines'    => $pricedLines,
             'subtotal' => $subtotal,
             'discount' => $discount,
             'total'    => $total,
-            'vatable'  => $vatable,
-            'vat'      => $vat,
         ];
     }
 

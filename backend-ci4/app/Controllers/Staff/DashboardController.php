@@ -67,6 +67,7 @@ class DashboardController extends BaseController
             'active'              => 'dashboard',
             'totalStock'          => $totalStock,
             'salesToday'          => $salesToday,
+            'salesYesterday'      => $salesYesterday,
             'salesTrendPct'       => $salesYesterday > 0 ? round((($salesToday - $salesYesterday) / $salesYesterday) * 100) . '%' : '0%',
             'txnToday'            => $txnToday,
             'txnDelta'            => $txnToday - $txnYesterday,

@@ -10,7 +10,12 @@
 
 <?= $this->section('content') ?>
 
-<?php $groups = $groups ?? []; $filter = $filter ?? 'all'; ?>
+<?php
+$groups = $groups ?? [];
+$filter = $filter ?? 'all';
+$allCount = $allCount ?? 0;
+$unreadCount = $unreadCount ?? 0;
+?>
 
 <style>
 .notif-filters { display: flex; gap: 12px; margin-bottom: 22px; }
@@ -89,9 +94,8 @@
 
 <div class="page-wrap">
     <div class="notif-filters">
-        <a href="?filter=all" class="<?= $filter === 'all' ? 'active' : '' ?>">All <span class="count"><?= esc($allCount ?? 0) ?></span></a>
-        <a href="?filter=staff" class="<?= $filter === 'staff' ? 'active' : '' ?>">Staff Activity <span class="count"><?= esc($staffCount ?? 0) ?></span></a>
-        <a href="?filter=orders" class="<?= $filter === 'orders' ? 'active' : '' ?>">Order Status <span class="count"><?= esc($orderCount ?? 0) ?></span></a>
+        <a href="?filter=all" class="<?= $filter === 'all' ? 'active' : '' ?>">All <span class="count"><?= esc((string) $allCount) ?></span></a>
+        <a href="?filter=unread" class="<?= $filter === 'unread' ? 'active' : '' ?>">Unread <span class="count"><?= esc((string) $unreadCount) ?></span></a>
     </div>
 
     <?php if (empty($groups)): ?>
@@ -133,16 +137,20 @@
                             <div class="title"><?= esc($n['title']) ?></div>
                             <?php if (!empty($n['message'])): ?><div class="msg"><?= esc($n['message']) ?></div><?php endif; ?>
                             <span class="type-pill"><?= esc($n['type']) ?></span>
-                            <div class="notif-actions">
-                                <form method="post" action="<?= site_url('admin/notifications/approve/' . $n['notification_id']) ?>">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="approve">Approve</button>
-                                </form>
-                                <form method="post" action="<?= site_url('admin/notifications/decline/' . $n['notification_id']) ?>">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="decline">Decline</button>
-                                </form>
-                            </div>
+                            <?php if (empty($n['status'])): ?>
+                                <div class="notif-actions">
+                                    <form method="post" action="<?= site_url('admin/notifications/approve/' . $n['notification_id']) ?>">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="approve">Approve</button>
+                                    </form>
+                                    <form method="post" action="<?= site_url('admin/notifications/decline/' . $n['notification_id']) ?>">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="decline">Decline</button>
+                                    </form>
+                                </div>
+                            <?php else: ?>
+                                <div class="msg" style="margin-top:8px;"><em>Resolved: <?= esc(ucfirst($n['status'])) ?></em></div>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -160,12 +168,14 @@
                         </summary>
                         <div class="notif-expand">
                             <?php if (!empty($n['message'])): ?><div class="msg"><?= esc($n['message']) ?></div><?php endif; ?>
-                            <div class="notif-actions">
-                                <form method="post" action="<?= site_url('admin/notifications/mark-read/' . $n['notification_id']) ?>">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="done">Mark as Done</button>
-                                </form>
-                            </div>
+                            <?php if (empty($n['is_read'])): ?>
+                                <div class="notif-actions">
+                                    <form method="post" action="<?= site_url('admin/notifications/mark-read/' . $n['notification_id']) ?>">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="done">Mark as Done</button>
+                                    </form>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </details>
                 <?php endif; ?>

@@ -96,8 +96,12 @@ class ReorderAlertModel extends Model
             }
         }
 
-        $existingByItem = array_column(
-            $this->whereIn('status', self::PENDING_STATUSES)->findAll(),
+        // An item with an "Ordered" alert already has a stock order in
+        // flight — it must NOT get a second alert (and therefore a second
+        // order) just because the delivery hasn't arrived yet and stock is
+        // still critical in the meantime.
+        $openByItem = array_column(
+            $this->whereIn('status', self::OPEN_STATUSES)->findAll(),
             null,
             'item_id'
         );
@@ -106,7 +110,7 @@ class ReorderAlertModel extends Model
 
         $newRows = [];
         foreach ($criticalByItem as $itemId => $p) {
-            if (isset($existingByItem[$itemId])) {
+            if (isset($openByItem[$itemId])) {
                 continue;
             }
 
@@ -127,8 +131,18 @@ class ReorderAlertModel extends Model
             $this->insertBatch($newRows);
         }
 
+        // Only auto-dismiss Active/Acknowledged alerts whose stock recovered
+        // on its own — never "Ordered" ones, even if stock happens to look
+        // fine again before delivery, since markDelivered() still needs to
+        // find them by status='Ordered' to mark them Fulfilled on arrival.
+        $pendingByItem = array_column(
+            $this->whereIn('status', self::PENDING_STATUSES)->findAll(),
+            null,
+            'item_id'
+        );
+
         $staleIds = [];
-        foreach ($existingByItem as $itemId => $alert) {
+        foreach ($pendingByItem as $itemId => $alert) {
             if (! isset($criticalByItem[$itemId])) {
                 $staleIds[] = $alert['alert_id'];
             }

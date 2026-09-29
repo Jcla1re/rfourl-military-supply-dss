@@ -97,4 +97,41 @@ class NotificationModel extends Model
     {
         $this->update($notificationId, ['status' => $status, 'is_read' => 1]);
     }
+
+    /**
+     * Notifications older than $days are permanently deleted. Called from
+     * each role's notifications index() so the inbox self-cleans without
+     * needing a cron/scheduled task, which this app doesn't have.
+     */
+    public function pruneExpired(int $days = 14): void
+    {
+        $cutoff = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+        $this->where('created_at <', $cutoff)->delete();
+    }
+
+    /**
+     * Buckets a list of notifications (already sorted newest-first) into
+     * Today / Yesterday / Earlier, dropping empty buckets so the view only
+     * ever renders the date-group headers that actually have content.
+     */
+    public static function groupByRecency(array $notifications): array
+    {
+        $groups    = ['Today' => [], 'Yesterday' => [], 'Earlier' => []];
+        $today     = date('Y-m-d');
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+
+        foreach ($notifications as $n) {
+            $date = date('Y-m-d', strtotime($n['created_at']));
+
+            if ($date === $today) {
+                $groups['Today'][] = $n;
+            } elseif ($date === $yesterday) {
+                $groups['Yesterday'][] = $n;
+            } else {
+                $groups['Earlier'][] = $n;
+            }
+        }
+
+        return array_filter($groups, fn ($g) => ! empty($g));
+    }
 }

@@ -41,7 +41,10 @@ class InventoryController extends BaseController
             $builder = $builder->where('size', $size);
         }
         if ($search) {
-            $builder = $builder->like('item_name', $search);
+            $builder = $builder->groupStart()
+                ->like('item_name', $search)
+                ->orLike('item_id', $search)
+                ->groupEnd();
         }
 
         if ($status) {

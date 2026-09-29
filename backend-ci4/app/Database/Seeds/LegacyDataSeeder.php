@@ -137,7 +137,7 @@ class LegacyDataSeeder extends Seeder
         $rows  = $this->readCsv('03_products.csv');
         $chunk = [];
         foreach ($rows as $r) {
-            $id = 'ITM-' . str_pad((string) $r['item_id'], 4, '0', STR_PAD_LEFT);
+            $id = str_pad((string) $r['item_id'], 4, '0', STR_PAD_LEFT);
             $this->itemMap[(int) $r['item_id']] = $id;
             $supId = self::intFromFloatString($r['supplier_id']);
             $chunk[] = [

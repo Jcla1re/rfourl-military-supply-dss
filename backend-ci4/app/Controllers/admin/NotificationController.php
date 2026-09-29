@@ -7,7 +7,7 @@ use App\Models\NotificationModel;
 
 class NotificationController extends BaseController
 {
-    protected $notificationModel;
+    protected NotificationModel $notificationModel;
 
     public function __construct()
     {
@@ -15,52 +15,46 @@ class NotificationController extends BaseController
     }
 
     /**
-     * Only ever lists pending (unread) notifications — once a card is acted
-     * on (opened, marked done, approved/declined) it drops out of this
-     * inbox instead of lingering with a stale "read" state.
+     * "All" shows the full history (up to the 14-day retention window);
+     * "Unread" narrows to pending ones. Either way, results are bucketed
+     * into Today/Yesterday/Earlier for scanning at a glance.
      */
     public function index()
     {
-        $filter = $this->request->getGet('filter') ?: 'all';
-        $notifications = $this->notificationModel->forRole('Admin', null, true);
+        $this->notificationModel->pruneExpired();
+
+        $filter = $this->request->getGet('filter') === 'unread' ? 'unread' : 'all';
+        $all    = $this->notificationModel->forRole('Admin', null, false);
 
         // Legacy rows created before the `category` column existed fall
-        // back to the old substring heuristic so they still group sanely.
-        foreach ($notifications as &$n) {
+        // back to the old substring heuristic so they still render sanely.
+        foreach ($all as &$n) {
             $n['category'] = $n['category'] ?? (str_contains(strtolower($n['type']), 'order') ? 'order_status' : 'staff_activity');
         }
         unset($n);
 
-        $orderCount = count(array_filter($notifications, fn ($n) => $n['category'] === 'order_status'));
-        $staffCount = count($notifications) - $orderCount;
+        $allCount    = count($all);
+        $unreadCount = count(array_filter($all, fn ($n) => empty($n['is_read'])));
 
-        if ($filter !== 'all') {
-            $notifications = array_values(array_filter($notifications, fn ($n) => $filter === 'orders' ? $n['category'] === 'order_status' : $n['category'] !== 'order_status'));
-        }
-
-        $groups = [];
-        foreach ($notifications as $n) {
-            $date = date('Y-m-d', strtotime($n['created_at']));
-            $label = $date === date('Y-m-d') ? 'Today' : ($date === date('Y-m-d', strtotime('-1 day')) ? 'Yesterday' : date('F j, Y', strtotime($date)));
-            $groups[$label][] = $n;
-        }
+        $notifications = $filter === 'unread'
+            ? array_values(array_filter($all, fn ($n) => empty($n['is_read'])))
+            : $all;
 
         $data = [
-            'title'      => 'Notification',
-            'active'     => 'notifications',
-            'groups'     => $groups,
-            'filter'     => $filter,
-            'allCount'   => $orderCount + $staffCount,
-            'orderCount' => $orderCount,
-            'staffCount' => $staffCount,
+            'title'       => 'Notification',
+            'active'      => 'notifications',
+            'groups'      => NotificationModel::groupByRecency($notifications),
+            'filter'      => $filter,
+            'allCount'    => $allCount,
+            'unreadCount' => $unreadCount,
         ];
 
         return view('admin/notifications', $data);
     }
 
-    public function markRead($notificationId)
+    public function markRead(int $notificationId)
     {
-        $this->notificationModel->update((int) $notificationId, ['is_read' => 1]);
+        $this->notificationModel->update($notificationId, ['is_read' => 1]);
         return redirect()->to('/admin/notifications');
     }
 
@@ -74,15 +68,15 @@ class NotificationController extends BaseController
      * Order-status cards navigate straight to the order they're about —
      * this marks the card done and forwards to it in one step.
      */
-    public function open($notificationId)
+    public function open(int $notificationId)
     {
-        $notification = $this->notificationModel->find((int) $notificationId);
+        $notification = $this->notificationModel->find($notificationId);
 
         if (! $notification) {
             return redirect()->to('/admin/notifications');
         }
 
-        $this->notificationModel->update((int) $notificationId, ['is_read' => 1]);
+        $this->notificationModel->update($notificationId, ['is_read' => 1]);
 
         return redirect()->to($notification['link_url'] ?: '/admin/notifications');
     }
@@ -93,30 +87,30 @@ class NotificationController extends BaseController
      * Settings > Security so the admin picks the new password themselves,
      * the same way any other staff password change happens.
      */
-    public function approve($notificationId)
+    public function approve(int $notificationId)
     {
-        $notification = $this->notificationModel->find((int) $notificationId);
+        $notification = $this->notificationModel->find($notificationId);
 
         if (! $notification) {
             return redirect()->to('/admin/notifications');
         }
 
-        $this->notificationModel->resolve((int) $notificationId, 'approved');
+        $this->notificationModel->resolve($notificationId, 'approved');
         $this->notificationModel->push('Staff', 'Access Request', 'Your password reset request was approved', 'The admin will give you your new password directly.', null, 'staff_activity');
 
         return redirect()->to('/admin/settings?tab=security')
             ->with('success', 'Request approved. Set a new password for the staff account below.');
     }
 
-    public function decline($notificationId)
+    public function decline(int $notificationId)
     {
-        $notification = $this->notificationModel->find((int) $notificationId);
+        $notification = $this->notificationModel->find($notificationId);
 
         if (! $notification) {
             return redirect()->to('/admin/notifications');
         }
 
-        $this->notificationModel->resolve((int) $notificationId, 'declined');
+        $this->notificationModel->resolve($notificationId, 'declined');
         $this->notificationModel->push('Staff', 'Access Request', 'Your password reset request was declined', 'Please contact the admin directly if you still need access.', null, 'staff_activity');
 
         return redirect()->to('/admin/notifications')->with('success', 'Request declined.');

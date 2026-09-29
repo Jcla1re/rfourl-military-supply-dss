@@ -17,6 +17,7 @@ class UserModel extends Model
         'supplier_id',
         'username',
         'email',
+        'phone',
         'password_hash',
         'role',
         'full_name',

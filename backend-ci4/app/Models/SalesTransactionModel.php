@@ -27,9 +27,14 @@ class SalesTransactionModel extends Model
 
     protected $useTimestamps = false;
 
+    /**
+     * Plain sequential invoice number (e.g. "1001", "1002", ...) matching
+     * the numbering style pre-printed on the shop's real Sales Invoice
+     * booklets, rather than a system-style "RCPT-YYYYMMDD-####" code.
+     */
     public function generateReceiptNo(): string
     {
-        return 'RCPT-' . date('Ymd') . '-' . str_pad((string) ($this->countAll() + 1), 4, '0', STR_PAD_LEFT);
+        return (string) (1000 + $this->countAll() + 1);
     }
 
     public function totalForToday(): float

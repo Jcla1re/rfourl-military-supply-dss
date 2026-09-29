@@ -98,6 +98,7 @@ $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'ro
     $routes->get('notifications', 'NotificationController::index');
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');
     $routes->post('notifications/mark-all-read', 'NotificationController::markAllRead');
+    $routes->post('notifications/open/(:segment)', 'NotificationController::open/$1');
 });
 
 $routes->group('supplier', ['namespace' => 'App\Controllers\Supplier', 'filter' => 'roleauth:Supplier'], static function ($routes) {
@@ -116,6 +117,7 @@ $routes->group('supplier', ['namespace' => 'App\Controllers\Supplier', 'filter' 
     $routes->get('notifications', 'NotificationController::index');
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');
     $routes->post('notifications/mark-all-read', 'NotificationController::markAllRead');
+    $routes->post('notifications/open/(:segment)', 'NotificationController::open/$1');
 
     $routes->get('profile', 'ProfileController::index');
     $routes->post('profile/update', 'ProfileController::update');

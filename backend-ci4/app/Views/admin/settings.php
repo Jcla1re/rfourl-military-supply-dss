@@ -135,7 +135,7 @@ $tabs = [
                         </div>
                         <div class="set-field">
                             <label>Contact number</label>
-                            <input value="—" readonly style="color:#888;">
+                            <input name="phone" value="<?= esc($admin['phone'] ?? '') ?>" placeholder="e.g. 0917 123 4567">
                         </div>
                     </div>
                     <div class="text-end"><button type="submit" class="btn btn-maroon">Save</button></div>

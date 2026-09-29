@@ -176,10 +176,10 @@ class AuthController extends BaseController
         $user = $this->userModel->find(session()->get('pwd_reset_user_id'));
 
         return view('auth/otp_verify', [
-            'role'    => $role,
-            'email'   => $user['email'] ?? '',
-            'error'   => session()->getFlashdata('error'),
-            'notice'  => session()->getFlashdata('notice'),
+            'role'   => $role,
+            'email'  => $user['email'] ?? '',
+            'error'  => session()->getFlashdata('error'),
+            'notice' => session()->getFlashdata('notice'),
         ]);
     }
 
@@ -223,10 +223,10 @@ class AuthController extends BaseController
             'reset_otp_expires' => date('Y-m-d H:i:s', strtotime('+10 minutes')),
         ]);
 
-        $emailed = $this->deliverOtpEmail($user, $otp);
-        $redirect = redirect()->to("/login/{$role}/otp");
+        $delivered = $this->deliverOtpEmail($user, $otp);
+        $redirect  = redirect()->to("/login/{$role}/otp");
 
-        return $emailed ? $redirect->with('notice', 'A new code has been sent.') : $redirect;
+        return $delivered ? $redirect->with('notice', 'A new code has been sent.') : $redirect;
     }
 
     public function showResetPassword($role)

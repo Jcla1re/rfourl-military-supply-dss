@@ -1,3 +1,7 @@
+<?php
+$role     = $role ?? 'admin';
+$errorMsg = session()->getFlashdata('error');
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -18,8 +22,8 @@
             <button type="submit" class="btn-login">Reset Password</button>
         </form>
 
-        <?php if (session()->getFlashdata('error')): ?>
-            <div class="auth-error"><?= esc(session()->getFlashdata('error')) ?></div>
+        <?php if ($errorMsg): ?>
+            <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
         <?php endif; ?>
     </div>
 </body>

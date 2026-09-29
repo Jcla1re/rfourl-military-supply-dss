@@ -46,10 +46,18 @@ class ProductModel extends Model
                     ->findAll();
     }
 
+    /**
+     * Plain numeric ID (e.g. "0563"), no "ITM-" prefix. Existing products
+     * keep their old "ITM-####" ids — item_id is a real FK (RESTRICT) in
+     * six other tables (sales_item, so_item, inventory_log, reorder_alert,
+     * cluster_segments, pdss_computation), so renaming them retroactively
+     * would mean dropping and rebuilding every one of those constraints.
+     * This only changes the format for newly added items going forward.
+     */
     public function generateNextId(): string
     {
         $count = $this->countAll();
-        return 'ITM-' . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        return str_pad((string) ($count + 1), 4, '0', STR_PAD_LEFT);
     }
 
     public function getStatus(array $product): array

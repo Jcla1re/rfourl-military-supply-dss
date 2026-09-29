@@ -158,10 +158,15 @@ $tab = $tab ?? 'status';
                             </div>
 
                             <div class="ord-actions">
+                                <!-- Order Confirmed -> Preparing -> Shipped are the supplier's own
+                                     progress, updated from their portal (Supplier\NewOrdersController::accept,
+                                     Supplier\DeliveriesController::ship). Admin no longer force-advances
+                                     those intermediate steps — only closes out a fully received order,
+                                     or follows up with the supplier for a status update. -->
                                 <form method="post" action="<?= site_url('admin/orders/update-status/' . $o['so_id']) ?>">
                                     <?= csrf_field() ?>
-                                    <input type="hidden" name="status" value="<?= $o['status'] === 'Order Confirmed' ? 'Preparing' : ($o['status'] === 'Preparing' ? 'Shipped' : 'Delivered') ?>">
-                                    <button type="submit"><?= $o['status'] === 'Shipped' ? 'Mark as Delivered' : 'Advance to ' . ($o['status'] === 'Order Confirmed' ? 'Preparing' : 'Shipped') ?></button>
+                                    <input type="hidden" name="status" value="Delivered">
+                                    <button type="submit">Mark as Done</button>
                                 </form>
                                 <form method="post" action="<?= site_url('admin/orders/flag-delayed/' . $o['so_id']) ?>">
                                     <?= csrf_field() ?>

@@ -25,6 +25,13 @@ class DashboardController extends BaseController
         $weekly     = $salesTransactionModel->weeklyTotals();
         $lastWeekly = $salesTransactionModel->lastWeekTotals();
 
+        $salesToday     = $salesTransactionModel->totalForToday();
+        $salesYesterday = (float) ($salesTransactionModel->selectSum('total_amount')
+            ->where('DATE(sale_date)', date('Y-m-d', strtotime('-1 day')))->first()['total_amount'] ?? 0);
+        $salesTrendPct  = $salesYesterday > 0
+            ? round((($salesToday - $salesYesterday) / $salesYesterday) * 100) . '%'
+            : '0%';
+
         $categoryCounts = $productModel
             ->select('category, COUNT(*) as total')
             ->where('is_active', 1)
@@ -37,12 +44,13 @@ class DashboardController extends BaseController
             'active'         => 'dashboard',
             'totalStock'     => array_sum(array_column($productModel->where('is_active', 1)->findAll(), 'current_stock')),
             'lowStockCount'  => $reorderAlertModel->pendingCount(),
-            'salesToday'     => $salesTransactionModel->totalForToday(),
+            'salesToday'     => $salesToday,
+            'salesYesterday' => $salesYesterday,
             'weekLabels'     => $weekly['labels'],
             'weekData'       => $weekly['data'],
             'lastWeekData'   => $lastWeekly['data'],
             'stockTrendPct'  => '0%',
-            'salesTrendPct'  => '0%',
+            'salesTrendPct'  => $salesTrendPct,
             'seasonLabels'   => array_column($categoryCounts, 'category'),
             'seasonData'     => array_column($categoryCounts, 'total'),
             'topProducts'    => array_map(

@@ -1,4 +1,9 @@
-<?php // app/Views/auth/forgot_password_staff.php ?>
+<?php
+// app/Views/auth/forgot_password_staff.php
+$error   = $error ?? null;
+$sent    = $sent ?? false;
+$errorMsg = session()->getFlashdata('error') ?? $error;
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -23,8 +28,8 @@
 
         <div class="notify-box">No self-service reset - The owner will send you the password</div>
 
-        <?php if (session()->getFlashdata('error') || !empty($error)): ?>
-            <div class="auth-error"><?= esc(session()->getFlashdata('error') ?? $error) ?></div>
+        <?php if ($errorMsg): ?>
+            <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
         <?php endif; ?>
 
         <form action="<?= site_url('login/staff/forgot') ?>" method="post">
