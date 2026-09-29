@@ -73,10 +73,10 @@ $totalItems = $totalItems ?? 0;
 
 .inv-action-btn {
     border: 0;
-    border-radius: 8px;
-    padding: 8px 14px;
-    background: #dcecdf;
-    color: #24472d;
+    border-radius: 10px;
+    padding: 8px 20px;
+    background: #71AA60;
+    color: #fff;
     font-weight: 700;
     cursor: pointer;
     white-space: nowrap;
@@ -88,6 +88,21 @@ $totalItems = $totalItems ?? 0;
     color: #666;
     cursor: pointer;
     padding: 0 6px;
+}
+
+.data-table td.inv-actions-cell {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding-right: 40px;
+}
+.inv-actions-cell .inv-action-btn {
+    grid-column: 1;
+    justify-self: end;
+}
+.inv-actions-cell .inv-more-btn {
+    grid-column: 2;
 }
 </style>
 
@@ -154,7 +169,7 @@ $totalItems = $totalItems ?? 0;
                         <th>Stock Level</th>
                         <th>Status</th>
                         <th>Last Updated</th>
-                        <th class="text-end">Actions</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -184,7 +199,7 @@ $totalItems = $totalItems ?? 0;
                                 </td>
                                 <td><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span></td>
                                 <td><?= esc(date('M j, Y', strtotime($product['updated_at'] ?? 'now'))) ?></td>
-                                <td class="text-end">
+                                <td class="inv-actions-cell">
                                     <?php if ($itemStatus === 'Reorder Now'): ?>
                                         <button type="button"
                                                 class="inv-action-btn open-order-modal"

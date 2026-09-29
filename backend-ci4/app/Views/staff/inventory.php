@@ -87,7 +87,7 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
                 <thead>
                     <tr>
                         <th>Item Name</th><th>Size</th><th>Type</th><th>On Hand</th><th>Rop</th>
-                        <th>Stock Level</th><th>Status</th><th>Last Updated</th><th class="text-end">Actions</th>
+                        <th>Stock Level</th><th>Status</th><th>Last Updated</th><th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -112,7 +112,7 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
                                 <td><div class="stock-bar <?= $pillClass ?>"><span style="width: <?= $pct ?>%"></span></div></td>
                                 <td><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span></td>
                                 <td><?= esc(date('M j, Y', strtotime($product['updated_at'] ?? 'now'))) ?></td>
-                                <td class="text-end">
+                                <td class="text-center">
                                     <?php if ($itemStatus === 'Reorder Now'): ?>
                                         <form method="post" action="<?= site_url('staff/inventory/notify/' . $product['item_id']) ?>">
                                             <?= csrf_field() ?>
