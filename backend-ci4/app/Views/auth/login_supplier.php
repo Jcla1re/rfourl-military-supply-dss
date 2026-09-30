@@ -1,7 +1,8 @@
 <?php
 // app/Views/auth/login_supplier.php
-$errorMsg   = session()->getFlashdata('error');
-$successMsg = session()->getFlashdata('success');
+$errorMsg      = session()->getFlashdata('error');
+$successMsg    = session()->getFlashdata('success');
+$lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('supplier');
 ?>
 <!DOCTYPE html>
 <html>
@@ -19,7 +20,7 @@ $successMsg = session()->getFlashdata('success');
             <label>Password:</label>
             <input type="password" name="password" required>
             <div class="forgot-link"><a href="<?= site_url('login/supplier/forgot') ?>">forgot password?</a></div>
-            <button type="submit" class="btn-login">Login</button>
+            <button type="submit" class="btn-login" id="loginSubmitBtn"<?= $lockedSeconds > 0 ? ' disabled' : '' ?>>Login</button>
         </form>
         <?php if ($errorMsg): ?>
             <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
@@ -27,6 +28,26 @@ $successMsg = session()->getFlashdata('success');
         <?php if ($successMsg): ?>
             <div class="auth-success"><?= esc((string) $successMsg) ?></div>
         <?php endif; ?>
+        <div class="auth-back"><a href="<?= site_url('/') ?>">&larr; Back to role selection</a></div>
     </div>
+    <?php if ($lockedSeconds > 0): ?>
+    <script>
+        (function () {
+            let seconds = <?= (int) $lockedSeconds ?>;
+            const btn = document.getElementById('loginSubmitBtn');
+            const label = btn.textContent;
+            (function tick() {
+                if (seconds <= 0) {
+                    btn.disabled = false;
+                    btn.textContent = label;
+                    return;
+                }
+                btn.textContent = `Try again in ${seconds}s`;
+                seconds--;
+                setTimeout(tick, 1000);
+            })();
+        })();
+    </script>
+    <?php endif; ?>
 </body>
 </html>

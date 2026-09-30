@@ -152,7 +152,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
         setTimeout(() => {
             el.classList.add('toast-hide');
             setTimeout(() => el.remove(), 400);
-        }, 3000);
+        }, 1000);
     });
 </script>
 </body>

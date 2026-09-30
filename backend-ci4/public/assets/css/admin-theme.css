@@ -355,9 +355,14 @@ body {
     font-size: 1.1rem;
 }
 
+.notification-button {
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
 .notification-button:hover {
     background: rgba(255,255,255,0.2);
     color: #fff;
+    transform: translateY(-1px);
 }
 
 .notif-badge {
@@ -399,15 +404,15 @@ body {
     z-index: 2000;
     background: #fff;
     border: none;
-    box-shadow: 0 10px 28px rgba(0,0,0,.18);
-    border-radius: 12px;
-    padding: 14px 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.16);
+    border-radius: 10px;
+    padding: 8px 14px;
     margin: 0;
-    min-width: 300px;
+    min-width: 280px;
     max-width: 420px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     animation: toastIn 0.4s cubic-bezier(.21, 1.02, .73, 1) forwards;
 }
 
@@ -417,11 +422,11 @@ body {
     animation: toastOut 0.4s cubic-bezier(.21, 1.02, .73, 1) forwards;
 }
 
-.toast-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.toast-icon { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
 .toast-icon.success { background: var(--green-bg); color: var(--green-text); }
 .toast-icon.error { background: var(--red-bg); color: var(--accent-maroon); }
-.toast-title { font-weight: 800; font-size: 15px; color: var(--text-dark); }
-.toast-msg { font-size: 13px; color: #555; margin-top: 2px; }
+.toast-title { font-weight: 800; font-size: 13.5px; color: var(--text-dark); }
+.toast-msg { font-size: 12px; color: #555; margin-top: 1px; }
 
 /* ===== Shared admin page shell ===== */
 .page-wrap {
@@ -493,6 +498,12 @@ body {
     border-bottom: 1px solid #e2e2e2;
     vertical-align: middle;
 }
+.data-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+.data-table tbody tr:hover {
+    background-color: #f5f4ef;
+}
 
 /* Mini stock-level bar shown inside table cells */
 .stock-bar {
@@ -522,6 +533,7 @@ body {
     font-weight: 600;
     border-bottom: 3px solid transparent;
     margin-bottom: -1px;
+    transition: color 0.15s ease, border-color 0.15s ease;
 }
 .underline-tabs a.active {
     color: #2f5138;
@@ -538,6 +550,10 @@ body {
     border-radius: 999px;
     font-weight: 700;
     cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+.pill-tabs button:hover {
+    transform: translateY(-1px);
 }
 .pill-tabs button.active {
     background: var(--sidebar-active-text, #2f3b24);
@@ -592,6 +608,7 @@ body {
     border: 1px solid #ddd;
     text-decoration: none;
     color: #333;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 .admin-pagination a.active { background: var(--sidebar-bg); color: #fff; border-color: var(--sidebar-bg); }
 
@@ -600,10 +617,20 @@ body {
     position: fixed; inset: 0; z-index: 1000; display: none;
     align-items: center; justify-content: center; background: rgba(0,0,0,.35);
 }
-.inv-modal.show { display: flex; }
+.inv-modal.show { display: flex; animation: modalOverlayIn 0.18s ease; }
 .inv-modal-card {
     width: min(680px, 92vw); max-height: 90vh; overflow-y: auto;
     padding: 26px 28px; border-radius: 16px; background: #fff;
+}
+.inv-modal.show .inv-modal-card { animation: modalCardIn 0.22s cubic-bezier(.21, 1.02, .73, 1); }
+
+@keyframes modalOverlayIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes modalCardIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 .inv-modal-card .subtitle { color: #666; margin-top: -4px; margin-bottom: 18px; }
 .inv-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
@@ -611,6 +638,12 @@ body {
 .inv-form-field label { font-weight: 600; }
 .inv-form-field input, .inv-form-field select {
     padding: 12px; border: 1px solid #ccc; border-radius: 8px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.inv-form-field input:focus, .inv-form-field select:focus {
+    outline: none;
+    border-color: #6b8f4e;
+    box-shadow: 0 0 0 3px rgba(107, 143, 78, 0.15);
 }
 .inv-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
 .inv-hr { border: none; border-top: 1px solid #eee; margin: 20px 0; }
@@ -625,3 +658,11 @@ body {
     border-radius: 12px;
     background: #fff;
 }
+
+/* ===== Motion polish: subtle, consistent micro-interactions ===== */
+.btn {
+    transition: transform 0.12s ease, box-shadow 0.15s ease,
+        background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }

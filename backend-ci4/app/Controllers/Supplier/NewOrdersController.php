@@ -3,6 +3,7 @@
 namespace App\Controllers\Supplier;
 
 use App\Controllers\BaseController;
+use App\Libraries\EmailNotifier;
 use App\Models\NotificationModel;
 use App\Models\SoItemModel;
 use App\Models\StockOrderModel;
@@ -12,12 +13,14 @@ class NewOrdersController extends BaseController
     protected $stockOrderModel;
     protected $soItemModel;
     protected $notificationModel;
+    protected $emailNotifier;
 
     public function __construct()
     {
         $this->stockOrderModel  = new StockOrderModel();
         $this->soItemModel      = new SoItemModel();
         $this->notificationModel = new NotificationModel();
+        $this->emailNotifier    = new EmailNotifier();
     }
 
     public function index()
@@ -66,6 +69,7 @@ class NewOrdersController extends BaseController
         $this->stockOrderModel->update($soId, ['status' => 'Preparing']);
 
         $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} accepted by supplier", session()->get('full_name') . " accepted order {$soId} and has started preparing it.", null, 'order_status', "/admin/orders/{$soId}");
+        $this->emailNotifier->toRole('Admin', "Order {$soId} accepted by supplier", session()->get('full_name') . " accepted order {$soId} and has started preparing it.");
 
         return redirect()->to('/supplier/new-orders')->with('success', "Order {$soId} accepted. It now appears under Deliveries.");
     }
@@ -81,6 +85,7 @@ class NewOrdersController extends BaseController
         $this->stockOrderModel->update($soId, ['status' => 'Cancelled']);
 
         $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} declined by supplier", session()->get('full_name') . " declined order {$soId}. Please reassign or follow up.", null, 'order_status', "/admin/orders/{$soId}");
+        $this->emailNotifier->toRole('Admin', "Order {$soId} declined by supplier", session()->get('full_name') . " declined order {$soId}. Please reassign or follow up.");
 
         return redirect()->to('/supplier/new-orders')->with('success', "Order {$soId} declined.");
     }

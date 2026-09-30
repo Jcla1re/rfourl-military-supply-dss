@@ -3,6 +3,7 @@
 namespace App\Controllers\Supplier;
 
 use App\Controllers\BaseController;
+use App\Libraries\EmailNotifier;
 use App\Models\NotificationModel;
 use App\Models\SoItemModel;
 use App\Models\StockOrderModel;
@@ -12,12 +13,14 @@ class DeliveriesController extends BaseController
     protected $stockOrderModel;
     protected $soItemModel;
     protected $notificationModel;
+    protected $emailNotifier;
 
     public function __construct()
     {
         $this->stockOrderModel   = new StockOrderModel();
         $this->soItemModel       = new SoItemModel();
         $this->notificationModel = new NotificationModel();
+        $this->emailNotifier     = new EmailNotifier();
     }
 
     public function index()
@@ -57,6 +60,7 @@ class DeliveriesController extends BaseController
         ]);
 
         $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} shipped out", "Tracking no.: " . ($this->request->getPost('tracking_no') ?: 'not provided'), null, 'order_status', "/admin/orders/{$soId}");
+        $this->emailNotifier->toRole('Admin', "Order {$soId} shipped out", "Tracking no.: " . ($this->request->getPost('tracking_no') ?: 'not provided'));
 
         return redirect()->to('/supplier/deliveries')->with('success', "Order {$soId} marked as shipped out.");
     }
@@ -72,6 +76,7 @@ class DeliveriesController extends BaseController
         $this->stockOrderModel->markDelivered($soId, session()->get('user_id'));
 
         $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} delivered", session()->get('full_name') . " marked order {$soId} as delivered.", null, 'order_status', "/admin/orders/{$soId}");
+        $this->emailNotifier->toRole('Admin', "Order {$soId} delivered", session()->get('full_name') . " marked order {$soId} as delivered. Inventory has been updated.");
 
         return redirect()->to('/supplier/deliveries')->with('success', "Order {$soId} marked as delivered. Inventory has been updated.");
     }

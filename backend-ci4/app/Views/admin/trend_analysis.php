@@ -67,7 +67,12 @@ $selectedYearLabel = is_scalar($selectedYear) ? (string) $selectedYear : '';
 ?>
 
 <style>
-.ta-stat { background: #fff; border-radius: 14px; padding: 18px 20px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; }
+.ta-stat {
+    background: #fff; border-radius: 14px; padding: 18px 20px; display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; text-decoration: none; color: inherit;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+a.ta-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-1px); cursor: pointer; }
 .ta-stat .icon { font-size: 26px; }
 .ta-stat .value { font-size: 26px; font-weight: 800; }
 .chart-card { background: #fff; border-radius: 14px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 16px; }
@@ -106,8 +111,8 @@ $selectedYearLabel = is_scalar($selectedYear) ? (string) $selectedYear : '';
 
 <div class="page-wrap">
     <div class="row g-3 mb-1">
-        <div class="col-md-6"><div class="ta-stat"><span class="icon"><i class="bi bi-box-seam"></i></span><div><div class="text-muted small">Total Stock on hand</div><div class="value"><?= number_format($totalStock ?? 0) ?></div></div></div></div>
-        <div class="col-md-6"><div class="ta-stat"><span class="icon"><i class="bi bi-cash-coin"></i></span><div><div class="text-muted small">Sales Today</div><div class="value">₱<?= number_format($salesToday ?? 0, 0) ?></div></div></div></div>
+        <div class="col-md-6"><a href="<?= site_url('admin/inventory') ?>" class="ta-stat"><span class="icon"><i class="bi bi-box-seam"></i></span><div><div class="text-muted small">Total Stock on hand</div><div class="value"><?= number_format($totalStock ?? 0) ?></div></div></a></div>
+        <div class="col-md-6"><a href="<?= site_url('admin/sales') ?>?tab=receipts" class="ta-stat"><span class="icon"><i class="bi bi-cash-coin"></i></span><div><div class="text-muted small">Sales Today</div><div class="value">₱<?= number_format($salesToday ?? 0, 0) ?></div></div></a></div>
     </div>
 
     <div class="row g-3 mt-1">
@@ -282,6 +287,7 @@ new Chart(document.getElementById('annualChart'), {
         ]
     },
     options: {
+        animation: { duration: 900, easing: 'easeOutQuart' },
         plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 24 } } },
         scales: { y: { grid: { color: '#eee' } }, x: { grid: { display: false } } },
         layout: { padding: { top: 30 } }
@@ -314,6 +320,7 @@ new Chart(document.getElementById('weeklyChart'), {
         ]
     },
     options: {
+        animation: { duration: 900, easing: 'easeOutQuart' },
         plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 24 } } },
         scales: { y: { grid: { color: '#eee' } }, x: { grid: { display: false } } },
         layout: { padding: { top: 30 } }

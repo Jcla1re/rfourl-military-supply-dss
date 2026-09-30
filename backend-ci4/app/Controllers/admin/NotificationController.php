@@ -95,8 +95,7 @@ class NotificationController extends BaseController
             return redirect()->to('/admin/notifications');
         }
 
-        $this->notificationModel->resolve($notificationId, 'approved');
-        $this->notificationModel->push('Staff', 'Access Request', 'Your password reset request was approved', 'The admin will give you your new password directly.', null, 'staff_activity');
+        $this->notificationModel->approveAccessRequest($notificationId);
 
         return redirect()->to('/admin/settings?tab=security')
             ->with('success', 'Request approved. Set a new password for the staff account below.');
@@ -110,8 +109,7 @@ class NotificationController extends BaseController
             return redirect()->to('/admin/notifications');
         }
 
-        $this->notificationModel->resolve($notificationId, 'declined');
-        $this->notificationModel->push('Staff', 'Access Request', 'Your password reset request was declined', 'Please contact the admin directly if you still need access.', null, 'staff_activity');
+        $this->notificationModel->declineAccessRequest($notificationId);
 
         return redirect()->to('/admin/notifications')->with('success', 'Request declined.');
     }

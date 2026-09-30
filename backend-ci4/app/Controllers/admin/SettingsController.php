@@ -184,4 +184,40 @@ class SettingsController extends BaseController
 
         return redirect()->to('/admin/settings?tab=accounts')->with('success', $user['is_active'] ? 'Staff account deactivated.' : 'Staff account reactivated.');
     }
+
+    /**
+     * A real delete, not just deactivation — but only when the account has
+     * no sales, order, inventory, or notification history tied to it.
+     * Every FK referencing users.user_id is ON DELETE RESTRICT, so deleting
+     * an account with history would fail at the DB level anyway; this
+     * checks up front so the admin gets a clear explanation instead of a
+     * raw SQL error, and old receipts/records never lose their cashier.
+     */
+    public function deleteStaff($userId)
+    {
+        $userId = (int) $userId;
+        $user   = $this->userModel->find($userId);
+
+        if (! $user || $user['role'] !== 'Staff') {
+            return redirect()->to('/admin/settings?tab=accounts')->with('error', 'Staff account not found.');
+        }
+
+        $db = db_connect();
+
+        $hasHistory = $db->table('sales_transaction')->where('user_id', $userId)->countAllResults() > 0
+            || $db->table('stock_order')->where('user_id', $userId)->countAllResults() > 0
+            || $db->table('inventory_log')->where('user_id', $userId)->countAllResults() > 0
+            || $db->table('notifications')->where('recipient_id', $userId)->countAllResults() > 0;
+
+        if ($hasHistory) {
+            return redirect()->to('/admin/settings?tab=accounts')->with(
+                'error',
+                "{$user['full_name']} has sales, order, or inventory history and can't be deleted — deactivate the account instead so past records keep their cashier/handler."
+            );
+        }
+
+        $this->userModel->delete($userId);
+
+        return redirect()->to('/admin/settings?tab=accounts')->with('success', "{$user['full_name']}'s account was deleted.");
+    }
 }

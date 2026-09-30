@@ -143,6 +143,23 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
         return d.innerHTML;
     }
 
+    // Lets page-level JS (e.g. a failed receipt print) raise the same toast
+    // card used for server flash messages, without a page reload.
+    function showClientToast(type, message) {
+        const el = document.createElement('div');
+        el.className = type === 'success' ? 'toast-success' : 'alert-danger';
+        const icon  = type === 'success' ? 'success' : 'error';
+        const title = type === 'success' ? 'Success!' : 'Error';
+        const bi    = type === 'success' ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+        el.innerHTML = `<div class="toast-icon ${icon}"><i class="bi ${bi}"></i></div>
+            <div><div class="toast-title">${title}</div><div class="toast-msg">${toastEscapeHtml(message)}</div></div>`;
+        document.body.appendChild(el);
+        setTimeout(() => {
+            el.classList.add('toast-hide');
+            setTimeout(() => el.remove(), 400);
+        }, 1000);
+    }
+
     document.querySelectorAll('.alert-success, .toast-success').forEach(el => {
         const msg = el.textContent.trim();
         el.innerHTML = `<div class="toast-icon success"><i class="bi bi-check-circle-fill"></i></div>
@@ -158,7 +175,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
         setTimeout(() => {
             el.classList.add('toast-hide');
             setTimeout(() => el.remove(), 400);
-        }, 3000);
+        }, 1000);
     });
 </script>
 </body>

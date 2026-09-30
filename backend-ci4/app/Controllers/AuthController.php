@@ -3,16 +3,20 @@
 
 namespace App\Controllers;
 
+use App\Libraries\EmailNotifier;
+use App\Libraries\LoginLockout;
 use App\Models\NotificationModel;
 use App\Models\UserModel;
 
 class AuthController extends BaseController
 {
     protected $userModel;
+    protected LoginLockout $lockout;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
+        $this->lockout   = new LoginLockout();
     }
 
     public function landing()
@@ -28,21 +32,27 @@ class AuthController extends BaseController
 
     public function attemptAdminLogin()
     {
+        $locked = $this->lockout->secondsRemaining('admin');
+        if ($locked > 0) {
+            return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.");
+        }
+
         $username = $this->request->getPost('username');
         $password = $this->request->getPost('password');
 
         $user = $this->userModel->findByUsername($username);
 
         if (!$user || $user['role'] !== 'Admin') {
-            return redirect()->back()->with('error', 'Incorrect password. Please try again');
+            return $this->failLogin('admin');
         }
         if (!$user['is_active']) {
             return redirect()->back()->with('error', 'This account has been deactivated');
         }
         if (!password_verify($password, $user['password_hash'])) {
-            return redirect()->back()->with('error', 'Incorrect password. Please try again');
+            return $this->failLogin('admin');
         }
 
+        $this->lockout->reset('admin');
         $this->logUserIn($user);
         return redirect()->to('/admin/dashboard');
     }
@@ -55,6 +65,11 @@ class AuthController extends BaseController
 
     public function attemptStaffLogin()
     {
+        $locked = $this->lockout->secondsRemaining('staff');
+        if ($locked > 0) {
+            return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.");
+        }
+
         $password = $this->request->getPost('password');
 
         // Design simplification: looks up the single active Staff-role account.
@@ -64,9 +79,10 @@ class AuthController extends BaseController
                                  ->first();
 
         if (!$user || !password_verify($password, $user['password_hash'])) {
-            return redirect()->back()->with('error', 'Incorrect password. Please try again');
+            return $this->failLogin('staff');
         }
 
+        $this->lockout->reset('staff');
         $this->logUserIn($user);
         return redirect()->to('/staff/dashboard');
     }
@@ -79,20 +95,43 @@ class AuthController extends BaseController
 
     public function attemptSupplierLogin()
     {
+        $locked = $this->lockout->secondsRemaining('supplier');
+        if ($locked > 0) {
+            return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.");
+        }
+
         $username = $this->request->getPost('username');
         $password = $this->request->getPost('password');
 
         $user = $this->userModel->findByUsername($username);
 
         if (!$user || $user['role'] !== 'Supplier') {
-            return redirect()->back()->with('error', 'Incorrect password. Please try again');
+            return $this->failLogin('supplier');
         }
         if (!password_verify($password, $user['password_hash'])) {
-            return redirect()->back()->with('error', 'Incorrect password. Please try again');
+            return $this->failLogin('supplier');
         }
 
+        $this->lockout->reset('supplier');
         $this->logUserIn($user);
         return redirect()->to('/supplier/dashboard');
+    }
+
+    /**
+     * Records a failed login attempt for this role and returns the
+     * appropriate redirect: the usual generic message, or the lockout
+     * countdown once MAX_ATTEMPTS is reached.
+     */
+    private function failLogin(string $role)
+    {
+        $this->lockout->registerFailure($role);
+        $seconds = $this->lockout->secondsRemaining($role);
+
+        $message = $seconds > 0
+            ? "Too many failed attempts. Please wait {$seconds} seconds and try again."
+            : 'Incorrect password. Please try again';
+
+        return redirect()->back()->with('error', $message);
     }
 
     private function logUserIn(array $user): void
@@ -289,13 +328,55 @@ class AuthController extends BaseController
             return redirect()->to('/login/staff/forgot')->with('error', 'Please enter your name.');
         }
 
-        (new NotificationModel())->push(
+        $reasonText = $reason !== '' ? $reason : 'No reason provided.';
+
+        // Random per-notification token so the email's Approve/Decline
+        // buttons can act without an active admin session — validated like
+        // a one-time "magic link" rather than tied to who's logged in.
+        $actionToken = bin2hex(random_bytes(24));
+
+        $notificationId = (new NotificationModel())->push(
             'Admin',
             'Access Request',
             "Password reset requested by {$staffName}",
-            $reason !== '' ? $reason : 'No reason provided.',
+            $reasonText,
             null,
-            'access_request'
+            'access_request',
+            null,
+            $actionToken
+        );
+
+        $approveUrl = site_url("notification-action/{$notificationId}/{$actionToken}/approve");
+        $declineUrl = site_url("notification-action/{$notificationId}/{$actionToken}/decline");
+
+        // A locked-out Staff member needs a fast response — email the
+        // Owner/Admin directly instead of waiting for them to notice the
+        // in-app notification bell. HTML with real buttons; the link itself
+        // only opens a confirm page (see NotificationActionController) so an
+        // email security scanner pre-fetching the link can't silently act on
+        // it — only an explicit click on that page's confirm button can.
+        $staffNameHtml = esc($staffName, 'html');
+        $reasonHtml    = esc($reasonText, 'html');
+
+        $htmlMessage = "<p>{$staffNameHtml} can't log in and is requesting a password reset.</p>"
+            . "<p><strong>Reason given:</strong> {$reasonHtml}</p>"
+            . '<p style="margin:24px 0;">'
+            . "<a href=\"{$approveUrl}\" style=\"background:#2f6431;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin-right:12px;display:inline-block;\">Approve</a>"
+            . "<a href=\"{$declineUrl}\" style=\"background:#7a2020;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;\">Decline</a>"
+            . '</p>'
+            . '<p style="color:#888;font-size:12px;">Or log in to the admin portal and check Notifications.</p>';
+
+        $plainText = "{$staffName} can't log in and is requesting a password reset.\n\n"
+            . "Reason given: {$reasonText}\n\n"
+            . "Approve: {$approveUrl}\n"
+            . "Decline: {$declineUrl}\n\n"
+            . "Or log in to the admin portal and check Notifications to approve or decline this request.";
+
+        (new EmailNotifier())->toRoleHtml(
+            'Admin',
+            "Staff password reset requested by {$staffName}",
+            $htmlMessage,
+            $plainText
         );
 
         return redirect()->to('/login/staff/forgot')->with('sent', true);

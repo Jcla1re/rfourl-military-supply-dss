@@ -152,9 +152,24 @@
 .view-receipt-link:hover strong { text-decoration: underline; }
 
 @media print {
+    @page { margin: 12mm; }
     body * { visibility: hidden; }
     .receipt-modal.show, .receipt-modal.show * { visibility: visible; }
-    .receipt-modal.show { position: absolute; inset: 0; background: #fff; }
+    .receipt-modal.show {
+        position: absolute; inset: 0; background: #fff;
+        display: block;
+    }
+    /* max-height/overflow-y are screen-only concerns (vh has no meaning on
+       a printed page and clips/rescales content unpredictably); drop them
+       here so the printed receipt matches the on-screen card exactly. */
+    .receipt-card {
+        width: 100%; max-width: 600px; max-height: none; overflow: visible;
+        margin: 0 auto; box-shadow: none; border-radius: 0; padding: 0;
+    }
+    .receipt-modal.show * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
     .rc-close, .rc-actions { display: none; }
 }
 
@@ -411,7 +426,7 @@
                         <td class="num">₱<?= number_format($l['total'], 2) ?></td>
                     </tr>
                 <?php endforeach; ?>
-                <?php for ($i = count($receipt['lines']); $i < 12; $i++): ?>
+                <?php for ($i = 0; $i < 2; $i++): ?>
                     <tr class="blank-row"><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>
                 <?php endfor; ?>
             </tbody>
@@ -458,7 +473,7 @@
         <div class="inv-disclaimer">&quot;THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAXES&quot;</div>
 
         <div class="rc-actions">
-            <button type="button" onclick="window.print()">Print</button>
+            <button type="button" onclick="printReceipt()">Print</button>
             <a href="<?= site_url('staff/sales') ?>">+ New Sale</a>
         </div>
     </div>
@@ -519,7 +534,7 @@
         <div class="inv-disclaimer">&quot;THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAXES&quot;</div>
 
         <div class="rc-actions">
-            <button type="button" onclick="window.print()">Print</button>
+            <button type="button" onclick="printReceipt()">Print</button>
             <button type="button" id="closeHistoryReceipt2">Close</button>
         </div>
     </div>
@@ -540,7 +555,7 @@
         const rowsHtml = r.items.map(l =>
             `<tr><td style="text-align:center;">${l.qty}</td><td style="text-align:center;">pc</td><td>${escapeHtml(l.item_name)}</td><td class="num">₱${l.unit_price.toFixed(2)}</td><td class="num">₱${l.total.toFixed(2)}</td></tr>`
         );
-        for (let i = r.items.length; i < 12; i++) {
+        for (let i = 0; i < 2; i++) {
             rowsHtml.push('<tr class="blank-row"><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>');
         }
         document.getElementById('hrItemsBody').innerHTML = rowsHtml.join('');
@@ -580,6 +595,22 @@
 </script>
 
 <script>
+function printReceipt() {
+    try {
+        if (typeof window.print !== 'function') {
+            throw new Error('Printing is not supported in this browser.');
+        }
+        window.print();
+    } catch (err) {
+        console.error('Receipt print failed:', err);
+        if (typeof showClientToast === 'function') {
+            showClientToast('error', "Couldn't open the print dialog. Try again, or press Ctrl+P to print manually.");
+        } else {
+            alert("Couldn't open the print dialog. Try again, or press Ctrl+P to print manually.");
+        }
+    }
+}
+
 document.getElementById('closeReceipt')?.addEventListener('click', () => {
     document.getElementById('receiptModal').classList.remove('show');
 });

@@ -176,6 +176,10 @@ $tabs = [
                             <?= csrf_field() ?>
                             <button type="submit" class="btn btn-sm <?= $s['is_active'] ? 'btn-maroon' : 'btn-success' ?>"><?= $s['is_active'] ? 'Deactivate' : 'Reactivate' ?></button>
                         </form>
+                        <form method="post" action="<?= site_url('admin/settings/staff-accounts/delete/' . $s['user_id']) ?>" onsubmit="return confirm('Permanently delete this staff account? This cannot be undone. Accounts with sales, order, or inventory history can\'t be deleted — deactivate them instead.');">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
                     </div>
                 <?php endforeach; ?>
             </div>

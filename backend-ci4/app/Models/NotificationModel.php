@@ -22,6 +22,7 @@ class NotificationModel extends Model
         'link_url',
         'is_read',
         'status',
+        'action_token',
     ];
 
     public const CATEGORIES = ['order_status', 'staff_activity', 'access_request'];
@@ -67,6 +68,10 @@ class NotificationModel extends Model
         return $builder->countAllResults();
     }
 
+    /**
+     * @return int|string|false The new notification's ID (needed by callers
+     *                          that build an action link from $actionToken).
+     */
     public function push(
         string $role,
         string $type,
@@ -74,9 +79,10 @@ class NotificationModel extends Model
         ?string $message = null,
         ?int $recipientId = null,
         ?string $category = null,
-        ?string $linkUrl = null
-    ): void {
-        $this->insert([
+        ?string $linkUrl = null,
+        ?string $actionToken = null
+    ) {
+        return $this->insert([
             'recipient_role' => $role,
             'recipient_id'   => $recipientId,
             'type'           => $type,
@@ -85,6 +91,7 @@ class NotificationModel extends Model
             'message'        => $message,
             'link_url'       => $linkUrl,
             'is_read'        => 0,
+            'action_token'   => $actionToken,
         ]);
     }
 
@@ -96,6 +103,37 @@ class NotificationModel extends Model
     public function resolve(int $notificationId, string $status): void
     {
         $this->update($notificationId, ['status' => $status, 'is_read' => 1]);
+    }
+
+    /**
+     * Shared by the admin portal's Approve button and the one-click email
+     * action link, so both paths have exactly one definition of what
+     * "approving" a staff access request does.
+     */
+    public function approveAccessRequest(int $notificationId): void
+    {
+        $this->resolve($notificationId, 'approved');
+        $this->push(
+            'Staff',
+            'Access Request',
+            'Your password reset request was approved',
+            'The admin will give you your new password directly.',
+            null,
+            'staff_activity'
+        );
+    }
+
+    public function declineAccessRequest(int $notificationId): void
+    {
+        $this->resolve($notificationId, 'declined');
+        $this->push(
+            'Staff',
+            'Access Request',
+            'Your password reset request was declined',
+            'Please contact the admin directly if you still need access.',
+            null,
+            'staff_activity'
+        );
     }
 
     /**

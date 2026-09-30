@@ -13,10 +13,25 @@
     justify-content: space-between;
     gap: 16px;
     margin-bottom: 20px;
+    animation: dashAlertGlow 1.8s ease-out infinite;
 }
-.dash-alert .icon { color: var(--accent-maroon); font-size: 28px; flex-shrink: 0; }
+.dash-alert .icon {
+    color: var(--accent-maroon); font-size: 28px; flex-shrink: 0;
+    display: inline-block;
+    animation: dashAlertPulse 1s ease-in-out infinite;
+}
 .dash-alert .title { font-weight: 800; font-size: 18px; }
 .dash-alert .sub { color: #666; font-size: 13px; }
+
+@keyframes dashAlertPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.35) rotate(-4deg); }
+}
+@keyframes dashAlertGlow {
+    0%   { box-shadow: 0 0 0 0 rgba(122, 32, 32, 0.35); }
+    70%  { box-shadow: 0 0 0 10px rgba(122, 32, 32, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(122, 32, 32, 0); }
+}
 
 .dash-stat {
     background: #fff;
@@ -169,6 +184,7 @@ new Chart(document.getElementById('weeklySalesChart'), {
         ]
     },
     options: {
+        animation: { duration: 900, easing: 'easeOutQuart' },
         plugins: { legend: { position: 'top', align: 'start', labels: { boxWidth: 24 } } },
         scales: { y: { grid: { color: '#eee' } }, x: { grid: { display: false } } }
     }
@@ -184,7 +200,11 @@ new Chart(document.getElementById('seasonChart'), {
             borderRadius: 4
         }]
     },
-    options: { plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#eee' } }, x: { grid: { display: false } } } }
+    options: {
+        animation: { duration: 900, easing: 'easeOutQuart' },
+        plugins: { legend: { display: false } },
+        scales: { y: { grid: { color: '#eee' } }, x: { grid: { display: false } } }
+    }
 });
 </script>
 

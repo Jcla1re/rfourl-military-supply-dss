@@ -26,6 +26,12 @@ $routes->post('login/(:segment)/otp/resend', 'AuthController::resendOtp/$1');
 $routes->get('login/(:segment)/reset-password', 'AuthController::showResetPassword/$1');
 $routes->post('login/(:segment)/reset-password', 'AuthController::resetPassword/$1');
 
+// One-click Approve/Decline links from the staff-access-request email —
+// deliberately outside the roleauth-filtered admin group; gated by the
+// notification's own random action_token instead of a login session.
+$routes->get('notification-action/(:num)/(:segment)/(:segment)', 'NotificationActionController::confirm/$1/$2/$3');
+$routes->post('notification-action/(:num)/(:segment)/(:segment)', 'NotificationActionController::submit/$1/$2/$3');
+
 $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'roleauth:Admin'], static function ($routes) {
     $routes->get('dashboard', 'DashboardController::index');
 
@@ -68,6 +74,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->post('settings/staff-password', 'SettingsController::changeStaffPassword');
     $routes->post('settings/staff-accounts', 'SettingsController::addStaffAccount');
     $routes->post('settings/staff-accounts/toggle/(:segment)', 'SettingsController::deactivateStaff/$1');
+    $routes->post('settings/staff-accounts/delete/(:segment)', 'SettingsController::deleteStaff/$1');
 
     $routes->get('notifications', 'NotificationController::index');
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');

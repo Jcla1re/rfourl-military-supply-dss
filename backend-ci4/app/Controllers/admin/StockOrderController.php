@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\EmailNotifier;
 use App\Models\NotificationModel;
 use App\Models\ProductModel;
 use App\Models\ReorderAlertModel;
@@ -20,6 +21,7 @@ class StockOrderController extends BaseController
     protected $reorderAlertModel;
     protected $userModel;
     protected $notificationModel;
+    protected $emailNotifier;
 
     public function __construct()
     {
@@ -30,17 +32,22 @@ class StockOrderController extends BaseController
         $this->reorderAlertModel = new ReorderAlertModel();
         $this->userModel         = new UserModel();
         $this->notificationModel = new NotificationModel();
+        $this->emailNotifier     = new EmailNotifier();
     }
 
     /**
-     * The user_id of the Supplier-portal account tied to a given
-     * supplier_id, so an order notification reaches only that one
-     * supplier's inbox instead of broadcasting to every supplier account.
+     * The Supplier-portal account tied to a given supplier_id, so an order
+     * notification (in-app or email) reaches only that one supplier's
+     * inbox instead of broadcasting to every supplier account.
      */
+    private function supplierUser(string $supplierId): ?array
+    {
+        return $this->userModel->where('supplier_id', $supplierId)->where('role', 'Supplier')->first();
+    }
+
     private function supplierUserId(string $supplierId): ?int
     {
-        $user = $this->userModel->where('supplier_id', $supplierId)->where('role', 'Supplier')->first();
-        return $user['user_id'] ?? null;
+        return $this->supplierUser($supplierId)['user_id'] ?? null;
     }
 
     public function index()
@@ -116,14 +123,22 @@ class StockOrderController extends BaseController
         // "Follow up"/"Delayed" is the admin asking the SUPPLIER for a status
         // update — the admin already knows they just clicked this, so the
         // notification belongs in the supplier's inbox, not the admin's own.
+        $supplierUser = $this->supplierUser($order['supplier_id']);
+
         $this->notificationModel->push(
             'Supplier',
             'Order Status',
             "Order {$soId} needs a status update",
             "The expected delivery for {$soId} has passed. Please follow up and provide an update.",
-            $this->supplierUserId($order['supplier_id']),
+            $supplierUser['user_id'] ?? null,
             'order_status',
             '/supplier/deliveries'
+        );
+
+        $this->emailNotifier->toUser(
+            $supplierUser,
+            "Order {$soId} needs a status update",
+            "The expected delivery date for order {$soId} has passed. Please log in to the supplier portal and provide a status update."
         );
 
         return redirect()->to('/admin/orders')->with('success', "Order {$soId} flagged as delayed. Supplier has been notified to follow up.");
@@ -181,6 +196,9 @@ class StockOrderController extends BaseController
 
         $soId = $this->stockOrderModel->generateNextId();
 
+        $db = db_connect();
+        $db->transStart();
+
         $this->stockOrderModel->insert([
             'so_id'                   => $soId,
             'supplier_id'             => $supplierId,
@@ -201,11 +219,21 @@ class StockOrderController extends BaseController
             ]);
         }
 
+        $alert   = null;
+        $product = null;
         if ($alertId) {
             $alert   = $this->reorderAlertModel->find((int) $alertId);
             $product = $alert ? $this->productModel->find($alert['item_id']) : null;
             $this->reorderAlertModel->update((int) $alertId, ['status' => 'Ordered', 'so_id' => $soId]);
+        }
 
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return redirect()->back()->with('error', 'Failed to create the stock order. Please try again.');
+        }
+
+        if ($alertId && $alert) {
             // Closes the loop back to whoever flagged this item — staff share
             // a single portal login, so this broadcasts to all Staff rather
             // than one specific account.
@@ -220,14 +248,22 @@ class StockOrderController extends BaseController
             );
         }
 
+        $newOrderSupplierUser = $this->supplierUser($supplierId);
+
         $this->notificationModel->push(
             'Supplier',
             'Order Status',
             "New order {$soId}",
             "A new stock order {$soId} has been placed. Check New Orders to accept it.",
-            $this->supplierUserId($supplierId),
+            $newOrderSupplierUser['user_id'] ?? null,
             'order_status',
             '/supplier/new-orders'
+        );
+
+        $this->emailNotifier->toUser(
+            $newOrderSupplierUser,
+            "New stock order {$soId}",
+            "A new stock order {$soId} has been placed. Please log in to the supplier portal to review and accept it."
         );
 
         return redirect()->to('/admin/orders')->with('success', "Stock order {$soId} created and sent to supplier.");
@@ -254,14 +290,22 @@ class StockOrderController extends BaseController
         }
 
         if ($newStatus !== $order['status']) {
+            $statusSupplierUser = $this->supplierUser($order['supplier_id']);
+
             $this->notificationModel->push(
                 'Supplier',
                 'Order Status',
                 "Order {$soId} updated to {$newStatus}",
                 "The admin manually set order {$soId} to {$newStatus}.",
-                $this->supplierUserId($order['supplier_id']),
+                $statusSupplierUser['user_id'] ?? null,
                 'order_status',
                 $newStatus === 'Cancelled' ? '/supplier/new-orders' : '/supplier/deliveries'
+            );
+
+            $this->emailNotifier->toUser(
+                $statusSupplierUser,
+                "Order {$soId} updated to {$newStatus}",
+                "The admin manually set order {$soId} to {$newStatus}. Please log in to the supplier portal for details."
             );
         }
 

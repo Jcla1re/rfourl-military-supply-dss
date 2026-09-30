@@ -16,9 +16,24 @@
 .dash-alert {
     background: #fff; border: 1px solid var(--accent-maroon); border-radius: 12px;
     padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px;
+    animation: dashAlertGlow 1.8s ease-out infinite;
 }
-.dash-alert .icon { color: var(--accent-maroon); font-size: 28px; flex-shrink: 0; }
+.dash-alert .icon {
+    color: var(--accent-maroon); font-size: 28px; flex-shrink: 0;
+    display: inline-block;
+    animation: dashAlertPulse 1s ease-in-out infinite;
+}
 .dash-alert .title { font-weight: 800; font-size: 16px; }
+
+@keyframes dashAlertPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.35) rotate(-4deg); }
+}
+@keyframes dashAlertGlow {
+    0%   { box-shadow: 0 0 0 0 rgba(122, 32, 32, 0.35); }
+    70%  { box-shadow: 0 0 0 10px rgba(122, 32, 32, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(122, 32, 32, 0); }
+}
 
 .dash-stat {
     background: #fff; border-radius: 14px; padding: 20px 22px; display: flex; align-items: center; gap: 16px;

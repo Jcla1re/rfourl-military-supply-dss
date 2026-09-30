@@ -43,15 +43,15 @@ $unreadCount = $unreadCount ?? 0;
 .notif-card.red .icn { color: var(--accent-maroon); border-color: var(--accent-maroon); }
 .notif-card.red .btn-view { background: var(--accent-maroon); color: #fff; border: none; }
 
-.notif-card.blue    { border-color: #2159a8; }
-.notif-card.blue .icn { color: #2159a8; border-color: #2159a8; }
-.notif-card.blue .btn-view { background: #2159a8; color: #fff; border: none; }
-.notif-card.blue .type-pill { background: #dbe6f5; color: #2159a8; }
+.notif-card.green    { border-color: var(--green-text); }
+.notif-card.green .icn { color: var(--green-text); border-color: var(--green-text); }
+.notif-card.green .btn-view { background: var(--green-text); color: #fff; border: none; }
+.notif-card.green .type-pill { background: var(--green-bg); color: var(--green-text); }
 
-.notif-card.purple  { border-color: #5a3aa8; }
-.notif-card.purple .icn { color: #5a3aa8; border-color: #5a3aa8; }
-.notif-card.purple .btn-view { background: #5a3aa8; color: #fff; border: none; }
-.notif-card.purple .type-pill { background: #e6ddf5; color: #5a3aa8; }
+.notif-card.amber  { border-color: var(--amber-text); }
+.notif-card.amber .icn { color: var(--amber-text); border-color: var(--amber-text); }
+.notif-card.amber .btn-view { background: var(--amber-text); color: #fff; border: none; }
+.notif-card.amber .type-pill { background: var(--amber-bg); color: var(--amber-text); }
 
 /* Order-status cards: the whole card is a submit button that marks it done
    and forwards straight to the order — reset button chrome so it still
@@ -59,15 +59,15 @@ $unreadCount = $unreadCount ?? 0;
 .notif-card-openform { display: block; width: 100%; padding: 0; margin-bottom: 14px; }
 .notif-card-open {
     all: unset; display: flex; align-items: flex-start; gap: 16px; width: 100%; box-sizing: border-box;
-    background: #fff; border-radius: 12px; padding: 18px 20px; border-left: 4px solid #2159a8; cursor: pointer;
+    background: #fff; border-radius: 12px; padding: 18px 20px; border-left: 4px solid var(--green-text); cursor: pointer;
 }
 .notif-card-open:hover { background: #f7f9fc; }
-.notif-card-open .icn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #2159a8; color: #2159a8; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.notif-card-open .icn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--green-text); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
 .notif-card-open .body { flex: 1; text-align: left; }
 .notif-card-open .title { font-weight: 800; font-size: 17px; color: #1c1c1c; }
 .notif-card-open .msg { color: #555; font-size: 14px; margin-top: 2px; }
-.notif-card-open .type-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; margin-top: 8px; background: #dbe6f5; color: #2159a8; }
-.notif-card-open .go { align-self: center; color: #2159a8; font-size: 20px; }
+.notif-card-open .type-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; margin-top: 8px; background: var(--green-bg); color: var(--green-text); }
+.notif-card-open .go { align-self: center; color: var(--green-text); font-size: 20px; }
 
 /* Staff-activity cards: <details> disclosure — collapsed shows just the
    title, expanding reveals the message + a "Mark as Done" action. */
@@ -82,8 +82,8 @@ $unreadCount = $unreadCount ?? 0;
     background: #fff; border-radius: 0 0 12px 12px; padding: 4px 20px 18px 76px; border-left: 4px solid #ccc; border-top: 1px dashed #eee;
 }
 .notif-details.red .notif-expand, .notif-details.red .notif-card { border-left-color: var(--accent-maroon); }
-.notif-details.purple .notif-expand, .notif-details.purple .notif-card { border-left-color: #5a3aa8; }
-.notif-details.blue .notif-expand, .notif-details.blue .notif-card { border-left-color: #2159a8; }
+.notif-details.amber .notif-expand, .notif-details.amber .notif-card { border-left-color: var(--amber-text); }
+.notif-details.green .notif-expand, .notif-details.green .notif-card { border-left-color: var(--green-text); }
 
 .notif-actions { display: flex; gap: 10px; margin-top: 12px; }
 .notif-actions button { padding: 9px 18px; border-radius: 8px; font-weight: 700; border: 1px solid #ccc; background: #fff; cursor: pointer; }
@@ -107,7 +107,7 @@ $unreadCount = $unreadCount ?? 0;
                 <?php
                 $typeLower = strtolower($n['type']);
                 $isDamagedLost = str_contains($typeLower, 'damaged') || str_contains($typeLower, 'lost');
-                $color = $isDamagedLost ? 'red' : ($n['category'] === 'access_request' ? 'purple' : ($n['category'] === 'order_status' ? 'blue' : 'blue'));
+                $color = $isDamagedLost ? 'red' : ($n['category'] === 'access_request' ? 'amber' : 'green');
                 $icon = match (true) {
                     $isDamagedLost => 'bi-exclamation',
                     $n['category'] === 'access_request' => 'bi-exclamation',
