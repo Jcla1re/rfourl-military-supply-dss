@@ -70,6 +70,26 @@ class StockOrderController extends BaseController
         $activeOrders  = array_values(array_filter($allOrders, fn ($o) => ! in_array($o['status'], ['Delivered', 'Cancelled'], true)));
         $historyOrders = array_values(array_filter($allOrders, fn ($o) => in_array($o['status'], ['Delivered', 'Cancelled'], true)));
 
+        $historySearch = trim((string) ($this->request->getGet('search') ?? ''));
+        if ($historySearch !== '') {
+            $needle = strtolower($historySearch);
+            $historyOrders = array_values(array_filter($historyOrders, function ($o) use ($needle) {
+                return str_contains(strtolower($o['so_id']), $needle)
+                    || str_contains(strtolower($o['company_name'] ?? ''), $needle);
+            }));
+        }
+
+        // order_date is stored as 'Y-m-d', so plain string comparison sorts
+        // correctly without needing to parse it.
+        $historyDateFrom = trim((string) ($this->request->getGet('date_from') ?? ''));
+        $historyDateTo   = trim((string) ($this->request->getGet('date_to') ?? ''));
+        if ($historyDateFrom !== '') {
+            $historyOrders = array_values(array_filter($historyOrders, fn ($o) => $o['order_date'] >= $historyDateFrom));
+        }
+        if ($historyDateTo !== '') {
+            $historyOrders = array_values(array_filter($historyOrders, fn ($o) => $o['order_date'] <= $historyDateTo));
+        }
+
         foreach ($activeOrders as &$o) {
             $lines             = $this->soItemModel->forOrder($o['so_id']);
             $o['lines']        = $lines;
@@ -95,8 +115,11 @@ class StockOrderController extends BaseController
             'title'          => 'Orders',
             'active'         => 'orders',
             'tab'            => $tab,
-            'orders'         => $activeOrders,
-            'historyOrders'  => $historyOrders,
+            'orders'          => $activeOrders,
+            'historyOrders'   => $historyOrders,
+            'historySearch'   => $historySearch,
+            'historyDateFrom' => $historyDateFrom,
+            'historyDateTo'   => $historyDateTo,
             'suppliers'      => $this->supplierModel->where('is_active', 1)->findAll(),
             'products'       => $this->productModel->where('is_active', 1)->orderBy('item_name', 'ASC')->findAll(),
             'statuses'       => StockOrderModel::STATUSES,

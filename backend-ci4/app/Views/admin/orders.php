@@ -10,9 +10,15 @@
 <?php
 $orders = $orders ?? [];
 $historyOrders = $historyOrders ?? [];
+$historySearch = $historySearch ?? '';
+$historyDateFrom = $historyDateFrom ?? '';
+$historyDateTo = $historyDateTo ?? '';
 $suppliers = $suppliers ?? [];
 $products = $products ?? [];
 $tab = $tab ?? 'status';
+$calMonth = $calMonth ?? (int) date('n');
+$calYear = $calYear ?? (int) date('Y');
+$restockDates = $restockDates ?? [];
 ?>
 
 <style>
@@ -103,6 +109,16 @@ $tab = $tab ?? 'status';
 .cal-legend { display: flex; gap: 18px; margin-top: 14px; font-size: 13px; }
 .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .cal-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+.ord-filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.ord-search {
+    display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #ddd;
+    border-radius: 10px; padding: 10px 14px; max-width: 360px; flex: 1; min-width: 220px;
+}
+.ord-search i { color: #888; font-size: 16px; flex-shrink: 0; }
+.ord-search input { flex: 1; min-width: 0; border: none; outline: none; font-size: 14px; }
+.ord-filter-bar input[type="date"] { border: 1px solid #ddd; border-radius: 10px; padding: 9px 12px; font-size: 14px; }
+.ord-filter-bar .sep { color: #888; font-size: 13px; }
 
 </style>
 
@@ -200,7 +216,7 @@ $tab = $tab ?? 'status';
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): ?>
                             <?php
                             $dateStr = sprintf('%04d-%02d-%02d', $calYear, $calMonth, $d);
-                            $cls = $dateStr === $todayStr ? 'today' : (in_array($dateStr, $restockDates ?? [], true) ? 'restock' : '');
+                            $cls = $dateStr === $todayStr ? 'today' : (in_array($dateStr, $restockDates, true) ? 'restock' : '');
                             ?>
                             <div class="cal-day <?= $cls ?>"><?= $d ?></div>
                         <?php endfor; ?>
@@ -213,6 +229,16 @@ $tab = $tab ?? 'status';
             </div>
         </div>
     <?php else: ?>
+        <form method="get" class="ord-filter-bar">
+            <input type="hidden" name="tab" value="history">
+            <div class="ord-search">
+                <i class="bi bi-search"></i>
+                <input type="search" name="search" value="<?= esc($historySearch) ?>" placeholder="Search by Order ID or Supplier...">
+            </div>
+            <input type="date" name="date_from" value="<?= esc($historyDateFrom) ?>" onchange="this.form.submit()">
+            <span class="sep">to</span>
+            <input type="date" name="date_to" value="<?= esc($historyDateTo) ?>" onchange="this.form.submit()">
+        </form>
         <div class="page-panel">
             <table class="data-table">
                 <thead>
@@ -230,7 +256,7 @@ $tab = $tab ?? 'status';
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="5" class="text-center py-4">No completed orders yet.</td></tr>
+                        <tr><td colspan="5" class="text-center py-4"><?= ($historySearch !== '' || $historyDateFrom !== '' || $historyDateTo !== '') ? 'No orders match your filters.' : 'No completed orders yet.' ?></td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

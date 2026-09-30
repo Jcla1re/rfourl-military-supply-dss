@@ -21,7 +21,7 @@ class NotificationActionController extends BaseController
 {
     private const ACTIONS = ['approve', 'decline'];
 
-    public function confirm($notificationId, $token, $action)
+    public function confirm($notificationId, string $token, string $action)
     {
         $notification = $this->validRequest($notificationId, $token, $action);
 
@@ -43,7 +43,7 @@ class NotificationActionController extends BaseController
         ]);
     }
 
-    public function submit($notificationId, $token, $action)
+    public function submit($notificationId, string $token, string $action)
     {
         $notification = $this->validRequest($notificationId, $token, $action);
 

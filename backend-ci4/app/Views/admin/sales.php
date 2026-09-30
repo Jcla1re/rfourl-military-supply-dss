@@ -69,7 +69,10 @@
 .pos-card .stock.amber { color: var(--amber-text); }
 .pos-card .stock.red { color: var(--red-text); }
 
-.cart-panel { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); position: sticky; top: 16px; }
+.cart-panel {
+    background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto;
+}
 .cart-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
 .cart-head .count { background: var(--sidebar-bg); color: #fff; border-radius: 999px; padding: 2px 10px; font-size: 12px; margin-left: 6px; }
 .cart-line { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }

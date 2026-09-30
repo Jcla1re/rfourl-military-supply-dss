@@ -13,7 +13,7 @@ $isApprove    = $action === 'approve';
 <body class="auth-body">
     <div class="auth-card">
         <h2><?= $isApprove ? 'Approve' : 'Decline' ?> Request</h2>
-        <p class="auth-hint"><?= esc($notification['title'] ?? '') ?></p>
+        <p class="auth-hint"><?= esc((string) ($notification['title'] ?? '')) ?></p>
 
         <?php if (! empty($notification['message'])): ?>
             <div class="auth-notice"><?= esc($notification['message']) ?></div>

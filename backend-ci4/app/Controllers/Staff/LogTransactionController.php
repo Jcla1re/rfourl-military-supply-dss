@@ -4,9 +4,10 @@
 namespace App\Controllers\Staff;
 
 use App\Controllers\BaseController;
+use App\Libraries\EmailNotifier;
 use App\Models\InventoryLogModel;
+use App\Models\NotificationModel;
 use App\Models\ProductModel;
-use App\Models\UserModel;
 
 class LogTransactionController extends BaseController
 {
@@ -19,17 +20,19 @@ class LogTransactionController extends BaseController
 
     protected $productModel;
     protected $inventoryLogModel;
+    protected $notificationModel;
+    protected $emailNotifier;
 
     public function __construct()
     {
         $this->productModel      = new ProductModel();
         $this->inventoryLogModel = new InventoryLogModel();
+        $this->notificationModel = new NotificationModel();
+        $this->emailNotifier     = new EmailNotifier();
     }
 
     public function index()
     {
-        $userModel = new UserModel();
-
         $logs = $this->inventoryLogModel
             ->select('inventory_log.*, products.item_name, users.full_name as staff_name')
             ->join('products', 'products.item_id = inventory_log.item_id', 'left')
@@ -69,13 +72,13 @@ class LogTransactionController extends BaseController
 
     public function store()
     {
-        $type = $this->request->getPost('type');
+        $type = (string) $this->request->getPost('type');
 
         if (! isset(self::TYPES[$type])) {
             return redirect()->to('/staff/log-transaction')->with('error', 'Unknown transaction type.');
         }
 
-        $itemId = $this->request->getPost('item_id');
+        $itemId = (string) $this->request->getPost('item_id');
         $product = $itemId ? $this->productModel->find($itemId) : null;
 
         if (! $product) {
@@ -148,6 +151,49 @@ class LogTransactionController extends BaseController
             $notes ?: null
         );
 
+        $this->notifyAdmin($type, (array) $product, $qty, $delta, $newStock, $notes);
+
         return redirect()->to('/staff/log-transaction')->with('success', 'Transaction logged successfully.');
+    }
+
+    /**
+     * Every logged transaction notifies the Admin/Owner for visibility.
+     * Restock is the one that needs a fast response — it means a supplier
+     * delivery physically arrived, and the matching stock order is still
+     * sitting open until the Owner marks it Delivered from the Orders page
+     * — so restock also gets a direct link there and an email, the same
+     * "needs quick action" treatment given to other order-status events.
+     */
+    private function notifyAdmin(string $type, array $product, int $qty, int $delta, int $newStock, string $notes): void
+    {
+        $staffName = session()->get('full_name') ?? 'A staff member';
+        $itemName  = $product['item_name'];
+
+        if ($type === 'restock') {
+            $title   = "Restock logged: {$itemName}";
+            $message = "{$staffName} logged a restock of {$qty} unit(s) for {$itemName}. New stock: {$newStock}. {$notes}"
+                . ' If this completes an open order, mark it Delivered from Orders.';
+
+            $this->notificationModel->push('Admin', 'Restock', $title, $message, null, 'order_status', '/admin/orders');
+
+            $this->emailNotifier->toRole(
+                'Admin',
+                "Restock logged for {$itemName} — check open orders",
+                "{$message}\n\nLog in to the admin portal and check Orders to mark the matching order as delivered."
+            );
+
+            return;
+        }
+
+        $labels = [
+            'return'     => ['type' => 'Customer Return', 'title' => "Customer return logged: {$itemName}"],
+            'damaged'    => ['type' => 'Damaged/Lost Item', 'title' => "Damaged/Lost reported: {$itemName}"],
+            'adjustment' => ['type' => 'Manual Adjustment', 'title' => "Stock adjustment logged: {$itemName}"],
+        ];
+        $label = $labels[$type] ?? ['type' => 'Inventory Update', 'title' => "Inventory updated: {$itemName}"];
+
+        $message = "{$staffName} logged a " . strtolower($label['type']) . " for {$itemName} ({$delta} units). New stock: {$newStock}. {$notes}";
+
+        $this->notificationModel->push('Admin', $label['type'], $label['title'], trim($message), null, 'staff_activity');
     }
 }

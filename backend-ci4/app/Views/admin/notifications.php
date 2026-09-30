@@ -53,6 +53,15 @@ $unreadCount = $unreadCount ?? 0;
 .notif-card.amber .btn-view { background: var(--amber-text); color: #fff; border: none; }
 .notif-card.amber .type-pill { background: var(--amber-bg); color: var(--amber-text); }
 
+/* Read notifications visually recede — unread stays full-strength (bold
+   title, white card) as the default look, read fades to a muted/dimmed
+   card instead, so the two states are obviously different at a glance. */
+.notif-card.is-read { background: #f6f6f4; }
+.notif-card.is-read .title { font-weight: 600; color: #666; }
+.notif-card.is-read .msg { color: #888; }
+.notif-card.is-read .icn { opacity: .6; }
+.new-pill { background: var(--green-bg); color: var(--green-text); border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 700; margin-left: 8px; }
+
 /* Order-status cards: the whole card is a submit button that marks it done
    and forwards straight to the order — reset button chrome so it still
    looks/lays out exactly like a plain notif-card. */
@@ -68,6 +77,10 @@ $unreadCount = $unreadCount ?? 0;
 .notif-card-open .msg { color: #555; font-size: 14px; margin-top: 2px; }
 .notif-card-open .type-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; margin-top: 8px; background: var(--green-bg); color: var(--green-text); }
 .notif-card-open .go { align-self: center; color: var(--green-text); font-size: 20px; }
+.notif-card-open.is-read { background: #f6f6f4; }
+.notif-card-open.is-read .title { font-weight: 600; color: #666; }
+.notif-card-open.is-read .msg { color: #888; }
+.notif-card-open.is-read .icn { opacity: .6; }
 
 /* Staff-activity cards: <details> disclosure — collapsed shows just the
    title, expanding reveals the message + a "Mark as Done" action. */
@@ -116,13 +129,15 @@ $unreadCount = $unreadCount ?? 0;
                 };
                 ?>
 
+                <?php $isRead = !empty($n['is_read']); ?>
+
                 <?php if ($n['category'] === 'order_status'): ?>
                     <form method="post" action="<?= site_url('admin/notifications/open/' . $n['notification_id']) ?>" class="notif-card-openform">
                         <?= csrf_field() ?>
-                        <button type="submit" class="notif-card-open">
+                        <button type="submit" class="notif-card-open <?= $isRead ? 'is-read' : '' ?>">
                             <span class="icn"><i class="bi <?= $icon ?>"></i></span>
                             <span class="body">
-                                <span class="title" style="display:block;"><?= esc($n['title']) ?></span>
+                                <span class="title" style="display:block;"><?= esc($n['title']) ?><?php if (!$isRead): ?><span class="new-pill">NEW</span><?php endif; ?></span>
                                 <?php if (!empty($n['message'])): ?><span class="msg" style="display:block;"><?= esc($n['message']) ?></span><?php endif; ?>
                                 <span class="type-pill"><?= esc($n['type']) ?></span>
                             </span>
@@ -131,10 +146,10 @@ $unreadCount = $unreadCount ?? 0;
                     </form>
 
                 <?php elseif ($n['category'] === 'access_request'): ?>
-                    <div class="notif-card <?= $color ?>">
+                    <div class="notif-card <?= $color ?> <?= $isRead ? 'is-read' : '' ?>">
                         <div class="icn"><i class="bi <?= $icon ?>"></i></div>
                         <div class="flex-grow-1">
-                            <div class="title"><?= esc($n['title']) ?></div>
+                            <div class="title"><?= esc($n['title']) ?><?php if (!$isRead): ?><span class="new-pill">NEW</span><?php endif; ?></div>
                             <?php if (!empty($n['message'])): ?><div class="msg"><?= esc($n['message']) ?></div><?php endif; ?>
                             <span class="type-pill"><?= esc($n['type']) ?></span>
                             <?php if (empty($n['status'])): ?>
@@ -157,10 +172,10 @@ $unreadCount = $unreadCount ?? 0;
                 <?php else: ?>
                     <details class="notif-details <?= $color ?>">
                         <summary>
-                            <div class="notif-card <?= $color ?>">
+                            <div class="notif-card <?= $color ?> <?= $isRead ? 'is-read' : '' ?>">
                                 <div class="icn"><i class="bi <?= $icon ?>"></i></div>
                                 <div class="flex-grow-1">
-                                    <div class="title"><?= esc($n['title']) ?></div>
+                                    <div class="title"><?= esc($n['title']) ?><?php if (!$isRead): ?><span class="new-pill">NEW</span><?php endif; ?></div>
                                     <span class="type-pill"><?= esc($n['type']) ?></span>
                                 </div>
                                 <span class="chevron"><i class="bi bi-chevron-down"></i></span>
