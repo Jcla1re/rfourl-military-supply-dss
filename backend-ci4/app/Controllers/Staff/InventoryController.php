@@ -111,6 +111,15 @@ class InventoryController extends BaseController
             'success'       => session()->getFlashdata('success'),
         ];
 
+        // Live search/filtering fetches this same data in the background
+        // (see the inline script in staff/inventory.php) and swaps just the
+        // table + pagination in place — no full page reload, and it still
+        // searches the whole dataset rather than only the rows already on
+        // screen.
+        if ($this->request->isAJAX()) {
+            return view('staff/_inventory_table', $data);
+        }
+
         return view('staff/inventory', $data);
     }
 
