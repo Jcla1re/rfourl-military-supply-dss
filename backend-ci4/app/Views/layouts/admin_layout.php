@@ -150,9 +150,11 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
                 </a>
             </div>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <?= $this->renderSection('content') ?>
+        <div class="main-scroll">
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <?= $this->renderSection('content') ?>
+        </div>
     </div>
 </div>
 

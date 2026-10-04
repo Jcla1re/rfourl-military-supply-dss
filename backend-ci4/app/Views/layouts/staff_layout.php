@@ -115,7 +115,9 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
                 </a>
             </div>
         </div>
-        <?= $this->renderSection('content') ?>
+        <div class="main-scroll">
+            <?= $this->renderSection('content') ?>
+        </div>
     </div>
 </div>
 

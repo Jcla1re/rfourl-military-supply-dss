@@ -34,7 +34,7 @@ class AuthController extends BaseController
     {
         $locked = $this->lockout->secondsRemaining('admin');
         if ($locked > 0) {
-            return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.");
+            return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.")->with('attempted_role', 'admin');
         }
 
         $username = $this->request->getPost('username');
@@ -46,7 +46,7 @@ class AuthController extends BaseController
             return $this->failLogin('admin');
         }
         if (!$user['is_active']) {
-            return redirect()->back()->with('error', 'This account has been deactivated');
+            return redirect()->back()->with('error', 'This account has been deactivated')->with('attempted_role', 'admin');
         }
         if (!password_verify($password, $user['password_hash'])) {
             return $this->failLogin('admin');
@@ -67,7 +67,7 @@ class AuthController extends BaseController
     {
         $locked = $this->lockout->secondsRemaining('staff');
         if ($locked > 0) {
-            return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.");
+            return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.")->with('attempted_role', 'staff');
         }
 
         $password = $this->request->getPost('password');
@@ -97,7 +97,7 @@ class AuthController extends BaseController
     {
         $locked = $this->lockout->secondsRemaining('supplier');
         if ($locked > 0) {
-            return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.");
+            return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.")->with('attempted_role', 'supplier');
         }
 
         $username = $this->request->getPost('username');
@@ -131,7 +131,7 @@ class AuthController extends BaseController
             ? "Too many failed attempts. Please wait {$seconds} seconds and try again."
             : 'Incorrect password. Please try again';
 
-        return redirect()->back()->with('error', $message);
+        return redirect()->back()->with('error', $message)->with('attempted_role', $role);
     }
 
     private function logUserIn(array $user): void
