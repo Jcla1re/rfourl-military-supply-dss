@@ -69,6 +69,18 @@
 .pos-card .stock.amber { color: var(--amber-text); }
 .pos-card .stock.red { color: var(--red-text); }
 
+.size-pick-list { display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; }
+.size-pick-btn {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    width: 100%; padding: 14px 16px; border: 1px solid #ddd; border-radius: 10px;
+    background: #fff; cursor: pointer; font-size: 15px; text-align: left;
+}
+.size-pick-btn:hover:not([disabled]) { border-color: #3d5230; background: #f7f9f5; }
+.size-pick-btn[disabled] { opacity: .5; cursor: not-allowed; background: #f3f3f1; }
+.size-pick-btn .sz { font-weight: 800; font-size: 17px; min-width: 50px; }
+.size-pick-btn .st { color: #777; font-size: 12.5px; flex: 1; }
+.size-pick-btn .pr { font-weight: 700; }
+
 .cart-panel {
     background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
     position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto;
@@ -188,7 +200,7 @@
     </div>
 
     <?php if ($tab === 'pos'): ?>
-        <?php $products = $products ?? []; ?>
+        <?php $groups = $groups ?? []; ?>
         <div class="pos-layout">
             <div>
                 <div class="pill-tabs mb-3">
@@ -199,25 +211,39 @@
                 </div>
                 <input type="search" class="pos-search" id="posSearch" placeholder="Search items...">
 
-                <?php if (empty($products)): ?>
+                <?php if (empty($groups)): ?>
                     <div class="empty-state">No items in inventory yet.</div>
                 <?php else: ?>
                     <div class="pos-grid" id="posGrid">
-                        <?php foreach ($products as $p): ?>
-                            <div class="pos-card <?= $p['current_stock'] <= 0 ? 'disabled' : '' ?>"
-                                 data-cat="<?= esc($p['category']) ?>"
-                                 data-name="<?= esc(strtolower($p['item_name'])) ?>"
-                                 data-id="<?= esc($p['item_id']) ?>"
-                                 data-item-name="<?= esc($p['item_name']) ?>"
-                                 data-size="<?= esc($p['size'] ?? '') ?>"
-                                 data-price="<?= esc($p['selling_price']) ?>"
-                                 data-stock="<?= esc($p['current_stock']) ?>"
-                                 data-rop="<?= esc($p['manual_rop_warning'] ?? 0) ?>">
+                        <?php foreach ($groups as $g): ?>
+                            <?php
+                            $variantsPayload = array_map(fn ($v) => [
+                                'item_id'            => $v['item_id'],
+                                'item_name'          => $v['item_name'],
+                                'size'               => $v['size'] ?? '',
+                                'selling_price'      => (float) $v['selling_price'],
+                                'current_stock'      => (int) $v['current_stock'],
+                                'manual_rop_warning' => (int) ($v['manual_rop_warning'] ?? 0),
+                            ], $g['variants']);
+                            ?>
+                            <div class="pos-card <?= $g['total_stock'] <= 0 ? 'disabled' : '' ?>"
+                                 data-cat="<?= esc($g['category']) ?>"
+                                 data-name="<?= esc(strtolower($g['item_name'])) ?>"
+                                 data-item-name="<?= esc($g['item_name']) ?>"
+                                 data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
                                 <div class="icon"><i class="bi bi-box-seam"></i></div>
-                                <div class="name"><?= esc($p['item_name']) ?></div>
-                                <div class="size">Size <?= esc($p['size'] ?? '—') ?></div>
-                                <div class="price">₱<?= number_format($p['selling_price'], 0) ?></div>
-                                <div class="stock <?= $p['pos_status']['class'] ?>"><?= esc($p['pos_status']['label']) ?></div>
+                                <div class="name"><?= esc($g['item_name']) ?></div>
+                                <div class="size">
+                                    <?= $g['is_multi_size'] ? esc((string) count($g['variants'])) . ' sizes' : 'Size ' . esc($g['variants'][0]['size'] ?? '—') ?>
+                                </div>
+                                <div class="price">
+                                    <?= $g['min_price'] === $g['max_price']
+                                        ? '₱' . number_format($g['min_price'], 0)
+                                        : '₱' . number_format($g['min_price'], 0) . '–' . number_format($g['max_price'], 0) ?>
+                                </div>
+                                <div class="stock <?= $g['total_stock'] <= 0 ? 'red' : 'green' ?>">
+                                    <?= $g['total_stock'] <= 0 ? 'Out of Stock' : esc((string) $g['total_stock']) . ' in Stock' ?>
+                                </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -388,6 +414,16 @@
             </div>
         </div>
     <?php endif; ?>
+</div>
+
+<div class="inv-modal" id="sizePickerModal">
+    <div class="inv-modal-card" style="max-width:420px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0" id="sizePickerTitle">Choose Size</h3>
+            <button type="button" class="btn-close" id="closeSizePicker"></button>
+        </div>
+        <div class="size-pick-list" id="sizePickerList"></div>
+    </div>
 </div>
 
 <?php if (!empty($receipt)): ?>
@@ -640,15 +676,57 @@ if (document.getElementById('posGrid')) {
         });
     }
 
+    // A card with one variant (most Patches/Metal/Equipment/Accessories
+    // items, or a Clothes/Shoes item that only has one size entered so far)
+    // adds straight to the cart like before. A card with multiple variants
+    // (sizes) opens a picker instead, so staff pick exactly which size the
+    // customer wants — each size is its own real stock-tracked product row.
+    function addVariantToCart(v) {
+        const id = String(v.item_id);
+        if (!cart[id]) {
+            cart[id] = { name: v.item_name, size: v.size || '', price: v.selling_price, stock: v.current_stock, qty: 0 };
+        }
+        if (cart[id].qty < cart[id].stock) cart[id].qty++;
+    }
+
+    function openSizePicker(itemName, variants) {
+        document.getElementById('sizePickerTitle').textContent = 'Choose Size — ' + itemName;
+        const list = document.getElementById('sizePickerList');
+        list.innerHTML = variants.map(v => {
+            const inCart = cart[String(v.item_id)] ? cart[String(v.item_id)].qty : 0;
+            const remaining = v.current_stock - inCart;
+            return `<button type="button" class="size-pick-btn" data-item-id="${v.item_id}" ${remaining <= 0 ? 'disabled' : ''}>
+                <span class="sz">${v.size || '—'}</span>
+                <span class="st">${remaining > 0 ? remaining + ' in stock' : 'Out of stock'}</span>
+                <span class="pr">₱${Number(v.selling_price).toFixed(0)}</span>
+            </button>`;
+        }).join('');
+        list.querySelectorAll('.size-pick-btn:not([disabled])').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const v = variants.find(x => String(x.item_id) === btn.dataset.itemId);
+                addVariantToCart(v);
+                renderCart();
+                document.getElementById('sizePickerModal').classList.remove('show');
+            });
+        });
+        document.getElementById('sizePickerModal').classList.add('show');
+    }
+
+    document.getElementById('closeSizePicker').addEventListener('click', () => {
+        document.getElementById('sizePickerModal').classList.remove('show');
+    });
+
     document.querySelectorAll('.pos-card:not(.disabled)').forEach(card => {
         card.addEventListener('click', () => {
-            const id = card.dataset.id;
-            if (!cart[id]) {
-                cart[id] = { name: card.dataset.itemName, size: card.dataset.size, price: parseFloat(card.dataset.price), stock: parseInt(card.dataset.stock), qty: 0 };
+            const variants = JSON.parse(card.dataset.variants || '[]');
+            if (variants.length === 0) return;
+            if (variants.length === 1) {
+                addVariantToCart(variants[0]);
+                card.classList.add('selected');
+                renderCart();
+            } else {
+                openSizePicker(card.dataset.itemName, variants);
             }
-            if (cart[id].qty < cart[id].stock) cart[id].qty++;
-            card.classList.add('selected');
-            renderCart();
         });
     });
 
@@ -764,14 +842,17 @@ if (document.getElementById('posGrid')) {
     // Grays out a product card, matching the "Out of Stock" look, once the
     // quantity already in the cart uses up all remaining stock — so the
     // customer can't add an 11th unit of an item that only had 10 left.
+    // For a multi-size card this sums remaining stock across every size
+    // (each size still tracks its own stock independently underneath).
     function updateCardAvailability() {
         document.querySelectorAll('.pos-card').forEach(card => {
-            const totalStock = parseInt(card.dataset.stock, 10);
-            if (totalStock <= 0) return; // already permanently out of stock
+            const variants = JSON.parse(card.dataset.variants || '[]');
+            if (variants.length === 0) return;
 
-            const id = card.dataset.id;
-            const rop = parseInt(card.dataset.rop, 10) || 0;
-            const remaining = totalStock - (cart[id] ? cart[id].qty : 0);
+            const remaining = variants.reduce((sum, v) => {
+                const inCart = cart[String(v.item_id)] ? cart[String(v.item_id)].qty : 0;
+                return sum + Math.max(0, v.current_stock - inCart);
+            }, 0);
             const stockEl = card.querySelector('.stock');
 
             if (remaining <= 0) {
@@ -780,9 +861,15 @@ if (document.getElementById('posGrid')) {
             } else {
                 card.classList.remove('disabled');
                 if (stockEl) {
-                    const status = rop > 0 && remaining <= rop
-                        ? { label: `${remaining} Left (Low)`, cls: 'amber' }
-                        : { label: `${remaining} in Stock`, cls: 'green' };
+                    let status;
+                    if (variants.length > 1) {
+                        status = { label: `${remaining} in Stock`, cls: 'green' };
+                    } else {
+                        const rop = variants[0].manual_rop_warning || 0;
+                        status = rop > 0 && remaining <= rop
+                            ? { label: `${remaining} Left (Low)`, cls: 'amber' }
+                            : { label: `${remaining} in Stock`, cls: 'green' };
+                    }
                     stockEl.textContent = status.label;
                     stockEl.className = 'stock ' + status.cls;
                 }

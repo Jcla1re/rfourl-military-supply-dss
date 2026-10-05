@@ -32,61 +32,21 @@ class InventoryController extends BaseController
         $page     = (int) ($this->request->getGet('page') ?? 1);
         $perPage  = 10;
 
-        $builder = $this->productModel->where('is_active', 1);
-
-        if ($category && $category !== 'All') {
-            $builder = $builder->where('category', $category);
-        }
-        if ($size) {
-            $builder = $builder->where('size', $size);
-        }
-        if ($search) {
-            $builder = $builder->groupStart()
-                ->like('item_name', $search)
-                ->orLike('item_id', $search)
-                ->groupEnd();
-        }
-
-        if ($status) {
-            $allProducts = $this->productModel->where('is_active', 1)->findAll();
-            $filteredIds = [];
-
-            foreach ($allProducts as $product) {
-                $label = $this->productModel->getStatus($product)['label'] ?? 'In Stock';
-
-                if ($label === $status) {
-                    $filteredIds[] = $product['item_id'];
-                }
-            }
-
-            $builder = $filteredIds
-                ? $builder->whereIn('item_id', $filteredIds)
-                : $builder->where('item_id', null);
-        }
-
-        $totalItems = $builder->countAllResults(false);
-
-        $products = $builder
-            ->orderBy('item_name', 'ASC')
-            ->findAll($perPage, ($page - 1) * $perPage);
-
         $eoqByItem = [];
-        if ($products) {
-            foreach ($this->pdssComputationModel->latestPerItem() as $c) {
-                $eoqByItem[$c['item_id']] = $c['eoq_value'];
-            }
+        foreach ($this->pdssComputationModel->latestPerItem() as $c) {
+            $eoqByItem[$c['item_id']] = $c['eoq_value'];
         }
 
-        foreach ($products as &$p) {
+        $allProducts = $this->productModel->where('is_active', 1)->findAll();
+        foreach ($allProducts as &$p) {
             $p['status']    = $this->productModel->getStatus($p);
             $p['eoq_value'] = $eoqByItem[$p['item_id']] ?? null;
         }
         unset($p);
 
-        $allProducts   = $this->productModel->where('is_active', 1)->findAll();
-        $inStockCount  = count(array_filter($allProducts, fn ($p) => ($this->productModel->getStatus($p)['label'] ?? 'In Stock') === 'In Stock'));
-        $lowStockCount = count(array_filter($allProducts, fn ($p) => ($this->productModel->getStatus($p)['label'] ?? 'In Stock') === 'Low Stock'));
-        $reorderCount  = count(array_filter($allProducts, fn ($p) => ($this->productModel->getStatus($p)['label'] ?? 'In Stock') === 'Reorder Now'));
+        $inStockCount  = count(array_filter($allProducts, fn ($p) => $p['status']['label'] === 'In Stock'));
+        $lowStockCount = count(array_filter($allProducts, fn ($p) => $p['status']['label'] === 'Low Stock'));
+        $reorderCount  = count(array_filter($allProducts, fn ($p) => $p['status']['label'] === 'Reorder Now'));
 
         // Total stock on hand per category, shown next to each category tab
         // (e.g. "Clothes (780)") so stock levels are visible before filtering.
@@ -96,13 +56,36 @@ class InventoryController extends BaseController
             $categoryStockTotals[$cat] = ($categoryStockTotals[$cat] ?? 0) + (int) $p['current_stock'];
         }
 
-        $sizes = $this->productModel
-            ->select('size')
-            ->where('is_active', 1)
-            ->where('size IS NOT NULL')
-            ->groupBy('size')
-            ->orderBy('size', 'ASC')
-            ->findAll();
+        $sizes = array_values(array_unique(array_filter(array_column($allProducts, 'size'))));
+        sort($sizes, SORT_STRING);
+
+        // Same item_name+category grouping as the POS/Stock Order screens —
+        // one row per item, each size still its own real underlying product.
+        // Filters narrow which *rows* are eligible before grouping, so an
+        // item with only one matching size still shows (with just that size).
+        $filtered = $allProducts;
+        if ($category && $category !== 'All') {
+            $filtered = array_values(array_filter($filtered, fn ($p) => $p['category'] === $category));
+        }
+        if ($search) {
+            $needle   = mb_strtolower($search);
+            $filtered = array_values(array_filter(
+                $filtered,
+                fn ($p) => str_contains(mb_strtolower($p['item_name']), $needle) || str_contains(mb_strtolower($p['item_id']), $needle)
+            ));
+        }
+        if ($size) {
+            $filtered = array_values(array_filter($filtered, fn ($p) => ($p['size'] ?? '') === $size));
+        }
+        if ($status) {
+            $filtered = array_values(array_filter($filtered, fn ($p) => $p['status']['label'] === $status));
+        }
+
+        usort($filtered, fn ($a, $b) => [$a['item_name'], $a['size'] ?? ''] <=> [$b['item_name'], $b['size'] ?? '']);
+
+        $groups     = $this->productModel->groupRows($filtered);
+        $totalItems = count($groups);
+        $products   = array_slice($groups, ($page - 1) * $perPage, $perPage);
 
         $data = [
             'title'               => 'Inventory',
@@ -113,7 +96,7 @@ class InventoryController extends BaseController
             'inStockCount'        => $inStockCount,
             'lowStockCount'       => $lowStockCount,
             'reorderCount'        => $reorderCount,
-            'totalItems'          => count($allProducts),
+            'totalItems'          => $totalItems,
             'currentPage'         => $page,
             'totalPages'          => (int) ceil($totalItems / $perPage),
             'category'            => $category ?? 'All',
@@ -122,7 +105,7 @@ class InventoryController extends BaseController
             'search'              => $search ?? '',
             'categories'          => ProductModel::CATEGORIES,
             'categoryStockTotals' => $categoryStockTotals,
-            'sizes'               => array_map(fn ($s) => $s['size'], $sizes),
+            'sizes'               => $sizes,
             'statuses'            => ['In Stock', 'Low Stock', 'Reorder Now'],
             'success'             => session()->getFlashdata('success'),
             'error'               => session()->getFlashdata('error'),

@@ -181,45 +181,73 @@ $products ??= [];
                 </thead>
                 <tbody>
                     <?php if (!empty($products)): ?>
-                        <?php foreach ($products as $product): ?>
+                        <?php foreach ($products as $group): ?>
                             <?php
-                            $itemStatus = $product['status']['label'] ?? 'In Stock';
+                            $variants = $group['variants'];
+                            $default  = $variants[0];
+                            $itemStatus = $default['status']['label'] ?? 'In Stock';
                             $pillClass = match ($itemStatus) {
                                 'Low Stock' => 'amber',
                                 'Reorder Now' => 'red',
                                 default => 'green',
                             };
-                            $rop = max((int) ($product['manual_rop_warning'] ?? 0), 1);
-                            $pct = min(100, round(((int) $product['current_stock'] / ($rop * 2)) * 100));
+                            $rop = max((int) ($default['manual_rop_warning'] ?? 0), 1);
+                            $pct = min(100, round(((int) $default['current_stock'] / ($rop * 2)) * 100));
+
+                            // Lean payload embedded on the row — switching the
+                            // Size dropdown swaps every other cell (and the
+                            // Order/Edit buttons' data) to that size's own
+                            // underlying product row, client-side, no reload.
+                            $variantsPayload = array_map(fn ($v) => [
+                                'item_id'            => $v['item_id'],
+                                'item_name'          => $v['item_name'],
+                                'category'           => $v['category'] ?? '',
+                                'size'               => $v['size'] ?? '',
+                                'supplier_id'        => $v['supplier_id'] ?? '',
+                                'unit_cost'          => (float) ($v['unit_cost'] ?? 0),
+                                'selling_price'      => (float) ($v['selling_price'] ?? 0),
+                                'current_stock'      => (int) ($v['current_stock'] ?? 0),
+                                'manual_rop_warning' => (int) ($v['manual_rop_warning'] ?? 0),
+                                'eoq_value'          => $v['eoq_value'],
+                                'status_label'       => $v['status']['label'] ?? 'In Stock',
+                                'updated_at_display'=> date('M j, Y', strtotime($v['updated_at'] ?? 'now')),
+                            ], $variants);
                             ?>
-                            <tr data-category="<?= esc($product['category'] ?? '') ?>">
-                                <td><?= esc($product['item_id'] ?? '—') ?></td>
-                                <td>
-                                    <strong><?= esc($product['item_name'] ?? 'Unknown item') ?></strong>
+                            <tr data-category="<?= esc($group['category'] ?? '') ?>" data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
+                                <td class="inv-item-id"><?= esc($default['item_id'] ?? '—') ?></td>
+                                <td><strong><?= esc($group['item_name'] ?? 'Unknown item') ?></strong></td>
+                                <td class="inv-size-cell">
+                                    <?php if (count($variants) > 1): ?>
+                                        <select class="inv-size-select">
+                                            <?php foreach ($variants as $i => $v): ?>
+                                                <option value="<?= $i ?>"><?= esc($v['size'] ?? '—') ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php else: ?>
+                                        <?= esc($default['size'] ?? '—') ?>
+                                    <?php endif; ?>
                                 </td>
-                                <td><?= esc($product['size'] ?? '—') ?></td>
-                                <td><?= esc($product['category'] ?? '') ?></td>
-                                <td><?= esc($product['current_stock'] ?? 0) ?></td>
-                                <td><?= esc($product['manual_rop_warning'] ?? 0) ?></td>
-                                <td><?= $product['eoq_value'] !== null ? esc($product['eoq_value']) : '—' ?></td>
-                                <td>
+                                <td><?= esc($group['category'] ?? '') ?></td>
+                                <td class="inv-stock-cell"><?= esc($default['current_stock'] ?? 0) ?></td>
+                                <td class="inv-rop-cell"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
+                                <td class="inv-eoq-cell"><?= $default['eoq_value'] !== null ? esc($default['eoq_value']) : '—' ?></td>
+                                <td class="inv-bar-cell">
                                     <div class="stock-bar <?= $pillClass ?>"><span style="width: <?= $pct ?>%"></span></div>
                                 </td>
-                                <td><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span></td>
-                                <td><?= esc(date('M j, Y', strtotime($product['updated_at'] ?? 'now'))) ?></td>
+                                <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span></td>
+                                <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
                                 <td class="inv-actions-cell">
-                                    <?php if ($itemStatus === 'Reorder Now'): ?>
-                                        <button type="button"
-                                                class="inv-action-btn open-order-modal"
-                                                data-item-id="<?= esc($product['item_id']) ?>"
-                                                data-item-name="<?= esc($product['item_name'] ?? '') ?>"
-                                                data-supplier-id="<?= esc($product['supplier_id'] ?? '') ?>"
-                                                data-unit-cost="<?= esc($product['unit_cost'] ?? 0) ?>"
-                                                data-recommended-eoq="<?= esc($product['eoq_value'] ?? 1) ?>">
-                                            Order
-                                        </button>
-                                    <?php endif; ?>
-                                    <button type="button" class="inv-more-btn edit-row" data-item="<?= esc(json_encode($product), 'attr') ?>">&hellip;</button>
+                                    <button type="button"
+                                            class="inv-action-btn open-order-modal"
+                                            style="<?= $itemStatus === 'Reorder Now' ? '' : 'display:none;' ?>"
+                                            data-item-id="<?= esc($default['item_id']) ?>"
+                                            data-item-name="<?= esc($default['item_name'] ?? '') ?>"
+                                            data-supplier-id="<?= esc($default['supplier_id'] ?? '') ?>"
+                                            data-unit-cost="<?= esc($default['unit_cost'] ?? 0) ?>"
+                                            data-recommended-eoq="<?= esc($default['eoq_value'] ?? 1) ?>">
+                                        Order
+                                    </button>
+                                    <button type="button" class="inv-more-btn edit-row" data-item="<?= esc(json_encode($variantsPayload[0]), 'attr') ?>">&hellip;</button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -280,9 +308,21 @@ $products ??= [];
                     <label>Item Name</label>
                     <input id="item_name" name="item_name" required>
                 </div>
-                <div class="inv-form-field">
+                <div class="inv-form-field" id="sizeLetterField">
                     <label>Size</label>
-                    <input id="size" name="size" placeholder="e.g. S, M, L">
+                    <select id="sizeLetter" name="size">
+                        <option value="">— None —</option>
+                        <option value="XS">XS</option>
+                        <option value="S">S</option>
+                        <option value="M">M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                        <option value="XXL">XXL</option>
+                    </select>
+                </div>
+                <div class="inv-form-field" id="sizeNumericField" style="display:none;">
+                    <label>Size (US)</label>
+                    <input id="sizeNumeric" name="size" type="number" step="0.5" min="0" placeholder="e.g. 9">
                 </div>
                 <div class="inv-form-field">
                     <label>Type</label>
@@ -438,6 +478,36 @@ const itemModal = document.getElementById('itemModal');
 const itemForm = document.getElementById('itemForm');
 const storeUrl = "<?= site_url('admin/inventory/store') ?>";
 
+// Clothes are sized XS-XXL, except "Goa Pants" specifically which uses US
+// numeric sizing like Shoes — everything else (Equipment/Patches/Metal/
+// Accessories) isn't a sized item at all. Only one of the two size inputs
+// is ever enabled at a time since both share name="size" — the disabled
+// one is excluded from the submitted form data entirely.
+function sizeModeFor(category, itemName) {
+    const name = (itemName || '').toLowerCase();
+    if (category === 'Shoes') return 'numeric';
+    if (category === 'Clothes' && name.includes('goa') && name.includes('pant')) return 'numeric';
+    if (category === 'Clothes') return 'letter';
+    return 'none';
+}
+
+function updateSizeFieldVisibility() {
+    const mode = sizeModeFor(document.getElementById('category').value, document.getElementById('item_name').value);
+    const letterField = document.getElementById('sizeLetterField');
+    const numericField = document.getElementById('sizeNumericField');
+    const letterInput = document.getElementById('sizeLetter');
+    const numericInput = document.getElementById('sizeNumeric');
+
+    letterField.style.display = mode === 'letter' ? '' : 'none';
+    letterInput.disabled = mode !== 'letter';
+
+    numericField.style.display = mode === 'numeric' ? '' : 'none';
+    numericInput.disabled = mode !== 'numeric';
+}
+
+document.getElementById('category').addEventListener('change', updateSizeFieldVisibility);
+document.getElementById('item_name').addEventListener('input', updateSizeFieldVisibility);
+
 document.getElementById('openAddModal').addEventListener('click', () => {
     itemForm.reset();
     itemForm.action = storeUrl;
@@ -445,6 +515,7 @@ document.getElementById('openAddModal').addEventListener('click', () => {
     document.getElementById('modalSubtitle').textContent = '';
     document.getElementById('submitItemBtn').textContent = 'Add Item';
     document.getElementById('deleteZone').style.display = 'none';
+    updateSizeFieldVisibility();
     itemModal.classList.add('show');
 });
 
@@ -456,8 +527,14 @@ document.querySelectorAll('.edit-row').forEach(button => {
         document.getElementById('modalSubtitle').textContent = `${item.item_name || ''} — Size ${item.size || '—'}`;
         document.getElementById('submitItemBtn').textContent = 'Save Changes';
         document.getElementById('item_name').value = item.item_name || '';
-        document.getElementById('size').value = item.size || '';
         document.getElementById('category').value = item.category || '';
+        updateSizeFieldVisibility();
+        const sizeMode = sizeModeFor(item.category || '', item.item_name || '');
+        if (sizeMode === 'numeric') {
+            document.getElementById('sizeNumeric').value = item.size || '';
+        } else if (sizeMode === 'letter') {
+            document.getElementById('sizeLetter').value = item.size || '';
+        }
         document.getElementById('supplier_id').value = item.supplier_id || '';
         document.getElementById('unit_cost').value = item.unit_cost || 0;
         document.getElementById('selling_price').value = item.selling_price || 0;
@@ -481,6 +558,58 @@ document.querySelectorAll('.edit-row').forEach(button => {
 
 document.getElementById('closeItemModal').addEventListener('click', () => itemModal.classList.remove('show'));
 document.getElementById('cancelItemModal').addEventListener('click', () => itemModal.classList.remove('show'));
+
+// Picking a different size in a row's Size dropdown swaps every other cell
+// (and the Order/Edit buttons' underlying data) to that size's own real
+// product row — each size is independently stock-tracked, this is purely
+// a display switch, no page reload.
+function pillClassForStatus(label) {
+    if (label === 'Low Stock') return 'amber';
+    if (label === 'Reorder Now') return 'red';
+    return 'green';
+}
+
+function applyVariantToRow(row, v) {
+    row.querySelector('.inv-item-id').textContent = v.item_id;
+    row.querySelector('.inv-stock-cell').textContent = v.current_stock;
+    row.querySelector('.inv-rop-cell').textContent = v.manual_rop_warning;
+    row.querySelector('.inv-eoq-cell').textContent = (v.eoq_value !== null && v.eoq_value !== undefined) ? v.eoq_value : '—';
+    row.querySelector('.inv-updated-cell').textContent = v.updated_at_display || '—';
+
+    const rop = Math.max(v.manual_rop_warning, 1);
+    const pct = Math.min(100, Math.round((v.current_stock / (rop * 2)) * 100));
+    const cls = pillClassForStatus(v.status_label);
+
+    const bar = row.querySelector('.inv-bar-cell .stock-bar');
+    bar.className = 'stock-bar ' + cls;
+    bar.querySelector('span').style.width = pct + '%';
+
+    const statusPill = row.querySelector('.inv-status-cell .status-pill');
+    statusPill.className = 'status-pill ' + cls;
+    statusPill.textContent = v.status_label;
+
+    const orderBtn = row.querySelector('.open-order-modal');
+    if (orderBtn) {
+        orderBtn.style.display = v.status_label === 'Reorder Now' ? '' : 'none';
+        orderBtn.dataset.itemId = v.item_id;
+        orderBtn.dataset.itemName = v.item_name;
+        orderBtn.dataset.supplierId = v.supplier_id;
+        orderBtn.dataset.unitCost = v.unit_cost;
+        orderBtn.dataset.recommendedEoq = v.eoq_value || 1;
+    }
+
+    const editBtn = row.querySelector('.edit-row');
+    if (editBtn) editBtn.dataset.item = JSON.stringify(v);
+}
+
+document.querySelectorAll('.inv-size-select').forEach(select => {
+    select.addEventListener('change', () => {
+        const row = select.closest('tr');
+        const variants = JSON.parse(row.dataset.variants || '[]');
+        const v = variants[select.value];
+        if (v) applyVariantToRow(row, v);
+    });
+});
 
 ['categoryFilter', 'sizeFilter', 'statusFilter'].forEach(id => {
     document.getElementById(id).addEventListener('change', event => {

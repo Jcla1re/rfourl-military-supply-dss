@@ -2,7 +2,7 @@
 <?= $this->extend('layouts/supplier_layout') ?>
 <?= $this->section('content') ?>
 
-<?php $orders = $orders ?? []; $filter = $filter ?? 'all'; ?>
+<?php $orders = $orders ?? []; $filter = $filter ?? 'all'; $search = $search ?? ''; ?>
 
 <style>
 .no-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
@@ -16,6 +16,12 @@
 .no-card-head .badge-pill.urgent { background: var(--red-bg); color: var(--red-text); }
 .no-card-body { padding: 18px 20px; }
 .no-card-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 0 20px 18px; }
+
+.no-items-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+.no-items-table th { text-align: left; font-size: 11px; text-transform: uppercase; color: #888; padding: 6px 8px; border-bottom: 1px solid #e2e2e2; }
+.no-items-table td { padding: 8px; border-bottom: 1px solid #f2f2f2; font-size: 14px; }
+.no-items-table td.num, .no-items-table th.num { text-align: right; }
+.no-items-table tfoot td { font-weight: 700; border-top: 2px solid #ddd; border-bottom: none; }
 </style>
 
 <div class="page-wrap">
@@ -41,7 +47,24 @@
                     <span class="badge-pill">Awaiting Confirmation</span>
                 </div>
                 <div class="no-card-body">
-                    <div><strong>Item ordered:</strong> <?php foreach ($o['lines'] as $l): ?><?= esc($l['item_name'] ?? $l['item_id']) ?> &times; <?= esc($l['order_quantity']) ?> items&nbsp; <?php endforeach; ?></div>
+                    <table class="no-items-table">
+                        <thead>
+                            <tr><th>Item</th><th class="num">Qty</th><th class="num">Unit Price</th><th class="num">Line Total</th></tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($o['lines'] as $l): ?>
+                                <tr>
+                                    <td><?= esc($l['item_name'] ?? $l['item_id']) ?></td>
+                                    <td class="num"><?= esc((string) $l['order_quantity']) ?></td>
+                                    <td class="num">₱<?= number_format((float) $l['unit_price'], 2) ?></td>
+                                    <td class="num">₱<?= number_format((float) $l['order_quantity'] * (float) $l['unit_price'], 2) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                        <tfoot>
+                            <tr><td colspan="3">Order Total</td><td class="num">₱<?= number_format((float) ($o['estimated'] ?? array_sum(array_map(fn ($l) => $l['order_quantity'] * $l['unit_price'], $o['lines']))), 2) ?></td></tr>
+                        </tfoot>
+                    </table>
                     <div class="mt-1">
                         <strong>Requested delivery:</strong> <?= !empty($o['expected_delivery_date']) ? esc(date('M j, Y', strtotime($o['expected_delivery_date']))) : '—' ?>
                         &nbsp;<strong>Total items:</strong> <?= esc($o['total_units']) ?>

@@ -60,6 +60,53 @@ class ProductModel extends Model
         return str_pad((string) ($count + 1), 4, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Active products grouped by item_name+category — e.g. "Goa Pants" size
+     * S, M, and L are three fully independent rows (own item_id, stock,
+     * ROP, and sales/order history), but the POS, Stock Ordering, and
+     * Inventory screens show them as one logical item with a size picker
+     * underneath, rather than three unrelated-looking cards/rows. Grouping
+     * happens here at query time — no schema change, no new table.
+     */
+    public function groupedActive(): array
+    {
+        $products = $this->where('is_active', 1)
+            ->orderBy('item_name', 'ASC')
+            ->orderBy('size', 'ASC')
+            ->findAll();
+
+        return $this->groupRows($products);
+    }
+
+    /**
+     * Same item_name+category grouping as groupedActive(), but over an
+     * already-fetched row list — lets a caller apply its own filters/status
+     * annotations first (e.g. Inventory's search/category/size/status
+     * filters) and then group what's left, instead of grouping everything
+     * and filtering groups afterward.
+     */
+    public function groupRows(array $products): array
+    {
+        $groups = [];
+        foreach ($products as $p) {
+            $key = $p['item_name'] . '|' . $p['category'];
+
+            if (! isset($groups[$key])) {
+                $groups[$key] = [
+                    'item_name'   => $p['item_name'],
+                    'category'    => $p['category'],
+                    'variants'    => [],
+                    'total_stock' => 0,
+                ];
+            }
+
+            $groups[$key]['variants'][]   = $p;
+            $groups[$key]['total_stock'] += (int) $p['current_stock'];
+        }
+
+        return array_values($groups);
+    }
+
     public function getStatus(array $product): array
     {
         $stock = (int) $product['current_stock'];

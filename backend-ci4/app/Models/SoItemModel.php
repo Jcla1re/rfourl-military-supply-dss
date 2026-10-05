@@ -16,6 +16,7 @@ class SoItemModel extends Model
         'so_id',
         'item_id',
         'order_quantity',
+        'shipped_quantity',
         'unit_price',
     ];
 
@@ -34,5 +35,17 @@ class SoItemModel extends Model
             ->join('products', 'products.item_id = so_item.item_id', 'left')
             ->where('so_id', $soId)
             ->findAll();
+    }
+
+    /**
+     * Records what the Supplier actually declares as shipped for each line
+     * of an order, at ship time — may differ from order_quantity on a
+     * partial shipment. Keyed by so_item_id => quantity.
+     */
+    public function recordShippedQuantities(array $quantitiesBySoItemId): void
+    {
+        foreach ($quantitiesBySoItemId as $soItemId => $qty) {
+            $this->update((int) $soItemId, ['shipped_quantity' => (int) $qty]);
+        }
     }
 }

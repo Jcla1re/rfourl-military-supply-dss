@@ -82,7 +82,8 @@ $pillClass = match ($order['status'] ?? '') {
                 <tr>
                     <th>Item</th>
                     <th>Category</th>
-                    <th>Quantity</th>
+                    <th>Ordered Qty</th>
+                    <th>Shipped Qty</th>
                     <th>Unit Price</th>
                     <th>Line Total</th>
                 </tr>
@@ -94,24 +95,59 @@ $pillClass = match ($order['status'] ?? '') {
                             <td><?= esc($i['item_name'] ?? $i['item_id']) ?></td>
                             <td><?= esc($i['category'] ?? '—') ?></td>
                             <td><?= esc($i['order_quantity']) ?></td>
+                            <td><?= $i['shipped_quantity'] !== null ? esc((string) $i['shipped_quantity']) : '—' ?></td>
                             <td>₱<?= number_format((float) $i['unit_price'], 2) ?></td>
                             <td>₱<?= number_format($i['order_quantity'] * $i['unit_price'], 2) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="5" class="text-center py-4">No line items recorded for this order.</td></tr>
+                    <tr><td colspan="6" class="text-center py-4">No line items recorded for this order.</td></tr>
                 <?php endif; ?>
             </tbody>
             <?php if (!empty($items)): ?>
                 <tfoot>
                     <tr>
-                        <td colspan="4" class="text-end fw-bold">Total</td>
+                        <td colspan="5" class="text-end fw-bold">Total</td>
                         <td class="fw-bold">₱<?= number_format($total, 2) ?></td>
                     </tr>
                 </tfoot>
             <?php endif; ?>
         </table>
     </div>
+
+    <?php if (($order['status'] ?? '') === 'Shipped'): ?>
+        <div class="page-panel mt-3">
+            <h5 class="mb-1">Confirm Delivery</h5>
+            <p class="subtitle">Check each item against what physically arrived — this should match what the supplier declared when they shipped it.</p>
+            <form method="post" action="<?= site_url('admin/orders/update-status/' . $order['so_id']) ?>">
+                <?= csrf_field() ?>
+                <input type="hidden" name="status" value="Delivered">
+                <table class="data-table mb-3">
+                    <thead><tr><th>Item</th><th>Shipped Qty</th><th>Unit Price</th><th>Line Total</th><th style="text-align:center;">Received</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($items as $i): ?>
+                            <?php $shippedQty = $i['shipped_quantity'] ?? $i['order_quantity']; ?>
+                            <tr>
+                                <td><?= esc($i['item_name'] ?? $i['item_id']) ?></td>
+                                <td><?= esc((string) $shippedQty) ?></td>
+                                <td>₱<?= number_format((float) $i['unit_price'], 2) ?></td>
+                                <td>₱<?= number_format((float) $shippedQty * (float) $i['unit_price'], 2) ?></td>
+                                <td style="text-align:center;"><input type="checkbox" required title="Confirm this item was physically received"></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold">Total (shipped quantities)</td>
+                            <td class="fw-bold">₱<?= number_format(array_sum(array_map(fn ($i) => ($i['shipped_quantity'] ?? $i['order_quantity']) * $i['unit_price'], $items)), 2) ?></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <button type="submit" class="btn btn-success">Confirm Delivery Received</button>
+            </form>
+        </div>
+    <?php endif; ?>
 </div>
 
 <?= $this->endSection() ?>

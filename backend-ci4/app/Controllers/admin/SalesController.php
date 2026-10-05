@@ -38,20 +38,18 @@ class SalesController extends BaseController
         ];
 
         if ($tab === 'pos') {
-            $products = $this->productModel->where('is_active', 1)->orderBy('item_name', 'ASC')->findAll();
-            foreach ($products as &$p) {
-                $rop = (int) ($p['manual_rop_warning'] ?? 0);
-                $stock = (int) $p['current_stock'];
-                $p['pos_status'] = $stock <= 0
-                    ? ['label' => 'Out of Stock', 'class' => 'red']
-                    : ($rop > 0 && $stock <= $rop
-                        ? ['label' => "{$stock} Left (Low)", 'class' => 'amber']
-                        : ['label' => "{$stock} in Stock", 'class' => 'green']);
-            }
-            unset($p);
+            $groups = $this->productModel->groupedActive();
 
-            $data['products']   = $products;
-            $data['categories'] = ProductModel::CATEGORIES;
+            foreach ($groups as &$g) {
+                $prices             = array_column($g['variants'], 'selling_price');
+                $g['min_price']     = min($prices);
+                $g['max_price']     = max($prices);
+                $g['is_multi_size'] = count($g['variants']) > 1;
+            }
+            unset($g);
+
+            $data['groups']      = $groups;
+            $data['categories']  = ProductModel::CATEGORIES;
         } else {
             $date         = $this->request->getGet('date') ?: date('Y-m-d');
             $transactions = $this->transactionsForDate($date);

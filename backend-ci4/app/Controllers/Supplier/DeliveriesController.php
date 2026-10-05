@@ -46,6 +46,13 @@ class DeliveriesController extends BaseController
         return view('supplier/deliveries', $data);
     }
 
+    /**
+     * The Supplier declares exactly what they're shipping, per line — this
+     * is as far as the Supplier's authority goes. Confirming receipt (and
+     * therefore restocking) is now an Admin/Staff-only action performed
+     * against these declared quantities, not something the Supplier can
+     * trigger themselves (see StockOrderModel::markDelivered()).
+     */
     public function ship($soId)
     {
         $order = $this->stockOrderModel->find($soId);
@@ -54,30 +61,35 @@ class DeliveriesController extends BaseController
             return redirect()->to('/supplier/deliveries')->with('error', 'Order not found.');
         }
 
-        $this->stockOrderModel->update($soId, [
-            'status'      => 'Shipped',
-            'tracking_no' => $this->request->getPost('tracking_no') ?: $order['tracking_no'],
-        ]);
+        // Only ever write quantities for so_item rows confirmed to belong
+        // to this order — never trust posted so_item_id keys directly.
+        $lines     = $this->soItemModel->forOrder($soId);
+        $postedQty = $this->request->getPost('shipped_qty') ?? [];
 
-        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} shipped out", "Tracking no.: " . ($this->request->getPost('tracking_no') ?: 'not provided'), null, 'order_status', "/admin/orders/{$soId}");
-        $this->emailNotifier->toRole('Admin', "Order {$soId} shipped out", "Tracking no.: " . ($this->request->getPost('tracking_no') ?: 'not provided'));
+        $quantities    = [];
+        $itemSummaries = [];
+        foreach ($lines as $line) {
+            $soItemId = (int) $line['so_item_id'];
+            $qty      = isset($postedQty[$soItemId]) ? max(0, (int) $postedQty[$soItemId]) : (int) $line['order_quantity'];
 
-        return redirect()->to('/supplier/deliveries')->with('success', "Order {$soId} marked as shipped out.");
-    }
-
-    public function deliver($soId)
-    {
-        $order = $this->stockOrderModel->find($soId);
-
-        if (! $order || $order['supplier_id'] !== session()->get('supplier_id')) {
-            return redirect()->to('/supplier/deliveries')->with('error', 'Order not found.');
+            $quantities[$soItemId] = $qty;
+            $itemSummaries[]       = ($line['item_name'] ?? $line['item_id']) . ": {$qty} unit(s)";
         }
 
-        $this->stockOrderModel->markDelivered($soId, session()->get('user_id'));
+        $this->soItemModel->recordShippedQuantities($quantities);
 
-        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} delivered", session()->get('full_name') . " marked order {$soId} as delivered.", null, 'order_status', "/admin/orders/{$soId}");
-        $this->emailNotifier->toRole('Admin', "Order {$soId} delivered", session()->get('full_name') . " marked order {$soId} as delivered. Inventory has been updated.");
+        $trackingNo = $this->request->getPost('tracking_no') ?: $order['tracking_no'];
 
-        return redirect()->to('/supplier/deliveries')->with('success', "Order {$soId} marked as delivered. Inventory has been updated.");
+        $this->stockOrderModel->update($soId, [
+            'status'      => 'Shipped',
+            'tracking_no' => $trackingNo,
+        ]);
+
+        $message = 'Tracking no.: ' . ($trackingNo ?: 'not provided') . '. Items shipped: ' . implode(', ', $itemSummaries) . '.';
+
+        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} shipped out", $message, null, 'order_status', "/admin/orders/{$soId}");
+        $this->emailNotifier->toRole('Admin', "Order {$soId} shipped out", $message . ' Please confirm receipt once the delivery arrives.');
+
+        return redirect()->to('/supplier/deliveries')->with('success', "Order {$soId} marked as shipped out.");
     }
 }

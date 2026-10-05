@@ -178,18 +178,71 @@ $restockDates = $restockDates ?? [];
                                      progress, updated from their portal (Supplier\NewOrdersController::accept,
                                      Supplier\DeliveriesController::ship). Admin no longer force-advances
                                      those intermediate steps — only closes out a fully received order,
-                                     or follows up with the supplier for a status update. -->
-                                <form method="post" action="<?= site_url('admin/orders/update-status/' . $o['so_id']) ?>">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="status" value="Delivered">
-                                    <button type="submit">Mark as Done</button>
-                                </form>
+                                     or follows up with the supplier for a status update. Confirming
+                                     receipt requires reviewing the supplier's declared shipped
+                                     quantities first (the checklist modal below), so this only
+                                     unlocks once the order has actually been shipped. -->
+                                <?php if ($o['status'] === 'Shipped'): ?>
+                                    <button type="button" onclick="document.getElementById('confirmModal-<?= esc($o['so_id']) ?>').classList.add('show')">Mark as Done</button>
+                                <?php else: ?>
+                                    <button type="button" disabled title="Available once the supplier ships this order">Mark as Done</button>
+                                <?php endif; ?>
                                 <form method="post" action="<?= site_url('admin/orders/flag-delayed/' . $o['so_id']) ?>">
                                     <?= csrf_field() ?>
                                     <button type="submit"><?= $isOverdue ? 'Delayed' : 'Follow up' ?></button>
                                 </form>
                             </div>
                         </div>
+
+                        <?php if ($o['status'] === 'Shipped'): ?>
+                        <div class="inv-modal" id="confirmModal-<?= esc($o['so_id']) ?>">
+                            <div class="inv-modal-card" style="max-width:560px;">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h3 class="mb-0">Confirm Delivery &mdash; #<?= esc($o['so_id']) ?></h3>
+                                    <button type="button" class="btn-close" onclick="this.closest('.inv-modal').classList.remove('show')"></button>
+                                </div>
+                                <p class="subtitle">Check each item against what physically arrived — this should match what the supplier declared when they shipped it.</p>
+                                <form method="post" action="<?= site_url('admin/orders/update-status/' . $o['so_id']) ?>">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="status" value="Delivered">
+                                    <table style="width:100%; border-collapse:collapse; margin-bottom:18px;">
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align:left; font-size:11px; text-transform:uppercase; color:#888; padding:6px 8px; border-bottom:1px solid #e2e2e2;">Item</th>
+                                                <th style="text-align:right; font-size:11px; text-transform:uppercase; color:#888; padding:6px 8px; border-bottom:1px solid #e2e2e2;">Shipped Qty</th>
+                                                <th style="text-align:right; font-size:11px; text-transform:uppercase; color:#888; padding:6px 8px; border-bottom:1px solid #e2e2e2;">Unit Price</th>
+                                                <th style="text-align:right; font-size:11px; text-transform:uppercase; color:#888; padding:6px 8px; border-bottom:1px solid #e2e2e2;">Line Total</th>
+                                                <th style="text-align:center; width:80px; font-size:11px; text-transform:uppercase; color:#888; padding:6px 8px; border-bottom:1px solid #e2e2e2;">Received</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach (($o['lines'] ?? []) as $l): ?>
+                                                <?php $shippedQty = $l['shipped_quantity'] ?? $l['order_quantity']; ?>
+                                                <tr>
+                                                    <td style="padding:8px; border-bottom:1px solid #f2f2f2;"><?= esc($l['item_name'] ?? $l['item_id']) ?></td>
+                                                    <td style="padding:8px; border-bottom:1px solid #f2f2f2; text-align:right;"><?= esc((string) $shippedQty) ?></td>
+                                                    <td style="padding:8px; border-bottom:1px solid #f2f2f2; text-align:right;">₱<?= number_format((float) $l['unit_price'], 2) ?></td>
+                                                    <td style="padding:8px; border-bottom:1px solid #f2f2f2; text-align:right;">₱<?= number_format((float) $shippedQty * (float) $l['unit_price'], 2) ?></td>
+                                                    <td style="padding:8px; border-bottom:1px solid #f2f2f2; text-align:center;"><input type="checkbox" required title="Confirm this item was physically received"></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="3" style="padding:8px; font-weight:700;">Order Total</td>
+                                                <td style="padding:8px; font-weight:700; text-align:right;">₱<?= number_format(array_sum(array_map(fn ($l) => ($l['shipped_quantity'] ?? $l['order_quantity']) * $l['unit_price'], $o['lines'] ?? [])), 2) ?></td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                    <div class="inv-modal-actions">
+                                        <button type="button" class="btn btn-secondary" onclick="this.closest('.inv-modal').classList.remove('show')">Cancel</button>
+                                        <button type="submit" class="btn btn-success">Confirm Delivery Received</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
@@ -323,37 +376,157 @@ $restockDates = $restockDates ?? [];
     </div>
 </div>
 
+<div class="inv-modal" id="itemPickerModal">
+    <div class="inv-modal-card" style="max-width:480px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0" id="pickerTitle">Select Item</h3>
+            <button type="button" class="btn-close" id="closeItemPicker"></button>
+        </div>
+        <div id="pickerStep1">
+            <input type="search" id="pickerSearch" placeholder="Search items..." style="width:100%; padding:10px 14px; border:1px solid #ccc; border-radius:8px; margin-bottom:12px;">
+            <div id="pickerGroupList" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+        <div id="pickerStep2" style="display:none;">
+            <button type="button" id="pickerBackBtn" style="border:none; background:none; color:#666; padding:0; margin-bottom:12px; cursor:pointer; font-weight:600;">&larr; Back</button>
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; font-size:11px; text-transform:uppercase; color:#888; padding-bottom:6px;">Size</th>
+                        <th style="text-align:left; font-size:11px; text-transform:uppercase; color:#888; padding-bottom:6px;">Qty to Order</th>
+                        <th style="text-align:left; font-size:11px; text-transform:uppercase; color:#888; padding-bottom:6px;">Unit Cost (₱)</th>
+                    </tr>
+                </thead>
+                <tbody id="pickerVariantBody"></tbody>
+            </table>
+            <button type="button" class="btn btn-success mt-3" id="pickerAddBtn" style="width:100%;">Add to Order</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.picker-group-btn {
+    display: flex; justify-content: space-between; align-items: center; width: 100%;
+    padding: 12px 14px; border: 1px solid #e2e2e2; border-radius: 8px; background: #fff;
+    cursor: pointer; text-align: left; font-size: 14px;
+}
+.picker-group-btn:hover { border-color: #3d5230; background: #f7f9f5; }
+.picker-group-btn .muted { color: #888; font-size: 12px; }
+</style>
+
 <script>
-const products = <?= json_encode(array_map(fn($p) => ['id' => $p['item_id'], 'name' => $p['item_name'], 'cost' => $p['unit_cost']], $products)) ?>;
+// Grouped by item_name+category — e.g. "Goa Pants" size S, M, and L are
+// three fully independent product rows (own item_id, stock, ROP), but the
+// picker shows them as one entry with a size step underneath. An item with
+// only one size skips straight past that step.
+const productGroups = <?= json_encode(array_map(fn ($g) => [
+    'item_name' => $g['item_name'],
+    'variants'  => array_map(fn ($v) => [
+        'item_id'   => $v['item_id'],
+        'size'      => $v['size'] ?? '',
+        'unit_cost' => (float) $v['unit_cost'],
+    ], $g['variants']),
+], $productGroups ?? [])) ?>;
+
 const itemModal = document.getElementById('itemModal');
 const lineItemsBody = document.getElementById('lineItemsBody');
+const itemPickerModal = document.getElementById('itemPickerModal');
+const pickerStep1 = document.getElementById('pickerStep1');
+const pickerStep2 = document.getElementById('pickerStep2');
+const pickerGroupList = document.getElementById('pickerGroupList');
+const pickerVariantBody = document.getElementById('pickerVariantBody');
+let activeGroup = null;
 
-function productOptions() {
-    let html = '<option value="">Select item…</option>';
-    products.forEach(p => { html += `<option value="${p.id}" data-cost="${p.cost}">${p.name}</option>`; });
-    return html;
-}
+function renderGroupList(filterText) {
+    const term = (filterText || '').toLowerCase();
+    const matches = productGroups.filter(g => g.item_name.toLowerCase().includes(term));
+    pickerGroupList.innerHTML = matches.length
+        ? matches.map(g => `
+            <button type="button" class="picker-group-btn" data-name="${g.item_name}">
+                <span>${g.item_name}</span>
+                <span class="muted">${g.variants.length > 1 ? g.variants.length + ' sizes' : ''}</span>
+            </button>
+        `).join('')
+        : '<div class="text-muted small p-2">No items found.</div>';
 
-function addLineRow() {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-        <td><select name="item_id[]" class="item-select" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;">${productOptions()}</select></td>
-        <td><input type="number" name="quantity[]" min="1" value="1" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;"></td>
-        <td><input type="number" name="unit_price[]" min="0" step="0.01" value="0" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;"></td>
-        <td><button type="button" class="btn-close remove-line"></button></td>
-    `;
-    lineItemsBody.appendChild(row);
-    row.querySelector('.item-select').addEventListener('change', e => {
-        const opt = e.target.selectedOptions[0];
-        if (opt && opt.dataset.cost) row.querySelector('input[name="unit_price[]"]').value = opt.dataset.cost;
+    pickerGroupList.querySelectorAll('.picker-group-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            activeGroup = productGroups.find(g => g.item_name === btn.dataset.name);
+            if (activeGroup) openSizeStep(activeGroup);
+        });
     });
-    row.querySelector('.remove-line').addEventListener('click', () => row.remove());
 }
 
-document.getElementById('addLineBtn').addEventListener('click', addLineRow);
+function openSizeStep(group) {
+    document.getElementById('pickerTitle').textContent = group.item_name;
+
+    pickerVariantBody.innerHTML = group.variants.map((v, i) => `
+        <tr>
+            <td style="padding:6px 8px;">${v.size || '—'}</td>
+            <td style="padding:6px 8px;"><input type="number" min="0" value="0" data-idx="${i}" class="picker-qty" style="width:90px; padding:6px 8px; border:1px solid #ccc; border-radius:6px;"></td>
+            <td style="padding:6px 8px;"><input type="number" min="0" step="0.01" value="${v.unit_cost}" data-idx="${i}" class="picker-cost" style="width:100px; padding:6px 8px; border:1px solid #ccc; border-radius:6px;"></td>
+        </tr>
+    `).join('');
+
+    pickerStep1.style.display = 'none';
+    pickerStep2.style.display = '';
+}
+
+function resetPickerToList() {
+    pickerStep2.style.display = 'none';
+    pickerStep1.style.display = '';
+    document.getElementById('pickerSearch').value = '';
+    renderGroupList();
+}
+
+document.getElementById('pickerBackBtn').addEventListener('click', resetPickerToList);
+document.getElementById('pickerSearch').addEventListener('input', e => renderGroupList(e.target.value));
+
+document.getElementById('pickerAddBtn').addEventListener('click', () => {
+    if (!activeGroup) return;
+
+    const qtyInputs  = pickerVariantBody.querySelectorAll('.picker-qty');
+    const costInputs = pickerVariantBody.querySelectorAll('.picker-cost');
+
+    qtyInputs.forEach((qtyInput, i) => {
+        const qty = parseInt(qtyInput.value, 10) || 0;
+        if (qty <= 0) return;
+
+        const v    = activeGroup.variants[i];
+        const cost = parseFloat(costInputs[i].value) || 0;
+        const label = activeGroup.item_name + (v.size ? ' — ' + v.size : '');
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="padding:8px;">
+                <input type="hidden" name="item_id[]" value="${v.item_id}">
+                ${label}
+            </td>
+            <td><input type="number" name="quantity[]" min="1" value="${qty}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;"></td>
+            <td><input type="number" name="unit_price[]" min="0" step="0.01" value="${cost}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;"></td>
+            <td><button type="button" class="btn-close remove-line"></button></td>
+        `;
+        lineItemsBody.appendChild(row);
+        row.querySelector('.remove-line').addEventListener('click', () => row.remove());
+    });
+
+    itemPickerModal.classList.remove('show');
+    itemModal.classList.add('show');
+    resetPickerToList();
+});
+
+document.getElementById('closeItemPicker').addEventListener('click', () => {
+    itemPickerModal.classList.remove('show');
+    itemModal.classList.add('show');
+});
+
+document.getElementById('addLineBtn').addEventListener('click', () => {
+    itemModal.classList.remove('show');
+    resetPickerToList();
+    itemPickerModal.classList.add('show');
+});
+
 document.getElementById('openAddModal').addEventListener('click', () => {
     lineItemsBody.innerHTML = '';
-    addLineRow();
     itemModal.classList.add('show');
 });
 document.getElementById('closeItemModal').addEventListener('click', () => itemModal.classList.remove('show'));

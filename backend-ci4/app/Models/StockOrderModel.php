@@ -103,14 +103,19 @@ class StockOrderModel extends Model
                 continue;
             }
 
-            $newStock = (int) $product['current_stock'] + (int) $line['order_quantity'];
+            // Prefer what the Supplier actually declared at ship time; only
+            // legacy orders placed before that feature existed fall back to
+            // the originally ordered quantity.
+            $receivedQty = $line['shipped_quantity'] ?? $line['order_quantity'];
+
+            $newStock = (int) $product['current_stock'] + (int) $receivedQty;
             $productModel->update($line['item_id'], ['current_stock' => $newStock]);
 
             $inventoryLogModel->record(
                 $line['item_id'],
                 $userId,
                 'RESTOCK',
-                (int) $line['order_quantity'],
+                (int) $receivedQty,
                 $newStock,
                 $soId,
                 'Received from stock order ' . $soId

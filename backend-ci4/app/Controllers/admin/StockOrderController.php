@@ -121,7 +121,7 @@ class StockOrderController extends BaseController
             'historyDateFrom' => $historyDateFrom,
             'historyDateTo'   => $historyDateTo,
             'suppliers'      => $this->supplierModel->where('is_active', 1)->findAll(),
-            'products'       => $this->productModel->where('is_active', 1)->orderBy('item_name', 'ASC')->findAll(),
+            'productGroups'  => $this->productModel->groupedActive(),
             'statuses'       => StockOrderModel::STATUSES,
             'priorities'     => StockOrderModel::PRIORITIES,
             'counts'         => $counts,

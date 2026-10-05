@@ -92,36 +92,53 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
                 </thead>
                 <tbody>
                     <?php if (!empty($products)): ?>
-                        <?php foreach ($products as $product): ?>
+                        <?php foreach ($products as $group): ?>
                             <?php
-                            $itemStatus = $product['status']['label'] ?? 'In Stock';
+                            $variants = $group['variants'];
+                            $default  = $variants[0];
+                            $itemStatus = $default['status']['label'] ?? 'In Stock';
                             $pillClass = match ($itemStatus) {
                                 'Low Stock' => 'amber',
                                 'Reorder Now' => 'red',
                                 default => 'green',
                             };
-                            $rop = max((int) ($product['manual_rop_warning'] ?? 0), 1);
-                            $pct = min(100, round(((int) $product['current_stock'] / ($rop * 2)) * 100));
+                            $rop = max((int) ($default['manual_rop_warning'] ?? 0), 1);
+                            $pct = min(100, round(((int) $default['current_stock'] / ($rop * 2)) * 100));
+
+                            $variantsPayload = array_map(fn ($v) => [
+                                'item_id'            => $v['item_id'],
+                                'current_stock'      => (int) ($v['current_stock'] ?? 0),
+                                'manual_rop_warning' => (int) ($v['manual_rop_warning'] ?? 0),
+                                'status_label'       => $v['status']['label'] ?? 'In Stock',
+                                'updated_at_display' => date('M j, Y', strtotime($v['updated_at'] ?? 'now')),
+                            ], $variants);
                             ?>
-                            <tr>
-                                <td><?= esc($product['item_id'] ?? '—') ?></td>
-                                <td><strong><?= esc($product['item_name'] ?? 'Unknown item') ?></strong></td>
-                                <td><?= esc($product['size'] ?? '—') ?></td>
-                                <td><?= esc($product['category'] ?? '') ?></td>
-                                <td><?= esc($product['current_stock'] ?? 0) ?></td>
-                                <td><?= esc($product['manual_rop_warning'] ?? 0) ?></td>
-                                <td><div class="stock-bar <?= $pillClass ?>"><span style="width: <?= $pct ?>%"></span></div></td>
-                                <td><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span></td>
-                                <td><?= esc(date('M j, Y', strtotime($product['updated_at'] ?? 'now'))) ?></td>
-                                <td class="text-center">
-                                    <?php if ($itemStatus === 'Reorder Now'): ?>
-                                        <form method="post" action="<?= site_url('staff/inventory/notify/' . $product['item_id']) ?>">
-                                            <?= csrf_field() ?>
-                                            <button type="submit" class="notify-btn">Notify Admin</button>
-                                        </form>
+                            <tr data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
+                                <td class="inv-item-id"><?= esc($default['item_id'] ?? '—') ?></td>
+                                <td><strong><?= esc($group['item_name'] ?? 'Unknown item') ?></strong></td>
+                                <td class="inv-size-cell">
+                                    <?php if (count($variants) > 1): ?>
+                                        <select class="inv-size-select">
+                                            <?php foreach ($variants as $i => $v): ?>
+                                                <option value="<?= $i ?>"><?= esc($v['size'] ?? '—') ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
                                     <?php else: ?>
-                                        &hellip;
+                                        <?= esc($default['size'] ?? '—') ?>
                                     <?php endif; ?>
+                                </td>
+                                <td><?= esc($group['category'] ?? '') ?></td>
+                                <td class="inv-stock-cell"><?= esc($default['current_stock'] ?? 0) ?></td>
+                                <td class="inv-rop-cell"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
+                                <td class="inv-bar-cell"><div class="stock-bar <?= $pillClass ?>"><span style="width: <?= $pct ?>%"></span></div></td>
+                                <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span></td>
+                                <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
+                                <td class="text-center inv-notify-cell">
+                                    <form method="post" action="<?= site_url('staff/inventory/notify/' . $default['item_id']) ?>" class="notify-form" style="<?= $itemStatus === 'Reorder Now' ? '' : 'display:none;' ?>">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="notify-btn">Notify Admin</button>
+                                    </form>
+                                    <span class="notify-none" style="<?= $itemStatus === 'Reorder Now' ? 'display:none;' : '' ?>">&hellip;</span>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -189,6 +206,53 @@ document.getElementById('searchInput').addEventListener('keydown', event => {
     }
     url.searchParams.delete('page');
     window.location.href = url.toString();
+});
+
+// Picking a different size in a row's Size dropdown swaps every other cell
+// (and the Notify Admin button's target) to that size's own real product
+// row — each size is independently stock-tracked, this is purely a display
+// switch, no page reload.
+function pillClassForStatus(label) {
+    if (label === 'Low Stock') return 'amber';
+    if (label === 'Reorder Now') return 'red';
+    return 'green';
+}
+
+document.querySelectorAll('.inv-size-select').forEach(select => {
+    select.addEventListener('change', () => {
+        const row = select.closest('tr');
+        const variants = JSON.parse(row.dataset.variants || '[]');
+        const v = variants[select.value];
+        if (!v) return;
+
+        row.querySelector('.inv-item-id').textContent = v.item_id;
+        row.querySelector('.inv-stock-cell').textContent = v.current_stock;
+        row.querySelector('.inv-rop-cell').textContent = v.manual_rop_warning;
+        row.querySelector('.inv-updated-cell').textContent = v.updated_at_display || '—';
+
+        const rop = Math.max(v.manual_rop_warning, 1);
+        const pct = Math.min(100, Math.round((v.current_stock / (rop * 2)) * 100));
+        const cls = pillClassForStatus(v.status_label);
+
+        const bar = row.querySelector('.inv-bar-cell .stock-bar');
+        bar.className = 'stock-bar ' + cls;
+        bar.querySelector('span').style.width = pct + '%';
+
+        const statusPill = row.querySelector('.inv-status-cell .status-pill');
+        statusPill.className = 'status-pill ' + cls;
+        statusPill.textContent = v.status_label;
+
+        const notifyForm = row.querySelector('.notify-form');
+        const notifyNone = row.querySelector('.notify-none');
+        if (v.status_label === 'Reorder Now') {
+            notifyForm.action = notifyForm.action.replace(/\/notify\/.*$/, '/notify/' + v.item_id);
+            notifyForm.style.display = '';
+            notifyNone.style.display = 'none';
+        } else {
+            notifyForm.style.display = 'none';
+            notifyNone.style.display = '';
+        }
+    });
 });
 </script>
 

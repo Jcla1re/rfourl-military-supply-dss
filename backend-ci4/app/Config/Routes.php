@@ -97,6 +97,7 @@ $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'ro
     $routes->get('log-transaction', 'LogTransactionController::index');
     $routes->get('log-transaction/(:segment)', 'LogTransactionController::form/$1');
     $routes->post('log-transaction/store', 'LogTransactionController::store');
+    $routes->post('log-transaction/restock-confirm/(:segment)', 'LogTransactionController::confirmRestock/$1');
 
     $routes->get('sales', 'SalesController::index');
     $routes->post('sales/checkout', 'SalesController::checkout');
@@ -117,7 +118,6 @@ $routes->group('supplier', ['namespace' => 'App\Controllers\Supplier', 'filter' 
 
     $routes->get('deliveries', 'DeliveriesController::index');
     $routes->post('deliveries/ship/(:segment)', 'DeliveriesController::ship/$1');
-    $routes->post('deliveries/deliver/(:segment)', 'DeliveriesController::deliver/$1');
 
     $routes->get('completed', 'CompletedController::index');
 

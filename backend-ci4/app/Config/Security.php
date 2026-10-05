@@ -70,8 +70,16 @@ class Security extends BaseConfig
      * --------------------------------------------------------------------------
      *
      * Regenerate CSRF Token on every submission.
+     *
+     * Left off: with this on, the token rotates after every single form
+     * submit anywhere on the site. Since the token cookie is shared across
+     * every open tab/page, submitting one form invalidates every other
+     * already-rendered form's token — reopening the Inventory Edit modal
+     * after any other action elsewhere then submitting throws a 403
+     * ("action not allowed"). One token per session still protects against
+     * CSRF; it just doesn't expire mid-session like this.
      */
-    public bool $regenerate = true;
+    public bool $regenerate = false;
 
     /**
      * --------------------------------------------------------------------------
