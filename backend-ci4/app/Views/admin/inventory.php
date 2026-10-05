@@ -162,132 +162,7 @@ $products ??= [];
             <?php endforeach; ?>
         </div>
 
-        <div class="data-table-wrap">
-            <table class="data-table" style="min-width: 980px;">
-                <thead>
-                    <tr>
-                        <th>Item ID</th>
-                        <th>Item Name</th>
-                        <th>Size</th>
-                        <th>Type</th>
-                        <th>On Hand</th>
-                        <th>Rop</th>
-                        <th>EOQ</th>
-                        <th>Stock Level</th>
-                        <th>Status</th>
-                        <th>Last Updated</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($products)): ?>
-                        <?php foreach ($products as $group): ?>
-                            <?php
-                            $variants = $group['variants'];
-                            $default  = $variants[0];
-                            $itemStatus = $default['status']['label'] ?? 'In Stock';
-                            $pillClass = match ($itemStatus) {
-                                'Low Stock' => 'amber',
-                                'Reorder Now' => 'red',
-                                default => 'green',
-                            };
-                            $rop = max((int) ($default['manual_rop_warning'] ?? 0), 1);
-                            $pct = min(100, round(((int) $default['current_stock'] / ($rop * 2)) * 100));
-
-                            // Lean payload embedded on the row — switching the
-                            // Size dropdown swaps every other cell (and the
-                            // Order/Edit buttons' data) to that size's own
-                            // underlying product row, client-side, no reload.
-                            $variantsPayload = array_map(fn ($v) => [
-                                'item_id'            => $v['item_id'],
-                                'item_name'          => $v['item_name'],
-                                'category'           => $v['category'] ?? '',
-                                'size'               => $v['size'] ?? '',
-                                'supplier_id'        => $v['supplier_id'] ?? '',
-                                'unit_cost'          => (float) ($v['unit_cost'] ?? 0),
-                                'selling_price'      => (float) ($v['selling_price'] ?? 0),
-                                'current_stock'      => (int) ($v['current_stock'] ?? 0),
-                                'manual_rop_warning' => (int) ($v['manual_rop_warning'] ?? 0),
-                                'eoq_value'          => $v['eoq_value'],
-                                'status_label'       => $v['status']['label'] ?? 'In Stock',
-                                'updated_at_display'=> date('M j, Y', strtotime($v['updated_at'] ?? 'now')),
-                            ], $variants);
-                            ?>
-                            <tr data-category="<?= esc($group['category'] ?? '') ?>" data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
-                                <td class="inv-item-id"><?= esc($default['item_id'] ?? '—') ?></td>
-                                <td><strong><?= esc($group['item_name'] ?? 'Unknown item') ?></strong></td>
-                                <td class="inv-size-cell">
-                                    <?php if (count($variants) > 1): ?>
-                                        <select class="inv-size-select">
-                                            <?php foreach ($variants as $i => $v): ?>
-                                                <option value="<?= $i ?>"><?= esc($v['size'] ?? '—') ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    <?php else: ?>
-                                        <?= esc($default['size'] ?? '—') ?>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?= esc($group['category'] ?? '') ?></td>
-                                <td class="inv-stock-cell"><?= esc($default['current_stock'] ?? 0) ?></td>
-                                <td class="inv-rop-cell"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
-                                <td class="inv-eoq-cell"><?= $default['eoq_value'] !== null ? esc($default['eoq_value']) : '—' ?></td>
-                                <td class="inv-bar-cell">
-                                    <div class="stock-bar <?= $pillClass ?>"><span style="width: <?= $pct ?>%"></span></div>
-                                </td>
-                                <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span></td>
-                                <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
-                                <td class="inv-actions-cell">
-                                    <button type="button"
-                                            class="inv-action-btn open-order-modal"
-                                            style="<?= $itemStatus === 'Reorder Now' ? '' : 'display:none;' ?>"
-                                            data-item-id="<?= esc($default['item_id']) ?>"
-                                            data-item-name="<?= esc($default['item_name'] ?? '') ?>"
-                                            data-supplier-id="<?= esc($default['supplier_id'] ?? '') ?>"
-                                            data-unit-cost="<?= esc($default['unit_cost'] ?? 0) ?>"
-                                            data-recommended-eoq="<?= esc($default['eoq_value'] ?? 1) ?>">
-                                        Order
-                                    </button>
-                                    <button type="button" class="inv-more-btn edit-row" data-item="<?= esc(json_encode($variantsPayload[0]), 'attr') ?>">&hellip;</button>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr><td colspan="11" class="text-center py-4">No inventory items found.</td></tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-
-        <?php $totalPages = max(1, (int) ($totalPages ?? 1)); ?>
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <span class="text-muted small">Showing <?= count($products ?? []) ?> of <?= esc((string) ($totalItems ?? 0)) ?> Items</span>
-            <?php if (($totalPages ?? 1) > 1): ?>
-                <div class="admin-pagination">
-                    <?php
-                    $currentPage = max(1, (int) ($currentPage ?? 1));
-                    $prevPage = max(1, $currentPage - 1);
-                    $nextPage = min((int) $totalPages, (int) $currentPage + 1);
-                    $params = $_GET;
-
-                    // Only ever show a sliding window of PAGER_WINDOW page
-                    // buttons (centered on the current page) instead of one
-                    // link per page — with 562 items that was 57 buttons wide.
-                    $pagerWindow = 10;
-                    $windowStart = max(1, $currentPage - intdiv($pagerWindow, 2));
-                    $windowEnd   = min($totalPages, $windowStart + $pagerWindow - 1);
-                    $windowStart = max(1, $windowEnd - $pagerWindow + 1);
-
-                    $params['page'] = $prevPage;
-                    ?>
-                    <a href="<?= site_url('admin/inventory') . '?' . http_build_query($params) ?>">&larr; Prev</a>
-                    <?php for ($i = $windowStart; $i <= $windowEnd; $i++): $params['page'] = $i; ?>
-                        <a href="<?= site_url('admin/inventory') . '?' . http_build_query($params) ?>" class="<?= $i === (int) $currentPage ? 'active' : '' ?>"><?= $i ?></a>
-                    <?php endfor; ?>
-                    <?php $params['page'] = $nextPage; ?>
-                    <a href="<?= site_url('admin/inventory') . '?' . http_build_query($params) ?>">Next &rarr;</a>
-                </div>
-            <?php endif; ?>
-        </div>
+        <?= view('admin/_inventory_table', get_defined_vars()) ?>
     </div>
 </div>
 
@@ -457,15 +332,19 @@ $products ??= [];
 <script>
 const orderModal = document.getElementById('orderModal');
 
-document.querySelectorAll('.open-order-modal').forEach(button => {
-    button.addEventListener('click', () => {
-        document.getElementById('orderItemId').value = button.dataset.itemId || '';
-        document.getElementById('orderItemName').value = button.dataset.itemName || '';
-        document.getElementById('orderSupplierId').value = button.dataset.supplierId || '';
-        document.getElementById('orderQuantity').value = button.dataset.recommendedEoq || 1;
-        document.getElementById('orderUnitPrice').value = button.dataset.unitCost || 0;
-        orderModal.classList.add('show');
-    });
+// Delegated (not bound per-button): live search replaces the table's rows
+// in place, so a listener attached directly to a button at page load would
+// stop working on anything fetched in afterward. Delegating from a parent
+// that's never replaced keeps this working for every row, old or new.
+document.addEventListener('click', event => {
+    const button = event.target.closest('.open-order-modal');
+    if (!button) return;
+    document.getElementById('orderItemId').value = button.dataset.itemId || '';
+    document.getElementById('orderItemName').value = button.dataset.itemName || '';
+    document.getElementById('orderSupplierId').value = button.dataset.supplierId || '';
+    document.getElementById('orderQuantity').value = button.dataset.recommendedEoq || 1;
+    document.getElementById('orderUnitPrice').value = button.dataset.unitCost || 0;
+    orderModal.classList.add('show');
 });
 
 document.querySelectorAll('.close-order-modal').forEach(button => {
@@ -519,41 +398,42 @@ document.getElementById('openAddModal').addEventListener('click', () => {
     itemModal.classList.add('show');
 });
 
-document.querySelectorAll('.edit-row').forEach(button => {
-    button.addEventListener('click', () => {
-        const item = JSON.parse(button.dataset.item || '{}');
+// Delegated for the same reason as .open-order-modal above.
+document.addEventListener('click', event => {
+    const button = event.target.closest('.edit-row');
+    if (!button) return;
+    const item = JSON.parse(button.dataset.item || '{}');
 
-        document.getElementById('modalTitle').textContent = 'Edit Item';
-        document.getElementById('modalSubtitle').textContent = `${item.item_name || ''} — Size ${item.size || '—'}`;
-        document.getElementById('submitItemBtn').textContent = 'Save Changes';
-        document.getElementById('item_name').value = item.item_name || '';
-        document.getElementById('category').value = item.category || '';
-        updateSizeFieldVisibility();
-        const sizeMode = sizeModeFor(item.category || '', item.item_name || '');
-        if (sizeMode === 'numeric') {
-            document.getElementById('sizeNumeric').value = item.size || '';
-        } else if (sizeMode === 'letter') {
-            document.getElementById('sizeLetter').value = item.size || '';
-        }
-        document.getElementById('supplier_id').value = item.supplier_id || '';
-        document.getElementById('unit_cost').value = item.unit_cost || 0;
-        document.getElementById('selling_price').value = item.selling_price || 0;
-        document.getElementById('current_stock').value = item.current_stock || 0;
-        document.getElementById('manual_rop_warning').value = item.manual_rop_warning || 0;
+    document.getElementById('modalTitle').textContent = 'Edit Item';
+    document.getElementById('modalSubtitle').textContent = `${item.item_name || ''} — Size ${item.size || '—'}`;
+    document.getElementById('submitItemBtn').textContent = 'Save Changes';
+    document.getElementById('item_name').value = item.item_name || '';
+    document.getElementById('category').value = item.category || '';
+    updateSizeFieldVisibility();
+    const sizeMode = sizeModeFor(item.category || '', item.item_name || '');
+    if (sizeMode === 'numeric') {
+        document.getElementById('sizeNumeric').value = item.size || '';
+    } else if (sizeMode === 'letter') {
+        document.getElementById('sizeLetter').value = item.size || '';
+    }
+    document.getElementById('supplier_id').value = item.supplier_id || '';
+    document.getElementById('unit_cost').value = item.unit_cost || 0;
+    document.getElementById('selling_price').value = item.selling_price || 0;
+    document.getElementById('current_stock').value = item.current_stock || 0;
+    document.getElementById('manual_rop_warning').value = item.manual_rop_warning || 0;
 
-        itemForm.action = "<?= site_url('admin/inventory/update') ?>/" + item.item_id;
+    itemForm.action = "<?= site_url('admin/inventory/update') ?>/" + item.item_id;
 
-        const deleteZone = document.getElementById('deleteZone');
-        deleteZone.style.display = 'flex';
-        document.getElementById('archiveBtn').onclick = () => {
-            if (!confirm(`Archive "${item.item_name}"?`)) return;
-            const form = document.getElementById('deleteForm');
-            form.action = "<?= site_url('admin/inventory/delete') ?>/" + item.item_id;
-            form.submit();
-        };
+    const deleteZone = document.getElementById('deleteZone');
+    deleteZone.style.display = 'flex';
+    document.getElementById('archiveBtn').onclick = () => {
+        if (!confirm(`Archive "${item.item_name}"?`)) return;
+        const form = document.getElementById('deleteForm');
+        form.action = "<?= site_url('admin/inventory/delete') ?>/" + item.item_id;
+        form.submit();
+    };
 
-        itemModal.classList.add('show');
-    });
+    itemModal.classList.add('show');
 });
 
 document.getElementById('closeItemModal').addEventListener('click', () => itemModal.classList.remove('show'));
@@ -602,13 +482,14 @@ function applyVariantToRow(row, v) {
     if (editBtn) editBtn.dataset.item = JSON.stringify(v);
 }
 
-document.querySelectorAll('.inv-size-select').forEach(select => {
-    select.addEventListener('change', () => {
-        const row = select.closest('tr');
-        const variants = JSON.parse(row.dataset.variants || '[]');
-        const v = variants[select.value];
-        if (v) applyVariantToRow(row, v);
-    });
+// Delegated so it keeps working after live search swaps the table rows.
+document.addEventListener('change', event => {
+    const select = event.target.closest('.inv-size-select');
+    if (!select) return;
+    const row = select.closest('tr');
+    const variants = JSON.parse(row.dataset.variants || '[]');
+    const v = variants[select.value];
+    if (v) applyVariantToRow(row, v);
 });
 
 ['categoryFilter', 'sizeFilter', 'statusFilter'].forEach(id => {
@@ -625,17 +506,39 @@ document.querySelectorAll('.inv-size-select').forEach(select => {
     });
 });
 
-document.getElementById('searchInput').addEventListener('keydown', event => {
-    if (event.key !== 'Enter') return;
-    const url = new URL(window.location.href);
-    if (event.target.value.trim()) {
-        url.searchParams.set('search', event.target.value.trim());
-    } else {
-        url.searchParams.delete('search');
+// Live search: fetches the real server-side search result in the
+// background (debounced) and swaps just the table + pagination in place.
+// No full page reload — and because it's a real query, not a filter of
+// whatever rows happen to already be on screen, it finds a match no
+// matter which page it's sitting on.
+(function () {
+    const searchInput = document.getElementById('searchInput');
+    let debounceTimer;
+
+    function fetchResults() {
+        const url = new URL(window.location.href);
+        const term = searchInput.value.trim();
+        if (term) {
+            url.searchParams.set('search', term);
+        } else {
+            url.searchParams.delete('search');
+        }
+        url.searchParams.delete('page');
+
+        fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(response => response.text())
+            .then(html => {
+                const current = document.getElementById('inventoryResults');
+                if (current) current.outerHTML = html;
+                window.history.replaceState({}, '', url.toString());
+            });
     }
-    url.searchParams.delete('page');
-    window.location.href = url.toString();
-});
+
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(fetchResults, 200);
+    });
+})();
 </script>
 
 <?= $this->endSection() ?>
