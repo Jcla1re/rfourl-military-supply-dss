@@ -74,8 +74,9 @@
         </table>
     </div>
 
+    <?php $totalPages = max(1, (int) ($totalPages ?? 1)); ?>
     <div class="d-flex justify-content-between align-items-center mt-3">
-        <span class="text-muted small">Showing <?= count($products ?? []) ?> of <?= esc($totalItems ?? 0) ?> Items</span>
+        <span class="text-muted small">Showing <?= count($products ?? []) ?> of <?= esc((string) ($totalItems ?? 0)) ?> Items</span>
         <?php if (($totalPages ?? 1) > 1): ?>
             <div class="admin-pagination">
                 <?php

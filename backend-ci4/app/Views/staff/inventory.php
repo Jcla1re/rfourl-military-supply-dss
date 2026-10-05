@@ -40,9 +40,9 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
 
         <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
             <div class="d-flex flex-wrap gap-3">
-                <span class="stat-pill green"><i class="bi bi-check-square-fill"></i> In Stock: <?= esc($inStockCount ?? 0) ?></span>
-                <span class="stat-pill amber"><i class="bi bi-lightning-fill"></i> Low Stock: <?= esc($lowStockCount ?? 0) ?></span>
-                <span class="stat-pill red"><i class="bi bi-exclamation-triangle-fill"></i> Reorder Now: <?= esc($reorderCount ?? 0) ?></span>
+                <span class="stat-pill green"><i class="bi bi-check-square-fill"></i> In Stock: <?= esc((string) ($inStockCount ?? 0)) ?></span>
+                <span class="stat-pill amber"><i class="bi bi-lightning-fill"></i> Low Stock: <?= esc((string) ($lowStockCount ?? 0)) ?></span>
+                <span class="stat-pill red"><i class="bi bi-exclamation-triangle-fill"></i> Reorder Now: <?= esc((string) ($reorderCount ?? 0)) ?></span>
             </div>
         </div>
 
@@ -75,7 +75,7 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
         </div>
 
         <div class="underline-tabs">
-            <a href="<?= site_url('staff/inventory') ?>" class="<?= $filterCategory === 'All' ? 'active' : '' ?>">All Items (<?= esc($totalItems ?? 0) ?>)</a>
+            <a href="<?= site_url('staff/inventory') ?>" class="<?= $filterCategory === 'All' ? 'active' : '' ?>">All Items (<?= esc((string) ($totalItems ?? 0)) ?>)</a>
             <?php $categoryStockTotals = $categoryStockTotals ?? []; ?>
             <?php foreach ($categories as $itemCategory): ?>
                 <a href="<?= site_url('staff/inventory') . '?category=' . urlencode($itemCategory) ?>" class="<?= $filterCategory === $itemCategory ? 'active' : '' ?>"><?= esc($itemCategory) ?> (<?= number_format($categoryStockTotals[$itemCategory] ?? 0) ?>)</a>
