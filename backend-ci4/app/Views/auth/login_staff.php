@@ -55,7 +55,6 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('staff');
                         </div>
                     </div>
                     <div class="form-row-between">
-                        <label class="remember-check"><input type="checkbox" name="remember" value="1"> Remember me</label>
                         <a href="<?= site_url('login/staff/forgot') ?>" class="forgot-link-inline">Forgot password?</a>
                     </div>
                     <button type="submit" class="btn-login" id="loginSubmitBtn"<?= $lockedSeconds > 0 ? ' disabled' : '' ?>>

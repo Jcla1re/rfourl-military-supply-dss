@@ -460,17 +460,8 @@ html, body.landing-body {
 .form-row-between {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     margin: 4px 0 20px;
-}
-
-.remember-check {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
-    color: #444;
-    cursor: pointer;
 }
 
 .forgot-link-inline {

@@ -115,7 +115,6 @@ $lockedSeconds = [
                         </div>
                     </div>
                     <div class="form-row-between">
-                        <label class="remember-check"><input type="checkbox" name="remember" value="1"> Remember me</label>
                         <a href="<?= site_url('login/admin/forgot') ?>" class="forgot-link-inline">Forgot password?</a>
                     </div>
                     <button type="submit" class="btn-login" id="loginSubmitBtn-admin"<?= $lockedSeconds['admin'] > 0 ? ' disabled' : '' ?>>
@@ -147,7 +146,6 @@ $lockedSeconds = [
                         </div>
                     </div>
                     <div class="form-row-between">
-                        <label class="remember-check"><input type="checkbox" name="remember" value="1"> Remember me</label>
                         <a href="<?= site_url('login/staff/forgot') ?>" class="forgot-link-inline">Forgot password?</a>
                     </div>
                     <button type="submit" class="btn-login" id="loginSubmitBtn-staff"<?= $lockedSeconds['staff'] > 0 ? ' disabled' : '' ?>>
@@ -183,7 +181,6 @@ $lockedSeconds = [
                         </div>
                     </div>
                     <div class="form-row-between">
-                        <label class="remember-check"><input type="checkbox" name="remember" value="1"> Remember me</label>
                         <a href="<?= site_url('login/supplier/forgot') ?>" class="forgot-link-inline">Forgot password?</a>
                     </div>
                     <button type="submit" class="btn-login" id="loginSubmitBtn-supplier"<?= $lockedSeconds['supplier'] > 0 ? ' disabled' : '' ?>>
