@@ -79,7 +79,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
                 <div class="sub">Immediate restocking recommended</div>
             </div>
         </div>
-        <a href="<?= site_url('admin/reorder-alerts') ?>" class="btn btn-maroon">View Alerts</a>
+        <a href="<?= site_url('admin/reorder-alerts') ?>" class="btn btn-maroon">Review Alerts</a>
     </div>
     <?php endif; ?>
 
