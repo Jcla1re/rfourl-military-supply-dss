@@ -3,7 +3,9 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\PasswordPolicy;
 use App\Models\DssParameterModel;
+use App\Models\SecurityLogModel;
 use App\Models\ProductModel;
 use App\Models\StockOrderModel;
 use App\Models\SupplierModel;
@@ -106,6 +108,29 @@ class SupplierController extends BaseController
             return redirect()->back()->withInput()->with('error', implode(' ', $this->validator->getErrors()));
         }
 
+        // Validate the optional portal login BEFORE creating the supplier, so a
+        // bad password or email does not leave a supplier with no account behind.
+        $loginEmail = $this->request->getPost('login_email');
+        $username   = $this->request->getPost('username');
+        $password   = $this->request->getPost('password');
+        $confirm    = $this->request->getPost('confirm_password');
+
+        if ($username || $password || $loginEmail) {
+            if (! $this->validate([
+                'login_email' => 'permit_empty|valid_email|is_unique[users.email]',
+                'username'    => 'required|is_unique[users.username]',
+                'password'    => 'required',
+            ])) {
+                return redirect()->back()->withInput()->with('error', implode(' ', $this->validator->getErrors()));
+            }
+            if ($error = PasswordPolicy::check($password)) {
+                return redirect()->back()->withInput()->with('error', $error);
+            }
+            if ($password !== $confirm) {
+                return redirect()->back()->withInput()->with('error', 'Passwords do not match.');
+            }
+        }
+
         $newId = $this->supplierModel->generateNextId();
         $status = $this->request->getPost('supplier_status') ?: 'Active';
 
@@ -121,16 +146,7 @@ class SupplierController extends BaseController
             'is_active'          => $status === 'Inactive' ? 0 : 1,
         ]);
 
-        $loginEmail = $this->request->getPost('login_email');
-        $username   = $this->request->getPost('username');
-        $password   = $this->request->getPost('password');
-        $confirm    = $this->request->getPost('confirm_password');
-
         if ($username && $password) {
-            if ($password !== $confirm) {
-                return redirect()->to('/admin/suppliers')->with('error', "Supplier {$newId} created, but the portal account password did not match — add the account manually in Settings.");
-            }
-
             $this->userModel->insert([
                 'supplier_id'   => $newId,
                 'username'      => $username,
@@ -140,6 +156,7 @@ class SupplierController extends BaseController
                 'full_name'     => $this->request->getPost('company_name'),
                 'is_active'     => 1,
             ]);
+            SecurityLogModel::log('account_created', null, "supplier portal: {$username} ({$newId})");
         }
 
         return redirect()->to('/admin/suppliers')->with('success', "Supplier {$newId} added successfully.");

@@ -70,6 +70,9 @@ class DashboardController extends BaseController
             'totalUnits'      => $totalUnitsThisMonth,
             'schedule'        => array_slice($schedule, 0, 5),
             'onTimeRate'      => $onTimeRate,
+            'deliveredTotal'  => count($allDelivered),
+            'onTimeCount'     => $allOnTime,
+            'leadTimeDays'    => (new \App\Models\SupplierModel())->find($supplierId)['lead_time_days'] ?? null,
             'today'           => $today,
         ];
 

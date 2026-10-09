@@ -77,6 +77,8 @@ a.ta-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-
 .ta-stat .value { font-size: 26px; font-weight: 800; }
 .chart-card { background: #fff; border-radius: 14px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 16px; }
 .chart-card h6 { font-weight: 700; margin-bottom: 10px; }
+.perf-card { display: flex; flex-direction: column; }
+.perf-list { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 4px; }
 .perf-bar-row { font-size: 13px; margin-bottom: 4px; font-weight: 600; }
 .perf-track { height: 10px; background: #e4e2dc; border-radius: 5px; overflow: hidden; margin-bottom: 14px; }
 .perf-track > span { display: block; height: 100%; background: #1c1c1c; border-radius: 5px; }
@@ -117,26 +119,33 @@ a.ta-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-
 
     <div class="row g-3 mt-1">
         <div class="col-lg-8">
-            <div class="chart-card">
+            <div class="chart-card h-100">
                 <h6>Annual Demand &mdash; Item Sold Per Month (<?= $selectedItem !== '' ? esc($selectedItemName) : 'All Products' ?>)<br><small class="text-muted fw-normal"><?= esc($selectedYearLabel) ?> vs <?= esc((string) ((int) $selectedYear - 1)) ?></small></h6>
                 <canvas id="annualChart" height="90"></canvas>
             </div>
-            <div class="chart-card">
-                <h6>Weekly Sales Trend<br><small class="text-muted fw-normal">7 days ending <?= esc($weekAsOf) ?><?= $selectedItem !== '' ? ' — ' . esc($selectedItemName) : '' ?></small></h6>
-                <canvas id="weeklyChart" height="90"></canvas>
-            </div>
         </div>
         <div class="col-lg-4">
-            <div class="chart-card">
+            <div class="chart-card h-100 perf-card">
                 <h6>Product Performance (Items Sold)</h6>
                 <?php if (empty($topSellers)): ?>
                     <div class="text-muted small">No sales recorded yet.</div>
                 <?php else: ?>
+                    <div class="perf-list">
                     <?php foreach ($topSellers as $t): ?>
                         <div class="perf-bar-row"><?= esc($t['item_name'] ?? $t['item_id']) ?></div>
                         <div class="perf-track"><span style="width: <?= round(($t['units_sold'] / $maxUnits) * 100) ?>%"></span></div>
                     <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-12">
+            <div class="chart-card">
+                <h6>Weekly Sales Trend<br><small class="text-muted fw-normal">7 days ending <?= esc($weekAsOf) ?><?= $selectedItem !== '' ? ' — ' . esc($selectedItemName) : '' ?></small></h6>
+                <canvas id="weeklyChart" height="55"></canvas>
             </div>
         </div>
     </div>

@@ -48,7 +48,9 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
 .dash-stat .trend .pct { color: #2f6431; font-weight: 700; }
 .dash-stat .trend .pct.down { color: var(--accent-maroon); }
 
-.panel-box { background: #fff; border-radius: 14px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; }
+.panel-box { background: #fff; border-radius: 14px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; display: flex; flex-direction: column; }
+.panel-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; padding: 24px 10px; color: #888; font-size: 14px; }
+.panel-empty i { font-size: 30px; color: #a9a79f; }
 .panel-box h6 { font-weight: 800; font-size: 15px; margin-bottom: 14px; }
 
 .sold-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
@@ -67,7 +69,9 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
 .recent-row .amt { text-align: right; font-weight: 700; }
 .recent-row .amt small { display: block; font-weight: 400; color: #888; font-size: 11px; }
 
-.qa-btn { display: block; width: 100%; text-align: center; padding: 14px; border-radius: 10px; font-weight: 700; text-decoration: none; margin-bottom: 10px; }
+.qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; align-content: start; }
+@media (max-width: 575px) { .qa-grid { grid-template-columns: 1fr; } }
+.qa-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; padding: 18px 14px; border-radius: 10px; font-weight: 700; text-decoration: none; }
 .qa-btn.primary { background: #6b8f4e; color: #fff; }
 .qa-btn.outline { background: #fff; border: 1px solid #ccc; color: #1c1c1c; }
 </style>
@@ -132,7 +136,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
             <div class="panel-box">
                 <h6>Items Sold Today</h6>
                 <?php if (empty($itemsSoldToday)): ?>
-                    <div class="text-muted small">No sales recorded yet today.</div>
+                    <div class="panel-empty"><i class="bi bi-receipt"></i>No sales recorded yet today.</div>
                 <?php else: ?>
                     <?php foreach ($itemsSoldToday as $row): ?>
                         <div class="sold-row"><span><?= esc($row['item_name'] ?? $row['item_id']) ?> x<?= esc($row['qty']) ?></span><strong>₱<?= number_format($row['line_total'], 0) ?></strong></div>
@@ -145,7 +149,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
             <div class="panel-box">
                 <h6>Recent Transactions</h6>
                 <?php if (empty($recentTransactions)): ?>
-                    <div class="text-muted small">No transactions recorded yet.</div>
+                    <div class="panel-empty"><i class="bi bi-clock-history"></i>No transactions recorded yet.</div>
                 <?php else: ?>
                     <?php foreach ($recentTransactions as $t): ?>
                         <div class="recent-row">
@@ -183,8 +187,12 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
         <div class="col-lg-6">
             <div class="panel-box">
                 <h6>Quick Actions</h6>
-                <a href="<?= site_url('staff/log-transaction') ?>" class="qa-btn primary">Log New Transaction</a>
-                <a href="<?= site_url('staff/inventory') ?>" class="qa-btn outline">Check Inventory</a>
+                <div class="qa-grid">
+                    <a href="<?= site_url('staff/log-transaction') ?>" class="qa-btn primary"><i class="bi bi-plus-circle"></i> Log New Transaction</a>
+                    <a href="<?= site_url('staff/sales') ?>" class="qa-btn outline"><i class="bi bi-cart3"></i> POS &amp; Sales</a>
+                    <a href="<?= site_url('staff/inventory') ?>" class="qa-btn outline"><i class="bi bi-box-seam"></i> Check Inventory</a>
+                    <a href="<?= site_url('staff/reorder-alerts') ?>" class="qa-btn outline"><i class="bi bi-bell"></i> Reorder Alerts</a>
+                </div>
             </div>
         </div>
     </div>

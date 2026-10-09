@@ -76,6 +76,12 @@ class LogTransactionController extends BaseController
             'type'     => $type,
             'typeInfo' => self::TYPES[$type],
             'products' => $this->productModel->where('is_active', 1)->orderBy('item_name', 'ASC')->findAll(),
+            'recent'   => $this->inventoryLogModel
+                ->select('inventory_log.*, products.item_name')
+                ->join('products', 'products.item_id = inventory_log.item_id', 'left')
+                ->where('inventory_log.log_type', self::TYPES[$type]['log_type'])
+                ->orderBy('inventory_log.timestamp', 'DESC')
+                ->findAll(5),
             'error'    => session()->getFlashdata('error'),
         ];
 

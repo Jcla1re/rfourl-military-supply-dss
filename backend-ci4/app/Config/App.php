@@ -199,4 +199,14 @@ class App extends BaseConfig
      * @see http://www.w3.org/TR/CSP/
      */
     public bool $CSPEnabled = false;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Enforced in production only. In development the Debug Toolbar adds
+        // per-request nonces, and a nonce makes browsers ignore 'unsafe-inline',
+        // which would block this app's inline scripts while developing.
+        $this->CSPEnabled = ENVIRONMENT === 'production';
+    }
 }

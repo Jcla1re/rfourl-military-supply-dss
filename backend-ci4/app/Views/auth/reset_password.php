@@ -16,7 +16,7 @@ $errorMsg = session()->getFlashdata('error');
         <form action="<?= site_url('login/' . $role . '/reset-password') ?>" method="post">
             <?= csrf_field() ?>
             <label>Enter New Password:</label>
-            <input type="password" name="new_password" minlength="8" required autofocus>
+            <input type="password" name="new_password" minlength="8" pattern="(?=.*[A-Za-z])(?=.*\d).{8,}" title="At least 8 characters, with a letter and a number" required autofocus>
             <label>Confirm New Password:</label>
             <input type="password" name="confirm_password" minlength="8" required>
             <button type="submit" class="btn-login">Reset Password</button>

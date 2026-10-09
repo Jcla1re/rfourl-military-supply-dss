@@ -37,7 +37,7 @@
     </div>
 
     <?php if (empty($orders)): ?>
-        <div class="empty-state">No new orders awaiting your response.</div>
+        <div class="empty-state"><i class="bi bi-inbox"></i>No new orders awaiting your response.</div>
     <?php else: ?>
         <?php foreach ($orders as $o): ?>
             <div class="no-card">

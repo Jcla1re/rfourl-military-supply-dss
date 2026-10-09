@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify, request
 
 from config import (
@@ -94,4 +95,7 @@ def cluster_inventory():
 
 
 if __name__ == "__main__":
-    app.run(port=5001, debug=True)
+    # Flask debug mode exposes an interactive console that allows remote code
+    # execution, so it is OFF unless explicitly enabled for local development
+    # (set FLASK_DEBUG=1). Production runs through gunicorn (see Procfile).
+    app.run(port=5001, debug=os.environ.get("FLASK_DEBUG") == "1")

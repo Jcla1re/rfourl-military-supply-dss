@@ -58,6 +58,16 @@ $tabs = [
 }
 
 .set-body { padding: 24px; }
+.set-detail { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-bottom: 1px solid #f2f2f2; font-size: 14px; }
+.set-detail:last-child { border-bottom: none; }
+.set-detail span { color: #777; }
+.set-detail strong { text-align: right; word-break: break-word; }
+.set-quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.set-quick a { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 14px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); text-decoration: none; color: inherit; transition: box-shadow .15s ease, transform .15s ease; }
+.set-quick a:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-1px); }
+.set-quick .ic { width: 40px; height: 40px; border-radius: 10px; background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.set-quick strong { display: block; font-size: 14px; }
+.set-quick small { color: #777; font-size: 12px; }
 .set-body h4 { font-weight: 800; }
 .set-hint { color: #666; margin-bottom: 20px; }
 
@@ -114,8 +124,10 @@ $tabs = [
                 </div>
             </div>
 
-            <div class="set-card">
-                <h5 class="fw-bold mb-3">Personal Information</h5>
+            <div class="row g-3 mb-3">
+                <div class="col-lg-7">
+                    <div class="set-card h-100 mb-0">
+                        <h5 class="fw-bold mb-3">Personal Information</h5>
                 <form method="post" action="<?= site_url('admin/settings/account') ?>">
                     <?= csrf_field() ?>
                     <div class="set-grid mb-3">
@@ -140,6 +152,27 @@ $tabs = [
                     </div>
                     <div class="text-end"><button type="submit" class="btn btn-maroon">Save</button></div>
                 </form>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="set-card h-100 mb-0">
+                        <h5 class="fw-bold mb-2">Account Details</h5>
+                        <div class="set-detail"><span>Username</span><strong><?= esc($admin['username'] ?? '—') ?></strong></div>
+                        <div class="set-detail"><span>Role</span><strong>Owner / Administrator</strong></div>
+                        <div class="set-detail"><span>Account Status</span><strong><?= !empty($admin['is_active']) ? 'Active' : 'Inactive' ?></strong></div>
+                        <div class="set-detail"><span>Member Since</span><strong><?= !empty($admin['created_at']) ? esc(date('F j, Y', strtotime($admin['created_at']))) : '—' ?></strong></div>
+                        <div class="set-detail"><span>Last Login</span><strong><?= !empty($admin['last_login']) ? esc(date('M j, Y g:i A', strtotime($admin['last_login']))) : '—' ?></strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <?php $activeStaff = count(array_filter($staffAccounts, fn ($u) => ! empty($u['is_active']) && ($u['role'] ?? '') === 'Staff')); ?>
+            <div class="set-quick">
+                <a href="<?= site_url('admin/settings?tab=accounts') ?>"><span class="ic"><i class="bi bi-people"></i></span><div><strong>User Accounts</strong><small><?= $activeStaff ?> active staff account<?= $activeStaff === 1 ? '' : 's' ?></small></div></a>
+                <a href="<?= site_url('admin/settings?tab=security') ?>"><span class="ic"><i class="bi bi-shield-lock"></i></span><div><strong>Security</strong><small>Change owner or staff password</small></div></a>
+                <a href="<?= site_url('admin/settings?tab=notif') ?>"><span class="ic"><i class="bi bi-bell"></i></span><div><strong>Notifications</strong><small>Choose which alerts you receive</small></div></a>
+                <a href="<?= site_url('admin/settings?tab=dss') ?>"><span class="ic"><i class="bi bi-sliders"></i></span><div><strong>DSS Parameter</strong><small>EOQ and ROP computation inputs</small></div></a>
             </div>
 
         <?php elseif ($tab === 'accounts'): ?>
@@ -197,7 +230,7 @@ $tabs = [
                                 <div class="set-field mb-3"><label>Full Name</label><input name="full_name" required></div>
                                 <div class="set-field mb-3"><label>Username</label><input name="username" required></div>
                                 <div class="set-field mb-3"><label>Contact email</label><input name="contact_email" type="email" placeholder="Personal email"></div>
-                                <div class="set-field mb-3"><label>Password</label><input name="password" type="password" placeholder="Minimum 8 characters" required></div>
+                                <div class="set-field mb-3"><label>Password</label><input name="password" type="password" placeholder="8+ characters, letter and number" required></div>
                                 <div class="set-field"><label>Confirm Password</label><input name="confirm_password" type="password" placeholder="Re-enter password" required></div>
                             </div>
                             <div class="modal-footer">
@@ -219,9 +252,10 @@ $tabs = [
                 </div>
                 <form method="post" action="<?= site_url('admin/settings/owner-password') ?>">
                     <?= csrf_field() ?>
-                    <div class="set-grid mb-3">
-                        <div class="set-field"><label>New Password</label><input name="new_password" type="password" placeholder="Minimum 8 characters"></div>
-                        <div class="set-field"><label>Confirm New Password</label><input name="confirm_password" type="password"></div>
+                    <div class="set-grid mb-3" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                        <div class="set-field"><label>Current Password</label><input name="current_password" type="password" required autocomplete="current-password"></div>
+                        <div class="set-field"><label>New Password</label><input name="new_password" type="password" placeholder="8+ characters, letter and number" required autocomplete="new-password"></div>
+                        <div class="set-field"><label>Confirm New Password</label><input name="confirm_password" type="password" required autocomplete="new-password"></div>
                     </div>
                     <div class="text-end"><button type="submit" class="btn btn-outline-dark">Change Password</button></div>
                 </form>
@@ -233,7 +267,7 @@ $tabs = [
                 <form method="post" action="<?= site_url('admin/settings/staff-password') ?>">
                     <?= csrf_field() ?>
                     <div class="set-grid mb-3">
-                        <div class="set-field"><label>New Password</label><input name="new_password" type="password" placeholder="Minimum 8 characters"></div>
+                        <div class="set-field"><label>New Password</label><input name="new_password" type="password" placeholder="8+ characters, letter and number"></div>
                         <div class="set-field"><label>Confirm New Password</label><input name="confirm_password" type="password"></div>
                     </div>
                     <div class="text-end"><button type="submit" class="btn btn-outline-dark">Change Password</button></div>
@@ -291,10 +325,15 @@ $tabs = [
                             <input name="ordering_cost" type="number" step="0.01" min="0" value="<?= esc($dss['ordering_cost'] ?? 0) ?>" required>
                             <small class="text-muted">Fixed cost incurred each time an order is placed (transport, admin)</small>
                         </div>
-                        <div class="set-field">
+                        <div class="set-field mb-3">
                             <label>Holding Cost per Unit/Year (H) - ₱</label>
                             <input name="holding_cost_per_unit" type="number" step="0.01" min="0" value="<?= esc($dss['holding_cost_per_unit'] ?? 0) ?>" required>
                             <small class="text-muted">Cost to store one item for one year (space, insurance)</small>
+                        </div>
+                        <div class="set-field mb-3">
+                            <label>Minimum Order Quantity</label>
+                            <input name="minimum_order_qty" type="number" min="1" value="<?= esc($dss['minimum_order_qty'] ?? 5) ?>" required>
+                            <small class="text-muted">EOQ floor. An item with no recorded demand (e.g. out of stock all period, or newly added) computes EOQ = 0 by formula alone — this ensures a reorder is still recommended.</small>
                         </div>
                         <div class="dss-formula">EOQ = √( 2 × D<sub>annual</sub> × S / H ) &middot; D<sub>annual</sub> = d × 365</div>
                     </div>
@@ -305,20 +344,15 @@ $tabs = [
                             <input name="service_level_target" type="number" step="0.01" min="0" max="100" value="<?= esc($dss['service_level_target'] ?? 95) ?>" required>
                             <small class="text-muted">Probability of not stocking out (Z = <?= esc($dss['z_score'] ?? 1.645) ?> at <?= esc($dss['service_level_target'] ?? 95) ?>%). Used only as a fallback — each item normally gets its own service level (95% / 90% / 85%) from its K-Means Class A/B/C.</small>
                         </div>
-                        <div class="set-field mb-2">
+                        <div class="set-field mb-3">
                             <label>Default Z-Score</label>
                             <input name="z_score" type="number" step="0.001" value="<?= esc($dss['z_score'] ?? 1.645) ?>" required>
                             <small class="text-muted">Applied when an item has no K-Means classification yet (e.g. clustering service unreachable and no cached assignment).</small>
                         </div>
-                        <div class="set-field">
+                        <div class="set-field mb-3">
                             <label>Demand Lookback Period</label>
                             <input name="demand_lookback_days" type="number" min="1" value="<?= esc($dss['demand_lookback_days'] ?? 90) ?>" required>
                             <small class="text-muted">How many days of past sales are used to compute avg demand.</small>
-                        </div>
-                        <div class="set-field">
-                            <label>Minimum Order Quantity</label>
-                            <input name="minimum_order_qty" type="number" min="1" value="<?= esc($dss['minimum_order_qty'] ?? 5) ?>" required>
-                            <small class="text-muted">EOQ floor. An item with no recorded demand (e.g. out of stock all period, or newly added) computes EOQ = 0 by formula alone — this ensures a reorder is still recommended.</small>
                         </div>
                         <div class="dss-formula">ROP = d × L + Safety stock &middot; SS = Z × &sigma;d × √L</div>
                     </div>

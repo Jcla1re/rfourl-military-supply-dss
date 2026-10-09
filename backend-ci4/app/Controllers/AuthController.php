@@ -3,9 +3,12 @@
 
 namespace App\Controllers;
 
+use App\Libraries\AttemptStore;
 use App\Libraries\EmailNotifier;
+use App\Libraries\PasswordPolicy;
 use App\Libraries\LoginLockout;
 use App\Models\NotificationModel;
+use App\Models\SecurityLogModel;
 use App\Models\UserModel;
 
 class AuthController extends BaseController
@@ -45,11 +48,14 @@ class AuthController extends BaseController
         if (!$user || $user['role'] !== 'Admin') {
             return $this->failLogin('admin');
         }
-        if (!$user['is_active']) {
-            return redirect()->back()->with('error', 'This account has been deactivated')->with('attempted_role', 'admin');
-        }
         if (!password_verify($password, $user['password_hash'])) {
             return $this->failLogin('admin');
+        }
+        // Only revealed after the password is proven correct, so a stranger
+        // can't use this message to discover which usernames exist.
+        if (!$user['is_active']) {
+            SecurityLogModel::log('login_blocked_deactivated', $user);
+            return redirect()->back()->with('error', 'This account has been deactivated')->with('attempted_role', 'admin');
         }
 
         $this->lockout->reset('admin');
@@ -111,6 +117,10 @@ class AuthController extends BaseController
         if (!password_verify($password, $user['password_hash'])) {
             return $this->failLogin('supplier');
         }
+        if (! $this->isAccountActive($user)) {
+            SecurityLogModel::log('login_blocked_deactivated', $user);
+            return redirect()->back()->with('error', 'This account has been deactivated')->with('attempted_role', 'supplier');
+        }
 
         $this->lockout->reset('supplier');
         $this->logUserIn($user);
@@ -127,6 +137,12 @@ class AuthController extends BaseController
         $this->lockout->registerFailure($role);
         $seconds = $this->lockout->secondsRemaining($role);
 
+        SecurityLogModel::log(
+            $seconds > 0 ? 'login_locked' : 'login_failed',
+            ['role' => ucfirst($role), 'username' => $this->request->getPost('username')],
+            "{$role} login"
+        );
+
         $message = $seconds > 0
             ? "Too many failed attempts. Please wait {$seconds} seconds and try again."
             : 'Incorrect password. Please try again';
@@ -134,8 +150,25 @@ class AuthController extends BaseController
         return redirect()->back()->with('error', $message)->with('attempted_role', $role);
     }
 
+    /** A user is active only if their own flag is on and, for suppliers, the supplier record is too. */
+    private function isAccountActive(array $user): bool
+    {
+        if (! $user['is_active']) {
+            return false;
+        }
+        if ($user['role'] === 'Supplier') {
+            $supplier = (new \App\Models\SupplierModel())->find($user['supplier_id']);
+            return $supplier && $supplier['is_active'];
+        }
+
+        return true;
+    }
+
     private function logUserIn(array $user): void
     {
+        // New session ID on login so a pre-login session ID can't be reused
+        // by an attacker (session fixation).
+        session()->regenerate(true);
         session()->set([
             'user_id'     => $user['user_id'],
             'username'    => $user['username'],
@@ -145,10 +178,12 @@ class AuthController extends BaseController
             'isLoggedIn'  => true,
         ]);
         $this->userModel->update($user['user_id'], ['last_login' => date('Y-m-d H:i:s')]);
+        SecurityLogModel::log('login_success', $user);
     }
 
     public function logout()
     {
+        SecurityLogModel::log('logout');
         session()->destroy();
         return redirect()->to('/');
     }
@@ -156,6 +191,16 @@ class AuthController extends BaseController
     // --- FORGOT PASSWORD (Admin & Supplier only — Staff shares one password reset from Settings) ---
 
     private const RESET_ROLES = ['admin' => 'Admin', 'supplier' => 'Supplier'];
+
+    // A 6-digit code only has 1,000,000 possibilities, so it is burned after
+    // a handful of wrong guesses and a new one must be requested.
+    private const OTP_MAX_ATTEMPTS = 5;
+
+    /** True if this client is still within its allowance for the given action. */
+    private function withinLimit(string $name, string $subject, int $capacity, int $seconds): bool
+    {
+        return AttemptStore::hit($name . '_' . md5(strtolower($subject)), $seconds) <= $capacity;
+    }
 
     public function showForgotPassword($role)
     {
@@ -176,6 +221,14 @@ class AuthController extends BaseController
         }
 
         $email = trim((string) $this->request->getPost('email'));
+
+        // Keyed on what was typed (not on whether the account exists), so the
+        // limit reveals nothing and stops anyone flooding an inbox with codes.
+        if (! $this->withinLimit('otp_ip', $this->request->getIPAddress(), 5, 600)
+            || ! $this->withinLimit('otp_mail', $email, 3, 600)) {
+            return redirect()->to("/login/{$role}/forgot")->with('error', 'Too many requests. Please wait a few minutes and try again.');
+        }
+
         $user  = $this->userModel->where('role', self::RESET_ROLES[$role])
             ->where('email', $email)
             ->where('is_active', 1)
@@ -194,6 +247,7 @@ class AuthController extends BaseController
             'reset_otp_hash'    => password_hash($otp, PASSWORD_DEFAULT),
             'reset_otp_expires' => date('Y-m-d H:i:s', strtotime('+10 minutes')),
         ]);
+        AttemptStore::forget('otp_attempts_' . $user['user_id']);
 
         $this->deliverOtpEmail($user, $otp);
 
@@ -240,9 +294,20 @@ class AuthController extends BaseController
         }
 
         if (! password_verify($code, $user['reset_otp_hash'])) {
+            $attemptsKey = 'otp_attempts_' . $user['user_id'];
+
+            if (AttemptStore::hit($attemptsKey, 600) >= self::OTP_MAX_ATTEMPTS) {
+                $this->userModel->update($user['user_id'], ['reset_otp_hash' => null, 'reset_otp_expires' => null]);
+                AttemptStore::forget($attemptsKey);
+                SecurityLogModel::log('otp_locked', $user, 'too many wrong codes');
+
+                return redirect()->to("/login/{$role}/otp")->with('error', 'Too many incorrect attempts. Please request a new code.');
+            }
+
             return redirect()->to("/login/{$role}/otp")->with('error', "Incorrect code, please try again.");
         }
 
+        AttemptStore::forget('otp_attempts_' . $user['user_id']);
         session()->set('pwd_reset_verified', true);
 
         return redirect()->to("/login/{$role}/reset-password");
@@ -255,17 +320,25 @@ class AuthController extends BaseController
         }
 
         $user = $this->userModel->find(session()->get('pwd_reset_user_id'));
-        $otp  = (string) random_int(100000, 999999);
+
+        if (! $this->withinLimit('otp_resend', (string) $user['user_id'], 3, 600)) {
+            return redirect()->to("/login/{$role}/otp")->with('error', 'Too many requests. Please wait a few minutes before asking for another code.');
+        }
+
+        $otp = (string) random_int(100000, 999999);
 
         $this->userModel->update($user['user_id'], [
             'reset_otp_hash'    => password_hash($otp, PASSWORD_DEFAULT),
             'reset_otp_expires' => date('Y-m-d H:i:s', strtotime('+10 minutes')),
         ]);
+        AttemptStore::forget('otp_attempts_' . $user['user_id']);
 
         $delivered = $this->deliverOtpEmail($user, $otp);
         $redirect  = redirect()->to("/login/{$role}/otp");
 
-        return $delivered ? $redirect->with('notice', 'A new code has been sent.') : $redirect;
+        return $delivered
+            ? $redirect->with('notice', 'A new code has been sent.')
+            : $redirect->with('error', 'We could not send the code. Please contact the administrator.');
     }
 
     public function showResetPassword($role)
@@ -289,8 +362,8 @@ class AuthController extends BaseController
         $newPass = (string) $this->request->getPost('new_password');
         $confirm = (string) $this->request->getPost('confirm_password');
 
-        if (strlen($newPass) < 8) {
-            return redirect()->to("/login/{$role}/reset-password")->with('error', 'Password must be at least 8 characters.');
+        if ($error = PasswordPolicy::check($newPass)) {
+            return redirect()->to("/login/{$role}/reset-password")->with('error', $error);
         }
         if ($newPass !== $confirm) {
             return redirect()->to("/login/{$role}/reset-password")->with('error', 'Passwords do not match.');
@@ -303,6 +376,9 @@ class AuthController extends BaseController
             'reset_otp_hash'    => null,
             'reset_otp_expires' => null,
         ]);
+
+        $resetUser = $this->userModel->find($userId);
+        SecurityLogModel::log('password_reset', $resetUser, 'via emailed code');
 
         session()->remove(['pwd_reset_user_id', 'pwd_reset_role', 'pwd_reset_verified']);
 
@@ -321,6 +397,11 @@ class AuthController extends BaseController
 
     public function notifyStaffForgot()
     {
+        // Each request emails the Owner, so cap how often one client can send it.
+        if (! $this->withinLimit('staff_forgot', $this->request->getIPAddress(), 3, 600)) {
+            return redirect()->to('/login/staff/forgot')->with('error', 'Too many requests. Please wait a few minutes and try again.');
+        }
+
         $staffName = trim((string) $this->request->getPost('staff_name'));
         $reason    = trim((string) $this->request->getPost('reason'));
 
@@ -388,14 +469,13 @@ class AuthController extends BaseController
     }
 
     /**
-     * Sends the OTP by email. Returns true if actually emailed; false if it fell
-     * back to surfacing the code on-screen (no email on file, or SMTP not yet
-     * configured in .env for this environment).
+     * Sends the OTP by email. Returns true if actually emailed. The code is
+     * never shown on-screen; on failure it is only logged (without the code).
      */
     private function deliverOtpEmail(array $user, string $otp): bool
     {
         if (empty($user['email'])) {
-            session()->setFlashdata('notice', "No email on file for this account. Your code is: {$otp}");
+            log_message('error', "OTP not sent: no email on file for user {$user['user_id']}");
             return false;
         }
 
@@ -415,9 +495,7 @@ class AuthController extends BaseController
         }
 
         if (! $sent) {
-            // SMTP isn't configured yet in this environment — surface the code so the
-            // flow stays fully testable. Remove this fallback once real SMTP is set in .env.
-            session()->setFlashdata('notice', "Email delivery isn't configured yet in this environment. Your code is: {$otp}");
+            log_message('error', "OTP email could not be delivered for user {$user['user_id']}");
         }
 
         return $sent;

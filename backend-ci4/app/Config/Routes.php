@@ -11,7 +11,7 @@ $routes->post('login/staff', 'AuthController::attemptStaffLogin');
 $routes->get('login/supplier', 'AuthController::showSupplierLogin');
 $routes->post('login/supplier', 'AuthController::attemptSupplierLogin');
 
-$routes->get('logout', 'AuthController::logout');
+$routes->post('logout', 'AuthController::logout');
 
 // Staff has no self-service reset — it notifies the Admin instead (see Figma "Can't access your account?").
 // Registered before the generic (:segment) routes below so it takes precedence for the "staff" segment.
@@ -128,4 +128,6 @@ $routes->group('supplier', ['namespace' => 'App\Controllers\Supplier', 'filter' 
 
     $routes->get('profile', 'ProfileController::index');
     $routes->post('profile/update', 'ProfileController::update');
+    $routes->post('profile/login-email', 'ProfileController::updateLoginEmail');
+    $routes->post('profile/password', 'ProfileController::changePassword');
 });

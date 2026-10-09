@@ -3,6 +3,8 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\PasswordPolicy;
+use App\Models\SecurityLogModel;
 use App\Models\DssParameterModel;
 use App\Models\NotificationPreferenceModel;
 use App\Models\UserModel;
@@ -98,6 +100,12 @@ class SettingsController extends BaseController
             return redirect()->to('/admin/settings')->with('error', 'Account not found.');
         }
 
+        if (! $this->validate([
+            'email' => "permit_empty|valid_email|is_unique[users.email,user_id,{$userId}]",
+        ])) {
+            return redirect()->to('/admin/settings?tab=profile')->with('error', implode(' ', $this->validator->getErrors()));
+        }
+
         $update = [
             'full_name' => $this->request->getPost('full_name'),
             'email'     => $this->request->getPost('email') ?: null,
@@ -106,13 +114,25 @@ class SettingsController extends BaseController
 
         $this->userModel->update($userId, $update);
         session()->set('full_name', $update['full_name']);
+        if (($user['email'] ?? null) !== $update['email']) {
+            SecurityLogModel::log('email_changed', null, 'owner profile email');
+        }
 
         return redirect()->to('/admin/settings?tab=profile')->with('success', 'Profile updated.');
     }
 
     public function changeOwnerPassword()
     {
-        return $this->changePasswordFor((int) session()->get('user_id'), 'owner');
+        $user = $this->userModel->find((int) session()->get('user_id'));
+
+        // The Owner must prove they know the current password, so a stolen
+        // or left-open session cannot be used to lock the Owner out.
+        if (! $user || ! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
+            SecurityLogModel::log('password_change_failed', null, 'wrong current password');
+            return redirect()->to('/admin/settings?tab=security')->with('error', 'Current password is incorrect.');
+        }
+
+        return $this->changePasswordFor((int) $user['user_id'], 'owner');
     }
 
     public function changeStaffPassword()
@@ -131,14 +151,15 @@ class SettingsController extends BaseController
         $newPass = $this->request->getPost('new_password');
         $confirm = $this->request->getPost('confirm_password');
 
-        if (empty($newPass) || strlen($newPass) < 8) {
-            return redirect()->to('/admin/settings?tab=security')->with('error', 'Password must be at least 8 characters.');
+        if ($error = PasswordPolicy::check($newPass)) {
+            return redirect()->to('/admin/settings?tab=security')->with('error', $error);
         }
         if ($newPass !== $confirm) {
             return redirect()->to('/admin/settings?tab=security')->with('error', 'Passwords do not match.');
         }
 
         $this->userModel->update($userId, ['password_hash' => password_hash($newPass, PASSWORD_DEFAULT)]);
+        SecurityLogModel::log('password_changed', null, "{$label} password changed by admin session");
 
         return redirect()->to('/admin/settings?tab=security')->with('success', ucfirst($label) . ' password updated.');
     }
@@ -148,11 +169,16 @@ class SettingsController extends BaseController
         $rules = [
             'full_name' => 'required',
             'username'  => 'required|is_unique[users.username]',
-            'password'  => 'required|min_length[8]',
+            'contact_email' => 'permit_empty|valid_email|is_unique[users.email]',
+            'password'  => 'required',
         ];
 
         if (! $this->validate($rules)) {
             return redirect()->to('/admin/settings?tab=accounts')->with('error', implode(' ', $this->validator->getErrors()));
+        }
+
+        if ($error = PasswordPolicy::check($this->request->getPost('password'))) {
+            return redirect()->to('/admin/settings?tab=accounts')->with('error', $error);
         }
 
         $confirm = $this->request->getPost('confirm_password');
@@ -168,6 +194,7 @@ class SettingsController extends BaseController
             'role'          => 'Staff',
             'is_active'     => 1,
         ]);
+        SecurityLogModel::log('account_created', null, 'staff: ' . $this->request->getPost('username'));
 
         return redirect()->to('/admin/settings?tab=accounts')->with('success', 'Staff account created.');
     }
@@ -181,6 +208,7 @@ class SettingsController extends BaseController
         }
 
         $this->userModel->update((int) $userId, ['is_active' => $user['is_active'] ? 0 : 1]);
+        SecurityLogModel::log($user['is_active'] ? 'account_deactivated' : 'account_reactivated', null, 'staff: ' . $user['username']);
 
         return redirect()->to('/admin/settings?tab=accounts')->with('success', $user['is_active'] ? 'Staff account deactivated.' : 'Staff account reactivated.');
     }

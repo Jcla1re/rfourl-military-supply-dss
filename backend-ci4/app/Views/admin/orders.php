@@ -98,7 +98,7 @@ $restockDates = $restockDates ?? [];
 .ord-actions form { flex: 1; }
 .ord-actions button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #fff; font-weight: 700; cursor: pointer; }
 
-.cal-card { background: #fff; border: 1px solid #e2e2e2; border-radius: 14px; padding: 18px; }
+.cal-card { background: #fff; border: 1px solid #e2e2e2; border-radius: 14px; padding: 18px; position: sticky; top: 16px; }
 .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .cal-nav a, .cal-nav span { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; color: #333; font-weight: 600; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
@@ -436,13 +436,20 @@ const pickerGroupList = document.getElementById('pickerGroupList');
 const pickerVariantBody = document.getElementById('pickerVariantBody');
 let activeGroup = null;
 
+// Item names/sizes are inserted via innerHTML, so escape them first.
+function escapeHtml(value) {
+    const d = document.createElement('div');
+    d.textContent = value == null ? '' : String(value);
+    return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function renderGroupList(filterText) {
     const term = (filterText || '').toLowerCase();
     const matches = productGroups.filter(g => g.item_name.toLowerCase().includes(term));
     pickerGroupList.innerHTML = matches.length
         ? matches.map(g => `
-            <button type="button" class="picker-group-btn" data-name="${g.item_name}">
-                <span>${g.item_name}</span>
+            <button type="button" class="picker-group-btn" data-name="${escapeHtml(g.item_name)}">
+                <span>${escapeHtml(g.item_name)}</span>
                 <span class="muted">${g.variants.length > 1 ? g.variants.length + ' sizes' : ''}</span>
             </button>
         `).join('')
@@ -461,7 +468,7 @@ function openSizeStep(group) {
 
     pickerVariantBody.innerHTML = group.variants.map((v, i) => `
         <tr>
-            <td style="padding:6px 8px;">${v.size || '—'}</td>
+            <td style="padding:6px 8px;">${escapeHtml(v.size || '—')}</td>
             <td style="padding:6px 8px;"><input type="number" min="0" value="0" data-idx="${i}" class="picker-qty" style="width:90px; padding:6px 8px; border:1px solid #ccc; border-radius:6px;"></td>
             <td style="padding:6px 8px;"><input type="number" min="0" step="0.01" value="${v.unit_cost}" data-idx="${i}" class="picker-cost" style="width:100px; padding:6px 8px; border:1px solid #ccc; border-radius:6px;"></td>
         </tr>
@@ -498,8 +505,8 @@ document.getElementById('pickerAddBtn').addEventListener('click', () => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td style="padding:8px;">
-                <input type="hidden" name="item_id[]" value="${v.item_id}">
-                ${label}
+                <input type="hidden" name="item_id[]" value="${escapeHtml(v.item_id)}">
+                ${escapeHtml(label)}
             </td>
             <td><input type="number" name="quantity[]" min="1" value="${qty}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;"></td>
             <td><input type="number" name="unit_price[]" min="0" step="0.01" value="${cost}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;"></td>

@@ -120,7 +120,7 @@ $action = $isEdit ? site_url('admin/suppliers/update/' . $supplier['supplier_id'
             <div class="sf-grid">
                 <div class="sf-field">
                     <label>Password</label>
-                    <input name="password" type="password" placeholder="Minimum 8 characters">
+                    <input name="password" type="password" placeholder="8+ characters, letter and number">
                 </div>
                 <div class="sf-field">
                     <label>Confirm Password</label>

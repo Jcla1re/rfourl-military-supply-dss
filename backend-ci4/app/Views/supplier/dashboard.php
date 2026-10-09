@@ -17,7 +17,15 @@
 .sd-stat .label { color: #555; font-size: 13px; }
 
 .sd-panel { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; }
-.sd-panel h6 { font-weight: 700; margin-bottom: 14px; }
+.sd-panel h6 { font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.sd-panel h6 i { color: var(--green-text); }
+.sd-panel .empty-state { padding: 34px 20px; }
+.sd-panel .empty-state i { display: block; font-size: 26px; color: #a9a79f; margin-bottom: 6px; }
+.sd-minis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.sd-mini { background: var(--content-bg); border-radius: 10px; padding: 12px 14px; }
+.sd-mini .v { font-size: 20px; font-weight: 800; line-height: 1.15; }
+.sd-mini .l { font-size: 12px; color: #777; margin-top: 2px; }
+@media (max-width: 575px) { .sd-minis { grid-template-columns: 1fr; } }
 
 .sd-notif-card { border: 1px solid #eee; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
 .sd-notif-card .icon-badge { width: 34px; height: 34px; border-radius: 8px; background: var(--red-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -72,12 +80,12 @@
         <div class="col-md-3 col-6"><div class="sd-stat"><span class="icon-box"><i class="bi bi-box-seam"></i></span><div><div class="value"><?= number_format($totalUnits ?? 0) ?></div><div class="label">Total Units Supplied</div></div></div></div>
     </div>
 
-    <div class="row g-3">
+    <div class="row g-3 mb-3">
         <div class="col-lg-6">
-            <div class="sd-panel mb-3">
+            <div class="sd-panel">
                 <h6><i class="bi bi-envelope"></i> Incoming Order Notification</h6>
                 <?php if (empty($pendingOrders)): ?>
-                    <div class="empty-state">No new orders right now.</div>
+                    <div class="empty-state"><i class="bi bi-inbox"></i>No new orders right now.</div>
                 <?php else: ?>
                     <?php foreach (array_slice($pendingOrders, 0, 3) as $o): ?>
                         <div class="sd-notif-card d-flex gap-3">
@@ -96,19 +104,13 @@
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
-
-            <div class="sd-panel">
-                <h6>My Performance</h6>
-                <div class="d-flex justify-content-between small"><span>On Time Delivery Rate</span><strong><?= esc($onTimeRate ?? 0) ?>%</strong></div>
-                <div class="sd-perf-track"><span style="width: <?= esc($onTimeRate ?? 0) ?>%"></span></div>
-            </div>
         </div>
 
         <div class="col-lg-6">
             <div class="sd-panel">
                 <h6><i class="bi bi-calendar3"></i> My Delivery Schedule</h6>
                 <?php if (empty($schedule)): ?>
-                    <div class="empty-state">Nothing scheduled.</div>
+                    <div class="empty-state"><i class="bi bi-calendar-check"></i>Nothing scheduled.</div>
                 <?php else: ?>
                     <?php foreach ($schedule as $s): ?>
                         <div class="sd-schedule-row">
@@ -121,6 +123,23 @@
                         </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <div class="sd-panel">
+        <h6><i class="bi bi-speedometer2"></i> My Performance</h6>
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-5">
+                <div class="d-flex justify-content-between small"><span>On Time Delivery Rate</span><strong><?= esc($onTimeRate ?? 0) ?>%</strong></div>
+                <div class="sd-perf-track"><span style="width: <?= esc($onTimeRate ?? 0) ?>%"></span></div>
+            </div>
+            <div class="col-lg-7">
+                <div class="sd-minis">
+                    <div class="sd-mini"><div class="v"><?= esc($deliveredTotal ?? 0) ?></div><div class="l">Orders delivered</div></div>
+                    <div class="sd-mini"><div class="v"><?= esc($onTimeCount ?? 0) ?></div><div class="l">Delivered on time</div></div>
+                    <div class="sd-mini"><div class="v"><?= esc($leadTimeDays ?? '—') ?> days</div><div class="l">Standard lead time</div></div>
+                </div>
             </div>
         </div>
     </div>

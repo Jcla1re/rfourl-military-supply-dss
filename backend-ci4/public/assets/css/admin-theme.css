@@ -270,6 +270,10 @@ body {
 }
 
 .sidebar .logout-link {
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
     color: #ef4444;
     font-size: 1.1rem;
     transition: color 0.15s ease;
@@ -668,6 +672,12 @@ body {
     border: 1px dashed #ccc;
     border-radius: 12px;
     background: #fff;
+}
+.empty-state > i.bi {
+    display: block;
+    font-size: 30px;
+    color: #a9a79f;
+    margin-bottom: 8px;
 }
 
 /* ===== Motion polish: subtle, consistent micro-interactions ===== */
