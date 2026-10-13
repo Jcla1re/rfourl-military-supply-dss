@@ -65,7 +65,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
 
 .top-product-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
 .top-product-track { height: 8px; background: #e4e2dc; border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
-.top-product-track > span { display: block; height: 100%; background: var(--accent-maroon); border-radius: 4px; }
+.top-product-track > span { display: block; height: 100%; background: linear-gradient(90deg, #a8e063 0%, #56ab2f 50%, #2e7d32 100%); border-radius: 4px; }
 </style>
 
 <div class="page-wrap">
@@ -196,7 +196,15 @@ new Chart(document.getElementById('seasonChart'), {
         labels: <?= json_encode($seasonLabels ?? []) ?>,
         datasets: [{
             data: <?= json_encode($seasonData ?? []) ?>,
-            backgroundColor: '#3d5230',
+            backgroundColor: (ctx) => {
+                const { ctx: c, chartArea } = ctx.chart;
+                if (!chartArea) return '#56ab2f';
+                const g = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                g.addColorStop(0, '#2e7d32');
+                g.addColorStop(0.5, '#56ab2f');
+                g.addColorStop(1, '#a8e063');
+                return g;
+            },
             borderRadius: 4
         }]
     },
