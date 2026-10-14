@@ -48,7 +48,7 @@ $restockDates = $restockDates ?? [];
     background: #4B6B42;
     border: 1px solid rgba(255, 255, 255, 0.45);
     border-bottom: none;
-    border-radius: 6px 6px 0 0;
+    border-radius: var(--radius-control) var(--radius-control) 0 0;
     transition: background-color 0.15s ease;
 }
 .ord-tabs a:hover:not(.active) {
@@ -66,12 +66,12 @@ $restockDates = $restockDates ?? [];
 
 .ord-col-label { text-transform: uppercase; letter-spacing: .06em; color: #666; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
 
-.ord-card { background: #fff; border: 1px solid #e2e2e2; border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+.ord-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); padding: 20px; margin-bottom: 16px; }
 .ord-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .ord-card-top .meta { color: #555; font-size: 13px; }
 .ord-card-top .title { font-weight: 800; font-size: 16px; margin: 2px 0; }
 .ord-card-top .sub { color: #777; font-size: 13px; }
-.priority-pill { background: #e9e7e1; border-radius: 999px; padding: 5px 14px; font-size: 12px; font-weight: 700; color: #4a4a4a; }
+.priority-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 700; color: #4a4a4a; }
 
 .ord-stepper { display: flex; align-items: center; margin: 22px 6px 6px; }
 .ord-step { flex: 1; text-align: center; position: relative; }
@@ -90,20 +90,20 @@ $restockDates = $restockDates ?? [];
 .ord-step.done .ord-line, .ord-step.current .ord-line { background: var(--green-text); }
 
 .ord-info-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
-.ord-info-box { background: #eef0ea; border-radius: 8px; padding: 10px 14px; }
+.ord-info-box { background: #eef0ea; border-radius: var(--radius-control); padding: 10px 14px; }
 .ord-info-box span { display: block; font-size: 12px; color: #3d5230; }
 .ord-info-box strong { font-size: 14px; }
 
 .ord-actions { display: flex; gap: 10px; }
 .ord-actions form { flex: 1; }
-.ord-actions button { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #fff; font-weight: 700; cursor: pointer; }
+.ord-actions button { width: 100%; padding: 12px; border-radius: var(--radius-control); border: 1px solid #333; background: #fff; font-weight: 700; cursor: pointer; }
 
-.cal-card { background: #fff; border: 1px solid #e2e2e2; border-radius: 14px; padding: 18px; position: sticky; top: 16px; }
+.cal-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); padding: 18px; position: sticky; top: 16px; }
 .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-.cal-nav a, .cal-nav span { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; color: #333; font-weight: 600; }
+.cal-nav a, .cal-nav span { padding: 8px 12px; border: 1px solid #ddd; border-radius: var(--radius-icon); text-decoration: none; color: #333; font-weight: 600; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
 .cal-grid .dow { font-size: 12px; color: #888; padding-bottom: 6px; }
-.cal-day { padding: 8px 0; border-radius: 8px; font-size: 14px; }
+.cal-day { padding: 8px 0; border-radius: var(--radius-control); font-size: 14px; }
 .cal-day.today { background: var(--sidebar-bg); color: #fff; font-weight: 700; }
 .cal-day.restock { background: #dcecdf; font-weight: 700; }
 .cal-legend { display: flex; gap: 18px; margin-top: 14px; font-size: 13px; }
@@ -113,11 +113,11 @@ $restockDates = $restockDates ?? [];
 .ord-filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
 .ord-search {
     display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #ddd;
-    border-radius: 10px; padding: 10px 14px; max-width: 360px; flex: 1; min-width: 220px;
+    border-radius: var(--radius-control); padding: 10px 14px; max-width: 360px; flex: 1; min-width: 220px;
 }
 .ord-search i { color: #888; font-size: 16px; flex-shrink: 0; }
 .ord-search input { flex: 1; min-width: 0; border: none; outline: none; font-size: 14px; }
-.ord-filter-bar input[type="date"] { border: 1px solid #ddd; border-radius: 10px; padding: 9px 12px; font-size: 14px; }
+.ord-filter-bar input[type="date"] { border: 1px solid #ddd; border-radius: var(--radius-control); padding: 9px 12px; font-size: 14px; }
 .ord-filter-bar .sep { color: #888; font-size: 13px; }
 
 </style>
@@ -365,7 +365,7 @@ $restockDates = $restockDates ?? [];
                     </thead>
                     <tbody id="lineItemsBody"></tbody>
                 </table>
-                <button type="button" style="border: 1px dashed #999; background: transparent; border-radius: 8px; padding: 8px 14px; margin-top: 8px; cursor:pointer;" id="addLineBtn">+ Add item</button>
+                <button type="button" style="border: 1px dashed #999; background: transparent; border-radius: var(--radius-control); padding: 8px 14px; margin-top: 8px; cursor:pointer;" id="addLineBtn">+ Add item</button>
             </div>
 
             <div class="inv-modal-actions">
@@ -383,7 +383,7 @@ $restockDates = $restockDates ?? [];
             <button type="button" class="btn-close" id="closeItemPicker"></button>
         </div>
         <div id="pickerStep1">
-            <input type="search" id="pickerSearch" placeholder="Search items..." style="width:100%; padding:10px 14px; border:1px solid #ccc; border-radius:8px; margin-bottom:12px;">
+            <input type="search" id="pickerSearch" placeholder="Search items..." style="width:100%; padding:10px 14px; border:1px solid #ccc; border-radius: var(--radius-control); margin-bottom:12px;">
             <div id="pickerGroupList" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
         </div>
         <div id="pickerStep2" style="display:none;">
@@ -406,7 +406,7 @@ $restockDates = $restockDates ?? [];
 <style>
 .picker-group-btn {
     display: flex; justify-content: space-between; align-items: center; width: 100%;
-    padding: 12px 14px; border: 1px solid #e2e2e2; border-radius: 8px; background: #fff;
+    padding: 12px 14px; border: 1px solid #e2e2e2; border-radius: var(--radius-control); background: #fff;
     cursor: pointer; text-align: left; font-size: 14px;
 }
 .picker-group-btn:hover { border-color: #3d5230; background: #f7f9f5; }
@@ -469,8 +469,8 @@ function openSizeStep(group) {
     pickerVariantBody.innerHTML = group.variants.map((v, i) => `
         <tr>
             <td style="padding:6px 8px;">${escapeHtml(v.size || '—')}</td>
-            <td style="padding:6px 8px;"><input type="number" min="0" value="0" data-idx="${i}" class="picker-qty" style="width:90px; padding:6px 8px; border:1px solid #ccc; border-radius:6px;"></td>
-            <td style="padding:6px 8px;"><input type="number" min="0" step="0.01" value="${v.unit_cost}" data-idx="${i}" class="picker-cost" style="width:100px; padding:6px 8px; border:1px solid #ccc; border-radius:6px;"></td>
+            <td style="padding:6px 8px;"><input type="number" min="0" value="0" data-idx="${i}" class="picker-qty" style="width:90px; padding:6px 8px; border:1px solid #ccc; border-radius: var(--radius-control);"></td>
+            <td style="padding:6px 8px;"><input type="number" min="0" step="0.01" value="${v.unit_cost}" data-idx="${i}" class="picker-cost" style="width:100px; padding:6px 8px; border:1px solid #ccc; border-radius: var(--radius-control);"></td>
         </tr>
     `).join('');
 
@@ -508,8 +508,8 @@ document.getElementById('pickerAddBtn').addEventListener('click', () => {
                 <input type="hidden" name="item_id[]" value="${escapeHtml(v.item_id)}">
                 ${escapeHtml(label)}
             </td>
-            <td><input type="number" name="quantity[]" min="1" value="${qty}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;"></td>
-            <td><input type="number" name="unit_price[]" min="0" step="0.01" value="${cost}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;"></td>
+            <td><input type="number" name="quantity[]" min="1" value="${qty}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius: var(--radius-control);"></td>
+            <td><input type="number" name="unit_price[]" min="0" step="0.01" value="${cost}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius: var(--radius-control);"></td>
             <td><button type="button" class="btn-close remove-line"></button></td>
         `;
         lineItemsBody.appendChild(row);

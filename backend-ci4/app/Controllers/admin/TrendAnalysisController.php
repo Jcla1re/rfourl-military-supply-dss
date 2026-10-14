@@ -59,6 +59,7 @@ class TrendAnalysisController extends BaseController
             if (isset($computations[$row['item_id']])) {
                 $c = $computations[$row['item_id']];
                 $variability[] = [
+                    'item_id'          => $row['item_id'],
                     'item_name'        => $row['item_name'] ?? $row['item_id'],
                     'avg_daily_demand' => $c['avg_daily_demand'],
                     'safety_stock'     => $c['safety_stock'],
@@ -84,6 +85,7 @@ class TrendAnalysisController extends BaseController
 
             $abcClassTotals[$class] += $pct;
             $abcItems[] = [
+                'item_id'   => $row['item_id'],
                 'item_name' => $row['item_name'] ?? $row['item_id'],
                 'pct'       => $pct,
                 'class'     => $class,
@@ -106,6 +108,41 @@ class TrendAnalysisController extends BaseController
             $abcByClass[$cls] = array_slice($list, 0, $maxPerClass);
         }
 
+        // Demand Variability: show each item's ABC class, highest daily demand first.
+        $classByItem = array_column($abcItems, 'class', 'item_id');
+        foreach ($variability as &$v) {
+            $v['class'] = $classByItem[$v['item_id']] ?? null;
+        }
+        unset($v);
+        usort($variability, fn ($a, $b) => (float) $b['avg_daily_demand'] <=> (float) $a['avg_daily_demand']);
+
+        // ---- Trend cards + chart presentation (derived from the data above) ----
+        $thisYear = (int) date('Y');
+        // The current year's line stops at the current month: future months
+        // are left empty (null), not plotted as 0.
+        $monthsSoFar = $year < $thisYear ? 12 : ($year === $thisYear ? (int) date('n') : 0);
+        $annualSoFar = [];
+        foreach ($monthTotals as $m => $total) {
+            $annualSoFar[] = $m <= $monthsSoFar ? $total : null;
+        }
+
+        // "Items sold in <year>": Jan 1 to today (or the whole year for past
+        // years), compared with the same span a year earlier.
+        $periodEnd = $year === $thisYear ? date('Y-m-d') : "{$year}-12-31";
+        $prevEnd   = (new \DateTime($periodEnd))->modify('-1 year')->format('Y-m-d');
+        $unitsYtd  = $this->unitsBetween("{$year}-01-01", $periodEnd, $itemId);
+        $unitsPrev = $this->unitsBetween(($year - 1) . '-01-01', $prevEnd, $itemId);
+
+        $bestMonth = null;
+        for ($m = 1; $m <= $monthsSoFar; $m++) {
+            if ($monthTotals[$m] > 0 && ($bestMonth === null || $monthTotals[$m] > $bestMonth['units'])) {
+                $bestMonth = ['name' => date('F', mktime(0, 0, 0, $m, 1)), 'units' => $monthTotals[$m]];
+            }
+        }
+        $topItem = $this->salesItemModel->topSellers(1, $year)[0] ?? null;
+
+        $weekStart = (new \DateTime($weekAsOf))->modify('-6 days');
+
         $topSellers = $this->salesItemModel->topSellers(5);
         $maxUnits   = $topSellers ? max(array_column($topSellers, 'units_sold')) : 1;
 
@@ -117,13 +154,21 @@ class TrendAnalysisController extends BaseController
             'products'       => $products,
             'selectedItem'   => $itemId,
             'annualLabels'   => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-            'annualData'     => array_values($monthTotals),
+            'annualData'     => $annualSoFar,
+            'monthsSoFar'    => $monthsSoFar,
             'annualDataPrev' => array_values($monthTotalsPrev),
             'annualPeak'     => max($monthTotals),
             'weekLabels'     => $thisWeek['labels'],
             'weekData'       => $thisWeek['data'],
             'weekDataPrev'   => $lastWeek['data'],
             'weekAsOf'       => $weekAsOf,
+            'weekRangeLabel' => self::dateRangeLabel($weekStart, new \DateTime($weekAsOf)),
+            'unitsYtd'       => $unitsYtd,
+            'unitsPrev'      => $unitsPrev,
+            'changePct'      => $unitsPrev > 0 ? (($unitsYtd - $unitsPrev) / $unitsPrev) * 100 : null,
+            'periodLabel'    => self::dateRangeLabel(new \DateTime("{$year}-01-01"), new \DateTime($periodEnd)),
+            'bestMonth'      => $bestMonth,
+            'topItem'        => $topItem,
             'topSellers'     => $topSellers,
             'maxUnits'       => $maxUnits ?: 1,
             'variability'    => $variability,
@@ -131,11 +176,36 @@ class TrendAnalysisController extends BaseController
             'abcTopItems'    => $abcTopItems,
             'abcByClass'     => $abcByClass,
             'abcClassCounts' => $abcClassCounts,
-            'totalStock'     => array_sum(array_column($products, 'current_stock')),
-            'salesToday'     => $this->salesTransactionModel->totalForToday(),
         ];
 
         return view('admin/trend_analysis', $data);
+    }
+
+    /**
+     * Total units sold between two dates (inclusive), optionally for one item.
+     */
+    private function unitsBetween(string $start, string $end, ?string $itemId): int
+    {
+        return (int) array_sum(array_column($this->salesItemModel->dailyQuantities($start, $end, $itemId), 'qty'));
+    }
+
+    /**
+     * Readable date range in the app's format: "Sep 24 – 30, 2026",
+     * "Sep 28 – Oct 4, 2026" or "Dec 29, 2025 – Jan 4, 2026".
+     */
+    private static function dateRangeLabel(\DateTime $from, \DateTime $to): string
+    {
+        if ($from->format('Y') !== $to->format('Y')) {
+            return $from->format('M j, Y') . ' – ' . $to->format('M j, Y');
+        }
+        if ($from->format('m') !== $to->format('m')) {
+            return $from->format('M j') . ' – ' . $to->format('M j, Y');
+        }
+        if ($from->format('j') === $to->format('j')) {
+            return $to->format('M j, Y');
+        }
+
+        return $from->format('M j') . ' – ' . $to->format('j, Y');
     }
 
     /**

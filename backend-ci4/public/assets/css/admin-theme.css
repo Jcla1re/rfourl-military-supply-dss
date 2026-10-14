@@ -18,7 +18,121 @@
     --amber-bg: #f8edc9;
     --red-text: #a52e2e;
     --red-bg: #f7dddd;
+
+    /* Primary buttons (Field Green): Order, + Add Item, Save, Checkout,
+       Submit, Notify... Every filled primary button uses these. */
+    --btn-bg: #71AA60;
+    --btn-bg-hover: #5F9850;
+    --btn-bg-active: #4F8542;
+    --btn-text: #FFFFFF;
+    --btn-font-weight: 500; /* Medium */
+    --btn-focus-ring: #2C3A1E;
+    --btn-disabled-bg: #E8E5DC;
+    --btn-disabled-text: #8A8D7E;
+
+    /* Corner-radius scale. Use these instead of hard-coded values so
+       every page stays consistent (auth-theme.css repeats them for the
+       login pages, which don't load this file).
+       control: buttons, inputs, search boxes, dropdowns, pagination
+       icon:    small icon-only buttons (⋯ menu, bell) and icon tiles
+       card:    cards, the table container, modals, dialogs
+       pill:    status badges and chips */
+    --radius-control: 10px;
+    --radius-icon: 8px;
+    --radius-card: 16px;
+    --radius-pill: 999px;
 }
+
+/* Bootstrap components follow the same radius scale. */
+.btn,
+.form-control,
+.form-select,
+.input-group-text {
+    border-radius: var(--radius-control);
+}
+.modal-content,
+.card,
+.toast {
+    border-radius: var(--radius-card);
+}
+.badge {
+    border-radius: var(--radius-pill);
+}
+
+/* ===== Primary buttons =====
+   Bootstrap's .btn-success plus the custom filled buttons on individual
+   pages. Pages must not set their own colors on these. */
+.btn-success {
+    --bs-btn-color: var(--btn-text);
+    --bs-btn-bg: var(--btn-bg);
+    --bs-btn-border-color: var(--btn-bg);
+    --bs-btn-hover-color: var(--btn-text);
+    --bs-btn-hover-bg: var(--btn-bg-hover);
+    --bs-btn-hover-border-color: var(--btn-bg-hover);
+    --bs-btn-active-color: var(--btn-text);
+    --bs-btn-active-bg: var(--btn-bg-active);
+    --bs-btn-active-border-color: var(--btn-bg-active);
+    --bs-btn-disabled-color: var(--btn-disabled-text);
+    --bs-btn-disabled-bg: var(--btn-disabled-bg);
+    --bs-btn-disabled-border-color: var(--btn-disabled-bg);
+    --bs-btn-disabled-opacity: 1;
+    --bs-btn-focus-box-shadow: none;
+    --bs-btn-font-weight: var(--btn-font-weight);
+}
+.btn-success.btn-sm { --bs-btn-font-size: 15px; }
+
+.inv-action-btn,
+.notify-btn,
+.qa-btn.primary,
+.lt-submit {
+    background-color: var(--btn-bg);
+    color: var(--btn-text);
+    font-weight: var(--btn-font-weight);
+    border-radius: var(--radius-control);
+    /* Hover lift + transition come from the "Motion polish" .btn rules
+       below, so these behave exactly like + Add Item. */
+}
+.inv-action-btn:hover,
+.notify-btn:hover,
+.qa-btn.primary:hover,
+.lt-submit:hover,
+.inv-action-btn:focus-visible,
+.notify-btn:focus-visible,
+.qa-btn.primary:focus-visible,
+.lt-submit:focus-visible {
+    background-color: var(--btn-bg-hover);
+    color: var(--btn-text);
+}
+.inv-action-btn:active,
+.notify-btn:active,
+.qa-btn.primary:active,
+.lt-submit:active {
+    background-color: var(--btn-bg-active);
+}
+
+/* Shared states for every primary button */
+.btn-success:focus-visible,
+.inv-action-btn:focus-visible,
+.notify-btn:focus-visible,
+.qa-btn.primary:focus-visible,
+.lt-submit:focus-visible {
+    outline: 3px solid var(--btn-focus-ring);
+    outline-offset: 2px;
+}
+.btn-success:disabled,
+.btn-success.disabled,
+.inv-action-btn:disabled,
+.notify-btn:disabled,
+.lt-submit:disabled {
+    background-color: var(--btn-disabled-bg);
+    border-color: var(--btn-disabled-bg);
+    color: var(--btn-disabled-text);
+    cursor: not-allowed;
+    opacity: 1;
+}
+/* Bootstrap turns off pointer events on disabled buttons, which would hide
+   the not-allowed cursor; the button stays disabled. */
+.btn-success:disabled { pointer-events: auto; }
 
 body {
     background-color: var(--content-bg);
@@ -248,7 +362,7 @@ body {
 .sidebar .nav-link:hover {
     background-color: var(--sidebar-hover-bg);
     color: var(--sidebar-hover-text);
-    border-radius: 8px;
+    border-radius: var(--radius-control);
     margin: 0 0.5rem;
 }
 
@@ -259,7 +373,7 @@ body {
 .sidebar .nav-link.active {
     background-color: var(--sidebar-active-bg);
     color: var(--sidebar-active-text);
-    border-radius: 8px;
+    border-radius: var(--radius-control);
     margin: 0 0.5rem;
     font-weight: 600;
 }
@@ -308,7 +422,7 @@ body {
 .alert-banner {
     background-color: var(--alert-bg);
     border-left: 4px solid var(--alert-border);
-    border-radius: 8px;
+    border-radius: var(--radius-card);
     padding: 1rem 1.25rem;
     display: flex;
     align-items: center;
@@ -319,21 +433,7 @@ body {
     background-color: var(--accent-maroon);
     color: #fff;
     border: none;
-}
-
-.btn-success {
-    background-color: #71AA60;
-    border-color: #71AA60;
-    color: #fff;
-}
-
-.btn-success:hover,
-.btn-success:focus,
-.btn-success:active,
-.btn-check:checked + .btn-success {
-    background-color: #5f9650;
-    border-color: #5f9650;
-    color: #fff;
+    font-weight: var(--btn-font-weight);
 }
 
 .btn-maroon:hover {
@@ -343,7 +443,7 @@ body {
 
 .stat-card, .panel-card {
     background-color: var(--card-bg);
-    border-radius: 10px;
+    border-radius: var(--radius-card);
     padding: 1.25rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
@@ -361,7 +461,7 @@ body {
     color: #fff;
     background: rgba(255,255,255,0.12);
     border: none;
-    border-radius: 10px;
+    border-radius: var(--radius-icon);
     width: 40px;
     height: 40px;
     display: inline-flex;
@@ -390,7 +490,7 @@ body {
     font-weight: 700;
     line-height: 1;
     padding: 3px 5px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     min-width: 16px;
     text-align: center;
 }
@@ -412,7 +512,8 @@ body {
 
 .alert-success,
 .alert-danger,
-.toast-success {
+.toast-success,
+.app-toast {
     position: fixed;
     top: 48px;
     left: 50%;
@@ -420,7 +521,7 @@ body {
     background: #fff;
     border: none;
     box-shadow: 0 8px 20px rgba(0,0,0,.16);
-    border-radius: 10px;
+    border-radius: var(--radius-card);
     padding: 8px 14px;
     margin: 0;
     min-width: 280px;
@@ -433,15 +534,56 @@ body {
 
 .alert-success.toast-hide,
 .alert-danger.toast-hide,
-.toast-success.toast-hide {
+.toast-success.toast-hide,
+.app-toast.toast-hide {
     animation: toastOut 0.4s cubic-bezier(.21, 1.02, .73, 1) forwards;
 }
 
+/* Countdown bar along the bottom edge (added by assets/js/toast-timer.js);
+   pauses while the toast is hovered. */
+.alert-success,
+.alert-danger,
+.toast-success,
+.app-toast { overflow: hidden; }
+.toast-timer {
+    position: absolute; left: 0; bottom: 0; height: 3px; width: 100%;
+    background: #71AA60; transform-origin: left;
+    animation: toastTimer var(--toast-duration, 4s) linear forwards;
+}
+.alert-danger .toast-timer { background: #B42318; }
+.is-paused > .toast-timer { animation-play-state: paused; }
+@keyframes toastTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .toast-timer { display: none; } }
+
 .toast-icon { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
 .toast-icon.success { background: var(--green-bg); color: var(--green-text); }
-.toast-icon.error { background: var(--red-bg); color: var(--accent-maroon); }
+.toast-icon.error { background: #FDECEA; color: #B42318; }
 .toast-title { font-weight: 800; font-size: 13.5px; color: var(--text-dark); }
 .toast-msg { font-size: 12px; color: #555; margin-top: 1px; }
+
+/* Shared toast component (partials/_toast.php + assets/js/toast-timer.js):
+   [icon] Title / "name" message  [Undo] [×] — success and error variants. */
+.app-toast { font-family: 'Poppins', sans-serif; padding-right: 8px; max-width: min(520px, calc(100vw - 32px)); }
+.app-toast-body { min-width: 0; flex: 1; }
+.app-toast .toast-title { font-weight: 600; font-size: 14px; color: #1F2617; }
+.app-toast .toast-msg { font-size: 13px; color: #5C6152; overflow-wrap: anywhere; }
+.app-toast .toast-msg strong { font-weight: 600; color: #1F2617; }
+.app-toast.is-error .toast-title { color: #912018; }
+.app-toast-undo-form { margin: 0; }
+.app-toast-undo {
+    border: 0; background: none; padding: 4px 8px; border-radius: var(--radius-icon);
+    color: #3B5434; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.app-toast-undo:hover { background: #F5F3EE; text-decoration: underline; }
+.app-toast-close {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 28px; height: 28px; border: 0; border-radius: var(--radius-icon);
+    background: none; color: #5C6152; font-size: 12px; cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+.app-toast-close:hover { background: #F5F3EE; color: #1F2617; }
+.app-toast-undo:focus-visible,
+.app-toast-close:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; }
 
 /* ===== Shared admin page shell ===== */
 .page-wrap {
@@ -452,7 +594,7 @@ body {
 
 .page-panel {
     background: var(--card-bg);
-    border-radius: 14px;
+    border-radius: var(--radius-card);
     padding: 22px;
     box-shadow: 0 2px 8px rgba(0,0,0,.06);
 }
@@ -463,7 +605,7 @@ body {
     align-items: center;
     gap: 8px;
     padding: 12px 18px;
-    border-radius: 10px;
+    border-radius: var(--radius-control); /* same corners as the search bar */
     border: 1px solid;
     font-weight: 700;
     background: #fff;
@@ -478,7 +620,7 @@ body {
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     font-size: 12px;
     font-weight: 700;
 }
@@ -543,15 +685,16 @@ body {
 }
 .underline-tabs a {
     padding: 10px 14px;
-    color: #666;
+    color: #444;
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 400;
     border-bottom: 3px solid transparent;
     margin-bottom: -1px;
     transition: color 0.15s ease, border-color 0.15s ease;
 }
 .underline-tabs a.active {
     color: #2f5138;
+    font-weight: 600;
     border-bottom-color: #5d965c;
 }
 
@@ -562,7 +705,7 @@ body {
     background: #fff;
     color: #333;
     padding: 10px 20px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     font-weight: 700;
     cursor: pointer;
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
@@ -581,7 +724,7 @@ body {
 .icon-stat-card {
     background: #fff;
     border: 1px solid #d8d5cd;
-    border-radius: 12px;
+    border-radius: var(--radius-card);
     padding: 18px;
     display: flex;
     align-items: center;
@@ -590,7 +733,7 @@ body {
 .icon-stat-card .icon-box {
     width: 52px;
     height: 52px;
-    border-radius: 10px;
+    border-radius: var(--radius-icon);
     background: #ececec;
     display: flex;
     align-items: center;
@@ -604,7 +747,7 @@ body {
 .danger-zone {
     background: var(--alert-bg);
     border: 1px solid #f0bcbc;
-    border-radius: 10px;
+    border-radius: var(--radius-control);
     padding: 16px 18px;
     display: flex;
     align-items: center;
@@ -615,17 +758,187 @@ body {
 .danger-zone strong { display: block; }
 .danger-zone small { color: #6a5a5a; }
 
+/* ===== Inventory search: validation message + empty results ===== */
+.inv-search-field {
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.inv-search.is-invalid {
+    border-color: #B42318;
+}
+.search-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-size: 13px;
+    color: #B42318;
+}
+.search-error[hidden] { display: none; }
+.inv-empty-search {
+    padding: 36px 16px;
+    text-align: center;
+}
+.inv-empty-search .title {
+    font-weight: 600;
+    color: var(--text-dark);
+    word-break: break-word;
+}
+.inv-empty-search .hint {
+    margin: 4px 0 14px;
+    color: #666;
+    font-size: 14px;
+}
+/* Secondary button (white) used by "Clear search" */
+.btn-clear-search {
+    padding: 8px 16px;
+    border: 1px solid #E8E5DC;
+    border-radius: var(--radius-control);
+    background: #FFFFFF;
+    color: #2C3A1E;
+    font-weight: var(--btn-font-weight);
+    cursor: pointer;
+    transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn-clear-search:hover {
+    background: #F5F3EE;
+    border-color: #71AA60;
+    transform: translateY(-1px);
+}
+.btn-clear-search:active { transform: translateY(0); }
+.btn-clear-search:focus-visible {
+    outline: 3px solid #71AA60;
+    outline-offset: 2px;
+}
+
+/* ===== Equal-height cards in a row (Dashboard, Trend Analysis) =====
+   Bootstrap rows already stretch their columns (align-items: stretch);
+   the cards fill the column so cards in the same row end on the same line.
+   Cards are flex columns, so a footer note can sit at the bottom with
+   margin-top: auto. Row spacing comes from the row gutters, not margins. */
+.row:has(> [class*="col"] > .chart-card),
+.row:has(> [class*="col"] > .ta-card) {
+    align-items: stretch;
+}
+.row > [class*="col"] > .chart-card,
+.row > [class*="col"] > .ta-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+}
+.row > [class*="col"] > .dash-stat { height: 100%; }
+.card-foot-note { margin-top: auto; }
+/* A chart inside a stretched card: the wrapper grows to fill the card and
+   the chart fills the wrapper (Chart.js maintainAspectRatio: false). */
+.chart-fill { position: relative; flex: 1 1 auto; min-height: 240px; }
+
 /* ===== Pagination ===== */
 .admin-pagination { display: flex; justify-content: center; gap: 6px; margin-top: 18px; }
 .admin-pagination a {
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: var(--radius-control);
     border: 1px solid #ddd;
     text-decoration: none;
     color: #333;
     transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 .admin-pagination a.active { background: var(--sidebar-bg); color: #fff; border-color: var(--sidebar-bg); }
+
+/* Shortened pager in table footers (partials/_pager.php) */
+.pager-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 20px;
+}
+.pager-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+}
+.pager-info strong { color: var(--text-dark, #222); font-weight: 600; }
+.pager-per-page {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 13px;
+    color: #666;
+}
+.per-page-select {
+    min-height: 36px;
+    padding: 4px 30px 4px 12px;
+    border: 1px solid #d8d5cd;
+    border-radius: var(--radius-control);
+    background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23666666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 11px center;
+    font: inherit;
+    font-size: 13px;
+    color: #333;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+.pager-footer .admin-pagination {
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 0;
+}
+.pager-footer .admin-pagination a,
+.pager-footer .admin-pagination span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: var(--radius-control);
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.pager-footer .admin-pagination a {
+    background: #FFFFFF;
+    border: 1px solid #E8E5DC;
+    color: #2C3A1E;
+}
+.pager-footer .admin-pagination a:not(.active):hover {
+    background: #F5F3EE;
+    border-color: #71AA60;
+}
+.pager-footer .admin-pagination a:focus-visible {
+    outline: 3px solid #71AA60;
+    outline-offset: 2px;
+}
+/* Active page: one class more specific than the white base rule above, so
+   the base background can never paint over it. No hover change. */
+.pager-footer .admin-pagination a.active,
+.pager-footer .admin-pagination a.active:hover {
+    background: #4A6741;
+    border-color: #4A6741;
+    color: #FFFFFF;
+    font-weight: 600;
+    cursor: default;
+}
+.pager-footer .admin-pagination span.disabled {
+    border: 1px solid #E8E5DC;
+    background: #F5F3EE;
+    color: #8A8D7E;
+    cursor: not-allowed;
+}
+.pager-footer .admin-pagination .pager-gap {
+    min-width: 24px;
+    padding: 0 4px;
+    border: 0;
+    color: #888;
+}
 
 /* ===== Shared modal shell (Add/Edit forms) ===== */
 .inv-modal {
@@ -635,7 +948,7 @@ body {
 .inv-modal.show { display: flex; animation: modalOverlayIn 0.18s ease; }
 .inv-modal-card {
     width: min(680px, 92vw); max-height: 90vh; overflow-y: auto;
-    padding: 26px 28px; border-radius: 16px; background: #fff;
+    padding: 26px 28px; border-radius: var(--radius-card); background: #fff;
 }
 .inv-modal.show .inv-modal-card { animation: modalCardIn 0.22s cubic-bezier(.21, 1.02, .73, 1); }
 
@@ -652,7 +965,7 @@ body {
 .inv-form-field { display: flex; flex-direction: column; gap: 6px; }
 .inv-form-field label { font-weight: 600; }
 .inv-form-field input, .inv-form-field select {
-    padding: 12px; border: 1px solid #ccc; border-radius: 8px;
+    padding: 12px; border: 1px solid #ccc; border-radius: var(--radius-control);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .inv-form-field input:focus, .inv-form-field select:focus {
@@ -670,7 +983,7 @@ body {
     text-align: center;
     color: #666;
     border: 1px dashed #ccc;
-    border-radius: 12px;
+    border-radius: var(--radius-card);
     background: #fff;
 }
 .empty-state > i.bi {
@@ -680,10 +993,24 @@ body {
     margin-bottom: 8px;
 }
 
-/* ===== Motion polish: subtle, consistent micro-interactions ===== */
-.btn {
+/* ===== Motion polish: subtle, consistent micro-interactions =====
+   One button effect everywhere: Bootstrap buttons (+ Add Item, Save…)
+   and the custom primary buttons (Order, Notify Admin, Submit…). */
+.btn,
+.inv-action-btn,
+.notify-btn,
+.qa-btn.primary,
+.lt-submit {
     transition: transform 0.12s ease, box-shadow 0.15s ease,
         background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
-.btn:hover { transform: translateY(-1px); }
-.btn:active { transform: translateY(0); }
+.btn:hover,
+.inv-action-btn:hover,
+.notify-btn:hover,
+.qa-btn.primary:hover,
+.lt-submit:hover { transform: translateY(-1px); }
+.btn:active,
+.inv-action-btn:active,
+.notify-btn:active,
+.qa-btn.primary:active,
+.lt-submit:active { transform: translateY(0); }

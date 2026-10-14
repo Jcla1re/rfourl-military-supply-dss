@@ -1,4 +1,24 @@
 /* public/assets/css/auth-theme.css */
+
+/* Corner-radius scale — same values as admin-theme.css (the login pages
+   don't load that file). Keep the two in sync. */
+:root {
+    --radius-control: 10px;
+    --radius-icon: 8px;
+    --radius-card: 16px;
+    --radius-pill: 999px;
+
+    /* Primary button colors: same values as admin-theme.css. */
+    --btn-bg: #71AA60;
+    --btn-bg-hover: #5F9850;
+    --btn-bg-active: #4F8542;
+    --btn-text: #FFFFFF;
+    --btn-font-weight: 500; /* Medium */
+    --btn-focus-ring: #2C3A1E;
+    --btn-disabled-bg: #E8E5DC;
+    --btn-disabled-text: #8A8D7E;
+}
+
 body.auth-body {
     background: #f0ede6;
     min-height: 100vh;
@@ -10,14 +30,14 @@ body.auth-body {
 .auth-frame {
     background: #fff;
     border: 1px solid #333;
-    border-radius: 16px;
+    border-radius: var(--radius-card);
     padding: 2rem;
     max-width: 900px;
     width: 100%;
 }
 .auth-card {
     background: #efe9df;
-    border-radius: 16px;
+    border-radius: var(--radius-card);
     padding: 2.5rem;
     max-width: 420px;
     margin: 0 auto;
@@ -37,35 +57,41 @@ body.auth-body {
 .auth-card label { font-size: 0.85rem; margin-bottom: 0.25rem; display: block; }
 .auth-card input {
     width: 100%; padding: 0.6rem 0.75rem; margin-bottom: 1rem;
-    border: 1px solid #ccc; border-radius: 6px; background: #fff;
+    border: 1px solid #ccc; border-radius: var(--radius-control); background: #fff;
 }
 .auth-card .forgot-link { text-align: right; font-size: 0.8rem; margin-top: -0.5rem; margin-bottom: 1rem; }
 .btn-login {
-    width: 100%; background: #4b6a3f; color: #fff; border: none;
-    padding: 0.8rem; border-radius: 12px; font-weight: 600;
+    width: 100%; background: var(--btn-bg); color: var(--btn-text); border: none;
+    padding: 0.8rem; border-radius: var(--radius-control); font-weight: var(--btn-font-weight);
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    cursor: pointer; transition: background-color 0.15s ease;
+    cursor: pointer;
+    /* Same effect as the app's primary buttons (admin-theme.css "Motion polish"). */
+    transition: transform 0.12s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
-.btn-login:hover:not(:disabled) { background: #3d5230; }
-.btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
+.btn-login:hover:not(:disabled),
+.btn-login:focus-visible:not(:disabled) { background: var(--btn-bg-hover); }
+.btn-login:hover:not(:disabled) { transform: translateY(-1px); }
+.btn-login:active:not(:disabled) { background: var(--btn-bg-active); transform: translateY(0); }
+.btn-login:focus-visible { outline: 3px solid var(--btn-focus-ring); outline-offset: 2px; }
+.btn-login:disabled { background: var(--btn-disabled-bg); color: var(--btn-disabled-text); cursor: not-allowed; }
 .auth-error { color: #a33; text-align: center; font-size: 0.85rem; margin-top: 1rem; }
 .auth-success { color: #2f6431; text-align: center; font-size: 0.85rem; margin-top: 1rem; }
 .auth-notice {
     background: #fdf3d6; border: 1px solid #e6cf8a; color: #6b5510;
-    border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.85rem; text-align: center; margin-bottom: 1rem;
+    border-radius: var(--radius-control); padding: 0.6rem 0.8rem; font-size: 0.85rem; text-align: center; margin-bottom: 1rem;
 }
 .auth-hint { text-align: center; font-size: 0.85rem; color: #555; margin-bottom: 1.5rem; }
 .otp-boxes { display: flex; justify-content: center; gap: 0.6rem; margin: 1.5rem 0; }
 .otp-boxes input {
     width: 3rem; height: 3.4rem; text-align: center; font-size: 1.4rem; font-weight: 700;
-    border: 1px solid #ccc; border-radius: 8px; background: #fff;
+    border: 1px solid #ccc; border-radius: var(--radius-control); background: #fff;
 }
 .auth-resend { text-align: center; font-size: 0.85rem; margin-top: 1rem; }
 .auth-resend button { border: none; background: none; color: #4a7a3a; font-weight: 700; cursor: pointer; padding: 0; }
 .auth-back { text-align: center; font-size: 0.8rem; margin-top: 1rem; }
 .auth-back a { color: #666; }
 .role-select-card {
-    background: #efe9df; border-radius: 16px; padding: 2rem;
+    background: #efe9df; border-radius: var(--radius-card); padding: 2rem;
     max-width: 320px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem;
 }
 /* Sign-in page — full-screen sliding split layout */
@@ -184,7 +210,7 @@ html, body.landing-body {
     width: 130px;
     height: 130px;
     background: #F4F4F4;
-    border-radius: 20px;
+    border-radius: var(--radius-card);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -240,7 +266,7 @@ html, body.landing-body {
     gap: 16px;
     padding: 18px 20px;
     border: 1px solid #e2e0d8;
-    border-radius: 14px;
+    border-radius: var(--radius-card);
     background: none;
     font: inherit;
     text-align: left;
@@ -259,7 +285,7 @@ html, body.landing-body {
     width: 46px;
     height: 46px;
     flex-shrink: 0;
-    border-radius: 10px;
+    border-radius: var(--radius-icon);
     background: #e9f1e4;
     color: #4b6a3f;
     display: flex;
@@ -371,7 +397,7 @@ html, body.landing-body {
     padding: 14px 18px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.35);
-    border-radius: 10px;
+    border-radius: var(--radius-control);
     color: #fff;
     font-weight: 700;
     font-size: 0.95rem;
@@ -405,7 +431,7 @@ html, body.landing-body {
     letter-spacing: 0.06em;
     text-transform: uppercase;
     padding: 6px 14px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     margin-bottom: 20px;
 }
 
@@ -436,7 +462,7 @@ html, body.landing-body {
     width: 100%;
     padding: 0.75rem 0.85rem 0.75rem 2.6rem;
     border: 1px solid #ccc;
-    border-radius: 10px;
+    border-radius: var(--radius-control);
     background: #fff;
     box-sizing: border-box;
 }
@@ -472,4 +498,10 @@ html, body.landing-body {
 
 .forgot-link-inline:hover {
     color: #4b6a3f;
+}
+/* Hide the browser's built-in password reveal/clear buttons (Edge/IE) —
+   the password field already has its own eye toggle. */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
 }

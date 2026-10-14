@@ -44,7 +44,7 @@ $tabs = [
     background: #4B6B42;
     border: 1px solid rgba(255, 255, 255, 0.45);
     border-bottom: none;
-    border-radius: 6px 6px 0 0;
+    border-radius: var(--radius-control) var(--radius-control) 0 0;
     transition: background-color 0.15s ease;
 }
 .set-tabs a:hover:not(.active) {
@@ -63,20 +63,20 @@ $tabs = [
 .set-detail span { color: #777; }
 .set-detail strong { text-align: right; word-break: break-word; }
 .set-quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-.set-quick a { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 14px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); text-decoration: none; color: inherit; transition: box-shadow .15s ease, transform .15s ease; }
+.set-quick a { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: var(--radius-card); padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); text-decoration: none; color: inherit; transition: box-shadow .15s ease, transform .15s ease; }
 .set-quick a:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-1px); }
-.set-quick .ic { width: 40px; height: 40px; border-radius: 10px; background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.set-quick .ic { width: 40px; height: 40px; border-radius: var(--radius-icon); background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
 .set-quick strong { display: block; font-size: 14px; }
 .set-quick small { color: #777; font-size: 12px; }
 .set-body h4 { font-weight: 800; }
 .set-hint { color: #666; margin-bottom: 20px; }
 
-.set-card { background: #fff; border-radius: 14px; padding: 22px 26px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 20px; }
+.set-card { background: #fff; border-radius: var(--radius-card); padding: 22px 26px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 20px; }
 .set-profile-head { display: flex; align-items: center; gap: 18px; }
 .set-avatar { width: 64px; height: 64px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #999; }
-.set-role-pill { display: inline-flex; align-items: center; gap: 6px; background: #e9e7e1; border-radius: 999px; padding: 4px 14px; font-size: 13px; font-weight: 600; margin: 4px 0; }
+.set-role-pill { display: inline-flex; align-items: center; gap: 6px; background: #e9e7e1; border-radius: var(--radius-pill); padding: 4px 14px; font-size: 13px; font-weight: 600; margin: 4px 0; }
 .set-field label { font-weight: 600; margin-bottom: 6px; display: block; }
-.set-field input, .set-field select { width: 100%; padding: 11px; border: 1px solid #ccc; border-radius: 8px; }
+.set-field input, .set-field select { width: 100%; padding: 11px; border: 1px solid #ccc; border-radius: var(--radius-control); }
 .set-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 @media (max-width: 800px) { .set-grid { grid-template-columns: 1fr; } }
 
@@ -85,7 +85,7 @@ $tabs = [
 .acct-avatar { width: 42px; height: 42px; border-radius: 50%; background: #f0efe9; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 .acct-name { font-weight: 700; }
 .acct-email { color: #777; font-size: 13px; }
-.acct-role-pill { background: #e9e7e1; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
+.acct-role-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 4px 12px; font-size: 12px; font-weight: 700; }
 
 .notif-pref-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #eee; }
 .notif-pref-row:last-child { border-bottom: none; }
@@ -94,8 +94,8 @@ $tabs = [
 
 .dss-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 @media (max-width: 900px) { .dss-cards { grid-template-columns: 1fr; } }
-.dss-formula { background: var(--content-bg); border-radius: 10px; padding: 14px 16px; font-size: 13px; text-align: center; margin-top: 14px; }
-.dss-warning { background: #eee; border-radius: 10px; padding: 16px 20px; display: flex; gap: 14px; margin-bottom: 20px; }
+.dss-formula { background: var(--content-bg); border-radius: var(--radius-control); padding: 14px 16px; font-size: 13px; text-align: center; margin-top: 14px; }
+.dss-warning { background: #eee; border-radius: var(--radius-control); padding: 16px 20px; display: flex; gap: 14px; margin-bottom: 20px; }
 </style>
 
 <div class="page-wrap" style="padding:0;">
@@ -150,7 +150,7 @@ $tabs = [
                             <input name="phone" value="<?= esc($admin['phone'] ?? '') ?>" placeholder="e.g. 0917 123 4567">
                         </div>
                     </div>
-                    <div class="text-end"><button type="submit" class="btn btn-maroon">Save</button></div>
+                    <div class="text-end"><button type="submit" class="btn btn-success">Save</button></div>
                 </form>
                     </div>
                 </div>
@@ -357,7 +357,7 @@ $tabs = [
                         <div class="dss-formula">ROP = d × L + Safety stock &middot; SS = Z × &sigma;d × √L</div>
                     </div>
                 </div>
-                <div class="text-end mt-3"><button type="submit" class="btn btn-maroon">Save Parameters</button></div>
+                <div class="text-end mt-3"><button type="submit" class="btn btn-success">Save Parameters</button></div>
             </form>
         <?php endif; ?>
     </div>

@@ -10,6 +10,9 @@ use App\Models\ProductModel;
 
 class InventoryController extends BaseController
 {
+    /** Rows-per-page choices offered under the inventory table; first is the default. */
+    private const PER_PAGE_OPTIONS = [10, 25, 50];
+
     protected $productModel;
 
     public function __construct()
@@ -20,11 +23,14 @@ class InventoryController extends BaseController
     public function index()
     {
         $category = $this->request->getGet('category');
-        $search   = $this->request->getGet('search');
+        [$search, $searchInput, $searchError] = ProductModel::validateSearch($this->request->getGet('search'));
         $size     = $this->request->getGet('size');
         $status   = $this->request->getGet('status');
         $page     = (int) ($this->request->getGet('page') ?? 1);
-        $perPage  = 10;
+        $perPage  = (int) ($this->request->getGet('per_page') ?? self::PER_PAGE_OPTIONS[0]);
+        if (! in_array($perPage, self::PER_PAGE_OPTIONS, true)) {
+            $perPage = self::PER_PAGE_OPTIONS[0];
+        }
 
         $allProducts = $this->productModel->where('is_active', 1)->findAll();
         foreach ($allProducts as &$p) {
@@ -36,13 +42,9 @@ class InventoryController extends BaseController
         $lowStockCount = count(array_filter($allProducts, fn ($p) => $p['status']['label'] === 'Low Stock'));
         $reorderCount  = count(array_filter($allProducts, fn ($p) => $p['status']['label'] === 'Reorder Now'));
 
-        // Total stock on hand per category, shown next to each category tab
-        // (e.g. "Clothes (780)") so stock levels are visible before filtering.
-        $categoryStockTotals = [];
-        foreach ($allProducts as $p) {
-            $cat = $p['category'] ?? 'Uncategorized';
-            $categoryStockTotals[$cat] = ($categoryStockTotals[$cat] ?? 0) + (int) $p['current_stock'];
-        }
+        // Rows per category tab (+ 'All'): same count as the table rows a tab
+        // shows, active items only. Shared with the dashboard chart.
+        $categoryCounts = $this->productModel->countRowsByCategory($allProducts);
 
         $sizes = array_values(array_unique(array_filter(array_column($allProducts, 'size'))));
         sort($sizes, SORT_STRING);
@@ -54,10 +56,9 @@ class InventoryController extends BaseController
             $filtered = array_values(array_filter($filtered, fn ($p) => $p['category'] === $category));
         }
         if ($search) {
-            $needle   = mb_strtolower($search);
             $filtered = array_values(array_filter(
                 $filtered,
-                fn ($p) => str_contains(mb_strtolower($p['item_name']), $needle) || str_contains(mb_strtolower($p['item_id']), $needle)
+                fn ($p) => ProductModel::matchesSearch($p, $search)
             ));
         }
         if ($size) {
@@ -71,6 +72,8 @@ class InventoryController extends BaseController
 
         $groups     = $this->productModel->groupRows($filtered);
         $totalItems = count($groups);
+        $totalPages = max(1, (int) ceil($totalItems / $perPage));
+        $page       = min(max(1, $page), $totalPages);
         $products   = array_slice($groups, ($page - 1) * $perPage, $perPage);
 
         $data = [
@@ -82,13 +85,17 @@ class InventoryController extends BaseController
             'reorderCount'  => $reorderCount,
             'totalItems'    => $totalItems,
             'currentPage'   => $page,
-            'totalPages'    => (int) ceil($totalItems / $perPage),
+            'totalPages'    => $totalPages,
+            'perPage'       => $perPage,
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
             'category'      => $category ?? 'All',
             'size'          => $size ?? '',
             'status'        => $status ?? '',
-            'search'        => $search ?? '',
+            'search'        => $search,
+            'searchInput'   => $searchInput,
+            'searchError'   => $searchError,
             'categories'    => ProductModel::CATEGORIES,
-            'categoryStockTotals' => $categoryStockTotals,
+            'categoryCounts'      => $categoryCounts,
             'sizes'         => $sizes,
             'statuses'      => ['In Stock', 'Low Stock', 'Reorder Now'],
             'success'       => session()->getFlashdata('success'),
@@ -121,6 +128,22 @@ class InventoryController extends BaseController
             );
         }
 
-        return redirect()->to('/staff/inventory')->with('success', 'Notify Sent! Reorder Point Notice');
+        return redirect()->to($this->listUrl())->with('success', 'Notify Sent! Reorder Point Notice');
+    }
+
+    /**
+     * The inventory list URL the user came from, rebuilt from the
+     * return_query the page posts along with each form (page, filters,
+     * search, rows per page), so saving or archiving an item lands them back
+     * on the same page instead of page 1. Only known list parameters are
+     * kept.
+     */
+    private function listUrl(): string
+    {
+        parse_str(ltrim((string) $this->request->getPost('return_query'), '?'), $params);
+        $params = array_intersect_key($params, array_flip(['category', 'search', 'size', 'status', 'page', 'per_page']));
+        $params = array_filter($params, 'is_string');
+
+        return '/staff/inventory' . ($params ? '?' . http_build_query($params) : '');
     }
 }

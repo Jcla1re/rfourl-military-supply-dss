@@ -6,10 +6,10 @@
 
 <style>
 .cp-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-.cp-tabs a { padding: 10px 18px; border-radius: 8px; border: 1px solid #ddd; background: #fff; text-decoration: none; color: #1c1c1c; font-weight: 600; }
+.cp-tabs a { padding: 10px 18px; border-radius: var(--radius-control); border: 1px solid #ddd; background: #fff; text-decoration: none; color: #1c1c1c; font-weight: 600; }
 .cp-tabs a.active { background: var(--sidebar-bg); color: #fff; border-color: var(--sidebar-bg); }
-.cp-stat { background: #fff; border-radius: 14px; padding: 18px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; }
-.cp-stat .icon-box { width: 44px; height: 44px; border-radius: 10px; background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; }
+.cp-stat { background: #fff; border-radius: var(--radius-card); padding: 18px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; }
+.cp-stat .icon-box { width: 44px; height: 44px; border-radius: var(--radius-icon); background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; }
 .cp-stat .value { font-size: 24px; font-weight: 800; }
 </style>
 

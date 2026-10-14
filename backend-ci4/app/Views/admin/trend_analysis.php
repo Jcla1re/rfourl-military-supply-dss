@@ -12,13 +12,20 @@
  * @var array[]  $products
  * @var string   $selectedItem
  * @var string[] $annualLabels
- * @var int[]    $annualData
+ * @var array    $annualData      This year per month; null for months not reached yet
  * @var int[]    $annualDataPrev
- * @var int      $annualPeak
+ * @var int      $monthsSoFar     How many months of the selected year have happened
  * @var string[] $weekLabels
  * @var int[]    $weekData
  * @var int[]    $weekDataPrev
  * @var string   $weekAsOf
+ * @var string   $weekRangeLabel
+ * @var int      $unitsYtd
+ * @var int      $unitsPrev
+ * @var float|null $changePct
+ * @var string   $periodLabel
+ * @var array|null $bestMonth
+ * @var array|null $topItem
  * @var array[]  $topSellers
  * @var int      $maxUnits
  * @var array[]  $variability
@@ -26,114 +33,245 @@
  * @var array[]  $abcTopItems
  * @var array{A: array[], B: array[], C: array[]} $abcByClass
  * @var array{A: int, B: int, C: int} $abcClassCounts
- * @var int      $totalStock
- * @var float    $salesToday
  */
+$selectedItem = $selectedItem ?? '';
+$products     = $products ?? [];
+$selectedYear = (int) ($selectedYear ?? date('Y'));
+
+// Item picker labels: name, plus size when there is one, so same-name items
+// in different sizes can be told apart.
+$itemLabel = static fn (array $p): string => $p['item_name'] . (! empty($p['size']) ? ' · ' . $p['size'] : '');
+$selectedItemLabel = '';
+foreach ($products as $p) {
+    if ($p['item_id'] === $selectedItem) {
+        $selectedItemLabel = $itemLabel($p);
+        break;
+    }
+}
 ?>
 <?= $this->extend('layouts/admin_layout') ?>
 
 <?= $this->section('header_actions') ?>
-<form method="get" class="d-flex gap-2">
-    <select name="year" class="form-select" onchange="this.form.submit()" style="width:auto;">
+<form method="get" class="ta-filters" id="taFilters">
+    <select name="year" class="form-select ta-year" onchange="this.form.submit()" aria-label="Year">
         <?php foreach (($years ?? []) as $y): ?>
-            <option value="<?= $y ?>" <?= $y == ($selectedYear ?? 0) ? 'selected' : '' ?>>Year: <?= $y ?></option>
+            <option value="<?= $y ?>" <?= $y == $selectedYear ? 'selected' : '' ?>><?= $y ?></option>
         <?php endforeach; ?>
     </select>
-    <select name="item" class="form-select" onchange="this.form.submit()" style="width:auto;">
-        <option value="">Item: All</option>
-        <?php foreach (($products ?? []) as $p): ?>
-            <option value="<?= esc($p['item_id']) ?>" <?= $p['item_id'] === ($selectedItem ?? '') ? 'selected' : '' ?>><?= esc($p['item_name']) ?></option>
+    <input type="hidden" name="item" id="taItemValue" value="<?= esc($selectedItem) ?>">
+    <div class="ta-item-picker">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input type="search" id="taItemSearch" class="form-control" list="taItemOptions" autocomplete="off"
+               placeholder="All items" aria-label="Item (type to search)" value="<?= esc($selectedItemLabel) ?>">
+    </div>
+    <datalist id="taItemOptions">
+        <option value="All items"></option>
+        <?php foreach ($products as $p): ?>
+            <option value="<?= esc($itemLabel($p)) ?>" data-id="<?= esc($p['item_id']) ?>"></option>
         <?php endforeach; ?>
-    </select>
+    </datalist>
 </form>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 
-<?php
-$selectedItem = $selectedItem ?? '';
-$products     = $products ?? [];
-$maxUnits     = $maxUnits ?? 1;
-$selectedYear = $selectedYear ?? (int) date('Y');
-$weekAsOf     = $weekAsOf ?? '';
-
-$selectedItemName = '';
-if ($selectedItem !== '') {
-    $itemNamesById     = array_column($products, 'item_name', 'item_id');
-    $selectedItemName  = (string) ($itemNamesById[$selectedItem] ?? '');
-}
-
-$selectedYearLabel = is_scalar($selectedYear) ? (string) $selectedYear : '';
-?>
-
 <style>
-.ta-stat {
-    background: #fff; border-radius: 14px; padding: 18px 20px; display: flex; align-items: center; gap: 14px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; text-decoration: none; color: inherit;
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+.page-wrap.ta-page { font-family: 'Poppins', sans-serif; }
+
+/* Header filters (sit in the green top bar) */
+.ta-filters { display: flex; gap: 8px; align-items: center; }
+.ta-filters .ta-year { width: auto; min-width: 96px; }
+.ta-item-picker { position: relative; width: 240px; }
+.ta-item-picker i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #8A8D7E; font-size: 14px; pointer-events: none; }
+.ta-item-picker input { padding-left: 34px; }
+
+/* Trend cards */
+.ta-card {
+    background: #fff; border-radius: var(--radius-card); padding: 18px 20px; height: 100%;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
 }
-a.ta-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-1px); cursor: pointer; }
-.ta-stat .icon { font-size: 26px; }
-.ta-stat .value { font-size: 26px; font-weight: 800; }
-.chart-card { background: #fff; border-radius: 14px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 16px; }
-.chart-card h6 { font-weight: 700; margin-bottom: 10px; }
+.ta-card .label { font-size: 13px; color: #5C6152; }
+.ta-card .value { margin-top: 4px; font-size: 26px; font-weight: 600; color: #1F2617; line-height: 1.2; overflow-wrap: anywhere; }
+.ta-card .value.is-text { font-size: 20px; }
+.ta-card .sub { margin-top: 4px; font-size: 13px; color: #5C6152; }
+.ta-change { display: inline-flex; align-items: center; gap: 4px; }
+.ta-change.up { color: #3B7D2C; }
+.ta-change.down { color: #B42318; }
+.ta-change.flat { color: #5C6152; }
+
+/* Cards */
+.chart-card { background: #fff; border-radius: var(--radius-card); padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 16px; }
+.chart-card h6 { font-size: 15px; font-weight: 600; color: #1F2617; margin: 0; }
+.card-sub { font-size: 13px; color: #5C6152; margin: 2px 0 0; }
+.card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+
+/* Monthly / Weekly segmented control */
+.ta-segment { display: inline-flex; padding: 3px; background: #F5F3EE; border: 1px solid #E8E5DC; border-radius: var(--radius-control); }
+.ta-segment button {
+    border: 0; background: transparent; padding: 6px 14px; border-radius: 8px;
+    font: inherit; font-size: 13px; font-weight: 500; color: #5C6152; cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+.ta-segment button:hover { color: #2C3A1E; }
+.ta-segment button[aria-pressed="true"] { background: #fff; color: #2C3A1E; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.ta-segment button:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; }
+
+/* Product performance */
 .perf-card { display: flex; flex-direction: column; }
-.perf-list { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 4px; }
-.perf-bar-row { font-size: 13px; margin-bottom: 4px; font-weight: 600; }
-.perf-track { height: 10px; background: #e4e2dc; border-radius: 5px; overflow: hidden; margin-bottom: 14px; }
-.perf-track > span { display: block; height: 100%; background: #1c1c1c; border-radius: 5px; }
-.var-table { width: 100%; }
-.var-table th { text-align: left; font-size: 12px; text-transform: uppercase; color: #777; padding-bottom: 8px; border-bottom: 1px solid #eee; }
-.var-table td { padding: 10px 0; border-bottom: 1px solid #f2f2f2; }
+.perf-list { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+.perf-row { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; margin-bottom: 6px; }
+.perf-row span { color: #2C3A1E; overflow-wrap: anywhere; }
+.perf-row strong { font-weight: 600; color: #1F2617; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.perf-track { height: 8px; background: #E8E5DC; border-radius: 4px; overflow: hidden; margin-bottom: 16px; }
+.perf-track > span {
+    display: block; height: 100%; width: var(--w);
+    background: linear-gradient(90deg, #8CC27A 0%, #4F8542 100%); border-radius: 4px;
+    transition: width 0.9s ease-out; transition-delay: calc(var(--i, 0) * 80ms);
+}
+.perf-list.is-animating .perf-track > span { width: 0; transition: none; }
 
-.abc-subtitle { font-size: 13px; color: #888; font-weight: 400; margin-bottom: 14px; }
-.abc-stack { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 12px; background: #eee; }
+/* ABC classification */
+.abc-stack { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin: 4px 0 12px; background: #F5F3EE; }
 .abc-stack > span { display: block; height: 100%; }
-.abc-stack .cls-a { background: #2e5339; }
-.abc-stack .cls-b { background: #6b9b6f; }
-.abc-stack .cls-c { background: #bfe0c3; }
-.abc-legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; font-weight: 600; margin-bottom: 16px; }
-.abc-legend .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
-.abc-legend .swatch.cls-a { background: #2e5339; }
-.abc-legend .swatch.cls-b { background: #6b9b6f; }
-.abc-legend .swatch.cls-c { background: #bfe0c3; }
-.abc-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f2f2f2; font-size: 14px; }
+.cls-a-fill { background: #2C3A1E; }
+.cls-b-fill { background: #71AA60; }
+.cls-c-fill { background: #C5DDBB; }
+.abc-meanings { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 6px; }
+.abc-meanings li { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #5C6152; }
+.abc-meanings strong { color: #1F2617; font-weight: 600; min-width: 34px; }
+.abc-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%; font-size: 12px; font-weight: 600; flex-shrink: 0;
+}
+.abc-badge.cls-a { background: #2C3A1E; color: #fff; }
+.abc-badge.cls-b { background: #71AA60; color: #fff; }
+.abc-badge.cls-c { background: #E4EFDF; color: #2F4A22; }
+.abc-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.abc-tab {
+    border: 1px solid #E8E5DC; background: #fff; border-radius: var(--radius-pill); padding: 5px 12px;
+    font: inherit; font-size: 13px; font-weight: 500; color: #5C6152; cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.abc-tab:hover { background: #F5F3EE; color: #2C3A1E; }
+.abc-tab.active { background: #2C3A1E; border-color: #2C3A1E; color: #fff; }
+.abc-tab:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; }
+.abc-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #F0EEE8; font-size: 14px; color: #2C3A1E; }
 .abc-row:last-child { border-bottom: none; }
-.abc-row .abc-right { display: flex; align-items: center; gap: 10px; }
-.abc-badge { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; font-weight: 700; }
-.abc-badge.cls-a { background: #f7d0d3; color: #a13a41; }
-.abc-badge.cls-b { background: #f7e2b0; color: #8a6512; }
-.abc-badge.cls-c { background: #e5e5e5; color: #666; }
+.abc-row .abc-right, .abc-head .abc-right { display: flex; align-items: center; gap: 10px; color: #5C6152; font-variant-numeric: tabular-nums; }
+/* Column headers over the item list; Share and Class columns have fixed
+   widths so the header text lines up with the values and badges below. */
+.abc-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 4px 0 8px; border-bottom: 1px solid #E8E5DC;
+    font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #4A5040;
+}
+.abc-head .abc-right { color: #4A5040; }
+.abc-share { min-width: 48px; text-align: right; }
+.abc-cls { width: 44px; display: flex; justify-content: center; }
 
-.abc-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
-.abc-tab { border: 1px solid #e0ddd4; background: #fff; border-radius: 8px; padding: 5px 12px; font-size: 13px; font-weight: 600; color: #666; cursor: pointer; }
-.abc-tab:hover { background: #f7f6f2; }
-.abc-tab.active { background: #1c1c1c; border-color: #1c1c1c; color: #fff; }
+/* Demand variability */
+.var-table { width: 100%; border-collapse: collapse; }
+.var-table th { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; color: #5C6152; padding: 0 0 8px; border-bottom: 1px solid #E8E5DC; text-align: left; }
+.var-table td { padding: 10px 0; border-bottom: 1px solid #F0EEE8; font-size: 14px; color: #2C3A1E; }
+.var-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 12px; }
+.var-table .cls { text-align: center; width: 64px; padding-left: 12px; }
+.var-note { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0 0; font-size: 13px; line-height: 1.5; color: #5C6152; }
+.var-note i { font-size: 16px; line-height: 1.25; flex-shrink: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+    .perf-track > span { transition: none; }
+}
+@media (max-width: 768px) {
+    .ta-item-picker { width: 180px; }
+}
 </style>
 
-<div class="page-wrap">
+<div class="page-wrap ta-page">
+    <?php
+    $yearLabel  = (string) $selectedYear;
+    $changePct  = $changePct ?? null;
+    $changeDir  = $changePct === null ? 'flat' : ($changePct > 0.05 ? 'up' : ($changePct < -0.05 ? 'down' : 'flat'));
+    ?>
     <div class="row g-3 mb-1">
-        <div class="col-md-6"><a href="<?= site_url('admin/inventory') ?>" class="ta-stat"><span class="icon"><i class="bi bi-box-seam"></i></span><div><div class="text-muted small">Total Stock on hand</div><div class="value"><?= number_format($totalStock ?? 0) ?></div></div></a></div>
-        <div class="col-md-6"><a href="<?= site_url('admin/sales') ?>?tab=receipts" class="ta-stat"><span class="icon"><i class="bi bi-cash-coin"></i></span><div><div class="text-muted small">Sales Today</div><div class="value">₱<?= number_format($salesToday ?? 0, 0) ?></div></div></a></div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="ta-card">
+                <div class="label">Items sold in <?= esc($yearLabel) ?></div>
+                <div class="value"><?= number_format($unitsYtd ?? 0) ?></div>
+                <div class="sub"><?= esc($periodLabel ?? '') ?></div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="ta-card">
+                <div class="label">vs. same period last year</div>
+                <?php if ($changePct === null): ?>
+                    <div class="value is-text ta-change flat">No sales last year</div>
+                    <div class="sub">Nothing to compare with</div>
+                <?php else: ?>
+                    <div class="value ta-change <?= $changeDir ?>">
+                        <?php if ($changeDir === 'up'): ?><i class="bi bi-arrow-up" aria-hidden="true"></i>
+                        <?php elseif ($changeDir === 'down'): ?><i class="bi bi-arrow-down" aria-hidden="true"></i><?php endif; ?>
+                        <span><?= ($changeDir === 'up' ? '+' : '') . number_format($changePct, 1) ?>%</span>
+                    </div>
+                    <div class="sub"><?= number_format($unitsPrev ?? 0) ?> items in <?= (int) $selectedYear - 1 ?></div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="ta-card">
+                <div class="label">Best month</div>
+                <?php if (empty($bestMonth)): ?>
+                    <div class="value is-text">—</div>
+                    <div class="sub">No sales yet</div>
+                <?php else: ?>
+                    <div class="value is-text"><?= esc($bestMonth['name']) ?></div>
+                    <div class="sub"><?= number_format($bestMonth['units']) ?> items sold</div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="ta-card">
+                <div class="label">Top item in <?= esc($yearLabel) ?></div>
+                <?php if (empty($topItem)): ?>
+                    <div class="value is-text">—</div>
+                    <div class="sub">No sales yet</div>
+                <?php else: ?>
+                    <div class="value is-text"><?= esc($topItem['item_name'] ?? $topItem['item_id']) ?></div>
+                    <div class="sub"><?= number_format((int) $topItem['units_sold']) ?> items sold</div>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 
     <div class="row g-3 mt-1">
         <div class="col-lg-8">
             <div class="chart-card h-100">
-                <h6>Annual Demand &mdash; Item Sold Per Month (<?= $selectedItem !== '' ? esc($selectedItemName) : 'All Products' ?>)<br><small class="text-muted fw-normal"><?= esc($selectedYearLabel) ?> vs <?= esc((string) ((int) $selectedYear - 1)) ?></small></h6>
-                <canvas id="annualChart" height="90"></canvas>
+                <div class="card-head">
+                    <div>
+                        <h6 id="trendTitle">Items sold per month<?= $selectedItemLabel !== '' ? ' · ' . esc($selectedItemLabel) : '' ?></h6>
+                        <p class="card-sub" id="trendSubtitle"><?= esc($yearLabel) ?> compared with <?= (int) $selectedYear - 1 ?></p>
+                    </div>
+                    <div class="ta-segment" role="group" aria-label="Chart period">
+                        <button type="button" data-view="monthly" aria-pressed="true">Monthly</button>
+                        <button type="button" data-view="weekly" aria-pressed="false">Weekly</button>
+                    </div>
+                </div>
+                <div class="chart-fill"><canvas id="trendChart" aria-label="Items sold chart" role="img"></canvas></div>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="chart-card h-100 perf-card">
-                <h6>Product Performance (Items Sold)</h6>
+                <div class="card-head"><div><h6>Product performance</h6><p class="card-sub">Items sold, all time</p></div></div>
                 <?php if (empty($topSellers)): ?>
                     <div class="text-muted small">No sales recorded yet.</div>
                 <?php else: ?>
                     <div class="perf-list">
-                    <?php foreach ($topSellers as $t): ?>
-                        <div class="perf-bar-row"><?= esc($t['item_name'] ?? $t['item_id']) ?></div>
-                        <div class="perf-track"><span style="width: <?= round(($t['units_sold'] / $maxUnits) * 100) ?>%"></span></div>
+                    <?php foreach ($topSellers as $i => $t): ?>
+                        <div>
+                            <div class="perf-row"><span><?= esc($t['item_name'] ?? $t['item_id']) ?></span><strong><?= number_format((int) $t['units_sold']) ?></strong></div>
+                            <div class="perf-track"><span style="--w: <?= round(($t['units_sold'] / ($maxUnits ?: 1)) * 100) ?>%; --i: <?= (int) $i ?>"></span></div>
+                        </div>
                     <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
@@ -142,21 +280,11 @@ a.ta-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-
     </div>
 
     <div class="row g-3 mt-1">
-        <div class="col-12">
-            <div class="chart-card">
-                <h6>Weekly Sales Trend<br><small class="text-muted fw-normal">7 days ending <?= esc($weekAsOf) ?><?= $selectedItem !== '' ? ' — ' . esc($selectedItemName) : '' ?></small></h6>
-                <canvas id="weeklyChart" height="55"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-3 mt-1">
         <div class="col-lg-6">
             <div class="chart-card">
-                <h6>ABC Classification</h6>
-                <div class="abc-subtitle">Based on % contribution to total sales value (<?= esc($selectedYearLabel) ?>)</div>
+                <div class="card-head"><div><h6>ABC classification</h6><p class="card-sub">Share of total sales value in <?= esc($yearLabel) ?></p></div></div>
                 <?php if (empty($abcTopItems)): ?>
-                    <div class="text-muted small">No sales recorded for <?= esc($selectedYearLabel !== '' ? $selectedYearLabel : 'this period') ?> yet.</div>
+                    <div class="text-muted small">No sales recorded for <?= esc($yearLabel) ?> yet.</div>
                 <?php else: ?>
                     <?php
                     $ac             = $abcClassTotals ?? ['A' => 0, 'B' => 0, 'C' => 0];
@@ -168,182 +296,280 @@ a.ta-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-
                             <div class="abc-row">
                                 <span><?= esc($item['item_name']) ?></span>
                                 <span class="abc-right">
-                                    <span class="text-muted"><?= round($item['pct']) ?>%</span>
-                                    <span class="abc-badge cls-<?= strtolower($item['class']) ?>"><?= esc($item['class']) ?></span>
+                                    <span class="abc-share"><?= round($item['pct']) ?>%</span>
+                                    <span class="abc-cls"><span class="abc-badge cls-<?= strtolower($item['class']) ?>" aria-label="Class <?= esc($item['class']) ?>"><?= esc($item['class']) ?></span></span>
                                 </span>
                             </div>
                             <?php
                         }
                     };
                     ?>
-                    <div class="abc-stack">
-                        <span class="cls-a" style="width: <?= round($ac['A']) ?>%"></span>
-                        <span class="cls-b" style="width: <?= round($ac['B']) ?>%"></span>
-                        <span class="cls-c" style="width: <?= round($ac['C']) ?>%"></span>
+                    <div class="abc-stack" role="img" aria-label="Class A <?= round($ac['A']) ?>%, B <?= round($ac['B']) ?>%, C <?= round($ac['C']) ?>% of sales value">
+                        <span class="cls-a-fill" style="width: <?= round($ac['A']) ?>%"></span>
+                        <span class="cls-b-fill" style="width: <?= round($ac['B']) ?>%"></span>
+                        <span class="cls-c-fill" style="width: <?= round($ac['C']) ?>%"></span>
                     </div>
-                    <div class="abc-legend">
-                        <span><span class="swatch cls-a"></span>A &middot; <?= round($ac['A']) ?>%</span>
-                        <span><span class="swatch cls-b"></span>B &middot; <?= round($ac['B']) ?>%</span>
-                        <span><span class="swatch cls-c"></span>C &middot; <?= round($ac['C']) ?>%</span>
+                    <ul class="abc-meanings">
+                        <li><span class="abc-badge cls-a">A</span><strong><?= round($ac['A']) ?>%</strong> Best sellers. Never run out.</li>
+                        <li><span class="abc-badge cls-b">B</span><strong><?= round($ac['B']) ?>%</strong> Steady sellers.</li>
+                        <li><span class="abc-badge cls-c">C</span><strong><?= round($ac['C']) ?>%</strong> Slow sellers. Order less.</li>
+                    </ul>
+
+                    <div class="abc-tabs" role="group" aria-label="Filter by class">
+                        <button type="button" class="abc-tab active" data-tab="all" aria-pressed="true">All</button>
+                        <button type="button" class="abc-tab" data-tab="A" aria-pressed="false">A (<?= (int) $abcClassCounts['A'] ?>)</button>
+                        <button type="button" class="abc-tab" data-tab="B" aria-pressed="false">B (<?= (int) $abcClassCounts['B'] ?>)</button>
+                        <button type="button" class="abc-tab" data-tab="C" aria-pressed="false">C (<?= (int) $abcClassCounts['C'] ?>)</button>
                     </div>
 
-                    <div class="abc-tabs">
-                        <button type="button" class="abc-tab active" data-tab="all">All</button>
-                        <button type="button" class="abc-tab" data-tab="A">A (<?= (int) $abcClassCounts['A'] ?>)</button>
-                        <button type="button" class="abc-tab" data-tab="B">B (<?= (int) $abcClassCounts['B'] ?>)</button>
-                        <button type="button" class="abc-tab" data-tab="C">C (<?= (int) $abcClassCounts['C'] ?>)</button>
+                    <div class="abc-head" aria-hidden="true">
+                        <span>Item</span>
+                        <span class="abc-right"><span class="abc-share">Share</span><span class="abc-cls">Class</span></span>
                     </div>
-
                     <div class="abc-list" data-tab-panel="all">
                         <?php $renderAbcRows($abcTopItems); ?>
                     </div>
-                    <div class="abc-list" data-tab-panel="A" style="display:none;">
-                        <?php empty($abcByClass['A']) ? print('<div class="text-muted small">No Class A items this period.</div>') : $renderAbcRows($abcByClass['A']); ?>
-                    </div>
-                    <div class="abc-list" data-tab-panel="B" style="display:none;">
-                        <?php empty($abcByClass['B']) ? print('<div class="text-muted small">No Class B items this period.</div>') : $renderAbcRows($abcByClass['B']); ?>
-                    </div>
-                    <div class="abc-list" data-tab-panel="C" style="display:none;">
-                        <?php empty($abcByClass['C']) ? print('<div class="text-muted small">No Class C items this period.</div>') : $renderAbcRows($abcByClass['C']); ?>
-                    </div>
+                    <?php foreach (['A', 'B', 'C'] as $cls): ?>
+                        <div class="abc-list" data-tab-panel="<?= $cls ?>" style="display:none;">
+                            <?php if (empty($abcByClass[$cls])): ?>
+                                <div class="text-muted small">No Class <?= $cls ?> items this period.</div>
+                            <?php else: ?>
+                                <?php $renderAbcRows($abcByClass[$cls]); ?>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
                 <?php endif; ?>
             </div>
         </div>
         <div class="col-lg-6">
             <div class="chart-card">
-                <h6>Demand Variability<br><small class="text-muted fw-normal">Probabilistic Basis &mdash; Top sellers of <?= esc($selectedYearLabel) ?></small></h6>
+                <div class="card-head"><div><h6>Demand variability</h6><p class="card-sub">Highest-demand items in <?= esc($yearLabel) ?>, used to compute safety stock.</p></div></div>
                 <?php if (empty($variability)): ?>
                     <div class="text-muted small">No PDSS computations yet for this period's best sellers. This populates once EOQ/ROP has run for an item.</div>
                 <?php else: ?>
                     <table class="var-table">
-                        <thead><tr><th>Item</th><th>Avg/Day</th><th>Safety stock</th></tr></thead>
+                        <thead><tr><th>Item</th><th class="num">Avg. daily demand</th><th class="num">Safety stock</th><th class="cls">Class</th></tr></thead>
                         <tbody>
                             <?php foreach ($variability as $v): ?>
-                                <tr><td><?= esc($v['item_name']) ?></td><td><?= esc($v['avg_daily_demand']) ?></td><td><?= esc($v['safety_stock']) ?></td></tr>
+                                <?php $ss = (int) round((float) $v['safety_stock']); ?>
+                                <tr>
+                                    <td><?= esc($v['item_name']) ?></td>
+                                    <td class="num"><?= number_format((float) $v['avg_daily_demand'], 2) ?> / day</td>
+                                    <td class="num"><?= number_format($ss) ?> <?= $ss === 1 ? 'unit' : 'units' ?></td>
+                                    <td class="cls">
+                                        <?php if (! empty($v['class'])): ?>
+                                            <span class="abc-badge cls-<?= strtolower($v['class']) ?>" aria-label="Class <?= esc($v['class']) ?>"><?= esc($v['class']) ?></span>
+                                        <?php else: ?>—<?php endif; ?>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    <p class="var-note"><i class="bi bi-info-circle" aria-hidden="true"></i> Safety stock is extra stock kept to cover days when demand is higher than average.</p>
                 <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
 
+<script src="/assets/js/chart-reveal.js"></script>
 <script>
-function peakLabelPlugin() {
-    return {
-        id: 'peakLabel',
-        afterDatasetsDraw(chart) {
-            const data = chart.data.datasets[0].data;
-            if (!data || !data.length || Math.max(...data) <= 0) return;
-
-            let maxIdx = 0;
-            for (let i = 1; i < data.length; i++) {
-                if (data[i] > data[maxIdx]) maxIdx = i;
-            }
-            const meta = chart.getDatasetMeta(0);
-            const point = meta.data[maxIdx];
-            if (!point) return;
-
-            const ctx = chart.ctx;
-            const label = 'Peak: ' + Number(data[maxIdx]).toLocaleString();
-            ctx.save();
-            ctx.font = 'bold 12px sans-serif';
-            const textWidth = ctx.measureText(label).width;
-            const boxW = textWidth + 20, boxH = 24;
-            const x = Math.min(Math.max(point.x - boxW / 2, 4), chart.width - boxW - 4);
-            const y = Math.max(point.y - boxH - 12, 4);
-
-            ctx.fillStyle = '#3d5230';
-            if (ctx.roundRect) {
-                ctx.beginPath();
-                ctx.roundRect(x, y, boxW, boxH, 5);
-                ctx.fill();
-            } else {
-                ctx.fillRect(x, y, boxW, boxH);
-            }
-            ctx.fillStyle = '#fff';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(label, x + boxW / 2, y + boxH / 2);
-            ctx.restore();
+// ---- Item picker: searchable, submits the item's id ----------------------
+(function () {
+    const search = document.getElementById('taItemSearch');
+    const hidden = document.getElementById('taItemValue');
+    const options = [...document.querySelectorAll('#taItemOptions option')];
+    const original = search.value;
+    search.addEventListener('change', () => {
+        const text = search.value.trim();
+        if (text === '' || text === 'All items') {
+            hidden.value = '';
+        } else {
+            const match = options.find(o => o.value === text && o.dataset.id);
+            if (!match) { search.value = original; return; } // not an item: keep the current selection
+            hidden.value = match.dataset.id;
         }
-    };
+        search.form.submit();
+    });
+    // Clearing with the × button goes back to all items.
+    search.addEventListener('search', () => { if (search.value === '' && original !== '') { hidden.value = ''; search.form.submit(); } });
+})();
+
+// ---- Charts ----------------------------------------------------------------
+// Same as the Dashboard: the line chart is revealed left to right once on
+// page load by revealPlugin (assets/js/chart-reveal.js); reduced-motion
+// users see it complete. Charts are created once Poppins has loaded so
+// chart text never renders in a fallback font.
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const MONTHLY = {
+    labels: <?= json_encode($annualLabels ?? []) ?>,
+    current: <?= json_encode(array_values($annualData ?? [])) ?>,
+    previous: <?= json_encode(array_values($annualDataPrev ?? [])) ?>,
+    currentLabel: <?= json_encode($yearLabel) ?>,
+    previousLabel: <?= json_encode((string) ($selectedYear - 1)) ?>,
+    title: <?= json_encode('Items sold per month' . ($selectedItemLabel !== '' ? ' · ' . $selectedItemLabel : '')) ?>,
+    subtitle: <?= json_encode($yearLabel . ' compared with ' . ($selectedYear - 1)) ?>,
+    monthsSoFar: <?= (int) ($monthsSoFar ?? 12) ?>,
+};
+const WEEKLY = {
+    labels: <?= json_encode($weekLabels ?? []) ?>,
+    current: <?= json_encode(array_values($weekData ?? [])) ?>,
+    previous: <?= json_encode(array_values($weekDataPrev ?? [])) ?>,
+    currentLabel: 'This week',
+    previousLabel: 'Week before',
+    title: <?= json_encode('Items sold per day' . ($selectedItemLabel !== '' ? ' · ' . $selectedItemLabel : '')) ?>,
+    subtitle: <?= json_encode(($weekRangeLabel ?? '') . ', compared with the week before') ?>,
+    monthsSoFar: null,
+};
+
+// Shades months that haven't happened yet, labelled "Not yet".
+const futureShadePlugin = {
+    id: 'futureShade',
+    beforeDatasetsDraw(chart) {
+        const soFar = chart.$view && chart.$view.monthsSoFar;
+        const count = chart.data.labels.length;
+        if (soFar === null || soFar === undefined || soFar >= count) return;
+        const { ctx, chartArea, scales: { x } } = chart;
+        const left = soFar === 0 ? chartArea.left : (x.getPixelForValue(soFar - 1) + x.getPixelForValue(soFar)) / 2;
+        ctx.save();
+        ctx.fillStyle = 'rgba(232, 229, 220, 0.45)';
+        ctx.fillRect(left, chartArea.top, chartArea.right - left, chartArea.bottom - chartArea.top);
+        ctx.fillStyle = '#8A8D7E';
+        ctx.font = '500 11px Poppins, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('Not yet', (left + chartArea.right) / 2, chartArea.top + 8);
+        ctx.restore();
+    }
+};
+
+// "Peak: N" on this period's highest point, always fully inside the chart
+// area. Drawn in afterDraw, and only once the reveal has finished.
+const peakLabelPlugin = {
+    id: 'peakLabel',
+    afterDraw(chart) {
+        if (chart.$reveal !== 1) return;
+        const data = chart.data.datasets[0].data;
+        let maxIdx = -1;
+        data.forEach((v, i) => { if (v !== null && v > 0 && (maxIdx < 0 || v > data[maxIdx])) maxIdx = i; });
+        if (maxIdx < 0) return;
+        const point = chart.getDatasetMeta(0).data[maxIdx];
+        if (!point || isNaN(point.y)) return;
+
+        const { ctx, chartArea } = chart;
+        const label = 'Peak: ' + Number(data[maxIdx]).toLocaleString('en-PH');
+        ctx.save();
+        ctx.font = '600 12px Poppins, sans-serif';
+        const boxW = ctx.measureText(label).width + 16, boxH = 24, gap = 10;
+        const x = Math.min(Math.max(point.x - boxW / 2, chartArea.left + 2), chartArea.right - boxW - 2);
+        let y = point.y - boxH - gap;
+        if (y < chartArea.top + 2) y = Math.min(point.y + gap, chartArea.bottom - boxH - 2); // no room above: go below
+        ctx.fillStyle = '#2C3A1E';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(x, y, boxW, boxH, 6); else ctx.rect(x, y, boxW, boxH);
+        ctx.fill();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, x + boxW / 2, y + boxH / 2 + 0.5);
+        ctx.restore();
+    }
+};
+
+function datasetsFor(view) {
+    return [
+        {
+            label: view.currentLabel,
+            data: view.current,
+            borderColor: '#4A6741',
+            borderWidth: 3,
+            backgroundColor: 'rgba(113, 170, 96, 0.14)',
+            fill: 'origin',
+            tension: 0.3,
+            pointRadius: 2.5,
+            pointBackgroundColor: '#4A6741',
+            spanGaps: false,
+        },
+        {
+            label: view.previousLabel,
+            data: view.previous,
+            borderColor: '#A9A493',
+            borderWidth: 2,
+            borderDash: [6, 5],
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.3,
+            pointRadius: 0,
+        },
+    ];
 }
 
-new Chart(document.getElementById('annualChart'), {
-    type: 'line',
-    data: {
-        labels: <?= json_encode($annualLabels ?? []) ?>,
-        datasets: [
-            {
-                label: 'This Year',
-                data: <?= json_encode($annualData ?? []) ?>,
-                borderColor: '#3d5230',
-                backgroundColor: 'transparent',
-                tension: 0.3,
-                pointRadius: 2
+document.fonts.load('600 12px Poppins').catch(() => {}).finally(() => {
+    Chart.defaults.font.family = "'Poppins', sans-serif";
+    Chart.defaults.color = '#5C6152';
+
+    const chart = new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: { labels: MONTHLY.labels, datasets: datasetsFor(MONTHLY) },
+        options: {
+            animation: false, // the left-to-right reveal plugin does the opening animation
+            maintainAspectRatio: false, // fills .chart-fill, which grows with the card
+            interaction: { mode: 'index', intersect: false },
+            layout: { padding: { top: 8 } },
+            plugins: {
+                legend: {
+                    position: 'top', align: 'end',
+                    labels: { usePointStyle: true, pointStyle: 'line', pointStyleWidth: 28, padding: 16, font: { size: 12 } }
+                },
+                tooltip: {
+                    titleFont: { family: "'Poppins', sans-serif", weight: '600' },
+                    bodyFont: { family: "'Poppins', sans-serif" },
+                    callbacks: { label: ctx => ctx.raw === null ? null : `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString('en-PH')} items` }
+                }
             },
-            {
-                label: 'Last Year',
-                data: <?= json_encode($annualDataPrev ?? []) ?>,
-                borderColor: '#b9b6ae',
-                borderDash: [5, 5],
-                backgroundColor: 'transparent',
-                tension: 0.3,
-                pointRadius: 0
+            scales: {
+                y: { beginAtZero: true, min: 0, grid: { color: '#EEECE5' }, ticks: { precision: 0 } },
+                x: { grid: { display: false } }
             }
-        ]
-    },
-    options: {
-        animation: { duration: 900, easing: 'easeOutQuart' },
-        plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 24 } } },
-        scales: { y: { grid: { color: '#eee' } }, x: { grid: { display: false } } },
-        layout: { padding: { top: 30 } }
-    },
-    plugins: [peakLabelPlugin()]
+        },
+        // Order matters: the "Not yet" shading draws before the reveal clip,
+        // so it's visible from the start like the grid.
+        plugins: [futureShadePlugin, revealPlugin, peakLabelPlugin]
+    });
+    chart.$view = MONTHLY;
+
+    // Monthly / Weekly toggle: same card, same colours, swaps the data.
+    document.querySelectorAll('.ta-segment button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const view = btn.dataset.view === 'weekly' ? WEEKLY : MONTHLY;
+            document.querySelectorAll('.ta-segment button').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+            document.getElementById('trendTitle').textContent = view.title;
+            document.getElementById('trendSubtitle').textContent = view.subtitle;
+            chart.$view = view;
+            revealNow(chart); // no replay on toggle; never left half-revealed
+            chart.data.labels = view.labels;
+            chart.data.datasets = datasetsFor(view);
+            chart.update();
+        });
+    });
 });
 
-new Chart(document.getElementById('weeklyChart'), {
-    type: 'line',
-    data: {
-        labels: <?= json_encode($weekLabels ?? []) ?>,
-        datasets: [
-            {
-                label: 'This Week',
-                data: <?= json_encode($weekData ?? []) ?>,
-                borderColor: '#1c1c1c',
-                backgroundColor: 'transparent',
-                tension: 0.3,
-                pointRadius: 2
-            },
-            {
-                label: 'Last Week',
-                data: <?= json_encode($weekDataPrev ?? []) ?>,
-                borderColor: '#b9b6ae',
-                borderDash: [5, 5],
-                backgroundColor: 'transparent',
-                tension: 0.3,
-                pointRadius: 0
-            }
-        ]
-    },
-    options: {
-        animation: { duration: 900, easing: 'easeOutQuart' },
-        plugins: { legend: { position: 'top', align: 'end', labels: { boxWidth: 24 } } },
-        scales: { y: { grid: { color: '#eee' } }, x: { grid: { display: false } } },
-        layout: { padding: { top: 30 } }
-    },
-    plugins: [peakLabelPlugin()]
-});
+// ---- Product performance: bars grow left to right (80 ms apart) ----------
+(function () {
+    const list = document.querySelector('.perf-list');
+    if (!list || reduceMotion) return;
+    list.classList.add('is-animating');
+    list.getBoundingClientRect();
+    requestAnimationFrame(() => list.classList.remove('is-animating'));
+})();
 
-document.querySelectorAll('.abc-tab').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        var tab = btn.dataset.tab;
-        document.querySelectorAll('.abc-tab').forEach(function (b) { b.classList.remove('active'); });
-        btn.classList.add('active');
-        document.querySelectorAll('.abc-list').forEach(function (panel) {
-            panel.style.display = panel.dataset.tabPanel === tab ? '' : 'none';
+// ---- ABC filter pills ------------------------------------------------------
+document.querySelectorAll('.abc-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.abc-tab').forEach(b => { b.classList.toggle('active', b === btn); b.setAttribute('aria-pressed', String(b === btn)); });
+        document.querySelectorAll('.abc-list').forEach(panel => {
+            panel.style.display = panel.dataset.tabPanel === btn.dataset.tab ? '' : 'none';
         });
     });
 });

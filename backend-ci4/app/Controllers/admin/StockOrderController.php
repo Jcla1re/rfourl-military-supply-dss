@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\EmailNotifier;
+use App\Libraries\Toast;
 use App\Models\NotificationModel;
 use App\Models\ProductModel;
 use App\Models\ReorderAlertModel;
@@ -195,7 +196,7 @@ class StockOrderController extends BaseController
         $alertId    = $this->request->getPost('alert_id');
 
         if (! $supplierId) {
-            return redirect()->back()->with('error', 'Please select a supplier.');
+            return redirect()->back()->with('toast', Toast::error("Couldn't create order", 'Please select a supplier.'));
         }
 
         $lines = [];
@@ -214,7 +215,7 @@ class StockOrderController extends BaseController
         }
 
         if (empty($lines)) {
-            return redirect()->back()->with('error', 'Add at least one item with a quantity greater than zero.');
+            return redirect()->back()->with('toast', Toast::error("Couldn't create order", 'Add at least one item with a quantity greater than zero.'));
         }
 
         $soId = $this->stockOrderModel->generateNextId();
@@ -253,7 +254,7 @@ class StockOrderController extends BaseController
         $db->transComplete();
 
         if ($db->transStatus() === false) {
-            return redirect()->back()->with('error', 'Failed to create the stock order. Please try again.');
+            return redirect()->back()->with('toast', Toast::error("Couldn't create order", 'Something went wrong while saving. Please try again.'));
         }
 
         if ($alertId && $alert) {
@@ -289,7 +290,7 @@ class StockOrderController extends BaseController
             "A new stock order {$soId} has been placed. Please log in to the supplier portal to review and accept it."
         );
 
-        return redirect()->to('/admin/orders')->with('success', "Stock order {$soId} created and sent to supplier.");
+        return redirect()->to('/admin/orders')->with('toast', Toast::success('Order created', 'was sent to the supplier.', $soId));
     }
 
     public function updateStatus($soId)

@@ -6,13 +6,13 @@
 
 <style>
 .no-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
-.no-filters a { padding: 10px 18px; border-radius: 8px; border: 1px solid #ddd; background: #fff; text-decoration: none; color: #1c1c1c; font-weight: 600; }
+.no-filters a { padding: 10px 18px; border-radius: var(--radius-control); border: 1px solid #ddd; background: #fff; text-decoration: none; color: #1c1c1c; font-weight: 600; }
 .no-filters a.active { background: var(--sidebar-bg); color: #fff; border-color: var(--sidebar-bg); }
-.no-filters input { padding: 10px 14px; border-radius: 8px; border: 1px solid #ddd; flex: 1; min-width: 200px; }
+.no-filters input { padding: 10px 14px; border-radius: var(--radius-control); border: 1px solid #ddd; flex: 1; min-width: 200px; }
 
-.no-card { background: #fff; border-radius: 14px; margin-bottom: 16px; overflow: hidden; }
+.no-card { background: #fff; border-radius: var(--radius-card); margin-bottom: 16px; overflow: hidden; }
 .no-card-head { display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: #f4f2ec; }
-.no-card-head .badge-pill { background: #e9e7e1; border-radius: 999px; padding: 5px 14px; font-size: 12px; font-weight: 700; }
+.no-card-head .badge-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 700; }
 .no-card-head .badge-pill.urgent { background: var(--red-bg); color: var(--red-text); }
 .no-card-body { padding: 18px 20px; }
 .no-card-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 0 20px 18px; }

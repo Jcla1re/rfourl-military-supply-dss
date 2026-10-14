@@ -15,9 +15,11 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
-.inv-toolbar { display: flex; gap: 12px; flex-wrap: wrap; margin: 18px 0; }
+.page-wrap { font-family: 'Poppins', sans-serif; }
+
+.inv-toolbar { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin: 18px 0; }
 .inv-toolbar select {
-    min-height: 46px; padding: 8px 34px 8px 14px; border: 1px solid #d8d5cd; border-radius: 10px; background: #fff; min-width: 150px;
+    min-height: 46px; padding: 8px 34px 8px 14px; border: 1px solid #d8d5cd; border-radius: var(--radius-control); background: #fff; min-width: 150px;
     font-family: 'Poppins', sans-serif; color: #888;
     appearance: none; -webkit-appearance: none; -moz-appearance: none;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23888888' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
@@ -26,16 +28,30 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
 }
 .inv-toolbar select.has-value { color: var(--text-dark); }
 .inv-search {
-    flex: 1; min-width: 220px; display: flex; align-items: center; gap: 8px;
-    min-height: 46px; padding: 8px 14px; border: 1px solid #d8d5cd; border-radius: 10px; background: #fff;
+    display: flex; align-items: center; gap: 8px;
+    min-height: 46px; padding: 8px 14px; border: 1px solid #d8d5cd; border-radius: var(--radius-control); background: #fff;
 }
 .inv-search i { color: #888; font-size: 16px; flex-shrink: 0; }
 .inv-search input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; padding: 0; }
-.notify-btn { border: 0; border-radius: 8px; padding: 8px 14px; background: #1c1c1c; color: #fff; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.notify-btn { border: 0; padding: 8px 14px; cursor: pointer; white-space: nowrap; } /* colors: shared primary-button rules */
+.notify-none { display: inline-block; padding: 0 10px; color: #666; font-size: 18px; line-height: 1; vertical-align: middle; }
+
+/* Only the table + pagination sit in a card; the summary pills, filters
+   and tabs sit directly on the page background. */
+.inv-table-card { background: var(--card-bg); border: 1px solid #e4e1d9; border-radius: var(--radius-control); overflow: hidden; }
+.inv-table-card .data-table tbody tr:last-child td { border-bottom: 0; }
+.inv-table-footer { padding: 14px 16px; border-top: 1px solid #e2e2e2; }
+.inv-table-footer .admin-pagination { margin-top: 0; }
+
+/* Column alignment: text left (default), numbers right, short codes
+   centered, actions right. */
+.data-table th.col-num, .data-table td.col-num { text-align: right; font-variant-numeric: tabular-nums; }
+.data-table th.col-center, .data-table td.col-center { text-align: center; }
+.data-table th.col-actions, .data-table td.col-actions { text-align: right; }
+.data-table td.inv-item-id, .data-table td.inv-updated-cell { color: #777; }
 </style>
 
 <div class="page-wrap">
-    <div class="page-panel">
         <?php if (!empty($success)): ?><div class="alert alert-success"><?= esc($success) ?></div><?php endif; ?>
 
         <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
@@ -47,9 +63,17 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
         </div>
 
         <div class="inv-toolbar">
-            <div class="inv-search">
-                <i class="bi bi-search"></i>
-                <input id="searchInput" type="search" value="<?= esc($filterSearch) ?>" placeholder="Search...">
+            <?php $searchError = $searchError ?? null; ?>
+            <div class="inv-search-field">
+                <div class="inv-search<?= $searchError ? ' is-invalid' : '' ?>">
+                    <i class="bi bi-search"></i>
+                    <input id="searchInput" type="search" value="<?= esc($searchInput ?? $filterSearch) ?>" placeholder="Search by item name or ID…" maxlength="50"
+                           aria-label="Search inventory by item name or ID"<?= $searchError ? ' aria-invalid="true" aria-describedby="searchError"' : '' ?>>
+                </div>
+                <p id="searchError" class="search-error" role="alert"<?= $searchError ? '' : ' hidden' ?>>
+                    <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                    <span><?= esc($searchError ?? \App\Models\ProductModel::SEARCH_ERROR) ?></span>
+                </p>
             </div>
 
             <select id="categoryFilter" class="<?= $filterCategory !== 'All' ? 'has-value' : '' ?>">
@@ -74,19 +98,38 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
             </select>
         </div>
 
+        <?php $categoryCounts = $categoryCounts ?? []; ?>
         <div class="underline-tabs">
-            <a href="<?= site_url('staff/inventory') ?>" class="<?= $filterCategory === 'All' ? 'active' : '' ?>">All Items (<?= esc((string) ($totalItems ?? 0)) ?>)</a>
-            <?php $categoryStockTotals = $categoryStockTotals ?? []; ?>
-            <?php foreach ($categories as $itemCategory): ?>
-                <a href="<?= site_url('staff/inventory') . '?category=' . urlencode($itemCategory) ?>" class="<?= $filterCategory === $itemCategory ? 'active' : '' ?>"><?= esc($itemCategory) ?> (<?= number_format($categoryStockTotals[$itemCategory] ?? 0) ?>)</a>
+            <?php $keepPerPage = (int) ($perPage ?? 10) !== (int) (($perPageOptions ?? [10])[0]) ? ['per_page' => (int) $perPage] : []; ?>
+            <a href="<?= site_url('staff/inventory') . ($keepPerPage ? '?' . http_build_query($keepPerPage) : '') ?>" class="<?= $filterCategory === 'All' ? 'active' : '' ?>">All Items (<?= number_format($categoryCounts['All'] ?? 0) ?>)</a>
+                        <?php foreach ($categories as $itemCategory): ?>
+                <a href="<?= site_url('staff/inventory') . '?' . http_build_query(['category' => $itemCategory] + $keepPerPage) ?>" class="<?= $filterCategory === $itemCategory ? 'active' : '' ?>"><?= esc($itemCategory) ?> (<?= number_format($categoryCounts[$itemCategory] ?? 0) ?>)</a>
             <?php endforeach; ?>
         </div>
 
         <?= view('staff/_inventory_table', get_defined_vars()) ?>
-    </div>
 </div>
 
 <script>
+// Rows per page + "return to the same page": the page, filters, search and
+// rows-per-page all live in the URL. Forms post the current query string as
+// return_query so the controller can redirect back to exactly this view.
+function syncReturnQuery() {
+    document.querySelectorAll('input[name="return_query"]').forEach(input => {
+        input.value = window.location.search;
+    });
+}
+syncReturnQuery();
+
+document.addEventListener('change', event => {
+    const select = event.target.closest('.per-page-select');
+    if (!select) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('per_page', select.value);
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+});
+
 ['categoryFilter', 'sizeFilter', 'statusFilter'].forEach(id => {
     document.getElementById(id).addEventListener('change', event => {
         const url = new URL(window.location.href);
@@ -108,7 +151,25 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
 // matter which page it's sitting on.
 (function () {
     const searchInput = document.getElementById('searchInput');
+    const searchBox = searchInput.closest('.inv-search');
+    const searchError = document.getElementById('searchError');
+    // Same rule as ProductModel::SEARCH_PATTERN on the server: letters
+    // (incl. ñ/Ñ), numbers, spaces and - : / & . ' #, max 50 characters.
+    const SEARCH_PATTERN = /^[\p{L}\p{N}\s\-:\/&.'#]{0,50}$/u;
     let debounceTimer;
+    let latestRequest = 0;
+
+    function setSearchInvalid(invalid) {
+        searchBox.classList.toggle('is-invalid', invalid);
+        searchError.hidden = !invalid;
+        if (invalid) {
+            searchInput.setAttribute('aria-invalid', 'true');
+            searchInput.setAttribute('aria-describedby', 'searchError');
+        } else {
+            searchInput.removeAttribute('aria-invalid');
+            searchInput.removeAttribute('aria-describedby');
+        }
+    }
 
     function fetchResults() {
         const url = new URL(window.location.href);
@@ -120,18 +181,39 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
         }
         url.searchParams.delete('page');
 
+        const request = ++latestRequest;
         fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(response => response.text())
             .then(html => {
+                // Ignore a response that's been overtaken by newer typing,
+                // including typing that made the search invalid.
+                if (request !== latestRequest) return;
                 const current = document.getElementById('inventoryResults');
                 if (current) current.outerHTML = html;
                 window.history.replaceState({}, '', url.toString());
+                syncReturnQuery();
             });
     }
+
+    // "Clear search" button in the empty-results state (delegated, since
+    // the table is swapped in place).
+    document.addEventListener('click', event => {
+        if (!event.target.closest('.btn-clear-search')) return;
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+        searchInput.focus();
+    });
 
 
     searchInput.addEventListener('input', () => {
         clearTimeout(debounceTimer);
+        if (!SEARCH_PATTERN.test(searchInput.value.trim())) {
+            // Invalid: show the message, don't search, leave table + URL alone.
+            latestRequest++;
+            setSearchInvalid(true);
+            return;
+        }
+        setSearchInvalid(false);
         debounceTimer = setTimeout(fetchResults, 200);
     });
 })();

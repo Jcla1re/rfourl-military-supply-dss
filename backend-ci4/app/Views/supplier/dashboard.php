@@ -5,37 +5,37 @@
 <?php $alerts = $alerts ?? []; $schedule = $schedule ?? []; $pendingOrders = $pendingOrders ?? []; ?>
 
 <style>
-.sd-alert { background: #fff; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.sd-alert { background: #fff; border-radius: var(--radius-card); padding: 16px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
 .sd-alert .icon { font-size: 24px; }
 .sd-alert .title { font-weight: 800; }
 .sd-alert .sub { color: #666; font-size: 13px; }
 .sd-alert form { margin-left: auto; }
 
-.sd-stat { background: #fff; border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; }
-.sd-stat .icon-box { width: 44px; height: 44px; border-radius: 10px; background: var(--green-bg); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--green-text); flex-shrink: 0; }
+.sd-stat { background: #fff; border-radius: var(--radius-card); padding: 16px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; }
+.sd-stat .icon-box { width: 44px; height: 44px; border-radius: var(--radius-icon); background: var(--green-bg); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--green-text); flex-shrink: 0; }
 .sd-stat .value { font-size: 24px; font-weight: 800; }
 .sd-stat .label { color: #555; font-size: 13px; }
 
-.sd-panel { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; }
+.sd-panel { background: #fff; border-radius: var(--radius-card); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; }
 .sd-panel h6 { font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 .sd-panel h6 i { color: var(--green-text); }
 .sd-panel .empty-state { padding: 34px 20px; }
 .sd-panel .empty-state i { display: block; font-size: 26px; color: #a9a79f; margin-bottom: 6px; }
 .sd-minis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.sd-mini { background: var(--content-bg); border-radius: 10px; padding: 12px 14px; }
+.sd-mini { background: var(--content-bg); border-radius: var(--radius-control); padding: 12px 14px; }
 .sd-mini .v { font-size: 20px; font-weight: 800; line-height: 1.15; }
 .sd-mini .l { font-size: 12px; color: #777; margin-top: 2px; }
 @media (max-width: 575px) { .sd-minis { grid-template-columns: 1fr; } }
 
-.sd-notif-card { border: 1px solid #eee; border-radius: 10px; padding: 14px; margin-bottom: 12px; }
-.sd-notif-card .icon-badge { width: 34px; height: 34px; border-radius: 8px; background: var(--red-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sd-notif-card { border: 1px solid #eee; border-radius: var(--radius-card); padding: 14px; margin-bottom: 12px; }
+.sd-notif-card .icon-badge { width: 34px; height: 34px; border-radius: var(--radius-icon); background: var(--red-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .sd-notif-card .title { font-weight: 700; }
 .sd-notif-card .meta { color: #888; font-size: 12px; margin-top: 6px; }
 
 .sd-schedule-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
 .sd-schedule-row:last-child { border-bottom: none; }
 .sd-schedule-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green-text); margin-top: 6px; flex-shrink: 0; }
-.sd-schedule-row .badge-pill { margin-left: auto; background: var(--green-bg); color: var(--green-text); border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 700; align-self: center; }
+.sd-schedule-row .badge-pill { margin-left: auto; background: var(--green-bg); color: var(--green-text); border-radius: var(--radius-pill); padding: 4px 10px; font-size: 11px; font-weight: 700; align-self: center; }
 .sd-schedule-row .badge-pill.pending { background: #e9e7e1; color: #4a4a4a; }
 
 .sd-perf-track { height: 10px; background: #e4e2dc; border-radius: 5px; overflow: hidden; margin-top: 6px; }
@@ -57,7 +57,7 @@
             <?php if ($a['status'] === 'Order Confirmed'): ?>
                 <form method="post" action="<?= site_url('supplier/new-orders/accept/' . $a['so_id']) ?>">
                     <?= csrf_field() ?>
-                    <button type="submit" class="btn btn-dark btn-sm">Accept Order</button>
+                    <button type="submit" class="btn btn-success btn-sm">Accept Order</button>
                 </form>
             <?php elseif ($a['status'] === 'Preparing'): ?>
                 <form method="post" action="<?= site_url('supplier/deliveries/ship/' . $a['so_id']) ?>">

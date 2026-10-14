@@ -32,11 +32,9 @@ class DashboardController extends BaseController
             ? round((($salesToday - $salesYesterday) / $salesYesterday) * 100) . '%'
             : '0%';
 
-        $categoryCounts = $productModel
-            ->select('category, COUNT(*) as total')
-            ->where('is_active', 1)
-            ->groupBy('category')
-            ->findAll();
+        // Same per-category row counts as the Inventory tabs.
+        $categoryCounts = $productModel->countRowsByCategory();
+        unset($categoryCounts['All']);
 
         $data = [
             'title'          => 'Dashboard',
@@ -51,8 +49,8 @@ class DashboardController extends BaseController
             'lastWeekData'   => $lastWeekly['data'],
             'stockTrendPct'  => '0%',
             'salesTrendPct'  => $salesTrendPct,
-            'seasonLabels'   => array_column($categoryCounts, 'category'),
-            'seasonData'     => array_column($categoryCounts, 'total'),
+            'seasonLabels'   => array_keys($categoryCounts),
+            'seasonData'     => array_values($categoryCounts),
             'topProducts'    => array_map(
                 fn ($p) => ['item_name' => $p['item_name'] ?? $p['item_id'], 'units_sold' => $p['units_sold']],
                 $salesItemModel->topSellers(5)

@@ -5,9 +5,9 @@
 <?php $supplier = $supplier ?? []; $stats = $stats ?? []; ?>
 
 <style>
-.pf-head { background: #fff; border-radius: 14px; padding: 22px 26px; display: flex; align-items: center; gap: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 20px; }
+.pf-head { background: #fff; border-radius: var(--radius-card); padding: 22px 26px; display: flex; align-items: center; gap: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 20px; }
 .pf-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 21px; flex-shrink: 0; }
-.pf-badge { background: #e9e7e1; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; margin-right: 6px; display: inline-block; }
+.pf-badge { background: #e9e7e1; border-radius: var(--radius-pill); padding: 4px 12px; font-size: 12px; font-weight: 700; margin-right: 6px; display: inline-block; }
 .pf-badge.is-active { background: var(--green-bg); color: var(--green-text); }
 .pf-badge.is-inactive { background: var(--red-bg); color: var(--red-text); }
 .pf-meta { margin-left: auto; display: flex; gap: 28px; text-align: right; }
@@ -15,9 +15,9 @@
 .pf-meta .l { font-size: 12px; color: #777; }
 
 /* Cards sit in equal-height pairs (row + height 100%), so they never stretch past their content */
-.pf-card { background: #fff; border-radius: 14px; padding: 20px 24px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; display: flex; flex-direction: column; }
+.pf-card { background: #fff; border-radius: var(--radius-card); padding: 20px 24px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; display: flex; flex-direction: column; }
 .pf-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.pf-card-head .ic { width: 32px; height: 32px; border-radius: 8px; background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.pf-card-head .ic { width: 32px; height: 32px; border-radius: var(--radius-icon); background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
 .pf-card-head h6 { margin: 0; font-weight: 800; font-size: 15px; }
 .pf-card-head .btn { margin-left: auto; }
 .pf-row { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-bottom: 1px solid #f2f2f2; font-size: 14px; }
@@ -29,7 +29,7 @@
 .pf-perf-track { height: 8px; background: #e4e2dc; border-radius: 4px; overflow: hidden; margin: 6px 0 14px; }
 .pf-perf-track > span { display: block; height: 100%; background: var(--green-text); border-radius: 4px; }
 .pf-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: auto; padding-top: 6px; padding-bottom: 8px; }
-.pf-tile { background: var(--content-bg); border-radius: 10px; padding: 12px 14px; }
+.pf-tile { background: var(--content-bg); border-radius: var(--radius-control); padding: 12px 14px; }
 .pf-tile .v { font-size: 20px; font-weight: 800; line-height: 1.15; }
 .pf-tile .l { font-size: 12px; color: #777; margin-top: 2px; }
 @media (max-width: 767px) { .pf-head { flex-wrap: wrap; } .pf-meta { margin-left: 0; text-align: left; width: 100%; } }

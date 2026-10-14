@@ -6,22 +6,35 @@
 // $this->request->isAJAX()), so there is exactly one place that knows
 // how to draw a row — no duplicated markup to keep in sync.
 ?>
-<div id="inventoryResults">
+<div id="inventoryResults" class="inv-table-card">
     <div class="data-table-wrap">
-        <table class="data-table" style="min-width: 980px;">
+        <table class="data-table inv-table">
+            <colgroup>
+                <col class="c-id">      <!-- Item ID -->
+                <col>                   <!-- Item name: takes the remaining space -->
+                <col class="c-size">    <!-- Size -->
+                <col class="c-type">    <!-- Type -->
+                <col class="c-onhand">  <!-- On hand -->
+                <col class="c-rop">     <!-- ROP -->
+                <col class="c-eoq">     <!-- EOQ -->
+                <col class="c-stock">   <!-- Stock level -->
+                <col class="c-status">  <!-- Status -->
+                <col class="c-updated"> <!-- Last updated -->
+                <col class="c-actions"> <!-- Actions -->
+            </colgroup>
             <thead>
                 <tr>
                     <th>Item ID</th>
                     <th>Item Name</th>
-                    <th>Size</th>
+                    <th class="col-center">Size</th>
                     <th>Type</th>
-                    <th>On Hand</th>
-                    <th>Rop</th>
-                    <th>EOQ</th>
-                    <th>Stock Level</th>
+                    <th class="col-num">On Hand</th>
+                    <th class="col-num">ROP</th>
+                    <th class="col-num">EOQ</th>
+                    <th class="col-stock">Stock Level</th>
                     <th>Status</th>
                     <th>Last Updated</th>
-                    <th class="text-center">Actions</th>
+                    <th class="col-actions">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -34,6 +47,7 @@
                         $pillClass = match ($itemStatus) {
                             'Low Stock' => 'amber',
                             'Reorder Now' => 'red',
+                            'Archived' => 'archived',
                             default => 'green',
                         };
                         $rop = max((int) ($default['manual_rop_warning'] ?? 0), 1);
@@ -58,10 +72,10 @@
                             'updated_at_display'=> date('M j, Y', strtotime($v['updated_at'] ?? 'now')),
                         ], $variants);
                         ?>
-                        <tr data-category="<?= esc($group['category'] ?? '') ?>" data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
+                        <tr class="<?= ! empty($showArchived) ? 'is-archived' : '' ?>" data-category="<?= esc($group['category'] ?? '') ?>" data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
                             <td class="inv-item-id"><?= esc($default['item_id'] ?? '—') ?></td>
                             <td><strong><?= esc($group['item_name'] ?? 'Unknown item') ?></strong></td>
-                            <td class="inv-size-cell">
+                            <td class="inv-size-cell col-center">
                                 <?php if (count($variants) > 1): ?>
                                     <select class="inv-size-select">
                                         <?php foreach ($variants as $i => $v): ?>
@@ -73,15 +87,21 @@
                                 <?php endif; ?>
                             </td>
                             <td><?= esc($group['category'] ?? '') ?></td>
-                            <td class="inv-stock-cell"><?= esc($default['current_stock'] ?? 0) ?></td>
-                            <td class="inv-rop-cell"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
-                            <td class="inv-eoq-cell"><?= $default['eoq_value'] !== null ? esc($default['eoq_value']) : '—' ?></td>
+                            <td class="inv-stock-cell col-num"><?= esc($default['current_stock'] ?? 0) ?></td>
+                            <td class="inv-rop-cell col-num"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
+                            <td class="inv-eoq-cell col-num"><?= $default['eoq_value'] !== null ? esc($default['eoq_value']) : '—' ?></td>
                             <td class="inv-bar-cell">
                                 <div class="stock-bar <?= $pillClass ?>"><span style="width: <?= $pct ?>%"></span></div>
                             </td>
                             <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span></td>
                             <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
-                            <td class="inv-actions-cell">
+                            <td class="inv-actions-cell col-actions">
+                                <?php if (! empty($showArchived)): ?>
+                                <button type="button" class="btn-restore" data-item-id="<?= esc($default['item_id']) ?>" data-item-name="<?= esc($default['item_name'] ?? '') ?>">
+                                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Restore
+                                </button>
+                                <?php else: ?>
+                                <div class="inv-actions">
                                 <button type="button"
                                         class="inv-action-btn open-order-modal"
                                         style="<?= $itemStatus === 'Reorder Now' ? '' : 'display:none;' ?>"
@@ -92,45 +112,47 @@
                                         data-recommended-eoq="<?= esc($default['eoq_value'] ?? 1) ?>">
                                     Order
                                 </button>
-                                <button type="button" class="inv-more-btn edit-row" data-item="<?= esc(json_encode($variantsPayload[0]), 'attr') ?>">&hellip;</button>
+                                <button type="button" class="inv-more-btn edit-row" data-item="<?= esc(json_encode($variantsPayload[0]), 'attr') ?>" aria-label="More options"><i class="bi bi-three-dots"></i></button>
+                                </div>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="11" class="text-center py-4">No inventory items found.</td></tr>
+                    <?php if (($search ?? '') !== ''): ?>
+                        <tr>
+                            <td colspan="11" class="inv-empty-search">
+                                <div class="title">No items match &ldquo;<?= esc($search) ?>&rdquo;</div>
+                                <p class="hint">Check the spelling or try a shorter word.</p>
+                                <button type="button" class="btn-clear-search">Clear search</button>
+                            </td>
+                        </tr>
+                    <?php elseif (! empty($showArchived)): ?>
+                        <tr>
+                            <td colspan="11" class="archived-empty">
+                                <div class="archived-empty-icon" aria-hidden="true"><i class="bi bi-archive"></i></div>
+                                <div class="archived-empty-title">No archived items</div>
+                                <p class="archived-empty-text">Items you archive will appear here. You can restore them anytime.</p>
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <tr><td colspan="11" class="text-center py-4">No inventory items found.</td></tr>
+                    <?php endif; ?>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
 
-    <?php $totalPages = max(1, (int) ($totalPages ?? 1)); ?>
-    <div class="d-flex justify-content-between align-items-center mt-3">
-        <span class="text-muted small">Showing <?= count($products ?? []) ?> of <?= esc((string) ($totalItems ?? 0)) ?> Items</span>
-        <?php if (($totalPages ?? 1) > 1): ?>
-            <div class="admin-pagination">
-                <?php
-                $currentPage = max(1, (int) ($currentPage ?? 1));
-                $prevPage = max(1, $currentPage - 1);
-                $nextPage = min((int) $totalPages, (int) $currentPage + 1);
-                $params = $_GET;
-
-                // Only ever show a sliding window of PAGER_WINDOW page
-                // buttons (centered on the current page) instead of one
-                // link per page — with 562 items that was 57 buttons wide.
-                $pagerWindow = 10;
-                $windowStart = max(1, $currentPage - intdiv($pagerWindow, 2));
-                $windowEnd   = min($totalPages, $windowStart + $pagerWindow - 1);
-                $windowStart = max(1, $windowEnd - $pagerWindow + 1);
-
-                $params['page'] = $prevPage;
-                ?>
-                <a href="<?= site_url('admin/inventory') . '?' . http_build_query($params) ?>">&larr; Prev</a>
-                <?php for ($i = $windowStart; $i <= $windowEnd; $i++): $params['page'] = $i; ?>
-                    <a href="<?= site_url('admin/inventory') . '?' . http_build_query($params) ?>" class="<?= $i === (int) $currentPage ? 'active' : '' ?>"><?= $i ?></a>
-                <?php endfor; ?>
-                <?php $params['page'] = $nextPage; ?>
-                <a href="<?= site_url('admin/inventory') . '?' . http_build_query($params) ?>">Next &rarr;</a>
-            </div>
-        <?php endif; ?>
-    </div>
+    <?php // Empty archived list: no footer ("No results" / rows per page) under the empty state. ?>
+    <?php if (! (! empty($showArchived) && empty($products) && ($search ?? '') === '')): ?>
+    <?= view('partials/_pager', [
+        'baseUrl'        => site_url('admin/inventory'),
+        'currentPage'    => $currentPage ?? 1,
+        'totalPages'     => $totalPages ?? 1,
+        'totalItems'     => $totalItems ?? 0,
+        'perPage'        => $perPage ?? 10,
+        'perPageOptions' => $perPageOptions ?? [10, 25, 50],
+        'shownCount'     => count($products ?? []),
+    ]) ?>
+    <?php endif; ?>
 </div>

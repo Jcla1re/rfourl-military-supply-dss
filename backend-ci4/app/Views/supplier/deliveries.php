@@ -5,9 +5,9 @@
 <?php $orders = $orders ?? []; ?>
 
 <style>
-.dv-card { background: #fff; border-radius: 14px; margin-bottom: 18px; overflow: hidden; }
+.dv-card { background: #fff; border-radius: var(--radius-card); margin-bottom: 18px; overflow: hidden; }
 .dv-head { display: flex; align-items: center; gap: 10px; padding: 16px 20px; }
-.dv-head .badge-pill { background: #e9e7e1; border-radius: 999px; padding: 5px 14px; font-size: 12px; font-weight: 700; }
+.dv-head .badge-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 700; }
 .dv-head .badge-pill.preparing { background: var(--amber-bg); color: var(--amber-text); }
 .dv-head .badge-pill.shipped { background: var(--green-bg); color: var(--green-text); }
 .dv-head .dispatched { margin-left: auto; color: #888; font-size: 12px; }
@@ -19,7 +19,7 @@
 .dv-stepper-labels .done { color: var(--green-text); font-weight: 700; }
 
 .dv-info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
-.dv-info-box { border: 1px solid #eee; border-radius: 8px; padding: 10px 14px; }
+.dv-info-box { border: 1px solid #eee; border-radius: var(--radius-control); padding: 10px 14px; }
 .dv-info-box span { display: block; font-size: 12px; color: #888; }
 .dv-info-box input { border: none; background: transparent; font-weight: 600; width: 100%; padding: 0; }
 
@@ -28,7 +28,7 @@
 .dv-items-table td { padding: 8px; border-bottom: 1px solid #f2f2f2; font-size: 14px; vertical-align: middle; }
 .dv-items-table td.num, .dv-items-table th.num { text-align: right; }
 .dv-items-table td.check, .dv-items-table th.check { text-align: center; width: 70px; }
-.dv-items-table input[type="number"] { width: 80px; padding: 6px 8px; border: 1px solid #ccc; border-radius: 6px; text-align: right; }
+.dv-items-table input[type="number"] { width: 80px; padding: 6px 8px; border: 1px solid #ccc; border-radius: var(--radius-control); text-align: right; }
 .dv-items-table input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
 .dv-items-table tfoot td { font-weight: 700; border-top: 2px solid #ddd; border-bottom: none; }
 .dv-awaiting-note { color: #888; font-size: 13px; font-style: italic; margin-top: 4px; }

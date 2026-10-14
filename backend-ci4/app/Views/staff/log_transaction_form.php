@@ -32,17 +32,17 @@ $g = $guide[$type] ?? ['icon' => 'bi-info-circle', 'about' => '', 'points' => []
 ?>
 
 <style>
-.lt-back { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; border: 1px solid #ccc; background: #fff; text-decoration: none; color: #1c1c1c; font-weight: 700; margin-bottom: 18px; }
+.lt-back { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: var(--radius-control); border: 1px solid #ccc; background: #fff; text-decoration: none; color: #1c1c1c; font-weight: 700; margin-bottom: 18px; }
 .lt-label { font-size: 12px; letter-spacing: .05em; color: #666; font-weight: 700; margin-bottom: 12px; }
 .lt-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 991px) { .lt-layout { grid-template-columns: 1fr; } }
-.lt-form-card { background: #fff; border-radius: 14px; padding: 28px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.lt-form-card { background: #fff; border-radius: var(--radius-card); padding: 28px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
 .lt-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
 .lt-grid .full { grid-column: 1 / -1; }
 @media (max-width: 560px) { .lt-grid { grid-template-columns: 1fr; } }
-.lt-aside { background: #fff; border-radius: 14px; padding: 22px 24px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.lt-aside { background: #fff; border-radius: var(--radius-card); padding: 22px 24px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
 .lt-aside-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.lt-aside-head .ic { width: 34px; height: 34px; border-radius: 9px; background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+.lt-aside-head .ic { width: 34px; height: 34px; border-radius: var(--radius-icon); background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
 .lt-aside h6 { margin: 0; font-weight: 800; font-size: 15px; }
 .lt-aside p { color: #666; font-size: 13.5px; margin-bottom: 12px; }
 .lt-points { list-style: none; padding: 0; margin: 0 0 6px; }
@@ -55,15 +55,15 @@ $g = $guide[$type] ?? ['icon' => 'bi-info-circle', 'about' => '', 'points' => []
 .lt-recent-row .qty.pos { color: var(--green-text); }
 .lt-recent-row .qty.neg { color: var(--red-text); }
 .lt-recent-empty { color: #888; font-size: 13px; padding: 8px 0; border-top: 1px solid #f2f2f2; }
-.lt-badge { display: inline-block; background: #e9e7e1; border-radius: 999px; padding: 5px 14px; font-size: 12px; font-weight: 700; margin-bottom: 22px; }
+.lt-badge { display: inline-block; background: #e9e7e1; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 700; margin-bottom: 22px; }
 .lt-field { margin-bottom: 18px; }
 .lt-field label { font-weight: 700; display: block; margin-bottom: 6px; font-size: 14px; }
 .lt-field input, .lt-field select, .lt-field textarea {
-    width: 100%; padding: 12px 14px; border: 1px solid #ccc; border-radius: 8px; background: #fff;
+    width: 100%; padding: 12px 14px; border: 1px solid #ccc; border-radius: var(--radius-control); background: #fff;
 }
 .lt-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 560px) { .lt-field-row { grid-template-columns: 1fr; } }
-.lt-submit { width: 100%; background: #6b8f4e; color: #fff; border: none; padding: 14px; border-radius: 10px; font-weight: 700; margin-top: 6px; }
+.lt-submit { width: 100%; border: none; padding: 14px; margin-top: 6px; } /* colors: shared primary-button rules */
 </style>
 
 <div class="page-wrap">

@@ -6,13 +6,13 @@
 // $this->request->isAJAX()), so there is exactly one place that knows
 // how to draw a row — no duplicated markup to keep in sync.
 ?>
-<div id="inventoryResults">
+<div id="inventoryResults" class="inv-table-card">
     <div class="data-table-wrap">
         <table class="data-table" style="min-width: 980px;">
             <thead>
                 <tr>
-                    <th>Item ID</th><th>Item Name</th><th>Size</th><th>Type</th><th>On Hand</th><th>Rop</th>
-                    <th>Stock Level</th><th>Status</th><th>Last Updated</th><th class="text-center">Actions</th>
+                    <th>Item ID</th><th>Item Name</th><th class="col-center">Size</th><th>Type</th><th class="col-num">On Hand</th><th class="col-num">ROP</th>
+                    <th>Stock Level</th><th>Status</th><th>Last Updated</th><th class="col-actions">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -41,7 +41,7 @@
                         <tr data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
                             <td class="inv-item-id"><?= esc($default['item_id'] ?? '—') ?></td>
                             <td><strong><?= esc($group['item_name'] ?? 'Unknown item') ?></strong></td>
-                            <td class="inv-size-cell">
+                            <td class="inv-size-cell col-center">
                                 <?php if (count($variants) > 1): ?>
                                     <select class="inv-size-select">
                                         <?php foreach ($variants as $i => $v): ?>
@@ -53,55 +53,45 @@
                                 <?php endif; ?>
                             </td>
                             <td><?= esc($group['category'] ?? '') ?></td>
-                            <td class="inv-stock-cell"><?= esc($default['current_stock'] ?? 0) ?></td>
-                            <td class="inv-rop-cell"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
+                            <td class="inv-stock-cell col-num"><?= esc($default['current_stock'] ?? 0) ?></td>
+                            <td class="inv-rop-cell col-num"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
                             <td class="inv-bar-cell"><div class="stock-bar <?= $pillClass ?>"><span style="width: <?= $pct ?>%"></span></div></td>
                             <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span></td>
                             <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
-                            <td class="text-center inv-notify-cell">
+                            <td class="inv-notify-cell col-actions">
                                 <form method="post" action="<?= site_url('staff/inventory/notify/' . $default['item_id']) ?>" class="notify-form" style="<?= $itemStatus === 'Reorder Now' ? '' : 'display:none;' ?>">
                                     <?= csrf_field() ?>
+                                    <input type="hidden" name="return_query" value="<?= esc($_SERVER['QUERY_STRING'] ?? '') ?>">
                                     <button type="submit" class="notify-btn">Notify Admin</button>
                                 </form>
-                                <span class="notify-none" style="<?= $itemStatus === 'Reorder Now' ? 'display:none;' : '' ?>">&hellip;</span>
+                                <span class="notify-none" style="<?= $itemStatus === 'Reorder Now' ? 'display:none;' : '' ?>"><i class="bi bi-three-dots"></i></span>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="10" class="text-center py-4">No inventory items found.</td></tr>
+                    <?php if (($search ?? '') !== ''): ?>
+                        <tr>
+                            <td colspan="10" class="inv-empty-search">
+                                <div class="title">No items match &ldquo;<?= esc($search) ?>&rdquo;</div>
+                                <p class="hint">Check the spelling or try a shorter word.</p>
+                                <button type="button" class="btn-clear-search">Clear search</button>
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <tr><td colspan="10" class="text-center py-4">No inventory items found.</td></tr>
+                    <?php endif; ?>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
 
-    <?php $totalPages = max(1, (int) ($totalPages ?? 1)); ?>
-    <div class="d-flex justify-content-between align-items-center mt-3">
-        <span class="text-muted small">Showing <?= count($products ?? []) ?> of <?= esc((string) ($totalItems ?? 0)) ?> Items</span>
-        <?php if (($totalPages ?? 1) > 1): ?>
-            <div class="admin-pagination">
-                <?php
-                $currentPage = max(1, (int) ($currentPage ?? 1));
-                $prevPage = max(1, $currentPage - 1);
-                $nextPage = min((int) $totalPages, $currentPage + 1);
-                $params = $_GET;
-
-                // Only ever show a sliding window of PAGER_WINDOW page
-                // buttons (centered on the current page) instead of one
-                // link per page — with 562 items that was 57 buttons wide.
-                $pagerWindow = 10;
-                $windowStart = max(1, $currentPage - intdiv($pagerWindow, 2));
-                $windowEnd   = min((int) $totalPages, $windowStart + $pagerWindow - 1);
-                $windowStart = max(1, $windowEnd - $pagerWindow + 1);
-
-                $params['page'] = $prevPage;
-                ?>
-                <a href="<?= site_url('staff/inventory') . '?' . http_build_query($params) ?>">&larr; Prev</a>
-                <?php for ($i = $windowStart; $i <= $windowEnd; $i++): $params['page'] = $i; ?>
-                    <a href="<?= site_url('staff/inventory') . '?' . http_build_query($params) ?>" class="<?= $i === (int) $currentPage ? 'active' : '' ?>"><?= $i ?></a>
-                <?php endfor; ?>
-                <?php $params['page'] = $nextPage; ?>
-                <a href="<?= site_url('staff/inventory') . '?' . http_build_query($params) ?>">Next &rarr;</a>
-            </div>
-        <?php endif; ?>
-    </div>
+    <?= view('partials/_pager', [
+        'baseUrl'        => site_url('staff/inventory'),
+        'currentPage'    => $currentPage ?? 1,
+        'totalPages'     => $totalPages ?? 1,
+        'totalItems'     => $totalItems ?? 0,
+        'perPage'        => $perPage ?? 10,
+        'perPageOptions' => $perPageOptions ?? [10, 25, 50],
+        'shownCount'     => count($products ?? []),
+    ]) ?>
 </div>

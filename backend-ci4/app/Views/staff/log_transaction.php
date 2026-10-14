@@ -11,7 +11,7 @@
 @media (max-width: 900px) { .lt-types { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .lt-types { grid-template-columns: 1fr; } }
 .lt-type-card {
-    background: #fff; border: 1px solid #e2e2e2; border-radius: 12px; padding: 22px 16px; text-align: center;
+    background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); padding: 22px 16px; text-align: center;
     text-decoration: none; color: #1c1c1c; transition: box-shadow .15s;
 }
 .lt-type-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08); color: #1c1c1c; }
@@ -19,10 +19,10 @@
 .lt-type-card .name { font-weight: 700; }
 .lt-type-card .sub { color: #888; font-size: 12px; margin-top: 4px; }
 
-.lt-log { background: #fff; border-radius: 12px; padding: 16px 20px; display: flex; gap: 14px; margin-bottom: 12px; }
+.lt-log { background: #fff; border-radius: var(--radius-card); padding: 16px 20px; display: flex; gap: 14px; margin-bottom: 12px; }
 .lt-log .dot { width: 34px; height: 34px; border-radius: 50%; background: #ececec; flex-shrink: 0; }
 .lt-log .title { font-weight: 700; }
-.lt-log .badge-pill { background: #e9e7e1; border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 700; margin-left: 8px; }
+.lt-log .badge-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 3px 10px; font-size: 11px; font-weight: 700; margin-left: 8px; }
 .lt-log .meta { color: #888; font-size: 12px; margin-top: 3px; }
 </style>
 

@@ -19,11 +19,11 @@ $dss = $dss ?? [];
 @media (max-width: 900px) { .ra-summary { grid-template-columns: 1fr; } }
 
 .ra-empty {
-    padding: 70px 20px; border: 1px dashed #c9c9c9; border-radius: 12px;
+    padding: 70px 20px; border: 1px dashed #c9c9c9; border-radius: var(--radius-card);
     text-align: center; color: #666; font-size: 16px;
 }
 
-.ra-card { background: #fff; border: 1px solid #e2e2e2; border-radius: 14px; margin-top: 16px; overflow: hidden; }
+.ra-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); margin-top: 16px; overflow: hidden; }
 .ra-card-head { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #eee; }
 .ra-card-head .icon { font-size: 26px; }
 .ra-card-head.critical .icon { color: var(--accent-maroon); }
@@ -33,21 +33,21 @@ $dss = $dss ?? [];
 .ra-card-head .order-btn { margin-left: auto; }
 
 .ra-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 18px 20px 0; }
-.ra-stat-box { border: 1px solid #e2e2e2; border-radius: 10px; padding: 14px; text-align: center; }
+.ra-stat-box { border: 1px solid #e2e2e2; border-radius: var(--radius-control); padding: 14px; text-align: center; }
 .ra-stat-box span { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #777; }
 .ra-stat-box strong { display: block; font-size: 26px; margin-top: 4px; }
 .ra-stat-box small { color: #888; font-size: 12px; }
 .ra-stat-box.stock strong { color: var(--accent-maroon); }
 .ra-stat-box.eoq strong { color: #a08217; }
 
-.ra-basis { margin: 18px 20px 20px; border: 1px solid #e2e2e2; border-radius: 10px; padding: 16px 18px; }
+.ra-basis { margin: 18px 20px 20px; border: 1px solid #e2e2e2; border-radius: var(--radius-control); padding: 16px 18px; }
 .ra-basis strong.title { display: block; margin-bottom: 10px; }
 .ra-basis-grid { display: flex; flex-wrap: wrap; gap: 24px; font-size: 14px; }
 .ra-basis-grid b { margin-left: 6px; }
 
 .ra-card-actions { display: flex; gap: 8px; padding: 12px 20px 0; }
 .ra-card-actions form { margin: 0; }
-.ra-status-badge { display: inline-flex; align-items: center; background: #eef3ee; color: #3d5230; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+.ra-status-badge { display: inline-flex; align-items: center; background: #eef3ee; color: #3d5230; border-radius: var(--radius-pill); padding: 4px 10px; font-size: 12px; font-weight: 700; }
 
 @media (max-width: 700px) { .ra-stats { grid-template-columns: 1fr; } }
 </style>
@@ -220,10 +220,10 @@ $dss = $dss ?? [];
     align-items: center; justify-content: center; background: rgba(0,0,0,.4);
 }
 .order-modal.show { display: flex; }
-.order-modal-card { width: min(760px, 92vw); max-height: 90vh; overflow-y: auto; padding: 26px; border-radius: 14px; background: #fff; }
+.order-modal-card { width: min(760px, 92vw); max-height: 90vh; overflow-y: auto; padding: 26px; border-radius: var(--radius-card); background: #fff; }
 .order-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .order-field { display: flex; flex-direction: column; gap: 6px; }
-.order-field input, .order-field select { padding: 12px; border: 1px solid #ccc; border-radius: 7px; }
+.order-field input, .order-field select { padding: 12px; border: 1px solid #ccc; border-radius: var(--radius-control); }
 @media (max-width: 700px) { .order-form-grid { grid-template-columns: 1fr; } }
 </style>
 

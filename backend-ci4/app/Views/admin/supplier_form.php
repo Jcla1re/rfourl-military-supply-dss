@@ -11,17 +11,17 @@ $action = $isEdit ? site_url('admin/suppliers/update/' . $supplier['supplier_id'
 <style>
 .sf-page { padding: 24px; background: var(--content-bg); min-height: calc(100vh - 88px); }
 .sf-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.sf-back { background: #fff; border: 1px solid #ccc; border-radius: 10px; padding: 10px 18px; text-decoration: none; color: #1c1c1c; font-weight: 600; }
+.sf-back { background: #fff; border: 1px solid #ccc; border-radius: var(--radius-control); padding: 10px 18px; text-decoration: none; color: #1c1c1c; font-weight: 600; }
 .sf-actions { display: flex; gap: 10px; }
 .sf-label { text-transform: uppercase; letter-spacing: .06em; color: #666; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
 
-.sf-section { background: #fbfbfa; border: 1px solid #e5e3dc; border-radius: 14px; padding: 24px; margin-bottom: 20px; }
-.sf-section-title { display: inline-block; background: #f0e6c8; color: #1c1c1c; font-weight: 700; padding: 6px 16px; border-radius: 999px; margin-bottom: 20px; }
+.sf-section { background: #fbfbfa; border: 1px solid #e5e3dc; border-radius: var(--radius-card); padding: 24px; margin-bottom: 20px; }
+.sf-section-title { display: inline-block; background: #f0e6c8; color: #1c1c1c; font-weight: 700; padding: 6px 16px; border-radius: var(--radius-pill); margin-bottom: 20px; }
 .sf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .sf-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
 .sf-field label { font-weight: 600; margin-bottom: 6px; display: block; }
 .sf-field input, .sf-field select {
-    width: 100%; padding: 12px 14px; border: 1px solid #ccc; border-radius: 8px; background: #fff;
+    width: 100%; padding: 12px 14px; border: 1px solid #ccc; border-radius: var(--radius-control); background: #fff;
 }
 .sf-radios { display: flex; gap: 28px; margin-top: 6px; }
 .sf-radios label { display: flex; align-items: center; gap: 8px; font-weight: 500; }

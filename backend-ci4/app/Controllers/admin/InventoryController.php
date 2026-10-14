@@ -6,10 +6,15 @@ use App\Controllers\BaseController;
 use App\Models\InventoryLogModel;
 use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
+use App\Models\SecurityLogModel;
 use App\Models\SupplierModel;
+use App\Libraries\Toast;
 
 class InventoryController extends BaseController
 {
+    /** Rows-per-page choices offered under the inventory table; first is the default. */
+    private const PER_PAGE_OPTIONS = [10, 25, 50];
+
     protected $productModel;
     protected $supplierModel;
     protected $inventoryLogModel;
@@ -26,11 +31,14 @@ class InventoryController extends BaseController
     public function index()
     {
         $category = $this->request->getGet('category');
-        $search   = $this->request->getGet('search');
+        [$search, $searchInput, $searchError] = ProductModel::validateSearch($this->request->getGet('search'));
         $size     = $this->request->getGet('size');
         $status   = $this->request->getGet('status');
         $page     = (int) ($this->request->getGet('page') ?? 1);
-        $perPage  = 10;
+        $perPage  = (int) ($this->request->getGet('per_page') ?? self::PER_PAGE_OPTIONS[0]);
+        if (! in_array($perPage, self::PER_PAGE_OPTIONS, true)) {
+            $perPage = self::PER_PAGE_OPTIONS[0];
+        }
 
         $eoqByItem = [];
         foreach ($this->pdssComputationModel->latestPerItem() as $c) {
@@ -44,40 +52,47 @@ class InventoryController extends BaseController
         }
         unset($p);
 
+        // Archived view (?status=archived): the table lists archived items
+        // instead. Everything else on the page (summary cards, tab counts)
+        // still counts active items only.
+        $showArchived     = is_string($status) && strtolower($status) === 'archived';
+        $archivedProducts = $this->productModel->where('is_active', 0)->findAll();
+        foreach ($archivedProducts as &$p) {
+            $p['status']    = ['label' => 'Archived', 'class' => 'status-archived'];
+            $p['eoq_value'] = $eoqByItem[$p['item_id']] ?? null;
+        }
+        unset($p);
+        $archivedCount = $this->productModel->countRowsByCategory($archivedProducts)['All'];
+
         $inStockCount  = count(array_filter($allProducts, fn ($p) => $p['status']['label'] === 'In Stock'));
         $lowStockCount = count(array_filter($allProducts, fn ($p) => $p['status']['label'] === 'Low Stock'));
         $reorderCount  = count(array_filter($allProducts, fn ($p) => $p['status']['label'] === 'Reorder Now'));
 
-        // Total stock on hand per category, shown next to each category tab
-        // (e.g. "Clothes (780)") so stock levels are visible before filtering.
-        $categoryStockTotals = [];
-        foreach ($allProducts as $p) {
-            $cat = $p['category'] ?? 'Uncategorized';
-            $categoryStockTotals[$cat] = ($categoryStockTotals[$cat] ?? 0) + (int) $p['current_stock'];
-        }
+        // Rows per category tab (+ 'All'): same count as the table rows a tab
+        // shows, active items only. Shared with the dashboard chart.
+        $categoryCounts = $this->productModel->countRowsByCategory($allProducts);
 
-        $sizes = array_values(array_unique(array_filter(array_column($allProducts, 'size'))));
+        $sizes = array_values(array_unique(array_filter(array_column($showArchived ? $archivedProducts : $allProducts, 'size'))));
         sort($sizes, SORT_STRING);
 
         // Same item_name+category grouping as the POS/Stock Order screens —
         // one row per item, each size still its own real underlying product.
         // Filters narrow which *rows* are eligible before grouping, so an
         // item with only one matching size still shows (with just that size).
-        $filtered = $allProducts;
+        $filtered = $showArchived ? $archivedProducts : $allProducts;
         if ($category && $category !== 'All') {
             $filtered = array_values(array_filter($filtered, fn ($p) => $p['category'] === $category));
         }
         if ($search) {
-            $needle   = mb_strtolower($search);
             $filtered = array_values(array_filter(
                 $filtered,
-                fn ($p) => str_contains(mb_strtolower($p['item_name']), $needle) || str_contains(mb_strtolower($p['item_id']), $needle)
+                fn ($p) => ProductModel::matchesSearch($p, $search)
             ));
         }
         if ($size) {
             $filtered = array_values(array_filter($filtered, fn ($p) => ($p['size'] ?? '') === $size));
         }
-        if ($status) {
+        if ($status && ! $showArchived) {
             $filtered = array_values(array_filter($filtered, fn ($p) => $p['status']['label'] === $status));
         }
 
@@ -85,6 +100,8 @@ class InventoryController extends BaseController
 
         $groups     = $this->productModel->groupRows($filtered);
         $totalItems = count($groups);
+        $totalPages = max(1, (int) ceil($totalItems / $perPage));
+        $page       = min(max(1, $page), $totalPages);
         $products   = array_slice($groups, ($page - 1) * $perPage, $perPage);
 
         $data = [
@@ -98,15 +115,21 @@ class InventoryController extends BaseController
             'reorderCount'        => $reorderCount,
             'totalItems'          => $totalItems,
             'currentPage'         => $page,
-            'totalPages'          => (int) ceil($totalItems / $perPage),
+            'totalPages'          => $totalPages,
+            'perPage'             => $perPage,
+            'perPageOptions'      => self::PER_PAGE_OPTIONS,
             'category'            => $category ?? 'All',
             'size'                => $size ?? '',
             'status'              => $status ?? '',
-            'search'              => $search ?? '',
+            'search'              => $search,
+            'searchInput'         => $searchInput,
+            'searchError'         => $searchError,
             'categories'          => ProductModel::CATEGORIES,
-            'categoryStockTotals' => $categoryStockTotals,
+            'categoryCounts'      => $categoryCounts,
             'sizes'               => $sizes,
             'statuses'            => ['In Stock', 'Low Stock', 'Reorder Now'],
+            'showArchived'        => $showArchived,
+            'archivedCount'       => $archivedCount,
             'success'             => session()->getFlashdata('success'),
             'error'               => session()->getFlashdata('error'),
         ];
@@ -134,7 +157,7 @@ class InventoryController extends BaseController
         ];
 
         if (! $this->validate($rules)) {
-            return redirect()->to('/admin/inventory')->with('error', implode(' ', $this->validator->getErrors()));
+            return redirect()->to($this->listUrl())->with('toast', Toast::error("Couldn't add item", implode(' ', $this->validator->getErrors())));
         }
 
         $newId = $this->productModel->generateNextId();
@@ -164,7 +187,7 @@ class InventoryController extends BaseController
             );
         }
 
-        return redirect()->to('/admin/inventory')->with('success', 'Item added successfully.');
+        return redirect()->to($this->listUrl())->with('toast', Toast::success('Item added', 'was added to inventory.', (string) $this->request->getPost('item_name')));
     }
 
     public function update($itemId)
@@ -172,7 +195,7 @@ class InventoryController extends BaseController
         $product = $this->productModel->find($itemId);
 
         if (! $product) {
-            return redirect()->to('/admin/inventory')->with('error', 'Item not found.');
+            return redirect()->to($this->listUrl())->with('toast', Toast::error("Couldn't save changes", 'This item no longer exists.'));
         }
 
         $rules = [
@@ -184,7 +207,7 @@ class InventoryController extends BaseController
         ];
 
         if (! $this->validate($rules)) {
-            return redirect()->to('/admin/inventory')->with('error', implode(' ', $this->validator->getErrors()));
+            return redirect()->to($this->listUrl())->with('toast', Toast::error("Couldn't save changes", implode(' ', $this->validator->getErrors())));
         }
 
         $newStock = (int) ($this->request->getPost('current_stock') ?: 0);
@@ -202,6 +225,14 @@ class InventoryController extends BaseController
         ]);
 
         if ($delta !== 0) {
+            // Optional reason picked in the Edit item modal; only the known
+            // choices are accepted.
+            $reason = (string) $this->request->getPost('stock_reason');
+            $note   = 'Manual adjustment via Inventory screen';
+            if (in_array($reason, ['Restock', 'Damaged', 'Returned', 'Count correction'], true)) {
+                $note .= ' (' . $reason . ')';
+            }
+
             $this->inventoryLogModel->record(
                 $itemId,
                 session()->get('user_id'),
@@ -209,11 +240,11 @@ class InventoryController extends BaseController
                 $delta,
                 $newStock,
                 null,
-                'Manual adjustment via Inventory screen'
+                $note
             );
         }
 
-        return redirect()->to('/admin/inventory')->with('success', 'Item updated successfully.');
+        return redirect()->to($this->listUrl())->with('toast', Toast::success('Changes saved', 'was updated.', (string) $this->request->getPost('item_name')));
     }
 
     public function delete($itemId)
@@ -221,11 +252,54 @@ class InventoryController extends BaseController
         $product = $this->productModel->find($itemId);
 
         if (! $product) {
-            return redirect()->to('/admin/inventory')->with('error', 'Item not found.');
+            return redirect()->to($this->listUrl())->with('toast', Toast::error('Item not found', 'It may have been removed already.'));
         }
 
         $this->productModel->update($itemId, ['is_active' => 0]);
+        SecurityLogModel::log('ITEM_ARCHIVED', null, "Archived item {$itemId} ({$product['item_name']})");
 
-        return redirect()->to('/admin/inventory')->with('success', 'Item archived.');
+        // Toast with Undo (restores right away) instead of a banner.
+        return redirect()->to($this->listUrl())->with('toast', Toast::success(
+            'Item archived',
+            'moved to Archived items.',
+            $product['item_name'],
+            ['undo' => site_url('admin/inventory/restore/' . rawurlencode((string) $itemId))]
+        ));
+    }
+
+    /**
+     * Brings an archived item back into active inventory (also used by the
+     * Undo button on the "archived" toast). Logged like archiving.
+     */
+    public function restore($itemId)
+    {
+        $product = $this->productModel->find($itemId);
+
+        if (! $product) {
+            return redirect()->to($this->listUrl())->with('toast', Toast::error('Item not found', 'It may have been removed already.'));
+        }
+
+        if ((int) $product['is_active'] !== 1) {
+            $this->productModel->update($itemId, ['is_active' => 1]);
+            SecurityLogModel::log('ITEM_RESTORED', null, "Restored item {$itemId} ({$product['item_name']})");
+        }
+
+        return redirect()->to($this->listUrl())->with('toast', Toast::success('Item restored', 'is back in inventory.', $product['item_name']));
+    }
+
+    /**
+     * The inventory list URL the user came from, rebuilt from the
+     * return_query the page posts along with each form (page, filters,
+     * search, rows per page), so saving or archiving an item lands them back
+     * on the same page instead of page 1. Only known list parameters are
+     * kept.
+     */
+    private function listUrl(): string
+    {
+        parse_str(ltrim((string) $this->request->getPost('return_query'), '?'), $params);
+        $params = array_intersect_key($params, array_flip(['category', 'search', 'size', 'status', 'page', 'per_page']));
+        $params = array_filter($params, 'is_string');
+
+        return '/admin/inventory' . ($params ? '?' . http_build_query($params) : '');
     }
 }

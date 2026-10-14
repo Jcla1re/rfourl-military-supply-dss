@@ -20,24 +20,24 @@ $unreadCount = $unreadCount ?? 0;
 <style>
 .notif-filters { display: flex; gap: 12px; margin-bottom: 22px; }
 .notif-filters a {
-    display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: var(--radius-pill);
     text-decoration: none; font-weight: 700; background: #fff; color: #1c1c1c; border: 1px solid #ddd;
 }
 .notif-filters a.active { background: var(--sidebar-bg); color: #fff; border-color: var(--sidebar-bg); }
-.notif-filters a .count { background: rgba(0,0,0,.08); border-radius: 999px; padding: 2px 9px; font-size: 12px; }
+.notif-filters a .count { background: rgba(0,0,0,.08); border-radius: var(--radius-pill); padding: 2px 9px; font-size: 12px; }
 .notif-filters a.active .count { background: rgba(255,255,255,.2); }
 
 .notif-date-label { color: #888; font-weight: 800; font-size: 22px; margin: 20px 0 12px; }
 
 .notif-card {
-    background: #fff; border-radius: 12px; padding: 18px 20px; display: flex; align-items: flex-start; gap: 16px;
+    background: #fff; border-radius: var(--radius-card); padding: 18px 20px; display: flex; align-items: flex-start; gap: 16px;
     margin-bottom: 14px; border-left: 4px solid #ccc;
 }
 .notif-card .icn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
 .notif-card .title { font-weight: 800; font-size: 17px; }
 .notif-card .msg { color: #555; font-size: 14px; margin-top: 2px; }
 .notif-card .btn-view { margin-left: auto; align-self: center; white-space: nowrap; }
-.notif-card .type-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; margin-top: 8px; }
+.notif-card .type-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-pill); padding: 4px 12px; font-size: 12px; font-weight: 700; margin-top: 8px; }
 
 .notif-card.red     { border-color: var(--accent-maroon); }
 .notif-card.red .icn { color: var(--accent-maroon); border-color: var(--accent-maroon); }
@@ -60,7 +60,7 @@ $unreadCount = $unreadCount ?? 0;
 .notif-card.is-read .title { font-weight: 600; color: #666; }
 .notif-card.is-read .msg { color: #888; }
 .notif-card.is-read .icn { opacity: .6; }
-.new-pill { background: var(--green-bg); color: var(--green-text); border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 700; margin-left: 8px; }
+.new-pill { background: var(--green-bg); color: var(--green-text); border-radius: var(--radius-pill); padding: 3px 10px; font-size: 11px; font-weight: 700; margin-left: 8px; }
 
 /* Order-status cards: the whole card is a submit button that marks it done
    and forwards straight to the order — reset button chrome so it still
@@ -68,14 +68,14 @@ $unreadCount = $unreadCount ?? 0;
 .notif-card-openform { display: block; width: 100%; padding: 0; margin-bottom: 14px; }
 .notif-card-open {
     all: unset; display: flex; align-items: flex-start; gap: 16px; width: 100%; box-sizing: border-box;
-    background: #fff; border-radius: 12px; padding: 18px 20px; border-left: 4px solid var(--green-text); cursor: pointer;
+    background: #fff; border-radius: var(--radius-card); padding: 18px 20px; border-left: 4px solid var(--green-text); cursor: pointer;
 }
 .notif-card-open:hover { background: #f7f9fc; }
 .notif-card-open .icn { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--green-text); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
 .notif-card-open .body { flex: 1; text-align: left; }
 .notif-card-open .title { font-weight: 800; font-size: 17px; color: #1c1c1c; }
 .notif-card-open .msg { color: #555; font-size: 14px; margin-top: 2px; }
-.notif-card-open .type-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; margin-top: 8px; background: var(--green-bg); color: var(--green-text); }
+.notif-card-open .type-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-pill); padding: 4px 12px; font-size: 12px; font-weight: 700; margin-top: 8px; background: var(--green-bg); color: var(--green-text); }
 .notif-card-open .go { align-self: center; color: var(--green-text); font-size: 20px; }
 .notif-card-open.is-read { background: #f6f6f4; }
 .notif-card-open.is-read .title { font-weight: 600; color: #666; }
@@ -88,18 +88,18 @@ $unreadCount = $unreadCount ?? 0;
 .notif-details summary { list-style: none; cursor: pointer; }
 .notif-details summary::-webkit-details-marker { display: none; }
 .notif-details .notif-card { margin-bottom: 0; }
-.notif-details[open] .notif-card { border-radius: 12px 12px 0 0; }
+.notif-details[open] .notif-card { border-radius: var(--radius-card) var(--radius-card) 0 0; }
 .notif-details .chevron { margin-left: auto; align-self: center; transition: transform .15s ease; color: #999; }
 .notif-details[open] .chevron { transform: rotate(180deg); }
 .notif-details .notif-expand {
-    background: #fff; border-radius: 0 0 12px 12px; padding: 4px 20px 18px 76px; border-left: 4px solid #ccc; border-top: 1px dashed #eee;
+    background: #fff; border-radius: 0 0 var(--radius-card) var(--radius-card); padding: 4px 20px 18px 76px; border-left: 4px solid #ccc; border-top: 1px dashed #eee;
 }
 .notif-details.red .notif-expand, .notif-details.red .notif-card { border-left-color: var(--accent-maroon); }
 .notif-details.amber .notif-expand, .notif-details.amber .notif-card { border-left-color: var(--amber-text); }
 .notif-details.green .notif-expand, .notif-details.green .notif-card { border-left-color: var(--green-text); }
 
 .notif-actions { display: flex; gap: 10px; margin-top: 12px; }
-.notif-actions button { padding: 9px 18px; border-radius: 8px; font-weight: 700; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+.notif-actions button { padding: 9px 18px; border-radius: var(--radius-control); font-weight: 700; border: 1px solid #ccc; background: #fff; cursor: pointer; }
 .notif-actions .approve { background: var(--green-text); color: #fff; border: none; }
 .notif-actions .decline { background: var(--accent-maroon); color: #fff; border: none; }
 .notif-actions .done { background: var(--sidebar-bg); color: #fff; border: none; }

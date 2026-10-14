@@ -14,7 +14,7 @@
 
 <style>
 .dash-alert {
-    background: #fff; border: 1px solid var(--accent-maroon); border-radius: 12px;
+    background: #fff; border: 1px solid var(--accent-maroon); border-radius: var(--radius-card);
     padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px;
     animation: dashAlertGlow 1.8s ease-out infinite;
 }
@@ -36,7 +36,7 @@
 }
 
 .dash-stat {
-    background: #fff; border-radius: 14px; padding: 20px 22px; display: flex; align-items: center; gap: 16px;
+    background: #fff; border-radius: var(--radius-card); padding: 20px 22px; display: flex; align-items: center; gap: 16px;
     box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; text-decoration: none; color: inherit;
     transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
@@ -48,7 +48,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
 .dash-stat .trend .pct { color: #2f6431; font-weight: 700; }
 .dash-stat .trend .pct.down { color: var(--accent-maroon); }
 
-.panel-box { background: #fff; border-radius: 14px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; display: flex; flex-direction: column; }
+.panel-box { background: #fff; border-radius: var(--radius-card); padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; display: flex; flex-direction: column; }
 .panel-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; padding: 24px 10px; color: #888; font-size: 14px; }
 .panel-empty i { font-size: 30px; color: #a9a79f; }
 .panel-box h6 { font-weight: 800; font-size: 15px; margin-bottom: 14px; }
@@ -71,8 +71,8 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
 
 .qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; align-content: start; }
 @media (max-width: 575px) { .qa-grid { grid-template-columns: 1fr; } }
-.qa-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; padding: 18px 14px; border-radius: 10px; font-weight: 700; text-decoration: none; }
-.qa-btn.primary { background: #6b8f4e; color: #fff; }
+.qa-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; padding: 18px 14px; border-radius: var(--radius-control); font-weight: 700; text-decoration: none; }
+/* .qa-btn.primary colors: shared primary-button rules */
 .qa-btn.outline { background: #fff; border: 1px solid #ccc; color: #1c1c1c; }
 </style>
 
@@ -92,7 +92,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
             <?= csrf_field() ?>
             <input type="hidden" name="item_id" value="<?= esc($alertItem['item_id'] ?? '') ?>">
             <input type="hidden" name="item_name" value="<?= esc($alertItem['item_name'] ?? '') ?>">
-            <button type="submit" class="btn btn-dark">Notify Admin</button>
+            <button type="submit" class="btn btn-success">Notify Admin</button>
         </form>
     </div>
     <?php endif; ?>

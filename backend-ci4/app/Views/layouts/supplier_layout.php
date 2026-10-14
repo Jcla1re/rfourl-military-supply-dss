@@ -129,33 +129,8 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
         localStorage.setItem('sidebarCollapsed', isCollapsed);
     });
 </script>
-<script>
-    // Flash messages (.alert-success/.alert-danger/.toast-success) render as
-    // an icon + title + message toast card near the header, auto-dismissing
-    // after 3s instead of sitting as a boxed banner in the page flow.
-    function toastEscapeHtml(s) {
-        const d = document.createElement('div');
-        d.textContent = s ?? '';
-        return d.innerHTML;
-    }
-
-    document.querySelectorAll('.alert-success, .toast-success').forEach(el => {
-        const msg = el.textContent.trim();
-        el.innerHTML = `<div class="toast-icon success"><i class="bi bi-check-circle-fill"></i></div>
-            <div><div class="toast-title">Success!</div><div class="toast-msg">${toastEscapeHtml(msg)}</div></div>`;
-    });
-    document.querySelectorAll('.alert-danger').forEach(el => {
-        const msg = el.textContent.trim();
-        el.innerHTML = `<div class="toast-icon error"><i class="bi bi-x-circle-fill"></i></div>
-            <div><div class="toast-title">Error</div><div class="toast-msg">${toastEscapeHtml(msg)}</div></div>`;
-    });
-
-    document.querySelectorAll('.alert-success, .alert-danger, .toast-success').forEach(el => {
-        setTimeout(() => {
-            el.classList.add('toast-hide');
-            setTimeout(() => el.remove(), 400);
-        }, 1000);
-    });
-</script>
+<?php // Shared toast: specific title, bold item name, Undo, × / Esc. Set with App\Libraries\Toast. ?>
+    <?= view('partials/_toast', ['toast' => session()->getFlashdata('toast')]) ?>
+    <script src="/assets/js/toast-timer.js"></script>
 </body>
 </html>

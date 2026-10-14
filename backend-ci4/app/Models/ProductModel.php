@@ -28,6 +28,44 @@ class ProductModel extends Model
 
     public const CATEGORIES = ['Clothes', 'Shoes', 'Equipment', 'Patches', 'Metal', 'Accessories'];
 
+    /**
+     * Inventory search rule: letters (incl. ñ/Ñ), numbers, spaces and the
+     * symbols that appear in item names (- : / & . ' #), max 50 characters.
+     * The search box checks the same rule in the browser
+     * (admin/inventory.php, staff/inventory.php); keep them in sync.
+     */
+    public const SEARCH_PATTERN = "/^[\\p{L}\\p{N}\\s\\-:\\/&.'#]{0,50}$/uD";
+    public const SEARCH_ERROR   = "Use letters, numbers, spaces, or - : / & . ' # only.";
+
+    /**
+     * Validates a raw ?search= value.
+     *
+     * Returns [term to search by, text to show in the search box, error].
+     * An invalid term is ignored (all items are shown) and the error is
+     * passed to the view, which shows it under the search box.
+     *
+     * @param mixed $raw
+     *
+     * @return array{0: string, 1: string, 2: string|null}
+     */
+    public static function validateSearch($raw): array
+    {
+        if (! is_string($raw)) {
+            return ['', '', null];
+        }
+
+        $term = trim($raw);
+        if ($term === '') {
+            return ['', '', null];
+        }
+
+        if (preg_match(self::SEARCH_PATTERN, $term) === 1) {
+            return [$term, $term, null];
+        }
+
+        return ['', mb_substr($term, 0, 50), self::SEARCH_ERROR];
+    }
+
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
@@ -85,6 +123,55 @@ class ProductModel extends Model
      * filters) and then group what's left, instead of grouping everything
      * and filtering groups afterward.
      */
+    /**
+     * Inventory search match: the term is found in the item name (partial,
+     * case-insensitive: "shirt" finds "06 Shirt") or in the item ID, where
+     * leading zeros don't matter ("146", "0146" and "00146" all find 0146).
+     */
+    public static function matchesSearch(array $product, string $term): bool
+    {
+        $needle = mb_strtolower(trim($term));
+        if ($needle === '') {
+            return true;
+        }
+
+        $name = mb_strtolower((string) ($product['item_name'] ?? ''));
+        $id   = mb_strtolower((string) ($product['item_id'] ?? ''));
+
+        if (str_contains($name, $needle) || str_contains($id, $needle)) {
+            return true;
+        }
+
+        // Numeric IDs: compare without leading zeros so extra zeros match too.
+        return ctype_digit($needle) && ctype_digit($id)
+            && ltrim($needle, '0') === ltrim($id, '0');
+    }
+
+    /**
+     * How many inventory table rows each category has, plus 'All'.
+     *
+     * One row = one item (sizes of the same item are grouped, exactly as the
+     * Inventory table shows them), counted over active items only. This is
+     * the single source for the Inventory category tabs, the "All Items"
+     * count and the dashboard's category chart, so they always agree.
+     *
+     * @param array|null $products Active product rows (fetched when null).
+     *
+     * @return array<string, int> ['All' => n, 'Clothes' => n, ...] in tab order
+     */
+    public function countRowsByCategory(?array $products = null): array
+    {
+        $products ??= $this->where('is_active', 1)->findAll();
+
+        $counts = array_fill_keys(self::CATEGORIES, 0);
+        foreach ($this->groupRows($products) as $group) {
+            $category          = (string) ($group['category'] ?? '');
+            $counts[$category] = ($counts[$category] ?? 0) + 1;
+        }
+
+        return ['All' => array_sum($counts)] + $counts;
+    }
+
     public function groupRows(array $products): array
     {
         $groups = [];

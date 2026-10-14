@@ -13,26 +13,26 @@
 .ra-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
 @media (max-width: 900px) { .ra-summary { grid-template-columns: 1fr; } }
 
-.ra-empty { padding: 70px 20px; border: 1px dashed #c9c9c9; border-radius: 12px; text-align: center; color: #666; font-size: 16px; }
+.ra-empty { padding: 70px 20px; border: 1px dashed #c9c9c9; border-radius: var(--radius-card); text-align: center; color: #666; font-size: 16px; }
 
-.ra-card { background: #fff; border: 1px solid #e2e2e2; border-radius: 14px; margin-top: 16px; overflow: hidden; }
+.ra-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); margin-top: 16px; overflow: hidden; }
 .ra-card-head { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #eee; }
 .ra-card-head .icon { font-size: 26px; }
 .ra-card-head.critical .icon { color: var(--accent-maroon); }
 .ra-card-head.warning .icon { color: #d39b28; }
 .ra-card-head h4 { margin: 0; font-weight: 800; font-size: 19px; }
 .ra-card-head span.sub { display: block; color: #555; font-size: 14px; }
-.ra-card-head .notify-btn { margin-left: auto; border: 0; border-radius: 8px; padding: 10px 18px; background: #1c1c1c; color: #fff; font-weight: 700; cursor: pointer; }
+.ra-card-head .notify-btn { margin-left: auto; border: 0; padding: 10px 18px; cursor: pointer; } /* colors: shared primary-button rules */
 
 .ra-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 18px 20px 0; }
-.ra-stat-box { border: 1px solid #e2e2e2; border-radius: 10px; padding: 14px; text-align: center; }
+.ra-stat-box { border: 1px solid #e2e2e2; border-radius: var(--radius-control); padding: 14px; text-align: center; }
 .ra-stat-box span { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #777; }
 .ra-stat-box strong { display: block; font-size: 26px; margin-top: 4px; }
 .ra-stat-box small { color: #888; font-size: 12px; }
 .ra-stat-box.stock strong { color: var(--accent-maroon); }
 .ra-stat-box.eoq strong { color: #a08217; }
 
-.ra-basis { margin: 18px 20px 20px; border: 1px solid #e2e2e2; border-radius: 10px; padding: 16px 18px; }
+.ra-basis { margin: 18px 20px 20px; border: 1px solid #e2e2e2; border-radius: var(--radius-control); padding: 16px 18px; }
 .ra-basis strong.title { display: block; margin-bottom: 10px; }
 .ra-basis-grid { display: flex; flex-wrap: wrap; gap: 24px; font-size: 14px; }
 .ra-basis-grid b { margin-left: 6px; }

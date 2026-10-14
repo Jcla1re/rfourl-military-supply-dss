@@ -6,24 +6,24 @@
 <?php $orders = $orders ?? []; ?>
 
 <style>
-.lt-back { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; border: 1px solid #ccc; background: #fff; text-decoration: none; color: #1c1c1c; font-weight: 700; margin-bottom: 18px; }
+.lt-back { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: var(--radius-control); border: 1px solid #ccc; background: #fff; text-decoration: none; color: #1c1c1c; font-weight: 700; margin-bottom: 18px; }
 .lt-label { font-size: 12px; letter-spacing: .05em; color: #666; font-weight: 700; margin-bottom: 12px; }
 .lt-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 991px) { .lt-layout { grid-template-columns: 1fr; } }
-.lt-form-card { background: #fff; border-radius: 14px; padding: 28px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
-.lt-aside { background: #fff; border-radius: 14px; padding: 22px 24px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.lt-form-card { background: #fff; border-radius: var(--radius-card); padding: 28px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.lt-aside { background: #fff; border-radius: var(--radius-card); padding: 22px 24px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
 .lt-aside-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.lt-aside-head .ic { width: 34px; height: 34px; border-radius: 9px; background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+.lt-aside-head .ic { width: 34px; height: 34px; border-radius: var(--radius-icon); background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
 .lt-aside h6 { margin: 0; font-weight: 800; font-size: 15px; }
 .lt-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-.lt-tile { background: var(--content-bg); border-radius: 10px; padding: 12px 14px; }
+.lt-tile { background: var(--content-bg); border-radius: var(--radius-control); padding: 12px 14px; }
 .lt-tile .v { font-size: 20px; font-weight: 800; line-height: 1.15; }
 .lt-tile .l { font-size: 12px; color: #777; margin-top: 2px; }
 .lt-points { list-style: none; padding: 0; margin: 0; }
 .lt-points li { display: flex; gap: 8px; font-size: 13.5px; padding: 7px 0; border-top: 1px solid #f2f2f2; }
 .lt-points li i { color: var(--green-text); margin-top: 2px; }
-.lt-badge { display: inline-block; background: #e9e7e1; border-radius: 999px; padding: 5px 14px; font-size: 12px; font-weight: 700; margin-bottom: 18px; }
-.lt-submit { width: 100%; background: #6b8f4e; color: #fff; border: none; padding: 14px; border-radius: 10px; font-weight: 700; margin-top: 18px; }
+.lt-badge { display: inline-block; background: #e9e7e1; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 700; margin-bottom: 18px; }
+.lt-submit { width: 100%; border: none; padding: 14px; margin-top: 18px; } /* colors: shared primary-button rules */
 
 .restock-check-table { width: 100%; border-collapse: collapse; }
 .restock-check-table th { text-align: left; font-size: 11px; text-transform: uppercase; color: #888; padding: 6px 8px; border-bottom: 1px solid #e2e2e2; }

@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\Toast;
 use App\Models\ClusterSegmentModel;
 use App\Models\DssParameterModel;
 use App\Models\PdssComputationModel;
@@ -164,7 +165,7 @@ class ReorderAlertController extends BaseController
      */
     public function createOrder()
     {
-        session()->setFlashdata('success', 'Stock order created.');
+        session()->setFlashdata('toast', Toast::success('Order created', 'The stock order was created.'));
         return redirect()->to('/admin/reorder-alerts');
     }
 }

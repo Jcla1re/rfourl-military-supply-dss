@@ -11,13 +11,13 @@ $errorMsg = session()->getFlashdata('error') ?? $error;
     <link href="/assets/css/auth-theme.css" rel="stylesheet">
     <style>
         .notify-box {
-            background: #fff; border-radius: 10px; padding: 0.9rem 1rem;
+            background: #fff; border-radius: var(--radius-control); padding: 0.9rem 1rem;
             font-size: 0.85rem; text-align: center; margin-bottom: 1.25rem; color: #333;
         }
         .notify-sent-pill {
             display: flex; align-items: center; justify-content: center; gap: 0.5rem;
             background: var(--green-bg, #ddf1df); color: var(--green-text, #2f6431);
-            border-radius: 999px; padding: 0.6rem 1rem; font-weight: 700; margin-top: 0.75rem;
+            border-radius: var(--radius-pill); padding: 0.6rem 1rem; font-weight: 700; margin-top: 0.75rem;
         }
     </style>
 </head>

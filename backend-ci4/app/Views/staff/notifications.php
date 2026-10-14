@@ -20,33 +20,33 @@ $unreadCount = $unreadCount ?? 0;
 <style>
 .notif-filters { display: flex; gap: 12px; margin-bottom: 22px; }
 .notif-filters a {
-    display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: var(--radius-pill);
     text-decoration: none; font-weight: 700; background: #fff; color: #1c1c1c; border: 1px solid #ddd;
 }
 .notif-filters a.active { background: var(--sidebar-bg); color: #fff; border-color: var(--sidebar-bg); }
-.notif-filters a .count { background: rgba(0,0,0,.08); border-radius: 999px; padding: 2px 9px; font-size: 12px; }
+.notif-filters a .count { background: rgba(0,0,0,.08); border-radius: var(--radius-pill); padding: 2px 9px; font-size: 12px; }
 .notif-filters a.active .count { background: rgba(255,255,255,.2); }
 .notif-date-label { color: #888; font-weight: 800; font-size: 22px; margin: 20px 0 12px; }
 .notif-date-label:first-child { margin-top: 0; }
 
-.sn-card { background: #fff; border-radius: 12px; padding: 16px 20px; display: flex; gap: 14px; margin-bottom: 14px; }
+.sn-card { background: #fff; border-radius: var(--radius-card); padding: 16px 20px; display: flex; gap: 14px; margin-bottom: 14px; }
 .sn-card.unread { border-left: 4px solid var(--green-text); }
-.sn-card .icon { width: 38px; height: 38px; border-radius: 8px; background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sn-card .icon { width: 38px; height: 38px; border-radius: var(--radius-icon); background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .sn-card .title { font-weight: 800; }
 .sn-card .msg { color: #555; font-size: 14px; margin-top: 2px; }
 .sn-card .meta { color: #999; font-size: 12px; margin-top: 6px; }
-.sn-card .new-pill { background: var(--green-bg); color: var(--green-text); border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 700; margin-left: 8px; }
+.sn-card .new-pill { background: var(--green-bg); color: var(--green-text); border-radius: var(--radius-pill); padding: 3px 10px; font-size: 11px; font-weight: 700; margin-left: 8px; }
 
 /* Cards that have somewhere to go: the whole card is a submit button that
    marks it read and forwards straight there. */
 .sn-card-openform { display: block; width: 100%; padding: 0; margin-bottom: 14px; }
 .sn-card-open {
     all: unset; display: flex; gap: 14px; width: 100%; box-sizing: border-box;
-    background: #fff; border-radius: 12px; padding: 16px 20px; cursor: pointer;
+    background: #fff; border-radius: var(--radius-card); padding: 16px 20px; cursor: pointer;
 }
 .sn-card-open:hover { background: #f7f9fc; }
 .sn-card-open.unread { border-left: 4px solid var(--green-text); }
-.sn-card-open .icon { width: 38px; height: 38px; border-radius: 8px; background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sn-card-open .icon { width: 38px; height: 38px; border-radius: var(--radius-icon); background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .sn-card-open .body { flex: 1; text-align: left; }
 .sn-card-open .title { font-weight: 800; color: #1c1c1c; }
 .sn-card-open .msg { color: #555; font-size: 14px; margin-top: 2px; }

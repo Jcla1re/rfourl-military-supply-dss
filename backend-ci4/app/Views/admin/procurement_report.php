@@ -10,19 +10,19 @@
 <?php $rows = $rows ?? []; $dss = $dss ?? []; ?>
 
 <style>
-.pr-params { background: #fff; border-radius: 14px; padding: 24px 26px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 20px; }
+.pr-params { background: #fff; border-radius: var(--radius-card); padding: 24px 26px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 20px; }
 .pr-params h3 { font-weight: 800; margin-bottom: 18px; }
 .pr-param-row { display: flex; flex-wrap: wrap; gap: 40px; margin-bottom: 18px; }
 .pr-param-row div span { display: block; color: #777; font-size: 13px; }
 .pr-param-row div strong { font-size: 20px; }
-.pr-formula { background: #f2f0e9; border-radius: 10px; padding: 16px 20px; font-size: 15px; line-height: 2; }
+.pr-formula { background: #f2f0e9; border-radius: var(--radius-control); padding: 16px 20px; font-size: 15px; line-height: 2; }
 
 .abc-badge {
     display: inline-flex; width: 26px; height: 26px; align-items: center; justify-content: center;
     border-radius: 50%; font-weight: 700; background: var(--red-bg); color: var(--red-text); font-size: 13px;
 }
 .pr-order-btn {
-    border: 1px solid #333; background: #fff; border-radius: 8px; padding: 8px 14px; font-weight: 700; cursor: pointer;
+    border: 1px solid #333; background: #fff; border-radius: var(--radius-control); padding: 8px 14px; font-weight: 700; cursor: pointer;
 }
 </style>
 
@@ -178,10 +178,10 @@
     align-items: center; justify-content: center; background: rgba(0,0,0,.4);
 }
 .order-modal.show { display: flex; }
-.order-modal-card { width: min(760px, 92vw); max-height: 90vh; overflow-y: auto; padding: 26px; border-radius: 14px; background: #fff; }
+.order-modal-card { width: min(760px, 92vw); max-height: 90vh; overflow-y: auto; padding: 26px; border-radius: var(--radius-card); background: #fff; }
 .order-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .order-field { display: flex; flex-direction: column; gap: 6px; }
-.order-field input, .order-field select { padding: 12px; border: 1px solid #ccc; border-radius: 7px; }
+.order-field input, .order-field select { padding: 12px; border: 1px solid #ccc; border-radius: var(--radius-control); }
 @media (max-width: 700px) { .order-form-grid { grid-template-columns: 1fr; } }
 </style>
 

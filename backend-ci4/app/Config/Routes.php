@@ -39,6 +39,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->post('inventory/store', 'InventoryController::store');
     $routes->post('inventory/update/(:segment)', 'InventoryController::update/$1');
     $routes->post('inventory/delete/(:segment)', 'InventoryController::delete/$1');
+    $routes->post('inventory/restore/(:segment)', 'InventoryController::restore/$1');
 
     $routes->get('suppliers', 'SupplierController::index');
     $routes->get('suppliers/create', 'SupplierController::create');

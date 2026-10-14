@@ -42,6 +42,7 @@ class ReorderAlertModel extends Model
         return $this->select('reorder_alert.*, products.item_name, products.category, products.current_stock, products.supplier_id')
             ->join('products', 'products.item_id = reorder_alert.item_id', 'left')
             ->whereIn('reorder_alert.status', self::PENDING_STATUSES)
+            ->where('products.is_active', 1) // archived items' alerts stay hidden until restored
             ->orderBy('reorder_alert.alert_timestamp', 'DESC')
             ->findAll();
     }
@@ -52,7 +53,10 @@ class ReorderAlertModel extends Model
      */
     public function pendingCount(): int
     {
-        return $this->whereIn('status', self::PENDING_STATUSES)->countAllResults();
+        return $this->join('products', 'products.item_id = reorder_alert.item_id')
+            ->whereIn('reorder_alert.status', self::PENDING_STATUSES)
+            ->where('products.is_active', 1) // archived items don't count
+            ->countAllResults();
     }
 
     /**
