@@ -137,6 +137,10 @@ class InventoryController extends BaseController
             return redirect()->to('/admin/inventory')->with('error', implode(' ', $this->validator->getErrors()));
         }
 
+        if ($this->isDuplicateItem((string) $this->request->getPost('item_name'), $this->request->getPost('size'), null)) {
+            return redirect()->to('/admin/inventory')->with('error', 'An item with this name and size already exists.');
+        }
+
         $newId = $this->productModel->generateNextId();
 
         $this->productModel->insert([
@@ -167,6 +171,27 @@ class InventoryController extends BaseController
         return redirect()->to('/admin/inventory')->with('success', 'Item added successfully.');
     }
 
+    /** True when another active item has the same name (case-insensitive) and size. */
+    private function isDuplicateItem(string $name, ?string $size, ?string $exceptItemId): bool
+    {
+        $builder = $this->productModel
+            ->where('is_active', 1)
+            ->where('LOWER(item_name)', mb_strtolower(trim($name)));
+
+        $size = trim((string) $size);
+        if ($size === '') {
+            $builder->groupStart()->where('size', null)->orWhere('size', '')->groupEnd();
+        } else {
+            $builder->where('LOWER(size)', mb_strtolower($size));
+        }
+
+        if ($exceptItemId !== null) {
+            $builder->where('item_id !=', $exceptItemId);
+        }
+
+        return $builder->countAllResults() > 0;
+    }
+
     public function update($itemId)
     {
         $product = $this->productModel->find($itemId);
@@ -185,6 +210,10 @@ class InventoryController extends BaseController
 
         if (! $this->validate($rules)) {
             return redirect()->to('/admin/inventory')->with('error', implode(' ', $this->validator->getErrors()));
+        }
+
+        if ($this->isDuplicateItem((string) $this->request->getPost('item_name'), $this->request->getPost('size'), (string) $itemId)) {
+            return redirect()->to('/admin/inventory')->with('error', 'Another item with this name and size already exists.');
         }
 
         $newStock = (int) ($this->request->getPost('current_stock') ?: 0);

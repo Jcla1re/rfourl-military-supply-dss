@@ -152,6 +152,20 @@ class LogTransactionController extends BaseController
         $logType      = self::TYPES[$type]['log_type'];
         $userId       = session()->get('user_id');
 
+        if ($type === 'damaged' && (int) $this->request->getPost('qty_affected') > $currentStock) {
+            return redirect()->to("/staff/log-transaction/{$type}")
+                ->with('error', "Only {$currentStock} unit(s) in stock - the damaged/lost quantity cannot be higher.");
+        }
+
+        if ($type === 'return') {
+            $saleRef = trim((string) $this->request->getPost('original_sale_ref'));
+            $sale    = $saleRef !== '' ? db_connect()->table('sales_transaction')->where('receipt_no', $saleRef)->get()->getRowArray() : null;
+            if (! $sale) {
+                return redirect()->to("/staff/log-transaction/{$type}")
+                    ->with('error', 'Original sale reference not found. Enter the receipt number of the original sale.');
+            }
+        }
+
         switch ($type) {
             case 'return':
                 $qty     = max(0, (int) $this->request->getPost('qty_returned'));
@@ -207,6 +221,8 @@ class LogTransactionController extends BaseController
             null,
             $notes ?: null
         );
+
+        (new \App\Models\ReorderAlertModel())->syncFromLiveInventory();
 
         $this->notifyAdmin($type, (array) $product, $qty, $delta, $newStock, $notes);
 

@@ -53,6 +53,7 @@ class NewOrdersController extends BaseController
             'filter'   => $filter,
             'search'   => $this->request->getGet('search') ?? '',
             'success'  => session()->getFlashdata('success'),
+            'error'    => session()->getFlashdata('error'),
         ];
 
         return view('supplier/new_orders', $data);
@@ -82,10 +83,17 @@ class NewOrdersController extends BaseController
             return redirect()->to('/supplier/new-orders')->with('error', 'Order not found.');
         }
 
-        $this->stockOrderModel->update($soId, ['status' => 'Cancelled']);
+        $reason = trim((string) $this->request->getPost('reason'));
+        if ($reason === '') {
+            return redirect()->to('/supplier/new-orders')->with('error', 'Please give a reason for declining the order.');
+        }
+        $reason = mb_substr($reason, 0, 255);
 
-        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} declined by supplier", session()->get('full_name') . " declined order {$soId}. Please reassign or follow up.", null, 'order_status', "/admin/orders/{$soId}");
-        $this->emailNotifier->toRole('Admin', "Order {$soId} declined by supplier", session()->get('full_name') . " declined order {$soId}. Please reassign or follow up.");
+        $this->stockOrderModel->update($soId, ['status' => 'Cancelled', 'decline_reason' => $reason]);
+
+        $declineMsg = session()->get('full_name') . " declined order {$soId}. Reason: {$reason}. Please reassign or follow up.";
+        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} declined by supplier", $declineMsg, null, 'order_status', "/admin/orders/{$soId}");
+        $this->emailNotifier->toRole('Admin', "Order {$soId} declined by supplier", $declineMsg);
 
         return redirect()->to('/supplier/new-orders')->with('success', "Order {$soId} declined.");
     }

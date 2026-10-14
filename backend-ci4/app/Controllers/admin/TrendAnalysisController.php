@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\SalesArchive;
 use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
 use App\Models\SalesItemModel;
@@ -23,7 +24,7 @@ class TrendAnalysisController extends BaseController
         $this->pdssComputationModel  = new PdssComputationModel();
     }
 
-    public function index()
+    private function buildData(): array
     {
         $year   = (int) ($this->request->getGet('year') ?? date('Y'));
         $itemId = $this->request->getGet('item') ?: null;
@@ -42,7 +43,11 @@ class TrendAnalysisController extends BaseController
         $lastWeekEnd = (new \DateTime($weekAsOf))->modify('-7 days')->format('Y-m-d');
         $lastWeek = $this->weekSeries($lastWeekEnd, $itemId);
 
-        $products = $this->productModel->where('is_active', 1)->orderBy('item_name', 'ASC')->findAll();
+        // Active products plus anything that has sales history, so older items stay searchable.
+        $products = $this->productModel
+            ->where('is_active', 1)
+            ->orWhere('item_id IN (SELECT DISTINCT item_id FROM sales_item)', null, false)
+            ->orderBy('item_name', 'ASC')->findAll();
 
         $computations = [];
         foreach ($this->pdssComputationModel->latestPerItem() as $c) {
@@ -112,7 +117,8 @@ class TrendAnalysisController extends BaseController
         $data = [
             'title'          => 'Trend Analysis',
             'active'         => 'trend_analysis',
-            'years'          => range((int) date('Y'), (int) date('Y') - 3),
+            'years'          => $this->yearsWithSales(),
+            'archiveNotice'  => SalesArchive::notice(),
             'selectedYear'   => $year,
             'products'       => $products,
             'selectedItem'   => $itemId,
@@ -131,11 +137,43 @@ class TrendAnalysisController extends BaseController
             'abcTopItems'    => $abcTopItems,
             'abcByClass'     => $abcByClass,
             'abcClassCounts' => $abcClassCounts,
-            'totalStock'     => array_sum(array_column($products, 'current_stock')),
+            'totalStock'     => array_sum(array_column(array_filter($products, fn ($p) => (int) $p['is_active'] === 1), 'current_stock')),
             'salesToday'     => $this->salesTransactionModel->totalForToday(),
         ];
 
-        return view('admin/trend_analysis', $data);
+        return $data;
+    }
+
+    public function index()
+    {
+        return view('admin/trend_analysis', $this->buildData());
+    }
+
+    public function pdf()
+    {
+        $data = $this->buildData();
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->setPaper('a4', 'portrait');
+        $dompdf->loadHtml(view('admin/trend_analysis_pdf', $data));
+        $dompdf->render();
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="trend-analysis-' . $data['selectedYear'] . '.pdf"')
+            ->setBody($dompdf->output());
+    }
+
+    /** Every year that has sales (newest first), always including the current year. */
+    private function yearsWithSales(): array
+    {
+        $rows  = db_connect()->query('SELECT DISTINCT YEAR(sale_date) AS y FROM sales_transaction ORDER BY y DESC')->getResultArray();
+        $years = array_map('intval', array_column($rows, 'y'));
+        $years[] = (int) date('Y');
+        $years = array_values(array_unique($years));
+        rsort($years);
+
+        return $years;
     }
 
     /**

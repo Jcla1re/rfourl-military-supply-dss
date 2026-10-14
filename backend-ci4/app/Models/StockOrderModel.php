@@ -22,6 +22,7 @@ class StockOrderModel extends Model
         'expected_delivery_date',
         'actual_delivery_date',
         'tracking_no',
+        'decline_reason',
     ];
 
     protected $useTimestamps = false;

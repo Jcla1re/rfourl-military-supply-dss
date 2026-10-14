@@ -84,8 +84,32 @@ class ProfileController extends BaseController
 
     /**
      * The Admin creates the portal account, but from then on the supplier owns
-     * its login email and password. Both changes re-check the current password.
+     * its username, login email and password. Each change re-checks the current password.
      */
+    public function updateUsername()
+    {
+        $user = $this->userModel->find((int) session()->get('user_id'));
+
+        if (! $user || ! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
+            SecurityLogModel::log('username_change_failed', null, 'wrong current password');
+            return redirect()->to('/supplier/profile')->with('error', 'Current password is incorrect.');
+        }
+
+        if (! $this->validate([
+            'username' => "required|min_length[4]|max_length[50]|alpha_dash|is_unique[users.username,user_id,{$user['user_id']}]",
+        ])) {
+            return redirect()->to('/supplier/profile')->with('error', implode(' ', $this->validator->getErrors()));
+        }
+
+        $newUsername = trim((string) $this->request->getPost('username'));
+
+        $this->userModel->update($user['user_id'], ['username' => $newUsername]);
+        session()->set('username', $newUsername);
+        SecurityLogModel::log('username_changed', $user, "{$user['username']} -> {$newUsername}");
+
+        return redirect()->to('/supplier/profile')->with('success', 'Username updated. Use it the next time you log in.');
+    }
+
     public function updateLoginEmail()
     {
         $user = $this->userModel->find((int) session()->get('user_id'));

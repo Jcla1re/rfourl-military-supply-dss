@@ -197,6 +197,8 @@
         <a href="?tab=receipts" class="<?= $tab === 'receipts' ? 'active' : '' ?>">Sales &amp; Receipts</a>
     </div>
 
+    <?php if ($tab === 'receipts'): ?><?= view('admin/_archive_notice', ['archiveNotice' => $archiveNotice ?? null]) ?><?php endif; ?>
+
     <?php if ($tab === 'pos'): ?>
         <?php $groups = $groups ?? []; ?>
         <div class="pos-layout">
@@ -343,6 +345,7 @@
                         <input type="date" name="date" value="<?= esc($date ?? date('Y-m-d')) ?>" class="form-control" onchange="this.form.submit()">
                     </form>
                     <a href="<?= site_url('admin/sales/export-pdf') . '?date=' . esc($date ?? date('Y-m-d')) ?>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-pdf"></i> Export PDF</a>
+                    <a href="<?= site_url('admin/sales/export-csv') . '?date=' . esc($date ?? date('Y-m-d')) ?>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-filetype-csv"></i> Export CSV</a>
                 </div>
             </div>
             <div class="data-table-wrap">
@@ -691,7 +694,7 @@ if (document.getElementById('posGrid')) {
         if (!cart[id]) {
             cart[id] = { name: v.item_name, size: v.size || '', price: v.selling_price, stock: v.current_stock, qty: 0 };
         }
-        if (cart[id].qty < cart[id].stock) cart[id].qty++;
+        if (cart[id].qty < cart[id].stock) { cart[id].qty++; } else { window.posStockLimit(cart[id]); }
     }
 
     function openSizePicker(itemName, variants) {
@@ -927,7 +930,19 @@ if (document.getElementById('posGrid')) {
         }
     }
 
-    window.posInc = id => { if (cart[id].qty < cart[id].stock) cart[id].qty++; renderCart(); };
+    window.posStockLimit = line => {
+        let el = document.getElementById('stockLimitMsg');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'stockLimitMsg';
+            el.className = 'alert alert-warning py-1 px-2 mt-2 mb-0 small';
+            document.getElementById('cartLines').parentNode.insertBefore(el, document.getElementById('cartLines'));
+        }
+        el.textContent = 'Only ' + line.stock + ' left of ' + line.name + '.';
+        clearTimeout(window.posStockLimitTimer);
+        window.posStockLimitTimer = setTimeout(() => el.remove(), 3000);
+    };
+    window.posInc = id => { if (cart[id].qty < cart[id].stock) { cart[id].qty++; } else { window.posStockLimit(cart[id]); } renderCart(); };
     window.posDec = id => { cart[id].qty = Math.max(0, cart[id].qty - 1); renderCart(); };
 
     document.getElementById('cashReceived').addEventListener('input', updateChange);

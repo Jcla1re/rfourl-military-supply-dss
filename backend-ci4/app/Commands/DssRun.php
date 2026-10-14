@@ -51,6 +51,10 @@ class DssRun extends BaseCommand
         }
         $orderingCost     = (float) $dssParams['ordering_cost'];
         $holdingCost      = (float) $dssParams['holding_cost_per_unit'];
+        if ($holdingCost <= 0) {
+            CLI::error('Holding cost per unit must be greater than zero - EOQ cannot be computed. Fix it in Settings > DSS Parameter.');
+            return;
+        }
         $defaultZScore    = (float) $dssParams['z_score'];
         $lookbackDays     = (int) $dssParams['demand_lookback_days'];
         $minimumOrderQty  = (int) ($dssParams['minimum_order_qty'] ?? 5);
@@ -61,9 +65,9 @@ class DssRun extends BaseCommand
             return;
         }
         $asOf = new \DateTime(substr($asOfRow['mx'], 0, 10));
-        $windowStart = (clone $asOf)->modify('-' . ($lookbackDays - 1) . ' days');
+        $windowStart = \DateTime::createFromImmutable(\App\Libraries\DssFormulas::windowStart($asOf, $lookbackDays));
 
-        CLI::write("As-of date: {$asOf->format('Y-m-d')} (window: {$windowStart->format('Y-m-d')} to {$asOf->format('Y-m-d')}, {$lookbackDays} days)", 'yellow');
+        CLI::write("As-of date: {$asOf->format('Y-m-d')} (window: {$windowStart->format('Y-m-d')} to {$asOf->format('Y-m-d')}, {$lookbackDays} days back, inclusive)", 'yellow');
 
         // --- Load window sales, grouped per item per day ---
         $windowRows = $db->table('sales_item si')
@@ -105,19 +109,15 @@ class DssRun extends BaseCommand
                 $cursor->modify('+1 day');
             }
 
-            $totalQty = array_sum($series);
-            $avgDaily = $totalQty / $lookbackDays;
-            $variance = 0.0;
-            foreach ($series as $v) {
-                $variance += ($v - $avgDaily) ** 2;
-            }
-            $stdDev = sqrt($variance / $lookbackDays);
+            $stats    = \App\Libraries\DssFormulas::demandStats($series);
+            $avgDaily = $stats['avg'];
+            $stdDev   = $stats['std'];
 
             $demandStats[$itemId] = [
                 'avg'    => $avgDaily,
                 'std'    => $stdDev,
                 'lead'   => $leadByItem[$itemId] ?? 7,
-                'annual' => (int) round($avgDaily * 365),
+                'annual' => \App\Libraries\DssFormulas::annualDemand($avgDaily),
             ];
         }
 
@@ -164,6 +164,7 @@ class DssRun extends BaseCommand
         $computationRows = [];
         $alertRows       = [];
         $abcUpdates      = [];
+        $ropUpdates      = [];
         $classifiedCount = 0;
         $abcClassAgg     = [
             'A' => ['count' => 0, 'demand_sum' => 0.0],
@@ -192,17 +193,22 @@ class DssRun extends BaseCommand
                 $abcClassAgg[$cls['abc_class']]['demand_sum'] += $avgDaily;
             }
 
-            $safetyStock  = (int) ceil(max(0, $zScore * $stdDev * sqrt($leadTime)));
-            $reorderPoint = (int) ceil(($avgDaily * $leadTime) + $safetyStock);
-            $eoqRaw       = ($annualDemand > 0 && $holdingCost > 0)
-                ? (int) round(sqrt((2 * $annualDemand * $orderingCost) / $holdingCost))
-                : 0;
+            $safetyStock  = \App\Libraries\DssFormulas::safetyStock($zScore, $stdDev, $leadTime);
+            $reorderPoint = \App\Libraries\DssFormulas::reorderPoint($avgDaily, $leadTime, $safetyStock);
+            $eoqRaw       = \App\Libraries\DssFormulas::eoq($annualDemand, $orderingCost, $holdingCost);
             // Floor at the supplier-side minimum order quantity — without
             // this, an item with zero recorded demand (out of stock the
             // whole lookback window, or newly added) computes EOQ = 0,
             // which recommends "order nothing" for an item that may well
             // need restocking right now.
             $eoq = max($eoqRaw, $minimumOrderQty);
+
+            // The live status/alerts read products.manual_rop_warning, so the
+            // engine's ROP is written there. A zero ROP (no demand signal) keeps
+            // whatever the Admin entered by hand.
+            if ($reorderPoint > 0) {
+                $ropUpdates[$itemId] = $reorderPoint;
+            }
 
             $computationRows[] = [
                 'item_id'          => $itemId,
@@ -239,6 +245,10 @@ class DssRun extends BaseCommand
 
         foreach ($abcUpdates as $itemId => $grade) {
             $db->table('products')->where('item_id', $itemId)->update(['abc_category' => $grade]);
+        }
+
+        foreach ($ropUpdates as $itemId => $rop) {
+            $db->table('products')->where('item_id', $itemId)->update(['manual_rop_warning' => $rop]);
         }
 
         // Only rewrite the cluster cache when we actually got a fresh

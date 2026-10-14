@@ -107,6 +107,9 @@ class ProductModel extends Model
         return array_values($groups);
     }
 
+    /** Stock up to this multiple of the reorder point is shown as "Low Stock" (120%). */
+    public const LOW_STOCK_BAND = 1.2;
+
     public function getStatus(array $product): array
     {
         $stock = (int) $product['current_stock'];
@@ -126,7 +129,7 @@ class ProductModel extends Model
         if ($stock <= $rop) {
             return ['label' => 'Reorder Now', 'class' => 'status-reorder'];
         }
-        if ($stock <= $rop * 1.5) {
+        if ($stock <= $rop * self::LOW_STOCK_BAND) {
             return ['label' => 'Low Stock', 'class' => 'status-low-stock'];
         }
         return ['label' => 'In Stock', 'class' => 'status-in-stock'];

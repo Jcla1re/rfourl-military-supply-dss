@@ -45,6 +45,7 @@
             <option value="<?= esc($p['item_id']) ?>" <?= $p['item_id'] === ($selectedItem ?? '') ? 'selected' : '' ?>><?= esc($p['item_name']) ?></option>
         <?php endforeach; ?>
     </select>
+    <a class="btn btn-outline-secondary" style="white-space:nowrap;" href="<?= site_url('admin/trend-analysis/pdf') . '?year=' . esc((string) ($selectedYear ?? date('Y'))) . '&item=' . esc((string) ($selectedItem ?? '')) ?>"><i class="bi bi-file-earmark-pdf"></i> Export PDF</a>
 </form>
 <?= $this->endSection() ?>
 
@@ -112,6 +113,7 @@ a.ta-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-
 </style>
 
 <div class="page-wrap">
+    <?= view('admin/_archive_notice', ['archiveNotice' => $archiveNotice ?? null]) ?>
     <div class="row g-3 mb-1">
         <div class="col-md-6"><a href="<?= site_url('admin/inventory') ?>" class="ta-stat"><span class="icon"><i class="bi bi-box-seam"></i></span><div><div class="text-muted small">Total Stock on hand</div><div class="value"><?= number_format($totalStock ?? 0) ?></div></div></a></div>
         <div class="col-md-6"><a href="<?= site_url('admin/sales') ?>?tab=receipts" class="ta-stat"><span class="icon"><i class="bi bi-cash-coin"></i></span><div><div class="text-muted small">Sales Today</div><div class="value">₱<?= number_format($salesToday ?? 0, 0) ?></div></div></a></div>

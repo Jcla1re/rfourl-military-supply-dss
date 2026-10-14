@@ -1,0 +1,41 @@
+STOCK COUNT SHEET - how to fill it in
+=====================================
+
+File: Stock_Count_Sheet.csv   (open it in Excel; keep it as CSV when you save)
+
+One row = one item in one size, for every item that comes in sizes
+(shoes, shirts, pants, uniforms, vests, belts, caps).
+
+WHAT TO FILL IN (4 columns)
+---------------------------
+carry_this_size (Y/N)  Y if the shop stocks or sells this size. N (or blank) if it does not.
+stock_count            How many pieces of THIS size are on the shelf today. Count the real items.
+                       Put 0 if you carry the size but have none right now.
+unit_cost              What the shop pays for one piece. Pre-filled from the system - correct it if wrong.
+selling_price          Selling price for one piece. Pre-filled from the system - correct it if wrong.
+supplier_id            Who supplies it (see Suppliers_reference.csv). Pre-filled - correct it if wrong.
+
+Leave a row blank if you do not carry that size. Only rows marked Y are used.
+
+THINGS TO KNOW
+--------------
+* "system_stock_all_sizes" is the total the system holds today for the whole item. Your size counts
+  should add up to about that number. If they do not, the physical count wins.
+* "units_sold_last_365d" and "units_sold_all_time" show how many of that size were sold, to help you
+  decide which sizes to carry. A size that was never sold may still be worth carrying - it is your call.
+* check_with_owner = Y means the size range for that item came only from a general rule, not from sales.
+  Please confirm the list of sizes is right (add or remove rows if needed).
+* "new item - not in the system yet": the item has no matching product in the system. Fill cost, selling
+  price and supplier yourself.
+* more_than_one_system_item = Y means the system has several products with this name. Use the one in
+  system_item_id and tell us if a different one is meant.
+* GOA B and GOA C are sold as top + waist, written like M+32. Mark Y only for combinations you really stock.
+
+SIZE FORMATS
+------------
+Shoes 5, 5.5, 6 ... 12      Shirts XS, S, M, L, XL, 2XL      Pants / belts 28 ... 44      Caps 5-8 or 54-58
+
+WHEN YOU ARE DONE
+-----------------
+Send the saved CSV back. The sizes you marked Y become active products with the stock you counted,
+and the reorder points are recalculated for each size.

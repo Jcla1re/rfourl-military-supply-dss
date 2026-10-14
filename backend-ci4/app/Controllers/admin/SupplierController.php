@@ -100,7 +100,7 @@ class SupplierController extends BaseController
     {
         $rules = [
             'company_name'   => 'required|max_length[100]',
-            'lead_time_days' => 'required|integer|greater_than_equal_to[0]',
+            'lead_time_days' => 'required|integer|greater_than_equal_to[1]',
             'contact_email'  => 'permit_empty|valid_email',
         ];
 
@@ -172,7 +172,7 @@ class SupplierController extends BaseController
 
         $rules = [
             'company_name'   => 'required|max_length[100]',
-            'lead_time_days' => 'required|integer|greater_than_equal_to[0]',
+            'lead_time_days' => 'required|integer|greater_than_equal_to[1]',
             'contact_email'  => 'permit_empty|valid_email',
         ];
 
