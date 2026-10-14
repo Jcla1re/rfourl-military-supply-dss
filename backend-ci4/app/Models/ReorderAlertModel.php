@@ -85,6 +85,47 @@ class ReorderAlertModel extends Model
      *   was replenished) is auto-dismissed, so it stops cluttering the
      *   list and pendingCount()/openAlerts() stay accurate.
      */
+    /**
+     * One in-app notification per newly raised alert; when many are raised at
+     * once (first sync after seeding, a bulk import) a single summary is sent
+     * instead so the Admin's inbox is not flooded.
+     *
+     * @param array<int,array<string,mixed>> $newRows
+     * @param array<string,array<string,mixed>> $productsByItem
+     */
+    private function notifyAdminOfNewAlerts(array $newRows, array $productsByItem): void
+    {
+        $notifications = new NotificationModel();
+        $link          = '/admin/reorder-alerts';
+
+        if (count($newRows) > 5) {
+            $notifications->push(
+                'Admin',
+                'Reorder Alert',
+                count($newRows) . ' items reached their reorder point',
+                'Open Reorder Alerts to review and order them.',
+                null,
+                'reorder_alert',
+                $link
+            );
+
+            return;
+        }
+
+        foreach ($newRows as $row) {
+            $name = $productsByItem[$row['item_id']]['item_name'] ?? $row['item_id'];
+            $notifications->push(
+                'Admin',
+                'Reorder Alert',
+                "Reorder alert: {$name}",
+                $row['trigger_reason'] . '. Suggested order quantity: ' . (int) $row['recommended_eoq'] . '.',
+                null,
+                'reorder_alert',
+                $link
+            );
+        }
+    }
+
     public function syncFromLiveInventory(): void
     {
         $productModel      = new ProductModel();
@@ -133,6 +174,7 @@ class ReorderAlertModel extends Model
         }
         if ($newRows) {
             $this->insertBatch($newRows);
+            $this->notifyAdminOfNewAlerts($newRows, $criticalByItem);
         }
 
         // Only auto-dismiss Active/Acknowledged alerts whose stock recovered

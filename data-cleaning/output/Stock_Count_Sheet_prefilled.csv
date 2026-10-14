@@ -1,0 +1,721 @@
+﻿product_code,item_name,category,size_type,size,units_sold_last_365d,units_sold_all_time,system_item_id,system_stock_all_sizes,more_than_one_system_item,carry_this_size (Y/N),stock_count,unit_cost,selling_price,supplier_id,check_with_owner,note,stock_basis
+P-0420,Berret,Accessories,CAP,54,0,0,0298,25,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0420,Berret,Accessories,CAP,55,0,0,0298,25,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0420,Berret,Accessories,CAP,56,0,0,0298,25,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0420,Berret,Accessories,CAP,57,0,3,0298,25,,Y,25,240.00,400.00,SUP-001,,,ESTIMATE: 25 in system split by sales mix
+P-0420,Berret,Accessories,CAP,58,0,0,0298,25,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0420,Berret,Accessories,CAP,59,0,0,0298,25,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0424,Pershing Cap,Accessories,CAP,4,1,1,0013,21,,Y,1,420.00,700.00,SUP-001,,,ESTIMATE: 21 in system split by sales mix
+P-0424,Pershing Cap,Accessories,CAP,5,0,2,0013,21,,Y,3,420.00,700.00,SUP-001,,,ESTIMATE: 21 in system split by sales mix
+P-0424,Pershing Cap,Accessories,CAP,6,2,5,0013,21,,Y,7,420.00,700.00,SUP-001,,,ESTIMATE: 21 in system split by sales mix
+P-0424,Pershing Cap,Accessories,CAP,7,0,1,0013,21,,Y,1,420.00,700.00,SUP-001,,,ESTIMATE: 21 in system split by sales mix
+P-0424,Pershing Cap,Accessories,CAP,8,2,4,0013,21,,Y,6,420.00,700.00,SUP-001,,,ESTIMATE: 21 in system split by sales mix
+P-0424,Pershing Cap,Accessories,CAP,56,0,2,0013,21,,Y,3,420.00,700.00,SUP-001,,,ESTIMATE: 21 in system split by sales mix
+P-0424,Pershing Cap,Accessories,CAP,57,0,0,0013,21,,,,420.00,700.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0424,Pershing Cap,Accessories,CAP,58,0,0,0013,21,,,,420.00,700.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0407,Tactical Belt,Accessories,WAIST,30,0,0,0076,8,,,,165.00,300.00,SUP-005,,,not sold in any recorded sale - left for the owner
+P-0407,Tactical Belt,Accessories,WAIST,32,0,1,0076,8,,Y,3,165.00,300.00,SUP-005,,,ESTIMATE: 8 in system split by sales mix
+P-0407,Tactical Belt,Accessories,WAIST,33,0,1,0076,8,,Y,3,165.00,300.00,SUP-005,,,ESTIMATE: 8 in system split by sales mix
+P-0407,Tactical Belt,Accessories,WAIST,34,0,1,0076,8,,Y,2,165.00,300.00,SUP-005,,,ESTIMATE: 8 in system split by sales mix
+P-0407,Tactical Belt,Accessories,WAIST,35,0,0,0076,8,,,,165.00,300.00,SUP-005,,,not sold in any recorded sale - left for the owner
+P-0407,Tactical Belt,Accessories,WAIST,36,0,0,0076,8,,,,165.00,300.00,SUP-005,,,not sold in any recorded sale - left for the owner
+P-0407,Tactical Belt,Accessories,WAIST,38,0,0,0076,8,,,,165.00,300.00,SUP-005,,,not sold in any recorded sale - left for the owner
+P-0407,Tactical Belt,Accessories,WAIST,39,0,0,0076,8,,,,165.00,300.00,SUP-005,,,not sold in any recorded sale - left for the owner
+P-0407,Tactical Belt,Accessories,WAIST,40,0,0,0076,8,,,,165.00,300.00,SUP-005,,,not sold in any recorded sale - left for the owner
+P-0151,4S Black,Clothes,LETTER,XS,0,0,0368,28,,,,150.00,250.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0151,4S Black,Clothes,LETTER,S,0,0,0368,28,,,,150.00,250.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0151,4S Black,Clothes,LETTER,M,0,0,0368,28,,,,150.00,250.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0151,4S Black,Clothes,LETTER,L,0,0,0368,28,,,,150.00,250.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0151,4S Black,Clothes,LETTER,XL,0,0,0368,28,,,,150.00,250.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0151,4S Black,Clothes,LETTER,2XL,0,0,0368,28,,,,150.00,250.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0149,4S White,Clothes,LETTER,XS,0,0,0131,15,,,,243.00,405.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0149,4S White,Clothes,LETTER,S,0,0,0131,15,,,,243.00,405.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0149,4S White,Clothes,LETTER,M,0,0,0131,15,,,,243.00,405.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0149,4S White,Clothes,LETTER,L,0,0,0131,15,,,,243.00,405.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0149,4S White,Clothes,LETTER,XL,0,1,0131,15,,Y,8,243.00,405.00,SUP-001,,,ESTIMATE: 15 in system split by sales mix
+P-0149,4S White,Clothes,LETTER,2XL,0,1,0131,15,,Y,7,243.00,405.00,SUP-001,,,ESTIMATE: 15 in system split by sales mix
+P-0150,4s Blue,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0150,4s Blue,Clothes,LETTER,S,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0150,4s Blue,Clothes,LETTER,M,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0150,4s Blue,Clothes,LETTER,L,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0150,4s Blue,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0150,4s Blue,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0119,6 Pocket Short,Clothes,LETTER,XS,0,0,0164,29,,,,228.00,380.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0119,6 Pocket Short,Clothes,LETTER,S,1,5,0164,29,,Y,5,228.00,380.00,SUP-001,,,ESTIMATE: 29 in system split by sales mix
+P-0119,6 Pocket Short,Clothes,LETTER,M,1,9,0164,29,,Y,10,228.00,380.00,SUP-001,,,ESTIMATE: 29 in system split by sales mix
+P-0119,6 Pocket Short,Clothes,LETTER,L,1,7,0164,29,,Y,8,228.00,380.00,SUP-001,,,ESTIMATE: 29 in system split by sales mix
+P-0119,6 Pocket Short,Clothes,LETTER,XL,1,6,0164,29,,Y,6,228.00,380.00,SUP-001,,,ESTIMATE: 29 in system split by sales mix
+P-0119,6 Pocket Short,Clothes,LETTER,2XL,0,0,0164,29,,,,228.00,380.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0111,A Pants,Clothes,LETTER,XS,0,3,0035,23,,Y,4,405.00,675.00,SUP-001,,,ESTIMATE: 23 in system split by sales mix
+P-0111,A Pants,Clothes,LETTER,S,2,4,0035,23,,Y,5,405.00,675.00,SUP-001,,,ESTIMATE: 23 in system split by sales mix
+P-0111,A Pants,Clothes,LETTER,M,1,6,0035,23,,Y,8,405.00,675.00,SUP-001,,,ESTIMATE: 23 in system split by sales mix
+P-0111,A Pants,Clothes,LETTER,L,1,5,0035,23,,Y,6,405.00,675.00,SUP-001,,,ESTIMATE: 23 in system split by sales mix
+P-0111,A Pants,Clothes,LETTER,XL,0,0,0035,23,,,,405.00,675.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0111,A Pants,Clothes,LETTER,2XL,0,0,0035,23,,,,405.00,675.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0110,A Shirt,Clothes,LETTER,XS,0,0,0055,7,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0110,A Shirt,Clothes,LETTER,S,0,2,0055,7,,Y,1,240.00,400.00,SUP-001,,,ESTIMATE: 7 in system split by sales mix
+P-0110,A Shirt,Clothes,LETTER,M,7,16,0055,7,,Y,4,240.00,400.00,SUP-001,,,ESTIMATE: 7 in system split by sales mix
+P-0110,A Shirt,Clothes,LETTER,L,3,6,0055,7,,Y,1,240.00,400.00,SUP-001,,,ESTIMATE: 7 in system split by sales mix
+P-0110,A Shirt,Clothes,LETTER,XL,1,5,0055,7,,Y,1,240.00,400.00,SUP-001,,,ESTIMATE: 7 in system split by sales mix
+P-0110,A Shirt,Clothes,LETTER,2XL,0,2,0055,7,,Y,0,240.00,400.00,SUP-001,,,ESTIMATE: 7 in system split by sales mix
+P-0140,Akids,Clothes,LETTER,XS,0,0,0136,20,Y,,,240.00,400.00,SUP-001,,,left blank: several system items share this name
+P-0140,Akids,Clothes,LETTER,S,0,0,0136,20,Y,,,240.00,400.00,SUP-001,,,left blank: several system items share this name
+P-0140,Akids,Clothes,LETTER,M,0,0,0136,20,Y,,,240.00,400.00,SUP-001,,,left blank: several system items share this name
+P-0140,Akids,Clothes,LETTER,L,1,2,0136,20,Y,,,240.00,400.00,SUP-001,,,left blank: several system items share this name
+P-0140,Akids,Clothes,LETTER,XL,0,4,0136,20,Y,,,240.00,400.00,SUP-001,,,left blank: several system items share this name
+P-0140,Akids,Clothes,LETTER,2XL,0,1,0136,20,Y,,,240.00,400.00,SUP-001,,,left blank: several system items share this name
+P-0115,Army Pants,Clothes,WAIST,30,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0115,Army Pants,Clothes,WAIST,32,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0115,Army Pants,Clothes,WAIST,34,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0115,Army Pants,Clothes,WAIST,36,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0115,Army Pants,Clothes,WAIST,38,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0115,Army Pants,Clothes,WAIST,40,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0138,Ath Pants,Clothes,LETTER,XS,0,0,0219,33,,,,420.00,700.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0138,Ath Pants,Clothes,LETTER,S,0,0,0219,33,,,,420.00,700.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0138,Ath Pants,Clothes,LETTER,M,0,0,0219,33,,,,420.00,700.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0138,Ath Pants,Clothes,LETTER,L,1,1,0219,33,,Y,33,420.00,700.00,SUP-001,,,ESTIMATE: 33 in system split by sales mix
+P-0138,Ath Pants,Clothes,LETTER,XL,0,0,0219,33,,,,420.00,700.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0138,Ath Pants,Clothes,LETTER,2XL,0,0,0219,33,,,,420.00,700.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0139,Athletic T-Shirt,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0139,Athletic T-Shirt,Clothes,LETTER,S,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0139,Athletic T-Shirt,Clothes,LETTER,M,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0139,Athletic T-Shirt,Clothes,LETTER,L,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0139,Athletic T-Shirt,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0139,Athletic T-Shirt,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0137,Athletic Uniform,Clothes,LETTER,XS,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0137,Athletic Uniform,Clothes,LETTER,S,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0137,Athletic Uniform,Clothes,LETTER,M,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0137,Athletic Uniform,Clothes,LETTER,L,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0137,Athletic Uniform,Clothes,LETTER,XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0137,Athletic Uniform,Clothes,LETTER,2XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0172,Athletic Upper,Clothes,LETTER,XS,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0172,Athletic Upper,Clothes,LETTER,S,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0172,Athletic Upper,Clothes,LETTER,M,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0172,Athletic Upper,Clothes,LETTER,L,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0172,Athletic Upper,Clothes,LETTER,XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0172,Athletic Upper,Clothes,LETTER,2XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0147,Botak,Clothes,LETTER,XS,0,0,0017,38,,,,39.00,65.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0147,Botak,Clothes,LETTER,S,0,12,0017,38,,Y,8,39.00,65.00,SUP-001,,,ESTIMATE: 38 in system split by sales mix
+P-0147,Botak,Clothes,LETTER,M,0,5,0017,38,,Y,3,39.00,65.00,SUP-001,,,ESTIMATE: 38 in system split by sales mix
+P-0147,Botak,Clothes,LETTER,L,0,12,0017,38,,Y,7,39.00,65.00,SUP-001,,,ESTIMATE: 38 in system split by sales mix
+P-0147,Botak,Clothes,LETTER,XL,0,32,0017,38,,Y,20,39.00,65.00,SUP-001,,,ESTIMATE: 38 in system split by sales mix
+P-0147,Botak,Clothes,LETTER,2XL,0,0,0017,38,,,,39.00,65.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0135,Bush Coat,Clothes,LETTER,XS,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0135,Bush Coat,Clothes,LETTER,S,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0135,Bush Coat,Clothes,LETTER,M,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0135,Bush Coat,Clothes,LETTER,L,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0135,Bush Coat,Clothes,LETTER,XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0135,Bush Coat,Clothes,LETTER,2XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0133,CAT Uniform,Clothes,LETTER,XS,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0133,CAT Uniform,Clothes,LETTER,S,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0133,CAT Uniform,Clothes,LETTER,M,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0133,CAT Uniform,Clothes,LETTER,L,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0133,CAT Uniform,Clothes,LETTER,XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0133,CAT Uniform,Clothes,LETTER,2XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0114,Cargo Pants,Clothes,LETTER,XS,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0114,Cargo Pants,Clothes,LETTER,S,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0114,Cargo Pants,Clothes,LETTER,M,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0114,Cargo Pants,Clothes,LETTER,L,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0114,Cargo Pants,Clothes,LETTER,XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0114,Cargo Pants,Clothes,LETTER,2XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0148,Cycling,Clothes,LETTER,XS,0,0,0019,10,,,,39.00,65.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0148,Cycling,Clothes,LETTER,S,0,17,0019,10,,Y,2,39.00,65.00,SUP-001,,,ESTIMATE: 10 in system split by sales mix
+P-0148,Cycling,Clothes,LETTER,M,10,50,0019,10,,Y,5,39.00,65.00,SUP-001,,,ESTIMATE: 10 in system split by sales mix
+P-0148,Cycling,Clothes,LETTER,L,14,24,0019,10,,Y,3,39.00,65.00,SUP-001,,,ESTIMATE: 10 in system split by sales mix
+P-0148,Cycling,Clothes,LETTER,XL,1,1,0019,10,,Y,0,39.00,65.00,SUP-001,,,ESTIMATE: 10 in system split by sales mix
+P-0148,Cycling,Clothes,LETTER,2XL,0,0,0019,10,,,,39.00,65.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0109,DF Patrol Shirt,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0109,DF Patrol Shirt,Clothes,LETTER,S,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0109,DF Patrol Shirt,Clothes,LETTER,M,2,2,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0109,DF Patrol Shirt,Clothes,LETTER,L,1,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0109,DF Patrol Shirt,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0109,DF Patrol Shirt,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0164,DFP Black,Clothes,LETTER,XS,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0164,DFP Black,Clothes,LETTER,S,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0164,DFP Black,Clothes,LETTER,M,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0164,DFP Black,Clothes,LETTER,L,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0164,DFP Black,Clothes,LETTER,XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0164,DFP Black,Clothes,LETTER,2XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0142,Dryfit,Clothes,LETTER,XS,0,0,0386,34,,,,150.00,250.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0142,Dryfit,Clothes,LETTER,S,2,2,0386,34,,Y,10,150.00,250.00,SUP-001,,,ESTIMATE: 34 in system split by sales mix
+P-0142,Dryfit,Clothes,LETTER,M,1,4,0386,34,,Y,19,150.00,250.00,SUP-001,,,ESTIMATE: 34 in system split by sales mix
+P-0142,Dryfit,Clothes,LETTER,L,0,1,0386,34,,Y,5,150.00,250.00,SUP-001,,,ESTIMATE: 34 in system split by sales mix
+P-0142,Dryfit,Clothes,LETTER,XL,0,0,0386,34,,,,150.00,250.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0142,Dryfit,Clothes,LETTER,2XL,0,0,0386,34,,,,150.00,250.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0159,Female Shirt,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0159,Female Shirt,Clothes,LETTER,S,2,2,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0159,Female Shirt,Clothes,LETTER,M,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0159,Female Shirt,Clothes,LETTER,L,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0159,Female Shirt,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0159,Female Shirt,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0167,Fix Short,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0167,Fix Short,Clothes,LETTER,S,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0167,Fix Short,Clothes,LETTER,M,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0167,Fix Short,Clothes,LETTER,L,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0167,Fix Short,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0167,Fix Short,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0136,Fixilized Uniform,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0136,Fixilized Uniform,Clothes,LETTER,S,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0136,Fixilized Uniform,Clothes,LETTER,M,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0136,Fixilized Uniform,Clothes,LETTER,L,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0136,Fixilized Uniform,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0136,Fixilized Uniform,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0130,Fsu,Clothes,LETTER,XS,0,2,0036,28,,Y,6,1380.00,2300.00,SUP-001,,,ESTIMATE: 28 in system split by sales mix
+P-0130,Fsu,Clothes,LETTER,S,1,4,0036,28,,Y,13,1380.00,2300.00,SUP-001,,,ESTIMATE: 28 in system split by sales mix
+P-0130,Fsu,Clothes,LETTER,M,2,2,0036,28,,Y,6,1380.00,2300.00,SUP-001,,,ESTIMATE: 28 in system split by sales mix
+P-0130,Fsu,Clothes,LETTER,L,1,1,0036,28,,Y,3,1380.00,2300.00,SUP-001,,,ESTIMATE: 28 in system split by sales mix
+P-0130,Fsu,Clothes,LETTER,XL,0,0,0036,28,,,,1380.00,2300.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0130,Fsu,Clothes,LETTER,2XL,0,0,0036,28,,,,1380.00,2300.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0107,GOA Lower,Clothes,WAIST,30,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0107,GOA Lower,Clothes,WAIST,32,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0107,GOA Lower,Clothes,WAIST,34,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0107,GOA Lower,Clothes,WAIST,36,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0107,GOA Lower,Clothes,WAIST,38,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0107,GOA Lower,Clothes,WAIST,40,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0104,Goa B,Clothes,SET,XS+28,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XS+29,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XS+30,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XS+31,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XS+32,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XS+33,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XS+34,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XS+35,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XS+36,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XS+37,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XS+38,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XS+39,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XS+40,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,S+28,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,S+29,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,S+30,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,S+31,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,S+32,0,1,0016,60,,Y,7,510.00,850.00,SUP-001,,,ESTIMATE: 60 in system split by sales mix
+P-0104,Goa B,Clothes,SET,S+33,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,S+34,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,S+35,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,S+36,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,S+37,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,S+38,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,S+39,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,S+40,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,M+28,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,M+29,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,M+30,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,M+31,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,M+32,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,M+33,0,1,0016,60,,Y,7,510.00,850.00,SUP-001,,,ESTIMATE: 60 in system split by sales mix
+P-0104,Goa B,Clothes,SET,M+34,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,M+35,0,1,0016,60,,Y,7,510.00,850.00,SUP-001,,,ESTIMATE: 60 in system split by sales mix
+P-0104,Goa B,Clothes,SET,M+36,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,M+37,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,M+38,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,M+39,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,M+40,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+28,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+29,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+30,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+31,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+32,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+33,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+34,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+35,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+36,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+37,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+38,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+39,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,L+40,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XL+28,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XL+29,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XL+30,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XL+31,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XL+32,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XL+33,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XL+34,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XL+35,1,1,0016,60,,Y,7,510.00,850.00,SUP-001,,,ESTIMATE: 60 in system split by sales mix
+P-0104,Goa B,Clothes,SET,XL+36,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XL+37,1,1,0016,60,,Y,7,510.00,850.00,SUP-001,,,ESTIMATE: 60 in system split by sales mix
+P-0104,Goa B,Clothes,SET,XL+38,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,XL+39,0,1,0016,60,,Y,6,510.00,850.00,SUP-001,,,ESTIMATE: 60 in system split by sales mix
+P-0104,Goa B,Clothes,SET,XL+40,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,2XL+28,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,2XL+29,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,2XL+30,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,2XL+31,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,2XL+32,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,2XL+33,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,2XL+34,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,2XL+35,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,2XL+36,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,2XL+37,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0104,Goa B,Clothes,SET,2XL+38,2,2,0016,60,,Y,13,510.00,850.00,SUP-001,,,ESTIMATE: 60 in system split by sales mix
+P-0104,Goa B,Clothes,SET,2XL+39,1,1,0016,60,,Y,6,510.00,850.00,SUP-001,,,ESTIMATE: 60 in system split by sales mix
+P-0104,Goa B,Clothes,SET,2XL+40,0,0,0016,60,,,,510.00,850.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XS+28,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XS+29,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XS+30,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XS+31,0,1,0015,13,,Y,2,540.00,900.00,SUP-001,,,ESTIMATE: 13 in system split by sales mix
+P-0105,Goa C,Clothes,SET,XS+32,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XS+33,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XS+34,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XS+35,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XS+36,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XS+37,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XS+38,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XS+39,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XS+40,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+28,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+29,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+30,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+31,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+32,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+33,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+34,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+35,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+36,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+37,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+38,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+39,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,S+40,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+28,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+29,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+30,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+31,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+32,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+33,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+34,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+35,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+36,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+37,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+38,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+39,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,M+40,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,L+28,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,L+29,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,L+30,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,L+31,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,L+32,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,L+33,0,1,0015,13,,Y,2,540.00,900.00,SUP-001,,,ESTIMATE: 13 in system split by sales mix
+P-0105,Goa C,Clothes,SET,L+34,1,1,0015,13,,Y,2,540.00,900.00,SUP-001,,,ESTIMATE: 13 in system split by sales mix
+P-0105,Goa C,Clothes,SET,L+35,2,2,0015,13,,Y,5,540.00,900.00,SUP-001,,,ESTIMATE: 13 in system split by sales mix
+P-0105,Goa C,Clothes,SET,L+36,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,L+37,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,L+38,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,L+39,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,L+40,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+28,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+29,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+30,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+31,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+32,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+33,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+34,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+35,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+36,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+37,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+38,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+39,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,XL+40,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,2XL+28,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,2XL+29,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,2XL+30,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,2XL+31,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,2XL+32,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,2XL+33,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,2XL+34,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,2XL+35,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,2XL+36,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,2XL+37,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,2XL+38,1,1,0015,13,,Y,2,540.00,900.00,SUP-001,,,ESTIMATE: 13 in system split by sales mix
+P-0105,Goa C,Clothes,SET,2XL+39,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0105,Goa C,Clothes,SET,2XL+40,0,0,0015,13,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0106,Goa Pants,Clothes,WAIST,28,0,0,0008,3,,,,420.00,700.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0106,Goa Pants,Clothes,WAIST,30,0,2,0008,3,,Y,0,420.00,700.00,SUP-001,,,ESTIMATE: 3 in system split by sales mix
+P-0106,Goa Pants,Clothes,WAIST,31,1,5,0008,3,,Y,1,420.00,700.00,SUP-001,,,ESTIMATE: 3 in system split by sales mix
+P-0106,Goa Pants,Clothes,WAIST,32,1,5,0008,3,,Y,1,420.00,700.00,SUP-001,,,ESTIMATE: 3 in system split by sales mix
+P-0106,Goa Pants,Clothes,WAIST,33,3,4,0008,3,,Y,1,420.00,700.00,SUP-001,,,ESTIMATE: 3 in system split by sales mix
+P-0106,Goa Pants,Clothes,WAIST,34,0,1,0008,3,,Y,0,420.00,700.00,SUP-001,,,ESTIMATE: 3 in system split by sales mix
+P-0106,Goa Pants,Clothes,WAIST,35,0,0,0008,3,,,,420.00,700.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0106,Goa Pants,Clothes,WAIST,36,0,2,0008,3,,Y,0,420.00,700.00,SUP-001,,,ESTIMATE: 3 in system split by sales mix
+P-0106,Goa Pants,Clothes,WAIST,37,0,4,0008,3,,Y,0,420.00,700.00,SUP-001,,,ESTIMATE: 3 in system split by sales mix
+P-0106,Goa Pants,Clothes,WAIST,38,0,0,0008,3,,,,420.00,700.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0106,Goa Pants,Clothes,WAIST,39,0,1,0008,3,,Y,0,420.00,700.00,SUP-001,,,ESTIMATE: 3 in system split by sales mix
+P-0106,Goa Pants,Clothes,WAIST,40,0,0,0008,3,,,,420.00,700.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0106,Goa Pants,Clothes,WAIST,42,0,0,0008,3,,,,420.00,700.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0106,Goa Pants,Clothes,WAIST,44,0,1,0008,3,,Y,0,420.00,700.00,SUP-001,,,ESTIMATE: 3 in system split by sales mix
+P-0166,Green Army Shirt,Clothes,LETTER,XS,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0166,Green Army Shirt,Clothes,LETTER,S,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0166,Green Army Shirt,Clothes,LETTER,M,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0166,Green Army Shirt,Clothes,LETTER,L,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0166,Green Army Shirt,Clothes,LETTER,XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0166,Green Army Shirt,Clothes,LETTER,2XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0168,Jac Pants,Clothes,LETTER,XS,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0168,Jac Pants,Clothes,LETTER,S,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0168,Jac Pants,Clothes,LETTER,M,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0168,Jac Pants,Clothes,LETTER,L,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0168,Jac Pants,Clothes,LETTER,XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0168,Jac Pants,Clothes,LETTER,2XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0120,L S White Sg,Clothes,LETTER,XS,0,0,0293,18,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0120,L S White Sg,Clothes,LETTER,S,0,0,0293,18,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0120,L S White Sg,Clothes,LETTER,M,0,2,0293,18,,Y,7,240.00,400.00,SUP-001,,,ESTIMATE: 18 in system split by sales mix
+P-0120,L S White Sg,Clothes,LETTER,L,0,1,0293,18,,Y,4,240.00,400.00,SUP-001,,,ESTIMATE: 18 in system split by sales mix
+P-0120,L S White Sg,Clothes,LETTER,XL,0,0,0293,18,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0120,L S White Sg,Clothes,LETTER,2XL,0,2,0293,18,,Y,7,240.00,400.00,SUP-001,,,ESTIMATE: 18 in system split by sales mix
+P-0160,Male Shirt,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0160,Male Shirt,Clothes,LETTER,S,2,2,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0160,Male Shirt,Clothes,LETTER,M,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0160,Male Shirt,Clothes,LETTER,L,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0160,Male Shirt,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0160,Male Shirt,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0116,NUP Pants,Clothes,LETTER,XS,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0116,NUP Pants,Clothes,LETTER,S,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0116,NUP Pants,Clothes,LETTER,M,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0116,NUP Pants,Clothes,LETTER,L,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0116,NUP Pants,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0116,NUP Pants,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0141,Og Cotton,Clothes,LETTER,XS,0,0,0132,20,,,,108.00,180.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0141,Og Cotton,Clothes,LETTER,S,0,17,0132,20,,Y,3,108.00,180.00,SUP-001,,,ESTIMATE: 20 in system split by sales mix
+P-0141,Og Cotton,Clothes,LETTER,M,3,67,0132,20,,Y,13,108.00,180.00,SUP-001,,,ESTIMATE: 20 in system split by sales mix
+P-0141,Og Cotton,Clothes,LETTER,L,1,22,0132,20,,Y,4,108.00,180.00,SUP-001,,,ESTIMATE: 20 in system split by sales mix
+P-0141,Og Cotton,Clothes,LETTER,XL,0,0,0132,20,,,,108.00,180.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0141,Og Cotton,Clothes,LETTER,2XL,0,0,0132,20,,,,108.00,180.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0158,PCO Shirt,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0158,PCO Shirt,Clothes,LETTER,S,0,2,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0158,PCO Shirt,Clothes,LETTER,M,2,10,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0158,PCO Shirt,Clothes,LETTER,L,0,6,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0158,PCO Shirt,Clothes,LETTER,XL,0,3,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0158,PCO Shirt,Clothes,LETTER,2XL,0,3,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0127,PMO Shirt,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0127,PMO Shirt,Clothes,LETTER,S,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0127,PMO Shirt,Clothes,LETTER,M,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0127,PMO Shirt,Clothes,LETTER,L,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0127,PMO Shirt,Clothes,LETTER,XL,1,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0127,PMO Shirt,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0118,Pants,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0118,Pants,Clothes,LETTER,S,1,2,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0118,Pants,Clothes,LETTER,M,2,8,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0118,Pants,Clothes,LETTER,L,0,2,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0118,Pants,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0118,Pants,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0108,Patrol Shirt,Clothes,LETTER,XS,0,0,0002,15,,,,840.00,1400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0108,Patrol Shirt,Clothes,LETTER,S,2,9,0002,15,,Y,3,840.00,1400.00,SUP-001,,,ESTIMATE: 15 in system split by sales mix
+P-0108,Patrol Shirt,Clothes,LETTER,M,3,17,0002,15,,Y,5,840.00,1400.00,SUP-001,,,ESTIMATE: 15 in system split by sales mix
+P-0108,Patrol Shirt,Clothes,LETTER,L,0,11,0002,15,,Y,4,840.00,1400.00,SUP-001,,,ESTIMATE: 15 in system split by sales mix
+P-0108,Patrol Shirt,Clothes,LETTER,XL,1,9,0002,15,,Y,3,840.00,1400.00,SUP-001,,,ESTIMATE: 15 in system split by sales mix
+P-0108,Patrol Shirt,Clothes,LETTER,2XL,0,0,0002,15,,,,840.00,1400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0112,Pavehawk Pants,Clothes,LETTER,XS,0,0,0027,18,,,,600.00,1000.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0112,Pavehawk Pants,Clothes,LETTER,S,0,6,0027,18,,Y,4,600.00,1000.00,SUP-001,,,ESTIMATE: 18 in system split by sales mix
+P-0112,Pavehawk Pants,Clothes,LETTER,M,2,12,0027,18,,Y,7,600.00,1000.00,SUP-001,,,ESTIMATE: 18 in system split by sales mix
+P-0112,Pavehawk Pants,Clothes,LETTER,L,1,9,0027,18,,Y,5,600.00,1000.00,SUP-001,,,ESTIMATE: 18 in system split by sales mix
+P-0112,Pavehawk Pants,Clothes,LETTER,XL,0,2,0027,18,,Y,1,600.00,1000.00,SUP-001,,,ESTIMATE: 18 in system split by sales mix
+P-0112,Pavehawk Pants,Clothes,LETTER,2XL,1,1,0027,18,,Y,1,600.00,1000.00,SUP-001,,,ESTIMATE: 18 in system split by sales mix
+P-0128,Plain Jacket,Clothes,LETTER,XS,0,0,0183,23,,,,600.00,1000.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0128,Plain Jacket,Clothes,LETTER,S,0,0,0183,23,,,,600.00,1000.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0128,Plain Jacket,Clothes,LETTER,M,0,0,0183,23,,,,600.00,1000.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0128,Plain Jacket,Clothes,LETTER,L,0,0,0183,23,,,,600.00,1000.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0128,Plain Jacket,Clothes,LETTER,XL,0,0,0183,23,,,,600.00,1000.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0128,Plain Jacket,Clothes,LETTER,2XL,0,0,0183,23,,,,600.00,1000.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0123,Polo Shirt,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0123,Polo Shirt,Clothes,LETTER,S,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0123,Polo Shirt,Clothes,LETTER,M,0,3,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0123,Polo Shirt,Clothes,LETTER,L,0,4,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0123,Polo Shirt,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0123,Polo Shirt,Clothes,LETTER,2XL,0,4,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0123,Polo Shirt,Clothes,LETTER,3XL,0,3,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0126,Qrp Shirt,Clothes,LETTER,XS,0,0,0189,21,,,,570.00,950.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0126,Qrp Shirt,Clothes,LETTER,S,0,0,0189,21,,,,570.00,950.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0126,Qrp Shirt,Clothes,LETTER,M,0,0,0189,21,,,,570.00,950.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0126,Qrp Shirt,Clothes,LETTER,L,0,0,0189,21,,,,570.00,950.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0126,Qrp Shirt,Clothes,LETTER,XL,0,0,0189,21,,,,570.00,950.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0126,Qrp Shirt,Clothes,LETTER,2XL,0,0,0189,21,,,,570.00,950.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0134,Ripstop,Clothes,LETTER,XS,0,2,0095,19,,Y,10,1380.00,2300.00,SUP-001,,,ESTIMATE: 19 in system split by sales mix
+P-0134,Ripstop,Clothes,LETTER,S,0,2,0095,19,,Y,9,1380.00,2300.00,SUP-001,,,ESTIMATE: 19 in system split by sales mix
+P-0134,Ripstop,Clothes,LETTER,M,0,0,0095,19,,,,1380.00,2300.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0134,Ripstop,Clothes,LETTER,L,0,0,0095,19,,,,1380.00,2300.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0134,Ripstop,Clothes,LETTER,XL,0,0,0095,19,,,,1380.00,2300.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0134,Ripstop,Clothes,LETTER,2XL,0,0,0095,19,,,,1380.00,2300.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0132,Rotc Uniform,Clothes,LETTER,XS,0,0,0166,31,,,,660.00,1100.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0132,Rotc Uniform,Clothes,LETTER,S,0,0,0166,31,,,,660.00,1100.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0132,Rotc Uniform,Clothes,LETTER,M,0,0,0166,31,,,,660.00,1100.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0132,Rotc Uniform,Clothes,LETTER,L,0,0,0166,31,,,,660.00,1100.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0132,Rotc Uniform,Clothes,LETTER,XL,0,0,0166,31,,,,660.00,1100.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0132,Rotc Uniform,Clothes,LETTER,2XL,0,0,0166,31,,,,660.00,1100.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0122,Round Neck,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0122,Round Neck,Clothes,LETTER,S,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0122,Round Neck,Clothes,LETTER,M,2,2,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0122,Round Neck,Clothes,LETTER,L,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0122,Round Neck,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0122,Round Neck,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0155,S Blue White,Clothes,LETTER,XS,0,0,0212,19,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0155,S Blue White,Clothes,LETTER,S,0,2,0212,19,,Y,19,240.00,400.00,SUP-001,,,ESTIMATE: 19 in system split by sales mix
+P-0155,S Blue White,Clothes,LETTER,M,0,0,0212,19,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0155,S Blue White,Clothes,LETTER,L,0,0,0212,19,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0155,S Blue White,Clothes,LETTER,XL,0,0,0212,19,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0155,S Blue White,Clothes,LETTER,2XL,0,0,0212,19,,,,240.00,400.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0171,SG Upper,Clothes,LETTER,XS,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0171,SG Upper,Clothes,LETTER,S,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0171,SG Upper,Clothes,LETTER,M,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0171,SG Upper,Clothes,LETTER,L,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0171,SG Upper,Clothes,LETTER,XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0171,SG Upper,Clothes,LETTER,2XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0131,Sar Uniform,Clothes,LETTER,XS,0,0,0038,26,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0131,Sar Uniform,Clothes,LETTER,S,1,4,0038,26,,Y,7,540.00,900.00,SUP-001,,,ESTIMATE: 26 in system split by sales mix
+P-0131,Sar Uniform,Clothes,LETTER,M,1,5,0038,26,,Y,9,540.00,900.00,SUP-001,,,ESTIMATE: 26 in system split by sales mix
+P-0131,Sar Uniform,Clothes,LETTER,L,1,2,0038,26,,Y,4,540.00,900.00,SUP-001,,,ESTIMATE: 26 in system split by sales mix
+P-0131,Sar Uniform,Clothes,LETTER,XL,2,3,0038,26,,Y,6,540.00,900.00,SUP-001,,,ESTIMATE: 26 in system split by sales mix
+P-0131,Sar Uniform,Clothes,LETTER,2XL,0,0,0038,26,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0117,Sg Pants,Clothes,WAIST,30,0,0,0067,18,,,,156.00,260.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0117,Sg Pants,Clothes,WAIST,31,0,3,0067,18,,Y,5,156.00,260.00,SUP-001,,,ESTIMATE: 18 in system split by sales mix
+P-0117,Sg Pants,Clothes,WAIST,32,0,0,0067,18,,,,156.00,260.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0117,Sg Pants,Clothes,WAIST,34,0,0,0067,18,,,,156.00,260.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0117,Sg Pants,Clothes,WAIST,35,0,7,0067,18,,Y,11,156.00,260.00,SUP-001,,,ESTIMATE: 18 in system split by sales mix
+P-0117,Sg Pants,Clothes,WAIST,36,0,0,0067,18,,,,156.00,260.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0117,Sg Pants,Clothes,WAIST,38,0,1,0067,18,,Y,2,156.00,260.00,SUP-001,,,ESTIMATE: 18 in system split by sales mix
+P-0117,Sg Pants,Clothes,WAIST,40,0,0,0067,18,,,,156.00,260.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0165,Short Sleeve Blue,Clothes,LETTER,XS,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0165,Short Sleeve Blue,Clothes,LETTER,S,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0165,Short Sleeve Blue,Clothes,LETTER,M,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0165,Short Sleeve Blue,Clothes,LETTER,L,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0165,Short Sleeve Blue,Clothes,LETTER,XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0165,Short Sleeve Blue,Clothes,LETTER,2XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0153,Somar,Clothes,LETTER,XS,0,0,0123,27,,,,1074.00,1790.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0153,Somar,Clothes,LETTER,S,0,0,0123,27,,,,1074.00,1790.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0153,Somar,Clothes,LETTER,M,0,0,0123,27,,,,1074.00,1790.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0153,Somar,Clothes,LETTER,L,0,0,0123,27,,,,1074.00,1790.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0153,Somar,Clothes,LETTER,XL,0,0,0123,27,,,,1074.00,1790.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0153,Somar,Clothes,LETTER,2XL,0,0,0123,27,,,,1074.00,1790.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0129,Sweatshirt,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0129,Sweatshirt,Clothes,LETTER,S,0,20,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0129,Sweatshirt,Clothes,LETTER,M,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0129,Sweatshirt,Clothes,LETTER,L,0,20,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0129,Sweatshirt,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0129,Sweatshirt,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0169,Sxr,Clothes,LETTER,XS,0,0,0090,25,,,,480.00,800.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0169,Sxr,Clothes,LETTER,S,0,0,0090,25,,,,480.00,800.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0169,Sxr,Clothes,LETTER,M,0,0,0090,25,,,,480.00,800.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0169,Sxr,Clothes,LETTER,L,0,3,0090,25,,Y,25,480.00,800.00,SUP-001,,,ESTIMATE: 25 in system split by sales mix
+P-0169,Sxr,Clothes,LETTER,XL,0,0,0090,25,,,,480.00,800.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0169,Sxr,Clothes,LETTER,2XL,0,0,0090,25,,,,480.00,800.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0124,T-Shirt,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0124,T-Shirt,Clothes,LETTER,S,1,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0124,T-Shirt,Clothes,LETTER,M,1,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0124,T-Shirt,Clothes,LETTER,L,0,2,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0124,T-Shirt,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0124,T-Shirt,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0113,Tactical Pants,Clothes,LETTER,XS,0,0,0012,21,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0113,Tactical Pants,Clothes,LETTER,S,6,9,0012,21,,Y,5,540.00,900.00,SUP-001,,,ESTIMATE: 21 in system split by sales mix
+P-0113,Tactical Pants,Clothes,LETTER,M,16,16,0012,21,,Y,8,540.00,900.00,SUP-001,,,ESTIMATE: 21 in system split by sales mix
+P-0113,Tactical Pants,Clothes,LETTER,L,10,14,0012,21,,Y,7,540.00,900.00,SUP-001,,,ESTIMATE: 21 in system split by sales mix
+P-0113,Tactical Pants,Clothes,LETTER,XL,1,1,0012,21,,Y,1,540.00,900.00,SUP-001,,,ESTIMATE: 21 in system split by sales mix
+P-0113,Tactical Pants,Clothes,LETTER,2XL,0,0,0012,21,,,,540.00,900.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0163,Tactical Uniform Set,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0163,Tactical Uniform Set,Clothes,LETTER,S,0,2,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0163,Tactical Uniform Set,Clothes,LETTER,M,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0163,Tactical Uniform Set,Clothes,LETTER,L,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0163,Tactical Uniform Set,Clothes,LETTER,XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0163,Tactical Uniform Set,Clothes,LETTER,2XL,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0125,Tmru Shirt,Clothes,LETTER,XS,0,0,0040,22,,,,495.00,825.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0125,Tmru Shirt,Clothes,LETTER,S,0,0,0040,22,,,,495.00,825.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0125,Tmru Shirt,Clothes,LETTER,M,0,3,0040,22,,Y,22,495.00,825.00,SUP-001,,,ESTIMATE: 22 in system split by sales mix
+P-0125,Tmru Shirt,Clothes,LETTER,L,0,0,0040,22,,,,495.00,825.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0125,Tmru Shirt,Clothes,LETTER,XL,0,0,0040,22,,,,495.00,825.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0125,Tmru Shirt,Clothes,LETTER,2XL,0,0,0040,22,,,,495.00,825.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0102,Tropical Black,Clothes,LETTER,XS,0,0,0125,20,,,,1020.00,1700.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0102,Tropical Black,Clothes,LETTER,S,0,0,0125,20,,,,1020.00,1700.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0102,Tropical Black,Clothes,LETTER,M,0,0,0125,20,,,,1020.00,1700.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0102,Tropical Black,Clothes,LETTER,L,0,0,0125,20,,,,1020.00,1700.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0102,Tropical Black,Clothes,LETTER,XL,0,0,0125,20,,,,1020.00,1700.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0102,Tropical Black,Clothes,LETTER,2XL,0,0,0125,20,,,,1020.00,1700.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0101,Tropical Blue Uniform,Clothes,LETTER,XS,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0101,Tropical Blue Uniform,Clothes,LETTER,S,0,9,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0101,Tropical Blue Uniform,Clothes,LETTER,M,0,4,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0101,Tropical Blue Uniform,Clothes,LETTER,L,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0101,Tropical Blue Uniform,Clothes,LETTER,XL,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0103,Tropical Pants,Clothes,LETTER,XS,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0103,Tropical Pants,Clothes,LETTER,S,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0103,Tropical Pants,Clothes,LETTER,M,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0103,Tropical Pants,Clothes,LETTER,L,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0103,Tropical Pants,Clothes,LETTER,XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0103,Tropical Pants,Clothes,LETTER,2XL,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0170,Uniform Type C,Clothes,LETTER,XS,0,0,0396,30,,,,132.00,220.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0170,Uniform Type C,Clothes,LETTER,S,0,0,0396,30,,,,132.00,220.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0170,Uniform Type C,Clothes,LETTER,M,0,0,0396,30,,,,132.00,220.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0170,Uniform Type C,Clothes,LETTER,L,0,0,0396,30,,,,132.00,220.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0170,Uniform Type C,Clothes,LETTER,XL,0,0,0396,30,,,,132.00,220.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0170,Uniform Type C,Clothes,LETTER,2XL,0,0,0396,30,,,,132.00,220.00,SUP-001,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0121,V-Neck,Clothes,LETTER,XS,0,0,0018,52,,,,72.00,120.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0121,V-Neck,Clothes,LETTER,S,0,22,0018,52,,Y,18,72.00,120.00,SUP-001,,,ESTIMATE: 52 in system split by sales mix
+P-0121,V-Neck,Clothes,LETTER,M,0,27,0018,52,,Y,22,72.00,120.00,SUP-001,,,ESTIMATE: 52 in system split by sales mix
+P-0121,V-Neck,Clothes,LETTER,L,2,15,0018,52,,Y,12,72.00,120.00,SUP-001,,,ESTIMATE: 52 in system split by sales mix
+P-0121,V-Neck,Clothes,LETTER,XL,0,0,0018,52,,,,72.00,120.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0121,V-Neck,Clothes,LETTER,2XL,0,0,0018,52,,,,72.00,120.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0157,White Shirt,Clothes,LETTER,XS,0,0,0285,6,,,,60.00,100.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0157,White Shirt,Clothes,LETTER,S,0,0,0285,6,,,,60.00,100.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0157,White Shirt,Clothes,LETTER,M,0,0,0285,6,,,,60.00,100.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0157,White Shirt,Clothes,LETTER,L,0,4,0285,6,,Y,3,60.00,100.00,SUP-001,,,ESTIMATE: 6 in system split by sales mix
+P-0157,White Shirt,Clothes,LETTER,XL,0,4,0285,6,,Y,3,60.00,100.00,SUP-001,,,ESTIMATE: 6 in system split by sales mix
+P-0157,White Shirt,Clothes,LETTER,2XL,0,0,0285,6,,,,60.00,100.00,SUP-001,,,not sold in any recorded sale - left for the owner
+P-0282,Pig Leather,Equipment,WAIST,30,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0282,Pig Leather,Equipment,WAIST,32,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0282,Pig Leather,Equipment,WAIST,34,1,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0282,Pig Leather,Equipment,WAIST,36,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0282,Pig Leather,Equipment,WAIST,38,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0282,Pig Leather,Equipment,WAIST,40,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0223,Rig Leather,Equipment,WAIST,30,1,1,0101,35,,Y,7,1430.00,2200.00,SUP-002,,,ESTIMATE: 35 in system split by sales mix
+P-0223,Rig Leather,Equipment,WAIST,32,0,2,0101,35,,Y,14,1430.00,2200.00,SUP-002,,,ESTIMATE: 35 in system split by sales mix
+P-0223,Rig Leather,Equipment,WAIST,34,1,1,0101,35,,Y,7,1430.00,2200.00,SUP-002,,,ESTIMATE: 35 in system split by sales mix
+P-0223,Rig Leather,Equipment,WAIST,36,0,0,0101,35,,,,1430.00,2200.00,SUP-002,,,not sold in any recorded sale - left for the owner
+P-0223,Rig Leather,Equipment,WAIST,38,0,1,0101,35,,Y,7,1430.00,2200.00,SUP-002,,,ESTIMATE: 35 in system split by sales mix
+P-0223,Rig Leather,Equipment,WAIST,40,0,0,0101,35,,,,1430.00,2200.00,SUP-002,,,not sold in any recorded sale - left for the owner
+P-0209,Vest,Equipment,LETTER,XS,1,1,0009,13,,Y,1,780.00,1200.00,SUP-002,,,ESTIMATE: 13 in system split by sales mix
+P-0209,Vest,Equipment,LETTER,S,2,4,0009,13,,Y,4,780.00,1200.00,SUP-002,,,ESTIMATE: 13 in system split by sales mix
+P-0209,Vest,Equipment,LETTER,M,4,6,0009,13,,Y,5,780.00,1200.00,SUP-002,,,ESTIMATE: 13 in system split by sales mix
+P-0209,Vest,Equipment,LETTER,L,2,3,0009,13,,Y,3,780.00,1200.00,SUP-002,,,ESTIMATE: 13 in system split by sales mix
+P-0209,Vest,Equipment,LETTER,XL,0,0,0009,13,,,,780.00,1200.00,SUP-002,,,not sold in any recorded sale - left for the owner
+P-0209,Vest,Equipment,LETTER,2XL,0,0,0009,13,,,,780.00,1200.00,SUP-002,,,not sold in any recorded sale - left for the owner
+P-0006,A Shoes,Shoes,SHOE,5,0,1,0029,31,,Y,1,1330.00,1900.00,SUP-006,,,ESTIMATE: 31 in system split by sales mix
+P-0006,A Shoes,Shoes,SHOE,6,0,1,0029,31,,Y,1,1330.00,1900.00,SUP-006,,,ESTIMATE: 31 in system split by sales mix
+P-0006,A Shoes,Shoes,SHOE,7,0,0,0029,31,,,,1330.00,1900.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0006,A Shoes,Shoes,SHOE,7.5,0,1,0029,31,,Y,1,1330.00,1900.00,SUP-006,,,ESTIMATE: 31 in system split by sales mix
+P-0006,A Shoes,Shoes,SHOE,8,0,4,0029,31,,Y,5,1330.00,1900.00,SUP-006,,,ESTIMATE: 31 in system split by sales mix
+P-0006,A Shoes,Shoes,SHOE,8.5,0,2,0029,31,,Y,3,1330.00,1900.00,SUP-006,,,ESTIMATE: 31 in system split by sales mix
+P-0006,A Shoes,Shoes,SHOE,9,0,6,0029,31,,Y,7,1330.00,1900.00,SUP-006,,,ESTIMATE: 31 in system split by sales mix
+P-0006,A Shoes,Shoes,SHOE,9.5,0,1,0029,31,,Y,1,1330.00,1900.00,SUP-006,,,ESTIMATE: 31 in system split by sales mix
+P-0006,A Shoes,Shoes,SHOE,10,0,4,0029,31,,Y,5,1330.00,1900.00,SUP-006,,,ESTIMATE: 31 in system split by sales mix
+P-0006,A Shoes,Shoes,SHOE,10.5,0,1,0029,31,,Y,1,1330.00,1900.00,SUP-006,,,ESTIMATE: 31 in system split by sales mix
+P-0006,A Shoes,Shoes,SHOE,11,0,4,0029,31,,Y,5,1330.00,1900.00,SUP-006,,,ESTIMATE: 31 in system split by sales mix
+P-0006,A Shoes,Shoes,SHOE,11.5,0,1,0029,31,,Y,1,1330.00,1900.00,SUP-006,,,ESTIMATE: 31 in system split by sales mix
+P-0009,Boots,Shoes,SHOE,7,0,0,0178,32,,,,700.00,1000.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0009,Boots,Shoes,SHOE,7.5,0,0,0178,32,,,,700.00,1000.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0009,Boots,Shoes,SHOE,8,0,0,0178,32,,,,700.00,1000.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0009,Boots,Shoes,SHOE,8.5,0,0,0178,32,,,,700.00,1000.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0009,Boots,Shoes,SHOE,9,0,0,0178,32,,,,700.00,1000.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0009,Boots,Shoes,SHOE,9.5,0,0,0178,32,,,,700.00,1000.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0009,Boots,Shoes,SHOE,10,0,0,0178,32,,,,700.00,1000.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0009,Boots,Shoes,SHOE,10.5,0,0,0178,32,,,,700.00,1000.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0009,Boots,Shoes,SHOE,11,0,0,0178,32,,,,700.00,1000.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0007,Clarino Shoes,Shoes,SHOE,6,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0007,Clarino Shoes,Shoes,SHOE,7,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0007,Clarino Shoes,Shoes,SHOE,7.5,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0007,Clarino Shoes,Shoes,SHOE,8,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0007,Clarino Shoes,Shoes,SHOE,8.5,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0007,Clarino Shoes,Shoes,SHOE,9,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0007,Clarino Shoes,Shoes,SHOE,9.5,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0007,Clarino Shoes,Shoes,SHOE,10,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0007,Clarino Shoes,Shoes,SHOE,10.5,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0007,Clarino Shoes,Shoes,SHOE,11,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0001,Combat Shoes,Shoes,SHOE,5,0,0,0014,24,,,,1260.00,1800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0001,Combat Shoes,Shoes,SHOE,5.5,0,0,0014,24,,,,1260.00,1800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0001,Combat Shoes,Shoes,SHOE,6,0,0,0014,24,,,,1260.00,1800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0001,Combat Shoes,Shoes,SHOE,6.5,0,1,0014,24,,Y,2,1260.00,1800.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0001,Combat Shoes,Shoes,SHOE,7,0,2,0014,24,,Y,3,1260.00,1800.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0001,Combat Shoes,Shoes,SHOE,7.5,0,1,0014,24,,Y,2,1260.00,1800.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0001,Combat Shoes,Shoes,SHOE,8,0,2,0014,24,,Y,3,1260.00,1800.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0001,Combat Shoes,Shoes,SHOE,8.5,0,1,0014,24,,Y,2,1260.00,1800.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0001,Combat Shoes,Shoes,SHOE,9,0,0,0014,24,,,,1260.00,1800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0001,Combat Shoes,Shoes,SHOE,9.5,0,3,0014,24,,Y,5,1260.00,1800.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0001,Combat Shoes,Shoes,SHOE,10,0,3,0014,24,,Y,5,1260.00,1800.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0001,Combat Shoes,Shoes,SHOE,10.5,0,0,0014,24,,,,1260.00,1800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0001,Combat Shoes,Shoes,SHOE,11,0,0,0014,24,,,,1260.00,1800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0001,Combat Shoes,Shoes,SHOE,11.5,0,0,0014,24,,,,1260.00,1800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0001,Combat Shoes,Shoes,SHOE,12,0,1,0014,24,,Y,2,1260.00,1800.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0004,Cs Volts,Shoes,SHOE,5.5,0,1,0034,17,,Y,3,1617.00,2310.00,SUP-006,,,ESTIMATE: 17 in system split by sales mix
+P-0004,Cs Volts,Shoes,SHOE,7,0,0,0034,17,,,,1617.00,2310.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0004,Cs Volts,Shoes,SHOE,7.5,0,0,0034,17,,,,1617.00,2310.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0004,Cs Volts,Shoes,SHOE,8,0,1,0034,17,,Y,3,1617.00,2310.00,SUP-006,,,ESTIMATE: 17 in system split by sales mix
+P-0004,Cs Volts,Shoes,SHOE,8.5,0,0,0034,17,,,,1617.00,2310.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0004,Cs Volts,Shoes,SHOE,9,0,2,0034,17,,Y,6,1617.00,2310.00,SUP-006,,,ESTIMATE: 17 in system split by sales mix
+P-0004,Cs Volts,Shoes,SHOE,9.5,0,0,0034,17,,,,1617.00,2310.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0004,Cs Volts,Shoes,SHOE,10,0,2,0034,17,,Y,5,1617.00,2310.00,SUP-006,,,ESTIMATE: 17 in system split by sales mix
+P-0004,Cs Volts,Shoes,SHOE,10.5,0,0,0034,17,,,,1617.00,2310.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0004,Cs Volts,Shoes,SHOE,11,0,0,0034,17,,,,1617.00,2310.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0003,Gibson,Shoes,SHOE,7,0,0,0044,28,,,,1400.00,2000.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0003,Gibson,Shoes,SHOE,7.5,0,0,0044,28,,,,1400.00,2000.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0003,Gibson,Shoes,SHOE,8,0,0,0044,28,,,,1400.00,2000.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0003,Gibson,Shoes,SHOE,8.5,0,0,0044,28,,,,1400.00,2000.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0003,Gibson,Shoes,SHOE,9,0,0,0044,28,,,,1400.00,2000.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0003,Gibson,Shoes,SHOE,9.5,0,0,0044,28,,,,1400.00,2000.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0003,Gibson,Shoes,SHOE,10,0,1,0044,28,,Y,28,1400.00,2000.00,SUP-006,,,ESTIMATE: 28 in system split by sales mix
+P-0003,Gibson,Shoes,SHOE,10.5,0,0,0044,28,,,,1400.00,2000.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0003,Gibson,Shoes,SHOE,11,0,0,0044,28,,,,1400.00,2000.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0002,Gibson Lites,Shoes,SHOE,5.5,0,1,0010,24,,Y,1,1400.00,2000.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0002,Gibson Lites,Shoes,SHOE,6,0,1,0010,24,,Y,1,1400.00,2000.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0002,Gibson Lites,Shoes,SHOE,7,0,2,0010,24,,Y,3,1400.00,2000.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0002,Gibson Lites,Shoes,SHOE,8,1,7,0010,24,,Y,10,1400.00,2000.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0002,Gibson Lites,Shoes,SHOE,8.5,0,1,0010,24,,Y,1,1400.00,2000.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0002,Gibson Lites,Shoes,SHOE,9,0,1,0010,24,,Y,1,1400.00,2000.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0002,Gibson Lites,Shoes,SHOE,10,0,2,0010,24,,Y,3,1400.00,2000.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0002,Gibson Lites,Shoes,SHOE,10.5,0,2,0010,24,,Y,3,1400.00,2000.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0002,Gibson Lites,Shoes,SHOE,11,0,1,0010,24,,Y,1,1400.00,2000.00,SUP-006,,,ESTIMATE: 24 in system split by sales mix
+P-0011,Jordan,Shoes,SHOE,7,0,0,0444,32,,,,105.00,150.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0011,Jordan,Shoes,SHOE,7.5,0,0,0444,32,,,,105.00,150.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0011,Jordan,Shoes,SHOE,8,0,0,0444,32,,,,105.00,150.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0011,Jordan,Shoes,SHOE,8.5,0,0,0444,32,,,,105.00,150.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0011,Jordan,Shoes,SHOE,9,0,0,0444,32,,,,105.00,150.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0011,Jordan,Shoes,SHOE,9.5,0,0,0444,32,,,,105.00,150.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0011,Jordan,Shoes,SHOE,10,0,0,0444,32,,,,105.00,150.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0011,Jordan,Shoes,SHOE,10.5,0,0,0444,32,,,,105.00,150.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0011,Jordan,Shoes,SHOE,11,0,0,0444,32,,,,105.00,150.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0008,Midcut,Shoes,SHOE,7,0,0,0050,33,,,,2660.00,3800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0008,Midcut,Shoes,SHOE,7.5,0,0,0050,33,,,,2660.00,3800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0008,Midcut,Shoes,SHOE,8,0,0,0050,33,,,,2660.00,3800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0008,Midcut,Shoes,SHOE,8.5,0,0,0050,33,,,,2660.00,3800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0008,Midcut,Shoes,SHOE,9,0,0,0050,33,,,,2660.00,3800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0008,Midcut,Shoes,SHOE,9.5,0,1,0050,33,,Y,17,2660.00,3800.00,SUP-006,,,ESTIMATE: 33 in system split by sales mix
+P-0008,Midcut,Shoes,SHOE,10,0,0,0050,33,,,,2660.00,3800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0008,Midcut,Shoes,SHOE,10.5,0,0,0050,33,,,,2660.00,3800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0008,Midcut,Shoes,SHOE,11,0,0,0050,33,,,,2660.00,3800.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0008,Midcut,Shoes,SHOE,11.5,0,1,0050,33,,Y,16,2660.00,3800.00,SUP-006,,,ESTIMATE: 33 in system split by sales mix
+P-0013,Non Patrol Shoes,Shoes,SHOE,7,0,0,0284,30,,,,280.00,400.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0013,Non Patrol Shoes,Shoes,SHOE,7.5,0,0,0284,30,,,,280.00,400.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0013,Non Patrol Shoes,Shoes,SHOE,8,0,0,0284,30,,,,280.00,400.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0013,Non Patrol Shoes,Shoes,SHOE,8.5,0,0,0284,30,,,,280.00,400.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0013,Non Patrol Shoes,Shoes,SHOE,9,0,0,0284,30,,,,280.00,400.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0013,Non Patrol Shoes,Shoes,SHOE,9.5,0,0,0284,30,,,,280.00,400.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0013,Non Patrol Shoes,Shoes,SHOE,10,0,0,0284,30,,,,280.00,400.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0013,Non Patrol Shoes,Shoes,SHOE,10.5,0,0,0284,30,,,,280.00,400.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0013,Non Patrol Shoes,Shoes,SHOE,11,0,0,0284,30,,,,280.00,400.00,SUP-006,Y,,"left blank: no size was ever sold, nothing to base a split on"
+P-0015,PNP White Shoes,Shoes,SHOE,7,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0015,PNP White Shoes,Shoes,SHOE,7.5,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0015,PNP White Shoes,Shoes,SHOE,8,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0015,PNP White Shoes,Shoes,SHOE,8.5,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0015,PNP White Shoes,Shoes,SHOE,9,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0015,PNP White Shoes,Shoes,SHOE,9.5,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0015,PNP White Shoes,Shoes,SHOE,10,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0015,PNP White Shoes,Shoes,SHOE,10.5,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0015,PNP White Shoes,Shoes,SHOE,11,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0005,Patrol Shoes,Shoes,SHOE,7,1,2,0003,2,,Y,0,1330.00,1900.00,SUP-006,,,ESTIMATE: 2 in system split by sales mix
+P-0005,Patrol Shoes,Shoes,SHOE,7.5,0,0,0003,2,,,,1330.00,1900.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0005,Patrol Shoes,Shoes,SHOE,8,0,6,0003,2,,Y,1,1330.00,1900.00,SUP-006,,,ESTIMATE: 2 in system split by sales mix
+P-0005,Patrol Shoes,Shoes,SHOE,8.5,0,0,0003,2,,,,1330.00,1900.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0005,Patrol Shoes,Shoes,SHOE,9,0,8,0003,2,,Y,1,1330.00,1900.00,SUP-006,,,ESTIMATE: 2 in system split by sales mix
+P-0005,Patrol Shoes,Shoes,SHOE,9.5,0,0,0003,2,,,,1330.00,1900.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0005,Patrol Shoes,Shoes,SHOE,10,0,5,0003,2,,Y,0,1330.00,1900.00,SUP-006,,,ESTIMATE: 2 in system split by sales mix
+P-0005,Patrol Shoes,Shoes,SHOE,10.5,0,0,0003,2,,,,1330.00,1900.00,SUP-006,,,not sold in any recorded sale - left for the owner
+P-0005,Patrol Shoes,Shoes,SHOE,11,0,1,0003,2,,Y,0,1330.00,1900.00,SUP-006,,,ESTIMATE: 2 in system split by sales mix
+P-0014,Rubber Shoes Peak,Shoes,SHOE,7,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0014,Rubber Shoes Peak,Shoes,SHOE,7.5,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0014,Rubber Shoes Peak,Shoes,SHOE,8,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0014,Rubber Shoes Peak,Shoes,SHOE,8.5,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0014,Rubber Shoes Peak,Shoes,SHOE,9,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0014,Rubber Shoes Peak,Shoes,SHOE,9.5,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0014,Rubber Shoes Peak,Shoes,SHOE,10,0,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0014,Rubber Shoes Peak,Shoes,SHOE,10.5,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0014,Rubber Shoes Peak,Shoes,SHOE,11,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0010,Snoz Gibson Shoes,Shoes,SHOE,6,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0010,Snoz Gibson Shoes,Shoes,SHOE,6.5,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0010,Snoz Gibson Shoes,Shoes,SHOE,7,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0010,Snoz Gibson Shoes,Shoes,SHOE,7.5,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0010,Snoz Gibson Shoes,Shoes,SHOE,8,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0010,Snoz Gibson Shoes,Shoes,SHOE,8.5,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0010,Snoz Gibson Shoes,Shoes,SHOE,9,1,1,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0010,Snoz Gibson Shoes,Shoes,SHOE,9.5,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0010,Snoz Gibson Shoes,Shoes,SHOE,10,0,0,,,,,,,,,,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0012,Under Armour Shoes,Shoes,SHOE,7,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0012,Under Armour Shoes,Shoes,SHOE,7.5,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0012,Under Armour Shoes,Shoes,SHOE,8,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0012,Under Armour Shoes,Shoes,SHOE,8.5,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0012,Under Armour Shoes,Shoes,SHOE,9,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0012,Under Armour Shoes,Shoes,SHOE,9.5,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0012,Under Armour Shoes,Shoes,SHOE,10,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0012,Under Armour Shoes,Shoes,SHOE,10.5,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system
+P-0012,Under Armour Shoes,Shoes,SHOE,11,0,0,,,,,,,,,Y,"new item - not in the system yet: fill cost, price and supplier",left blank: item not in the system

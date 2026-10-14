@@ -11,7 +11,7 @@ namespace App\Libraries;
  */
 class LoginLockout
 {
-    public const MAX_ATTEMPTS    = 5;
+    public const MAX_ATTEMPTS    = 3;
     public const LOCKOUT_SECONDS = 60;
     private const WINDOW_SECONDS = 900;
 

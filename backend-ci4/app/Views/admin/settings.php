@@ -315,6 +315,12 @@ $tabs = [
                 <div>Changing these values will affect all procurement recommendations system-wide. Only the owner can modify DSS parameters. The system does not use AI &mdash; all calculations are based on historical transaction data and the formulas below.</div>
             </div>
 
+            <form method="post" action="<?= site_url('admin/settings/run-engine') ?>" class="mb-3"
+                  onsubmit="return confirm('Recompute EOQ, Safety Stock, ROP and classes for all products now? This can take a minute.');">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-repeat"></i> Run DSS engine now</button>
+            </form>
+
             <form method="post" action="<?= site_url('admin/settings/dss-parameters') ?>">
                 <?= csrf_field() ?>
                 <div class="dss-cards">

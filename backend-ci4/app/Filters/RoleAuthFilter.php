@@ -22,6 +22,20 @@ class RoleAuthFilter implements FilterInterface
                 ->with('error', 'Please log in to continue.');
         }
 
+        // Idle timeout, enforced on the server (the cookie lifetime alone does
+        // not stop a copied session ID from working). Every request refreshes
+        // the clock, so only inactivity ends the session.
+        $limit = (int) config('Session')->expiration;
+        $last  = (int) $session->get('last_activity');
+
+        if ($limit > 0 && $last > 0 && (time() - $last) > $limit) {
+            $session->remove(['isLoggedIn', 'user_id', 'role', 'supplier_id', 'last_activity']);
+
+            return redirect()->to('/login/' . strtolower($requiredRole ?? 'admin'))
+                ->with('error', 'Your session expired after ' . (int) round($limit / 60) . ' minutes of inactivity. Please log in again.');
+        }
+        $session->set('last_activity', time());
+
         if ($requiredRole && $session->get('role') !== $requiredRole) {
             return redirect()->to('/login/' . strtolower($requiredRole))
                 ->with('error', 'You do not have access to that area.');

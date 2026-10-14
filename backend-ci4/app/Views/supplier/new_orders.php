@@ -26,6 +26,7 @@
 
 <div class="page-wrap">
     <?php if (!empty($success)): ?><div class="alert alert-success"><?= esc($success) ?></div><?php endif; ?>
+    <?php if (!empty($error)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
 
     <div class="no-filters">
         <a href="?filter=all" class="<?= $filter === 'all' ? 'active' : '' ?>">All (<?= count($orders) ?>)</a>
@@ -72,8 +73,9 @@
                     </div>
                 </div>
                 <div class="no-card-actions">
-                    <form method="post" action="<?= site_url('supplier/new-orders/decline/' . $o['so_id']) ?>" onsubmit="return confirm('Decline this order?');">
+                    <form method="post" action="<?= site_url('supplier/new-orders/decline/' . $o['so_id']) ?>" onsubmit="var r = prompt('Reason for declining this order?'); if (!r || !r.trim()) { return false; } this.reason.value = r.trim(); return true;">
                         <?= csrf_field() ?>
+                        <input type="hidden" name="reason" value="">
                         <button type="submit" class="btn" style="background: var(--red-bg); color: var(--red-text); font-weight:700;">Decline</button>
                     </form>
                     <form method="post" action="<?= site_url('supplier/new-orders/accept/' . $o['so_id']) ?>">

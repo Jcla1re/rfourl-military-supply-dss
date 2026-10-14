@@ -1,0 +1,3166 @@
+{
+  "info": {
+    "name": "RfourL PDSS - Integration Tests (IT-01 to IT-18)",
+    "description": "Run with the Collection Runner or Newman, top to bottom, against a TEST database. Fill the collection variables first. DB side-effects must be verified in phpMyAdmin (noted per folder).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// CI4 cookie-based CSRF: fetch a page, read the hidden token, send it with every request.",
+          "const base = pm.collectionVariables.get('baseUrl');",
+          "pm.sendRequest({ url: base + '/login/admin', method: 'GET' }, (err, res) => {",
+          "    if (err) { console.log('CSRF probe failed', err); return; }",
+          "    const html = res.text();",
+          "    const m = html.match(/name=\"csrf_test_name\"[^>]*value=\"([^\"]+)\"/) ||",
+          "              html.match(/value=\"([^\"]+)\"[^>]*name=\"csrf_test_name\"/);",
+          "    if (m) { pm.collectionVariables.set('csrf', m[1]); }",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "mlUrl",
+      "value": "http://127.0.0.1:5001"
+    },
+    {
+      "key": "csrf",
+      "value": ""
+    },
+    {
+      "key": "adminUser",
+      "value": "admin1"
+    },
+    {
+      "key": "adminPass",
+      "value": "Test1234"
+    },
+    {
+      "key": "staffUser",
+      "value": "staff1"
+    },
+    {
+      "key": "staffPass",
+      "value": "Test1234"
+    },
+    {
+      "key": "supplierUser",
+      "value": "MFUT"
+    },
+    {
+      "key": "supplierPass",
+      "value": "Test1234"
+    },
+    {
+      "key": "itemIdA",
+      "value": "0007"
+    },
+    {
+      "key": "itemIdB",
+      "value": "0033"
+    },
+    {
+      "key": "itemIdRop",
+      "value": "0023"
+    },
+    {
+      "key": "qtyToRop",
+      "value": "1"
+    },
+    {
+      "key": "holdingCost",
+      "value": "60.48"
+    },
+    {
+      "key": "supplierId",
+      "value": "SUP-001"
+    },
+    {
+      "key": "alertId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": "SO-0001"
+    },
+    {
+      "key": "orderId2",
+      "value": "SO-0002"
+    },
+    {
+      "key": "receiptNo",
+      "value": "BIR-20260714-01"
+    },
+    {
+      "key": "notificationId",
+      "value": "1"
+    },
+    {
+      "key": "staffUserId",
+      "value": "2"
+    },
+    {
+      "key": "reportDate",
+      "value": "2026-07-29"
+    },
+    {
+      "key": "reportYear",
+      "value": "2026"
+    },
+    {
+      "key": "reportMonth",
+      "value": "2026-07"
+    },
+    {
+      "key": "csvRows",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "IT-01 Login + RBAC + Dashboard",
+      "description": "Each role lands on its own dashboard; a role cannot open another role's page.",
+      "item": [
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /admin/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/admin/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Admin dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/dashboard"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Admin opens staff page -> denied",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/staff/dashboard"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /login/staff', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/login/staff'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/logout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Login as staff",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/staff",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{staffUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{staffPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /staff/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/staff/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Staff dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/staff/dashboard"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Staff opens admin page -> denied",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/dashboard"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /login/admin', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/login/admin'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/logout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Login as supplier",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/supplier",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{supplierUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{supplierPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /supplier/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/supplier/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Supplier dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/supplier/dashboard"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Supplier opens admin page -> denied",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/settings"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /login/admin', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/login/admin'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/logout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-02 Point of Sale + Inventory",
+      "description": "Sell itemA x1 and itemB x2. THEN verify in phpMyAdmin: 1 sales_transaction, 2 sales_item rows, stock -1 / -2, inventory_log type SALE.",
+      "item": [
+        {
+          "name": "Login as staff",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/staff",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{staffUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{staffPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /staff/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/staff/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Checkout 2 lines (cash)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/staff/sales/checkout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "item_id[]",
+                  "value": "{{itemIdA}}",
+                  "type": "text"
+                },
+                {
+                  "key": "quantity[]",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "item_id[]",
+                  "value": "{{itemIdB}}",
+                  "type": "text"
+                },
+                {
+                  "key": "quantity[]",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "payment_method",
+                  "value": "Cash",
+                  "type": "text"
+                },
+                {
+                  "key": "cash_received",
+                  "value": "100000",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"Sale completed\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"Sale completed\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-03 POS + Reorder Alerts + Notifications",
+      "description": "Sell {{itemIdRop}} down to its ROP, then open Reorder Alerts. The alert is raised when the Reorder Alerts page loads (ReorderAlertModel::syncFromLiveInventory) and uses products.manual_rop_warning, NOT the engine ROP, so set that field on the item first (see ST_AUDIT.md, ST-07). The code pushes no notification when the alert is raised.",
+      "item": [
+        {
+          "name": "Login as staff",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/staff",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{staffUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{staffPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /staff/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/staff/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "1. Checkout to reach ROP",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/staff/sales/checkout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "item_id[]",
+                  "value": "{{itemIdRop}}",
+                  "type": "text"
+                },
+                {
+                  "key": "quantity[]",
+                  "value": "{{qtyToRop}}",
+                  "type": "text"
+                },
+                {
+                  "key": "payment_method",
+                  "value": "Cash",
+                  "type": "text"
+                },
+                {
+                  "key": "cash_received",
+                  "value": "100000",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"Sale completed\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"Sale completed\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/logout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /admin/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/admin/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "2. Reorder alerts list shows the item",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/reorder-alerts"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"{{itemIdRop}}\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"{{itemIdRop}}\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "3. Notifications page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/notifications"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-04 / IT-05 K-Means + Engine (run from terminal)",
+      "description": "Not an HTTP flow. IT-04: `php spark dss:run` then check cluster_segments / products.abc_category. IT-05: stop the Flask service, run `php spark dss:run` again; expect 'Falling back to the last cached cluster assignment'. Health probe below.",
+      "item": [
+        {
+          "name": "Flask health (ml-service)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{mlUrl}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('ml-service is up', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IT-06 Settings (DSS parameter) + Engine",
+      "description": "Change ordering cost to 300; verify dss_parameters.ordering_cost and updated_by, then run `php spark dss:run` and compare EOQ.",
+      "item": [
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /admin/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/admin/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Save DSS parameters (ordering cost 300)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/settings/dss-parameters",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "ordering_cost",
+                  "value": "300",
+                  "type": "text"
+                },
+                {
+                  "key": "holding_cost_per_unit",
+                  "value": "{{holdingCost}}",
+                  "type": "text"
+                },
+                {
+                  "key": "service_level_target",
+                  "value": "95",
+                  "type": "text"
+                },
+                {
+                  "key": "z_score",
+                  "value": "1.645",
+                  "type": "text"
+                },
+                {
+                  "key": "demand_lookback_days",
+                  "value": "90",
+                  "type": "text"
+                },
+                {
+                  "key": "minimum_order_qty",
+                  "value": "5",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"parameters updated\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"parameters updated\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Invalid: ordering cost -250 is rejected",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/settings/dss-parameters",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "ordering_cost",
+                  "value": "-250",
+                  "type": "text"
+                },
+                {
+                  "key": "holding_cost_per_unit",
+                  "value": "{{holdingCost}}",
+                  "type": "text"
+                },
+                {
+                  "key": "service_level_target",
+                  "value": "95",
+                  "type": "text"
+                },
+                {
+                  "key": "z_score",
+                  "value": "1.645",
+                  "type": "text"
+                },
+                {
+                  "key": "demand_lookback_days",
+                  "value": "90",
+                  "type": "text"
+                },
+                {
+                  "key": "minimum_order_qty",
+                  "value": "5",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page does not contain \"parameters updated\"', () => pm.expect(pm.response.text()).to.not.include(pm.variables.replaceIn(\"parameters updated\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Invalid: service level 101% is rejected",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/settings/dss-parameters",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "ordering_cost",
+                  "value": "300",
+                  "type": "text"
+                },
+                {
+                  "key": "holding_cost_per_unit",
+                  "value": "{{holdingCost}}",
+                  "type": "text"
+                },
+                {
+                  "key": "service_level_target",
+                  "value": "101",
+                  "type": "text"
+                },
+                {
+                  "key": "z_score",
+                  "value": "1.645",
+                  "type": "text"
+                },
+                {
+                  "key": "demand_lookback_days",
+                  "value": "90",
+                  "type": "text"
+                },
+                {
+                  "key": "minimum_order_qty",
+                  "value": "5",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-07 Reorder Alert + Orders + Supplier Portal",
+      "description": "Admin creates two orders for supplier {{supplierId}} (ids captured into orderId / orderId2); the supplier must then see them. Verify in DB: reorder_alert becomes Ordered when alert_id is sent.",
+      "item": [
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /admin/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/admin/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Create stock order 1 (EOQ quantity)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/orders/store",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "supplier_id",
+                  "value": "{{supplierId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "item_id[]",
+                  "value": "{{itemIdRop}}",
+                  "type": "text"
+                },
+                {
+                  "key": "quantity[]",
+                  "value": "48",
+                  "type": "text"
+                },
+                {
+                  "key": "unit_price[]",
+                  "value": "480",
+                  "type": "text"
+                },
+                {
+                  "key": "priority",
+                  "value": "Order",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"created and sent to supplier\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"created and sent to supplier\")));",
+                  "const all = [...pm.response.text().matchAll(/Stock order (SO-\\d+) created/g)]; if (all.length) { pm.collectionVariables.set('orderId', all[all.length - 1][1]); } pm.test('captured orderId', () => pm.expect(all.length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Create stock order 2",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/orders/store",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "supplier_id",
+                  "value": "{{supplierId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "item_id[]",
+                  "value": "{{itemIdA}}",
+                  "type": "text"
+                },
+                {
+                  "key": "quantity[]",
+                  "value": "10",
+                  "type": "text"
+                },
+                {
+                  "key": "unit_price[]",
+                  "value": "480",
+                  "type": "text"
+                },
+                {
+                  "key": "priority",
+                  "value": "Order",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"created and sent to supplier\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"created and sent to supplier\")));",
+                  "const all = [...pm.response.text().matchAll(/Stock order (SO-\\d+) created/g)]; if (all.length) { pm.collectionVariables.set('orderId2', all[all.length - 1][1]); } pm.test('captured orderId2', () => pm.expect(all.length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/logout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Login as supplier",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/supplier",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{supplierUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{supplierPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /supplier/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/supplier/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Supplier sees order 1 in New Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/supplier/new-orders"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"{{orderId}}\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"{{orderId}}\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Supplier sees order 2 in New Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/supplier/new-orders"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"{{orderId2}}\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"{{orderId2}}\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-08 Supplier accept / decline + Notifications",
+      "description": "Uses {{orderId}} (accept) and {{orderId2}} (decline). The code stores no decline reason (see ST_AUDIT.md, ST-09).",
+      "item": [
+        {
+          "name": "Login as supplier",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/supplier",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{supplierUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{supplierPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /supplier/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/supplier/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Accept order",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/supplier/new-orders/accept/{{orderId}}",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"accepted\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"accepted\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Decline order",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/supplier/new-orders/decline/{{orderId2}}",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "reason",
+                  "value": "Out of stock",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"declined\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"declined\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/logout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /admin/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/admin/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Admin notifications show both",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/notifications"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"declined by supplier\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"declined by supplier\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-09 Supplier ships order with tracking number",
+      "description": "Order {{orderId}} must be in Preparing (accepted).",
+      "item": [
+        {
+          "name": "Login as supplier",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/supplier",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{supplierUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{supplierPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /supplier/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/supplier/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Ship out with tracking number",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/supplier/deliveries/ship/{{orderId}}",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "tracking_no",
+                  "value": "JT-TEST-0001",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"shipped out\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"shipped out\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/logout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /admin/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/admin/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Admin order page shows Shipped + tracking",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/orders/{{orderId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"JT-TEST-0001\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"JT-TEST-0001\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-10 Admin marks delivered -> inventory + alert",
+      "description": "Verify afterwards: stock +48, inventory_log RESTOCK linked to the order, actual_delivery_date set, alert Fulfilled.",
+      "item": [
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /admin/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/admin/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Mark as Delivered",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/orders/update-status/{{orderId}}",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "Delivered",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"marked as Delivered\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"marked as Delivered\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Again: stock must NOT be added twice (verify in DB)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/orders/update-status/{{orderId}}",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "Delivered",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/logout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Login as supplier",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/supplier",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{supplierUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{supplierPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /supplier/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/supplier/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Supplier Completed list",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/supplier/completed"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"{{orderId}}\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"{{orderId}}\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-11 Staff restock for an already-received order",
+      "description": "{{orderId}} is already Delivered, so Staff confirmation must be refused.",
+      "item": [
+        {
+          "name": "Login as staff",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/staff",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{staffUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{staffPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /staff/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/staff/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Confirm restock on received order",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/staff/log-transaction/restock-confirm/{{orderId}}",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"not ready to confirm\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"not ready to confirm\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-12 Log damaged item",
+      "description": "Verify afterwards: stock -1, inventory_log DAMAGED_LOST with the staff user_id, Admin notification.",
+      "item": [
+        {
+          "name": "Login as staff",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/staff",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{staffUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{staffPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /staff/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/staff/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Log 1 damaged",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/staff/log-transaction/store",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "type",
+                  "value": "damaged",
+                  "type": "text"
+                },
+                {
+                  "key": "item_id",
+                  "value": "{{itemIdA}}",
+                  "type": "text"
+                },
+                {
+                  "key": "qty_affected",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "item_condition",
+                  "value": "Damaged",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"logged successfully\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"logged successfully\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Boundary: more damaged than on hand (document expects rejection)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/staff/log-transaction/store",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "type",
+                  "value": "damaged",
+                  "type": "text"
+                },
+                {
+                  "key": "item_id",
+                  "value": "{{itemIdA}}",
+                  "type": "text"
+                },
+                {
+                  "key": "qty_affected",
+                  "value": "999999",
+                  "type": "text"
+                },
+                {
+                  "key": "item_condition",
+                  "value": "Damaged",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page does not contain \"logged successfully\"', () => pm.expect(pm.response.text()).to.not.include(pm.variables.replaceIn(\"logged successfully\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-13 Log customer return with sale reference",
+      "description": "Verify stock increases by the returned quantity. The code does not validate original_sale_ref (see ST_AUDIT.md, UT-33).",
+      "item": [
+        {
+          "name": "Login as staff",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/staff",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{staffUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{staffPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /staff/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/staff/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Log a return",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/staff/log-transaction/store",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "type",
+                  "value": "return",
+                  "type": "text"
+                },
+                {
+                  "key": "item_id",
+                  "value": "{{itemIdA}}",
+                  "type": "text"
+                },
+                {
+                  "key": "qty_returned",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "item_condition",
+                  "value": "Resellable",
+                  "type": "text"
+                },
+                {
+                  "key": "original_sale_ref",
+                  "value": "{{receiptNo}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"logged successfully\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"logged successfully\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Invalid sale reference (document expects rejection)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/staff/log-transaction/store",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "type",
+                  "value": "return",
+                  "type": "text"
+                },
+                {
+                  "key": "item_id",
+                  "value": "{{itemIdA}}",
+                  "type": "text"
+                },
+                {
+                  "key": "qty_returned",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "original_sale_ref",
+                  "value": "999999999",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page does not contain \"logged successfully\"', () => pm.expect(pm.response.text()).to.not.include(pm.variables.replaceIn(\"logged successfully\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-14 Staff reset request + Admin approval",
+      "description": "Staff submits a request; Admin finds it under notifications and approves. Verify the password result in DB / by logging in.",
+      "item": [
+        {
+          "name": "Staff submits forgot-password request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/staff/forgot",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "staff_name",
+                  "value": "Staff One",
+                  "type": "text"
+                },
+                {
+                  "key": "reason",
+                  "value": "Forgot my password (QA)",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /admin/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/admin/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Admin notifications list the request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/notifications"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const all = [...pm.response.text().matchAll(/notifications\\/approve\\/(\\d+)/g)]; if (all.length) { pm.collectionVariables.set('notificationId', all[all.length - 1][1]); } pm.test('captured notificationId', () => pm.expect(all.length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Admin approves request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/notifications/approve/{{notificationId}}",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-15 Add supplier with portal account",
+      "description": "Then log in with the new credentials.",
+      "item": [
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /admin/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/admin/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Create supplier",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/suppliers/store",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "company_name",
+                  "value": "Test Supplier QA",
+                  "type": "text"
+                },
+                {
+                  "key": "lead_time_days",
+                  "value": "7",
+                  "type": "text"
+                },
+                {
+                  "key": "contact_email",
+                  "value": "qa.supplier@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "login_email",
+                  "value": "qa.supplier@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "qa_supplier",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "Qasupp123",
+                  "type": "text"
+                },
+                {
+                  "key": "confirm_password",
+                  "value": "Qasupp123",
+                  "type": "text"
+                },
+                {
+                  "key": "supplier_status",
+                  "value": "Active",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Invalid: lead time 0 (document expects rejection)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/suppliers/store",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "company_name",
+                  "value": "Zero Lead",
+                  "type": "text"
+                },
+                {
+                  "key": "lead_time_days",
+                  "value": "0",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page does not contain \"Supplier added\"', () => pm.expect(pm.response.text()).to.not.include(pm.variables.replaceIn(\"Supplier added\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Invalid: malformed email is rejected",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/suppliers/store",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "company_name",
+                  "value": "Bad Email",
+                  "type": "text"
+                },
+                {
+                  "key": "lead_time_days",
+                  "value": "7",
+                  "type": "text"
+                },
+                {
+                  "key": "contact_email",
+                  "value": "supplier.a@",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-16 Deactivate staff account",
+      "description": "Deactivate staff user {{staffUserId}}, confirm the account cannot log in, then re-activate it so later runs still work.",
+      "item": [
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /admin/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/admin/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Deactivate staff account",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/settings/staff-accounts/toggle/{{staffUserId}}",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"deactivated\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"deactivated\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/logout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Deactivated staff cannot log in",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/staff",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{staffUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{staffPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('not sent to the staff dashboard', () => pm.expect(pm.response.headers.get('Location') || '').to.not.include('/staff/dashboard'));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /admin/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/admin/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Re-activate staff account",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/admin/settings/staff-accounts/toggle/{{staffUserId}}",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('page contains \"reactivated\"', () => pm.expect(pm.response.text()).to.include(pm.variables.replaceIn(\"reactivated\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/logout",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "IT-17 / IT-18 Exports",
+      "description": "Sales CSV for one day and one month, Sales PDF, and the Trend Analysis page. Row counts must be compared with the database (see SQL in docs/testing).",
+      "item": [
+        {
+          "name": "Login as admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('redirects to /admin/dashboard', () => { pm.expect(pm.response.code).to.be.oneOf([301,302,303]); pm.expect(pm.response.headers.get('Location') || '').to.include('/admin/dashboard'); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "Sales PDF export",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/sales/export-pdf?date={{reportDate}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('is a PDF', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('pdf'));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Sales CSV export (month)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/sales/export-csv?month={{reportMonth}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('is CSV', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('text/csv'));",
+                  "pm.test('has header and data rows', () => { const lines = pm.response.text().trim().split(String.fromCharCode(10)).map(l => l.trim()); pm.expect(lines[0]).to.include('Receipt No'); pm.expect(lines.length).to.be.above(1); pm.collectionVariables.set('csvRows', String(lines.length - 1)); });"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        },
+        {
+          "name": "Trend Analysis page, filtered",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/trend-analysis?year={{reportYear}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "ST-13 / ST-15 Security probes",
+      "description": "SQL injection on login, and a POST without a CSRF token.",
+      "item": [
+        {
+          "name": "SQLi in login form is rejected",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrf_test_name",
+                  "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "' OR '1'='1",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "' OR '1'='1",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('not sent to a dashboard', () => pm.expect(pm.response.headers.get('Location') || '').to.not.include('/dashboard'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST without CSRF token is rejected",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/login/admin",
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// strip the CSRF cookie so no token can match",
+                  "pm.cookies.jar().clear(pm.request.url, () => {});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('rejected (403 or back to login)', () => pm.expect(pm.response.code === 403 || (pm.response.headers.get('Location')||'').indexOf('/dashboard') === -1).to.be.true);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

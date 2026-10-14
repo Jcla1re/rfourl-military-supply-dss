@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\SalesArchive;
 use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
 use App\Models\SalesItemModel;
@@ -18,17 +19,17 @@ class TrendAnalysisController extends BaseController
     public function __construct()
     {
         $this->salesTransactionModel = new SalesTransactionModel();
-        $this->salesItemModel        = new SalesItemModel();
-        $this->productModel          = new ProductModel();
-        $this->pdssComputationModel  = new PdssComputationModel();
+        $this->salesItemModel = new SalesItemModel();
+        $this->productModel = new ProductModel();
+        $this->pdssComputationModel = new PdssComputationModel();
     }
 
-    public function index()
+    private function buildData(): array
     {
-        $year   = (int) ($this->request->getGet('year') ?? date('Y'));
+        $year = (int) ($this->request->getGet('year') ?? date('Y'));
         $itemId = $this->request->getGet('item') ?: null;
 
-        $monthTotals     = $this->monthlyTotals($year, $itemId);
+        $monthTotals = $this->monthlyTotals($year, $itemId);
         $monthTotalsPrev = $this->monthlyTotals($year - 1, $itemId);
 
         // Weekly chart: anchored to the latest actual sale date within the
@@ -42,7 +43,11 @@ class TrendAnalysisController extends BaseController
         $lastWeekEnd = (new \DateTime($weekAsOf))->modify('-7 days')->format('Y-m-d');
         $lastWeek = $this->weekSeries($lastWeekEnd, $itemId);
 
-        $products = $this->productModel->where('is_active', 1)->orderBy('item_name', 'ASC')->findAll();
+        // Active products plus anything that has sales history, so older items stay searchable.
+        $products = $this->productModel
+            ->where('is_active', 1)
+            ->orWhere('item_id IN (SELECT DISTINCT item_id FROM sales_item)', null, false)
+            ->orderBy('item_name', 'ASC')->findAll();
 
         $computations = [];
         foreach ($this->pdssComputationModel->latestPerItem() as $c) {
@@ -59,10 +64,10 @@ class TrendAnalysisController extends BaseController
             if (isset($computations[$row['item_id']])) {
                 $c = $computations[$row['item_id']];
                 $variability[] = [
-                    'item_id'          => $row['item_id'],
-                    'item_name'        => $row['item_name'] ?? $row['item_id'],
+                    'item_id' => $row['item_id'],
+                    'item_name' => $row['item_name'] ?? $row['item_id'],
                     'avg_daily_demand' => $c['avg_daily_demand'],
-                    'safety_stock'     => $c['safety_stock'],
+                    'safety_stock' => $c['safety_stock'],
                 ];
             }
         }
@@ -70,25 +75,25 @@ class TrendAnalysisController extends BaseController
         // ABC Classification panel: classic Pareto analysis (% contribution
         // to total sales value) for the selected year, ranked highest-revenue
         // first, split into A (top 80%), B (next 15%), C (remaining 5%).
-        $revenueRows  = $this->salesItemModel->revenueByItem($year);
+        $revenueRows = $this->salesItemModel->revenueByItem($year);
         $totalRevenue = array_sum(array_column($revenueRows, 'revenue'));
 
         $abcClassTotals = ['A' => 0.0, 'B' => 0.0, 'C' => 0.0];
-        $abcItems       = [];
-        $cumulative     = 0.0;
+        $abcItems = [];
+        $cumulative = 0.0;
         foreach ($revenueRows as $row) {
             $revenue = (float) $row['revenue'];
-            $pct     = $totalRevenue > 0 ? ($revenue / $totalRevenue) * 100 : 0;
+            $pct = $totalRevenue > 0 ? ($revenue / $totalRevenue) * 100 : 0;
             $cumulative += $revenue;
-            $cumPct  = $totalRevenue > 0 ? $cumulative / $totalRevenue : 1;
-            $class   = $cumPct <= 0.80 ? 'A' : ($cumPct <= 0.95 ? 'B' : 'C');
+            $cumPct = $totalRevenue > 0 ? $cumulative / $totalRevenue : 1;
+            $class = $cumPct <= 0.80 ? 'A' : ($cumPct <= 0.95 ? 'B' : 'C');
 
             $abcClassTotals[$class] += $pct;
             $abcItems[] = [
-                'item_id'   => $row['item_id'],
+                'item_id' => $row['item_id'],
                 'item_name' => $row['item_name'] ?? $row['item_id'],
-                'pct'       => $pct,
-                'class'     => $class,
+                'pct' => $pct,
+                'class' => $class,
             ];
         }
         $abcTopItems = array_slice($abcItems, 0, $topN);
@@ -98,7 +103,7 @@ class TrendAnalysisController extends BaseController
         // list above — Class A items dominate that list by definition,
         // since they're the highest individual % contributors).
         $abcClassCounts = ['A' => 0, 'B' => 0, 'C' => 0];
-        $abcByClass     = ['A' => [], 'B' => [], 'C' => []];
+        $abcByClass = ['A' => [], 'B' => [], 'C' => []];
         foreach ($abcItems as $item) {
             $abcClassCounts[$item['class']]++;
             $abcByClass[$item['class']][] = $item;
@@ -114,7 +119,7 @@ class TrendAnalysisController extends BaseController
             $v['class'] = $classByItem[$v['item_id']] ?? null;
         }
         unset($v);
-        usort($variability, fn ($a, $b) => (float) $b['avg_daily_demand'] <=> (float) $a['avg_daily_demand']);
+        usort($variability, fn($a, $b) => (float) $b['avg_daily_demand'] <=> (float) $a['avg_daily_demand']);
 
         // ---- Trend cards + chart presentation (derived from the data above) ----
         $thisYear = (int) date('Y');
@@ -129,8 +134,8 @@ class TrendAnalysisController extends BaseController
         // "Items sold in <year>": Jan 1 to today (or the whole year for past
         // years), compared with the same span a year earlier.
         $periodEnd = $year === $thisYear ? date('Y-m-d') : "{$year}-12-31";
-        $prevEnd   = (new \DateTime($periodEnd))->modify('-1 year')->format('Y-m-d');
-        $unitsYtd  = $this->unitsBetween("{$year}-01-01", $periodEnd, $itemId);
+        $prevEnd = (new \DateTime($periodEnd))->modify('-1 year')->format('Y-m-d');
+        $unitsYtd = $this->unitsBetween("{$year}-01-01", $periodEnd, $itemId);
         $unitsPrev = $this->unitsBetween(($year - 1) . '-01-01', $prevEnd, $itemId);
 
         $bestMonth = null;
@@ -144,41 +149,76 @@ class TrendAnalysisController extends BaseController
         $weekStart = (new \DateTime($weekAsOf))->modify('-6 days');
 
         $topSellers = $this->salesItemModel->topSellers(5);
-        $maxUnits   = $topSellers ? max(array_column($topSellers, 'units_sold')) : 1;
+        $maxUnits = $topSellers ? max(array_column($topSellers, 'units_sold')) : 1;
 
         $data = [
-            'title'          => 'Trend Analysis',
-            'active'         => 'trend_analysis',
-            'years'          => range((int) date('Y'), (int) date('Y') - 3),
-            'selectedYear'   => $year,
-            'products'       => $products,
-            'selectedItem'   => $itemId,
-            'annualLabels'   => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-            'annualData'     => $annualSoFar,
-            'monthsSoFar'    => $monthsSoFar,
+            'title' => 'Trend Analysis',
+            'active' => 'trend_analysis',
+            'years' => $this->yearsWithSales(),
+            'archiveNotice' => SalesArchive::notice(),
+            'selectedYear' => $year,
+            'products' => $products,
+            'selectedItem' => $itemId,
+            'annualLabels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            'annualData' => $annualSoFar,
+            'monthsSoFar' => $monthsSoFar,
             'annualDataPrev' => array_values($monthTotalsPrev),
-            'annualPeak'     => max($monthTotals),
-            'weekLabels'     => $thisWeek['labels'],
-            'weekData'       => $thisWeek['data'],
-            'weekDataPrev'   => $lastWeek['data'],
-            'weekAsOf'       => $weekAsOf,
+            'annualPeak' => max($monthTotals),
+            'weekLabels' => $thisWeek['labels'],
+            'weekData' => $thisWeek['data'],
+            'weekDataPrev' => $lastWeek['data'],
+            'weekAsOf' => $weekAsOf,
             'weekRangeLabel' => self::dateRangeLabel($weekStart, new \DateTime($weekAsOf)),
-            'unitsYtd'       => $unitsYtd,
-            'unitsPrev'      => $unitsPrev,
-            'changePct'      => $unitsPrev > 0 ? (($unitsYtd - $unitsPrev) / $unitsPrev) * 100 : null,
-            'periodLabel'    => self::dateRangeLabel(new \DateTime("{$year}-01-01"), new \DateTime($periodEnd)),
-            'bestMonth'      => $bestMonth,
-            'topItem'        => $topItem,
-            'topSellers'     => $topSellers,
-            'maxUnits'       => $maxUnits ?: 1,
-            'variability'    => $variability,
+            'unitsYtd' => $unitsYtd,
+            'unitsPrev' => $unitsPrev,
+            'changePct' => $unitsPrev > 0 ? (($unitsYtd - $unitsPrev) / $unitsPrev) * 100 : null,
+            'periodLabel' => self::dateRangeLabel(new \DateTime("{$year}-01-01"), new \DateTime($periodEnd)),
+            'bestMonth' => $bestMonth,
+            'topItem' => $topItem,
+            'topSellers' => $topSellers,
+            'maxUnits' => $maxUnits ?: 1,
+            'variability' => $variability,
             'abcClassTotals' => $abcClassTotals,
-            'abcTopItems'    => $abcTopItems,
-            'abcByClass'     => $abcByClass,
+            'abcTopItems' => $abcTopItems,
+            'abcByClass' => $abcByClass,
             'abcClassCounts' => $abcClassCounts,
+            'totalStock' => array_sum(array_column(array_filter($products, fn($p) => (int) $p['is_active'] === 1), 'current_stock')),
+            'salesToday' => $this->salesTransactionModel->totalForToday(),
         ];
 
-        return view('admin/trend_analysis', $data);
+        return $data;
+    }
+
+    public function index()
+    {
+        return view('admin/trend_analysis', $this->buildData());
+    }
+
+    public function pdf()
+    {
+        $data = $this->buildData();
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->setPaper('a4', 'portrait');
+        $dompdf->loadHtml(view('admin/trend_analysis_pdf', $data));
+        $dompdf->render();
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="trend-analysis-' . $data['selectedYear'] . '.pdf"')
+            ->setBody($dompdf->output());
+    }
+
+    /** Every year that has sales (newest first), always including the current year. */
+    private function yearsWithSales(): array
+    {
+        $rows = db_connect()->query('SELECT DISTINCT YEAR(sale_date) AS y FROM sales_transaction ORDER BY y DESC')->getResultArray();
+        $years = array_map('intval', array_column($rows, 'y'));
+        $years[] = (int) date('Y');
+        $years = array_values(array_unique($years));
+        rsort($years);
+
+        return $years;
     }
 
     /**
@@ -242,7 +282,7 @@ class TrendAnalysisController extends BaseController
      */
     private function weekSeries(string $endDate, ?string $itemId): array
     {
-        $end   = new \DateTime($endDate);
+        $end = new \DateTime($endDate);
         $start = (clone $end)->modify('-6 days');
 
         $rows = $this->salesItemModel->dailyQuantities($start->format('Y-m-d'), $end->format('Y-m-d'), $itemId);
@@ -252,11 +292,11 @@ class TrendAnalysisController extends BaseController
         }
 
         $labels = [];
-        $data   = [];
+        $data = [];
         $cursor = clone $start;
         while ($cursor <= $end) {
             $labels[] = $cursor->format('D');
-            $data[]   = $byDate[$cursor->format('Y-m-d')] ?? 0;
+            $data[] = $byDate[$cursor->format('Y-m-d')] ?? 0;
             $cursor->modify('+1 day');
         }
 

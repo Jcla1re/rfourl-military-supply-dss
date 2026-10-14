@@ -55,12 +55,40 @@ class SettingsController extends BaseController
         return redirect()->to('/admin/settings?tab=notif')->with('success', 'Notification preferences updated.');
     }
 
+    /**
+     * Runs the same engine as `php spark dss:run` (EOQ, Safety Stock, ROP,
+     * K-Means classes, reorder alerts) from the UI, so recommendations do not
+     * depend on someone opening a terminal. For unattended runs, schedule
+     * tools/run_dss.bat with Windows Task Scheduler.
+     */
+    public function runEngine()
+    {
+        @set_time_limit(300);
+
+        try {
+            $output = command('dss:run');
+        } catch (\Throwable $e) {
+            log_message('error', 'Manual DSS run failed: ' . $e->getMessage());
+            SecurityLogModel::log('dss_run_failed', null, $e->getMessage());
+
+            return redirect()->to('/admin/settings?tab=dss')->with('error', 'The DSS engine could not run: ' . $e->getMessage());
+        }
+
+        SecurityLogModel::log('dss_run_manual', null, 'run from Settings');
+
+        $summary = trim(preg_replace('/\e\[[0-9;]*m/', '', (string) $output));
+        $failed  = stripos($summary, 'failed') !== false || stripos($summary, 'cannot compute') !== false;
+
+        return redirect()->to('/admin/settings?tab=dss')->with($failed ? 'error' : 'success',
+            $failed ? 'DSS run did not complete: ' . $summary : 'DSS engine run complete. Recommendations and reorder alerts are updated.');
+    }
+
     public function updateDssParameters()
     {
         $rules = [
             'ordering_cost'         => 'required|numeric|greater_than_equal_to[0]',
-            'holding_cost_per_unit' => 'required|numeric|greater_than_equal_to[0]',
-            'service_level_target'  => 'required|numeric|greater_than[0]|less_than_equal_to[100]',
+            'holding_cost_per_unit' => 'required|numeric|greater_than[0]',
+            'service_level_target'  => 'required|numeric|greater_than[0]|less_than[100]',
             'z_score'               => 'required|numeric',
             'demand_lookback_days'  => 'required|integer|greater_than[0]',
             'minimum_order_qty'     => 'required|integer|greater_than[0]',

@@ -120,6 +120,7 @@
                 <div class="pf-row"><span>Login Email</span><strong><?= esc($loginAccount['email'] ?? '—') ?></strong></div>
                 <div class="pf-row"><span>Last Login</span><strong><?= !empty($loginAccount['last_login']) ? esc(date('M j, Y g:i A', strtotime($loginAccount['last_login']))) : '—' ?></strong></div>
                 <div class="pf-actions">
+                    <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#usernameModal">Change Username</button>
                     <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#loginEmailModal">Change Login Email</button>
                     <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#passwordModal">Change Password</button>
                 </div>
@@ -142,6 +143,29 @@
                     <div class="mb-3"><label class="fw-bold mb-1 d-block">Contact Email</label><input class="form-control" type="email" name="contact_email" value="<?= esc($supplier['contact_email'] ?? '') ?>"></div>
                     <div class="mb-3"><label class="fw-bold mb-1 d-block">Contact Number</label><input class="form-control" name="contact_number" value="<?= esc($supplier['contact_number'] ?? '') ?>"></div>
                     <div><label class="fw-bold mb-1 d-block">Preferred Courier</label><input class="form-control" name="preferred_courier" value="<?= esc($supplier['preferred_courier'] ?? '') ?>"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="usernameModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="<?= site_url('supplier/profile/username') ?>">
+                <?= csrf_field() ?>
+                <div class="modal-header">
+                    <h5 class="modal-title">Change Username</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">This is the name you type on the login page. Use 4&ndash;50 letters, numbers, dashes or underscores.</p>
+                    <div class="mb-3"><label class="fw-bold mb-1 d-block">New Username</label><input class="form-control" type="text" name="username" value="<?= esc($loginAccount['username'] ?? '') ?>" minlength="4" maxlength="50" pattern="[A-Za-z0-9_\-]+" required autocomplete="username"></div>
+                    <div><label class="fw-bold mb-1 d-block">Current Password</label><input class="form-control" type="password" name="current_password" required autocomplete="current-password"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

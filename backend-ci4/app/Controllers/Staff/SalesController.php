@@ -97,6 +97,19 @@ class SalesController extends BaseController
         return $transactions;
     }
 
+    public function exportCsv()
+    {
+        [$from, $to, $label] = \App\Libraries\SalesCsvExport::range(
+            $this->request->getGet('date'),
+            $this->request->getGet('month')
+        );
+
+        return $this->response
+            ->setHeader('Content-Type', 'text/csv; charset=utf-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="sales-' . $label . '.csv"')
+            ->setBody(\App\Libraries\SalesCsvExport::build($from, $to));
+    }
+
     public function exportPdf()
     {
         $date         = $this->request->getGet('date') ?: date('Y-m-d');
@@ -243,6 +256,9 @@ class SalesController extends BaseController
         }
 
         $db->transComplete();
+
+        // Raise any reorder alert this sale caused right away.
+        (new \App\Models\ReorderAlertModel())->syncFromLiveInventory();
 
         if ($db->transStatus() === false) {
             return redirect()->to('/staff/sales')->with('error', 'Checkout failed and was rolled back. Please try again.');

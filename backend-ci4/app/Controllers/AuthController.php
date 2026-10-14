@@ -43,6 +43,10 @@ class AuthController extends BaseController
         $username = $this->request->getPost('username');
         $password = $this->request->getPost('password');
 
+        if (trim((string) $username) === '' || (string) $password === '') {
+            return redirect()->back()->with('error', 'Please fill in all fields')->with('attempted_role', 'admin');
+        }
+
         $user = $this->userModel->findByUsername($username);
 
         if (!$user || $user['role'] !== 'Admin') {
@@ -78,6 +82,10 @@ class AuthController extends BaseController
 
         $password = $this->request->getPost('password');
 
+        if ((string) $password === '') {
+            return redirect()->back()->with('error', 'Please fill in all fields')->with('attempted_role', 'staff');
+        }
+
         // Design simplification: looks up the single active Staff-role account.
         // Flag to your panel if you expect multiple concurrent staff accounts.
         $user = $this->userModel->where('role', 'Staff')
@@ -108,6 +116,10 @@ class AuthController extends BaseController
 
         $username = $this->request->getPost('username');
         $password = $this->request->getPost('password');
+
+        if (trim((string) $username) === '' || (string) $password === '') {
+            return redirect()->back()->with('error', 'Please fill in all fields')->with('attempted_role', 'supplier');
+        }
 
         $user = $this->userModel->findByUsername($username);
 
@@ -143,9 +155,12 @@ class AuthController extends BaseController
             "{$role} login"
         );
 
-        $message = $seconds > 0
-            ? "Too many failed attempts. Please wait {$seconds} seconds and try again."
-            : 'Incorrect password. Please try again';
+        if ($seconds > 0) {
+            return redirect()->to("/login/{$role}/forgot")
+                ->with('error', "Too many failed attempts. Please reset your password, or wait {$seconds} seconds and try again.");
+        }
+
+        $message = 'Incorrect password. Please try again';
 
         return redirect()->back()->with('error', $message)->with('attempted_role', $role);
     }
@@ -176,6 +191,7 @@ class AuthController extends BaseController
             'role'        => $user['role'],
             'supplier_id' => $user['supplier_id'] ?? null,
             'isLoggedIn'  => true,
+            'last_activity' => time(),
         ]);
         $this->userModel->update($user['user_id'], ['last_login' => date('Y-m-d H:i:s')]);
         SecurityLogModel::log('login_success', $user);

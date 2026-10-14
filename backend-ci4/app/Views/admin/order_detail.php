@@ -72,6 +72,12 @@ $pillClass = match ($order['status'] ?? '') {
                 <span>Tracking Number</span>
                 <strong><?= esc($order['tracking_no'] ?? '—') ?></strong>
             </div>
+            <?php if (!empty($order['decline_reason'])): ?>
+            <div class="detail-field">
+                <span>Supplier's Decline Reason</span>
+                <strong><?= esc($order['decline_reason']) ?></strong>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 

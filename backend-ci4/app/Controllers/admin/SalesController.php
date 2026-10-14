@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\PosPricing;
+use App\Libraries\SalesArchive;
 use App\Models\InventoryLogModel;
 use App\Models\ProductModel;
 use App\Models\SalesItemModel;
@@ -56,6 +57,7 @@ class SalesController extends BaseController
             $weekRange    = $this->salesTransactionModel->weeklyTotals();
 
             $data['transactions'] = $transactions;
+            $data['archiveNotice'] = SalesArchive::notice();
             $data['date']         = $date;
             $data['salesToday']   = $this->salesTransactionModel->totalForToday();
             $data['salesWeek']    = array_sum($weekRange['data']);
@@ -94,6 +96,19 @@ class SalesController extends BaseController
         unset($t);
 
         return $transactions;
+    }
+
+    public function exportCsv()
+    {
+        [$from, $to, $label] = \App\Libraries\SalesCsvExport::range(
+            $this->request->getGet('date'),
+            $this->request->getGet('month')
+        );
+
+        return $this->response
+            ->setHeader('Content-Type', 'text/csv; charset=utf-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="sales-' . $label . '.csv"')
+            ->setBody(\App\Libraries\SalesCsvExport::build($from, $to));
     }
 
     public function exportPdf()
@@ -242,6 +257,9 @@ class SalesController extends BaseController
         }
 
         $db->transComplete();
+
+        // Raise any reorder alert this sale caused right away.
+        (new \App\Models\ReorderAlertModel())->syncFromLiveInventory();
 
         if ($db->transStatus() === false) {
             return redirect()->to('/admin/sales')->with('error', 'Checkout failed and was rolled back. Please try again.');

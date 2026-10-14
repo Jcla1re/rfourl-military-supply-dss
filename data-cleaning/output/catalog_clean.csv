@@ -1,0 +1,229 @@
+﻿Product_ID,Product_Name_Canonical,Category,Subcategory,Standard_Price_PHP,Common_Raw_Variants,Is_Inventory_Item
+P-0001,Combat Shoes,Shoes,Combat Shoes,1800,"Combat, Combat Gibson, Gibson Combat, Combat 12, Combat 700, Combat 7",yes
+P-0002,Gibson Lites,Shoes,Dress Shoes,2000,"Gibsonlites, Gibbons Lites, Gibson Lite, Gibson Lites 8/9/10/10.5",yes
+P-0003,Gibson Dress Shoes,Shoes,Dress Shoes,2000,"Gibson, GIBSON, Gibson Citeu, Gibson Clarino, Gibson 95, Clarino Gibson",yes
+P-0004,CS Volts,Shoes,Patrol/Combat,3300,"CS Volts Patrol Shoes, CS Volts Midcut, CS Volts HS, Pixilized CS Volts, Ripstop FS Volts",yes
+P-0005,Patrol Shoes,Shoes,Patrol Shoes,1850,"Patrolshoes, New Patrolshoes, Patrol CS Volts",yes
+P-0006,Athletic Shoes,Shoes,Athletic Shoes,1900,"A Shoes, A. Shoes, A-Shoes, JP A. Shoes, A Shoes CS Volts",yes
+P-0007,Clarino Shoes,Shoes,Dress Shoes,2000,"Clarino, Clarino 415, Clarino II, Clarino 11",yes
+P-0008,Midcut Boots,Shoes,Boots,3300,"Midcut, Midcut CS Volts",yes
+P-0009,Boots,Shoes,Boots,1800,"Bota, Bota Black, 511 Boots, Tactical Boots, Combat Boots, Combat 700",yes
+P-0010,Snoz Gibson Shoes,Shoes,Dress Shoes,2200,"Sno2 Gibson, Snoz Ladies",yes
+P-0011,Jordan Shoes,Shoes,Casual,1800,"Jordan, Big Jordan",yes
+P-0012,Under Armour Shoes,Shoes,Athletic,1800,Under Armor,yes
+P-0013,Non-Patrol Shoes,Shoes,Casual,400,Non Patrol Shoes,yes
+P-0014,Rubber Shoes Peak,Shoes,Rubber Shoes,3400,Rubber Shoes Peak,yes
+P-0015,PNP White Shoes,Shoes,White Shoes,2000,PNP White Shoes,yes
+P-0101,Tropical Blue Uniform,Clothes,Uniform,1600,"Tropical Blue, Tropical Blue set",yes
+P-0102,Tropical Black Uniform,Clothes,Uniform,1700,Tropical Black,yes
+P-0103,Tropical Pants,Clothes,Pants,800,Tropical Pants,yes
+P-0104,GOA B Uniform,Clothes,Uniform,800,"Goa B, New Goa B, Goa B Upper, GOA Upper - B",yes
+P-0105,GOA C Uniform,Clothes,Uniform,850,"Goa C, Goa C Upper, Upper Goa C",yes
+P-0106,GOA Pants,Clothes,Pants,700,"Goa Pants, GOA Pants 30–44",yes
+P-0107,GOA Lower,Clothes,Pants,650,"Goa Lower, Extra Lower",yes
+P-0108,Patrol Shirt,Clothes,Shirt,1400,"Patrolshirt, Patrol TShirt, Old Patrol Shirt, RS Patrol Shirt",yes
+P-0109,DF Patrol Shirt,Clothes,Shirt,1300,DF Patrol,yes
+P-0110,A Shirt,Clothes,Shirt,400,"A. Shirt, A-Shirt, A Shirt PCO, Ashirt PCO",yes
+P-0111,A Pants,Clothes,Pants,700,"A. Pants, A-Pants, A Pants M/L/S/XS",yes
+P-0112,Pavehawk Pants,Clothes,Pants,1000,"Pavehawk, Favehawk, Pave Hawk, Parchawk",yes
+P-0113,Tactical Pants,Clothes,Pants,900,"Tac Pants, Tacpants, Tac Pants Brown/Grey, Tactical Trousers",yes
+P-0114,Cargo Pants,Clothes,Pants,800,Cargo Pants,yes
+P-0115,Army Pants,Clothes,Pants,250,Army Pants,yes
+P-0116,NUP Pants,Clothes,Pants,650,NUP Pants,yes
+P-0117,SG Pants,Clothes,Pants,280,Sg Pants,yes
+P-0118,Pants,Clothes,Pants,800,Pants,yes
+P-0119,Shorts,Clothes,Shorts,500,"Short, Tac Short, 6-Pocket Short, G-Pocket Short, Banana Type Short, Athletic Short, Botak Short, Cycling Short",yes
+P-0120,Long Sleeve,Clothes,Shirt,400,"Longsleeve, L/S White SG",yes
+P-0121,V-Neck,Clothes,Shirt,130,"Vneck, V Neck",yes
+P-0122,Round Neck,Clothes,Shirt,150,"R-Neck, R.N.B, R-N-B Shirt",yes
+P-0123,Polo Shirt,Clothes,Shirt,450,Polo Shirt Blue/Black/Gray,yes
+P-0124,T-Shirt,Clothes,Shirt,400,"TShirt, Resistone T-shirt, Dryfit Tshirt",yes
+P-0125,TMRU Shirt,Clothes,Shirt,800,"TMRU Shirt, TMRU-Shirt",yes
+P-0126,QRP Shirt,Clothes,Shirt,950,QRP Shirt,yes
+P-0127,PMO Shirt,Clothes,Shirt,400,PMO Shirt,yes
+P-0128,Jacket,Clothes,Jacket,1000,"P Jacket, Plain Jacket, PNP Jacket",yes
+P-0129,Sweatshirt,Clothes,Sweatshirt,1200,"Tactical Sweatshirt, Sweatshirt Sg",yes
+P-0130,Field Service Uniform (FSU),Clothes,Uniform,2300,"FSU, Filed Service Uniform, FSU's",yes
+P-0131,SAR Uniform,Clothes,Uniform,900,"Search and Rescue Uniform, RS SaR Uniform, SAR PNCO, SAR PCO",yes
+P-0132,ROTC Uniform,Clothes,Uniform,1100,ROTC Uniform,yes
+P-0133,CAT Uniform,Clothes,Uniform,1000,CAT Uniform,yes
+P-0134,Ripstop Uniform,Clothes,Uniform,2800,"Ripstop, Set Ripstop, Ripstop Pixilized",yes
+P-0135,Bush Coat,Clothes,Uniform,1600,"Bush Coat, Bush Coat Upper",yes
+P-0136,Fixilized Uniform,Clothes,Uniform,2000,"Fixi, Fixilized",yes
+P-0137,Athletic Uniform,Clothes,Uniform,1600,"Set Athletic Uniform, Athletic Set",yes
+P-0138,Athletic Pants,Clothes,Pants,700,Ath Pants,yes
+P-0139,Athletic T-Shirt,Clothes,Shirt,400,"Athletic Shirt, Ath Shirt",yes
+P-0140,Kids Athletic Uniform,Clothes,Uniform,400,"A Kids, Akids, A-Kids, Kids A",yes
+P-0141,Olive Green (OG) Cotton,Clothes,Shirt,150,"OG Cotton, Olivegreen Cotton, Olive Green, OG Plain, O Green",yes
+P-0142,Dryfit,Clothes,Shirt,220,"Dryfit Green, Dryfit - M/L",yes
+P-0143,Sando,Clothes,Shirt,90,Sando,yes
+P-0144,Raincoat,Clothes,Raincoat,600,"PNP Raincoat, Rain Coat Blue, Rubbenze Raincoat, Nibbenze Raincoat",yes
+P-0145,Poncho,Clothes,Raincoat,300,Poncho Green,yes
+P-0146,Socks,Clothes,Socks,100,"PNP Socks, Combat Socks, Charol Socks, White Socks, Black Socks, Long Socks",yes
+P-0147,Botak Shorts,Clothes,Shorts,70,"Botak, Butak, Botak MTO",yes
+P-0148,Cycling Shorts,Clothes,Shorts,80,Cycling,yes
+P-0149,4s White,Clothes,Uniform,400,4s White,yes
+P-0150,4s Blue,Clothes,Uniform,280,4s Blue,yes
+P-0151,4s Black,Clothes,Uniform,250,4s Black,yes
+P-0153,SOMAR,Clothes,Uniform,1790,SOMAR,yes
+P-0155,S Blue/White,Clothes,Shirt,400,S Blue/White,yes
+P-0157,White Shirt,Clothes,Shirt,100,White Shirt,yes
+P-0158,PCO Shirt,Clothes,Shirt,350,"PCO Shirt, PCO shirt- Female",yes
+P-0159,Female Shirt,Clothes,Shirt,400,Female shirt,yes
+P-0160,Male Shirt,Clothes,Shirt,400,male shirt,yes
+P-0163,Tactical Uniform Set,Clothes,Uniform,1500,Tactical Set,yes
+P-0164,DFP Black,Clothes,Uniform,200,DP Black,yes
+P-0165,Short Sleeve Blue,Clothes,Shirt,400,Short Sleeve Blue,yes
+P-0166,Green Army Shirt,Clothes,Shirt,180,Green army shirt,yes
+P-0167,Fix Short,Clothes,Shorts,500,Fix short,yes
+P-0168,Jac Pants,Clothes,Pants,850,Jac pants,yes
+P-0169,SXR Uniform,Clothes,Uniform,800,SXR,yes
+P-0170,Uniform Type C,Clothes,Uniform,220,Uniform Type C,yes
+P-0171,SG Upper,Clothes,Uniform Part,300,Sg upper,yes
+P-0172,Athletic Upper,Clothes,Uniform Part,400,athletic upper,yes
+P-0201,Holster,Equipment,Holster,600,"Hollster, Holstel, Inside Holster, Outside Holster, Bikini Holster, Low Carry, Padel Holster, Canik Holster",yes
+P-0202,Magpouch,Equipment,Pouch,500,"Mag Pouch, Magpuch, Magazine Pouch, M16 Magpouch, Single Magpouch, Double Magpouch, Triple Tap Magpouch",yes
+P-0203,Handcuffs,Equipment,Restraint,650,"Posas, Posas Taiwan, Handcuffs Case, Posas Case",yes
+P-0204,Baton,Equipment,Weapon,300,"Baton with Pouch, Baton Case, Baton Holder",yes
+P-0205,Flashlight,Equipment,Light,300,"Big Flashlight, Large Flashlight, Flashlight L, LED Light, Flight Led Light",yes
+P-0206,Radio Case,Equipment,Pouch,300,"Radio Holder, Radio Pouch",yes
+P-0207,Flight Pouch,Equipment,Pouch,250,"Small Flight, Big Flight, Flight Holder, Flight Case",yes
+P-0208,Medkit,Equipment,Medical,300,"Med Kit, Medikal Kit, Medical Trauma Bag",yes
+P-0209,Vest,Equipment,Vest,1200,"Reflector Vest, Reflectorize Vest, Visibility Vest, HPG Vest, Unit Vest, Cy# Vest, Vest Med, MR Vest",yes
+P-0210,Tactical Helmet,Equipment,Helmet,1500,Tactical Helmet,yes
+P-0211,Metal Detector,Equipment,Tool,1800,Metal Detector,yes
+P-0212,Water Canteen,Equipment,Hydration,300,Water Canteen,yes
+P-0213,Mess Kit,Equipment,Field Gear,1250,"Messkit, Set Mess Kit",yes
+P-0214,Pail and Dipper,Equipment,Field Gear,350,"Pail Dipper Hanger, Pcildipper",yes
+P-0215,School Supplies,Equipment,School,350,"School Sup, School Suppl",yes
+P-0216,Lock,Equipment,Lock,50,"OR Lock, OD Lock, Lock for Pin, Pin Lock",yes
+P-0217,Whistle,Equipment,Whistle,120,"Pito, Pito with Carabiner, Pito w/ Carabiner",yes
+P-0218,Eye Protection,Equipment,Safety,250,"Eye Pro, Eyepro, Eye Pio, Eye/Pro",yes
+P-0219,Ear Protection,Equipment,Safety,200,Ear Pro,yes
+P-0220,Tactical Knife,Equipment,Knife,400,"Tac Knife, TacKnife, Knife, Tacknife",yes
+P-0221,Metal Polish,Equipment,Cleaning,150,"MC Metal Polish, Metalpolish MC, Pledge Metal Polish, Ms Metalpolish",yes
+P-0222,Gun Oil,Equipment,Cleaning,220,Gun oil,yes
+P-0223,Rig,Equipment,Rig,2000,"Set Rig, Rig New, Rig Leather, Rig Girsan, Rig TISAS, Rig SG, Rig Jordan Fiber, Fiber Rig, Rig 30/34",yes
+P-0224,Riffle Bag,Equipment,Bag,1500,Riffle Bag,yes
+P-0225,Body Bag,Equipment,Bag,450,Body Bag,yes
+P-0226,QD Bag,Equipment,Bag,850,QD Bag,yes
+P-0227,Cordura Bag,Equipment,Bag,800,Cordura Bag,yes
+P-0228,Rescue Can,Equipment,Rescue,2000,Rescue Can,yes
+P-0229,Pulse Oximeter,Equipment,Medical,880,Pulse oximeter,yes
+P-0230,Trauma Shears,Equipment,Medical,870,Trauma shears,yes
+P-0231,Safety Masks,Equipment,Safety,1400,Safety Masks,yes
+P-0232,Action Camera,Equipment,Camera,4800,Action Camera,yes
+P-0233,Personal Protective Gear,Equipment,Safety,1100,Personal Protective Gears,yes
+P-0234,Arnis,Equipment,Weapon,100,Arnis,yes
+P-0235,Paupango,Equipment,Tool,45,Paupango (rescue machete),yes
+P-0236,Tumbler,Equipment,Hydration,400,Tumbler,yes
+P-0237,Logbook,Equipment,Office,250,Logbook 500 pages,yes
+P-0238,Bungee Cord,Equipment,Cord,300,"Bunges Cord, Bangie Cord",yes
+P-0239,Nylon Belt,Equipment,Belt,100,Nylon Belt,yes
+P-0240,Suspender,Equipment,Accessory,250,suspender,yes
+P-0241,Tear Gas,Equipment,Weapon,200,"TIR Gas, Tirgas",yes
+P-0242,Pail,Equipment,Field Gear,250,Timba,yes
+P-0243,Sosin,Equipment,Tool,90,Sosin,yes
+P-0244,Brush / Shoe Shiner,Equipment,Cleaning,200,"Big Kiwi Brush, Big Bruno, Bruno, Bruno Big Brush, Poem Bruno, Shoe Polish Brush",yes
+P-0245,Kiwi Shoe Shiner,Equipment,Cleaning,220,Kiwi,yes
+P-0246,Redisol,Equipment,Cleaning,150,Redisol,yes
+P-0247,Spray,Equipment,Cleaning,200,Spray,yes
+P-0248,Paper Spray,Equipment,Cleaning,220,Papers Spray,yes
+P-0249,Cloth,Equipment,Material,30,"Basahan, Cloth",yes
+P-0250,Towel,Equipment,Toiletries,50,Towel,yes
+P-0252,FiXi Mask,Equipment,Mask,80,Fixi Mask,yes
+P-0253,12 NBW,Equipment,Field Gear,100,12 nbw,yes
+P-0254,Matt,Equipment,Field Gear,500,MATT,yes
+P-0255,Rack Sack,Equipment,Bag,1000,"Rack Sack, Rack Sock",yes
+P-0256,Umbrella,Equipment,Umbrella,400,Payong (Umbrella),yes
+P-0257,Grip,Equipment,Acessory,230,Grip,yes
+P-0265,Camelbak,Equipment,Hydration,800,Camel Back,yes
+P-0266,Dry Bag OG,Equipment,Bag,150,Db OG Green / Db OG Black,yes
+P-0267,Fiber Holster 9MM,Equipment,Holster,800,Fiber (H) 9MM B,yes
+P-0268,CP Pouch,Equipment,Pouch,300,Cp pouch,yes
+P-0269,Pershing Cap Case,Equipment,Case,200,Pershingcap case,yes
+P-0270,Hardhat,Equipment,Helmet,200,Hardhat Blue,yes
+P-0271,Tickler (Notepad),Equipment,Notepad,50,Tickler (Notepad),yes
+P-0272,Messkit Pouch,Equipment,Pouch,100,Messkit pouch,yes
+P-0273,Canteen Pouch,Equipment,Pouch,100,canteen pouch,yes
+P-0274,Knightstick,Equipment,Baton,300,Knightstick,yes
+P-0275,Saf Pillow,Equipment,Field Gear,800,Saf PILLOW,yes
+P-0276,Paddings,Equipment,Padding,600,paddings,yes
+P-0277,Box,Equipment,Box,300,Box,yes
+P-0278,Pen,Equipment,Office,30,Pen,yes
+P-0279,Foliage Green Camouflage,Equipment,Fabric/Accessory,40,Foliage Green Camouflage,yes
+P-0280,Magnet,Equipment,Magnet,225,Magnet,yes
+P-0281,Brads Magnet,Equipment,Magnet,500,Magnet,yes
+P-0282,Pig Leather,Equipment,Leather,2200,Pig Leather,yes
+P-0301,Patches,Patches,Patch,50,"Patch, Paches, Patch Type",yes
+P-0302,Woven Patch,Patches,Patch,150,Patch Woven,yes
+P-0303,Name Cloth,Patches,Name Cloth,50,"Namecloth, Logo & Namecloth, Name",yes
+P-0304,Logo,Patches,Logo,50,"PNP Logo, RDF Logo, Logo Black Hornet Cloth",yes
+P-0305,Burda,Patches,Embroidery,15,Burda (embroidery),yes
+P-0306,Padpao Patch,Patches,Patch,70,Padpao,yes
+P-0307,Mati Patch,Patches,Patch,250,Mati,yes
+P-0308,Commando Patch,Patches,Patch,150,Commando,yes
+P-0309,Velcro,Patches,Fastener,380,Velciro (Velcro - Hook and Loop Fasteners),yes
+P-0310,SOSIA,Patches,Patch,70,SOSIA,yes
+P-0311,Unit Patch,Patches,Patch,200,Unit,yes
+P-0312,Sticker,Patches,Sticker,50,Sticker,yes
+P-0401,Lanyard,Accessories,Lanyard,150,"Lanyard with Whistle, Yellow Lanyard, Pistol Lanyard",yes
+P-0402,ID Holder,Accessories,ID,70,"ID Lace, ID Holder",yes
+P-0403,Necktie,Accessories,Neckwear,150,"Neck Tie, Necktie with Tie Clip",yes
+P-0404,Tie Clip,Accessories,Neckwear,50,"Tai Clip, Tie/clip",yes
+P-0405,Collar Pin,Accessories,Pin,50,Collar Pins,yes
+P-0406,Shoulder Board,Accessories,Insignia,800,"Shoulderboard, Shoulder Loop, Shoulderloop",yes
+P-0407,Belt,Accessories,Belt,350,"Tactical Belt, Tac Belt, Rig Belt, Garterized Belt, SG Belt, Warbelt, Cobra Belt",yes
+P-0408,Sling Bag,Accessories,Bag,700,"Slingbag, Sling 04 Bag, Tactical Sling",yes
+P-0409,Belt Bag,Accessories,Bag,400,Beltbag Tag,yes
+P-0410,Duffle Bag,Accessories,Bag,1500,"Dafflebag, Duffel Bag",yes
+P-0411,7 Days Backpack,Accessories,Bag,700,"7days, 7 Days Mag, 7Days Bag",yes
+P-0412,Laptop Bag,Accessories,Bag,1600,"Loptop Case, Laptop Case",yes
+P-0413,Garment Bag,Accessories,Bag,300,Garment bag,yes
+P-0414,Hammock,Accessories,Outdoor,400,Duyan,yes
+P-0415,Sleeping Mat,Accessories,Outdoor,200,Sleeping Matt,yes
+P-0416,Bath Towel,Accessories,Toiletries,200,"Bathtowel, Face Towel",yes
+P-0417,Handkerchief,Accessories,Toiletries,50,"Hanky, White Hanky",yes
+P-0418,Keychain,Accessories,Keychain,150,Keychain,yes
+P-0419,Gloves,Accessories,Gloves,50,"Black Gloves, White Gloves",yes
+P-0420,Beret,Accessories,Headwear,400,"Berret, Bernet, Beret Blue 57",yes
+P-0421,Bonet,Accessories,Headwear,250,Army Bonet,yes
+P-0422,Hat,Accessories,Headwear,300,"Lousy Hat, Lowsy Hat",yes
+P-0423,Bullcap,Accessories,Headwear,350,"PNCO Bullcap, Chinglopez Bullcap, Embuss Bullcap, Metalic Bullcap, Plain Bullcap, PNP Bullcap",yes
+P-0424,Pershing Cap,Accessories,Headwear,700,"Pershingcap, Perching Cap, Pershingcup, Pershing Cup, Ladies Pershing Cap, PCO Ladies Pershing Cap",yes
+P-0425,Cap Device,Accessories,Insignia,200,"Cup Device, Pnco Capdelace, SG Cup Device",yes
+P-0426,Tubemask,Accessories,Face Cover,250,Tubemask,yes
+P-0427,Double Clip,Accessories,Clip,80,Double Clip,yes
+P-0428,Overseacap,Accessories,Headwear,800,Overseacap,yes
+P-0429,Clip Lock,Accessories,Clip,10,Clip Lock,yes
+P-0430,Sintas (Shoelace),Accessories,Shoelace,50,Sintas,yes
+P-0431,Single Clip,Accessories,Clip,50,Single Clip,yes
+P-0432,Rubbertack,Accessories,Strap,100,Rubbertack,yes
+P-0433,Gold Buckle Nylon Set,Accessories,Belt,130,Gold Buckle Blue/Black Nylon,yes
+P-0434,Miranda Doctrine,Accessories,Card/Patch,50,Miranda Doctrine,yes
+P-0435,Nameplate Clip,Accessories,Clip,60,Nameplate Clip,yes
+P-0436,Carabiner,Accessories,Clip,50,"Carabiner (Grimloc), Carabiner",yes
+P-0437,Big Belt Fiber,Accessories,Belt,2500,Big Belt Fiber,yes
+P-0438,Cycle Number,Accessories,Tag,350,Cycle Number vcit,yes
+P-0439,Double Cap,Accessories,Headwear,100,Double Cap,yes
+P-0440,Emboard Type,Accessories,Board,700,Police Major Emboard type,yes
+P-0441,Clip for Garison,Accessories,Clip,10,Clip for Garrison,yes
+P-0501,Badge,Metal / Insignia,Badge,100,"PNP Badge, Badge Santi, Badge Embro, SS Badge, SG Badge, OBC Pin, Vet Badge",yes
+P-0502,Nameplate,Metal / Insignia,Nameplate,250,"Name Plate, Nameplate Magnet, PNP Nameplate, Pin Nameplate",yes
+P-0503,Awards / Medal,Metal / Insignia,Award,500,"Award, PNP Awards, BFP Awards, MIGS Awards, ORLY Awards, Medalya Papuri, Papuri Medal, Ugnayang Pampulisya, Medal Paglilingkod",yes
+P-0504,Rank,Metal / Insignia,Rank,100,"Rank Goa, Rank Black, Rank Metal Pin, Change Rank, Change Unit, PSSG Rank, Rank Star, Rank for Pixilized",yes
+P-0505,Pin,Metal / Insignia,Pin,150,"BRC Pin, Logistic Pin, OSEC Pin, PSPG Pin, JLC Pin, BKC Pin, Ranger Pin, Perc Pin, IOBC Pin, OBC Pin, Tabak Pin, Soco Pin, 10BC Pin, OLC Pin, Crim, HPG, Bagong Pilipinas Pin, Pin B Pilipinas, Pin Flag",yes
+P-0506,Buckle,Metal / Insignia,Buckle,400,"PCT Buckle, Santi Buckle, PNCO Buckle, PCOL Buckle, Office Buckle, Dept Buckle, PLT Buckle, No Shine Buckle, Skeletal Buckle, Garison Buckle, Buckle Rig",yes
+P-0508,Star Rank,Metal / Insignia,Rank,100,"One Star, 1 Star Rank, Star",yes
+P-0509,Kalasag,Metal / Insignia,Insignia,40,"PNP Kalasag, MDD/Kalasag Pin",yes
+P-0510,Sculing,Metal / Insignia,Insignia,70,"MG Sculing, EOD Sculing, Sculing Swat Scout, SCQB Sculing, Swat Sculing",yes
+P-0511,Blue Duk Buttons Gold,Metal / Insignia,Buttons,1100,Blue Dak Buttons Gold,yes
+P-0512,Flag Magnet,Metal / Insignia,Magnet,120,Flag Magnet,yes
+P-0513,OPC,Metal / Insignia,Buckle,750,OPC,yes
+P-0514,Repair Badge,Metal / Insignia,Badge,300,Repair Badge,yes
+P-0515,Reflective Tag,Metal / Insignia,Tag,300,Reverse Silver (Reflective Tag),yes
+P-0516,Eora,Metal / Insignia,Pin/Accessory,50,Eora,yes
+P-0517,Combo SB,Metal / Insignia,Badge,500,Combo SB,yes
+P-0601,Pants/Uniform Repair,Services,Service,,,no
+P-0602,Shipping Fee,Services,Service,,,no
+P-0603,Patch Attachment,Services,Service,,,no
