@@ -86,13 +86,14 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
 
 <div class="page-wrap">
 
-    <?php if (!empty($lowStockCount) && $lowStockCount > 0): ?>
+    <?php $needs = (int) ($reorderSummary['needs'] ?? 0); $onOrder = (int) ($reorderSummary['on_order'] ?? 0); ?>
+    <?php if ($needs > 0 || $onOrder > 0): ?>
     <div class="dash-alert">
         <div class="d-flex align-items-center gap-3">
             <span class="icon"><i class="bi bi-exclamation-triangle"></i></span>
             <div>
-                <div class="title"><?= $lowStockCount ?> Item<?= $lowStockCount === 1 ? '' : 's' ?> have reached their Reorder Point (ROP)</div>
-                <div class="sub">Immediate restocking recommended</div>
+                <div class="title"><?= $needs ?> item<?= $needs === 1 ? '' : 's' ?> need<?= $needs === 1 ? 's' : '' ?> reordering &middot; <?= $onOrder ?> on order</div>
+                <div class="sub"><?= $needs > 0 ? 'Immediate restocking recommended' : 'Everything below its reorder point is already on order' ?></div>
             </div>
         </div>
         <a href="<?= site_url('admin/reorder-alerts') ?>" class="btn btn-maroon">Review Alerts</a>

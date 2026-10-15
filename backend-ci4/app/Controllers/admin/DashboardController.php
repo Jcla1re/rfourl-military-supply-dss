@@ -41,7 +41,8 @@ class DashboardController extends BaseController
             'pageTitle'      => 'Dashboard',
             'active'         => 'dashboard',
             'totalStock'     => array_sum(array_column($productModel->where('is_active', 1)->findAll(), 'current_stock')),
-            'lowStockCount'  => $reorderAlertModel->pendingCount(),
+            // Items (sizes grouped) that need reordering vs. already on order — same rule as Inventory.
+            'reorderSummary' => $productModel->reorderSummary(),
             'salesToday'     => $salesToday,
             'salesYesterday' => $salesYesterday,
             'weekLabels'     => $weekly['labels'],

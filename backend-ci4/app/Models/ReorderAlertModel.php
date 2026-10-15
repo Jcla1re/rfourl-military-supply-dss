@@ -39,7 +39,7 @@ class ReorderAlertModel extends Model
 
     public function openAlerts(): array
     {
-        return $this->select('reorder_alert.*, products.item_name, products.category, products.current_stock, products.supplier_id')
+        return $this->select('reorder_alert.*, products.item_name, products.size, products.category, products.current_stock, products.supplier_id')
             ->join('products', 'products.item_id = reorder_alert.item_id', 'left')
             ->whereIn('reorder_alert.status', self::PENDING_STATUSES)
             ->where('products.is_active', 1) // archived items' alerts stay hidden until restored

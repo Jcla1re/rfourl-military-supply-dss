@@ -82,6 +82,22 @@ class StockOrderModel extends Model
     }
 
     /**
+     * Cancels an order (admin status change or supplier decline). Its
+     * reorder alerts go back to Active, so the items show as needing
+     * reordering again and can be re-ordered. Shared by both portals.
+     */
+    public function markCancelled(string $soId, array $extra = []): void
+    {
+        $this->update($soId, ['status' => 'Cancelled'] + $extra);
+
+        (new ReorderAlertModel())
+            ->where('so_id', $soId)
+            ->where('status', 'Ordered')
+            ->set(['status' => 'Active', 'so_id' => null])
+            ->update();
+    }
+
+    /**
      * Marks an order Delivered, adds the received quantities to on-hand stock,
      * writes an inventory_log entry per line, and Fulfills any reorder_alert
      * that this order was created from. Shared by the Admin and Supplier

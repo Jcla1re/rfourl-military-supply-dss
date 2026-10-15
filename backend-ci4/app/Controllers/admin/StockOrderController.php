@@ -243,6 +243,14 @@ class StockOrderController extends BaseController
             ]);
         }
 
+        // Any pending alert for an ordered item is now covered by this order,
+        // whichever page the order came from; delivery marks it Fulfilled.
+        $this->reorderAlertModel
+            ->whereIn('item_id', array_column($lines, 'item_id'))
+            ->whereIn('status', ReorderAlertModel::PENDING_STATUSES)
+            ->set(['status' => 'Ordered', 'so_id' => $soId])
+            ->update();
+
         $alert   = null;
         $product = null;
         if ($alertId) {
@@ -309,6 +317,8 @@ class StockOrderController extends BaseController
 
         if ($newStatus === 'Delivered' && $order['status'] !== 'Delivered') {
             $this->stockOrderModel->markDelivered($soId, session()->get('user_id'));
+        } elseif ($newStatus === 'Cancelled' && $order['status'] !== 'Cancelled') {
+            $this->stockOrderModel->markCancelled($soId); // alerts back to Active
         } else {
             $this->stockOrderModel->update($soId, ['status' => $newStatus]);
         }

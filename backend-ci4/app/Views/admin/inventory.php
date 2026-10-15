@@ -115,7 +115,24 @@ $products ??= [];
     background: var(--card-bg);
     border: 1px solid #e4e1d9;
     border-radius: var(--radius-control); /* matches the search bar, filters and summary cards */
-    overflow: hidden;
+    /* No overflow clipping here: it would stop the sticky header row below
+       from sticking. The header row rounds its own top corners instead. */
+}
+
+/* Sticky column header row. The page scrolls inside .main-scroll (the
+   green header sits above it, outside the scroll area), so top: 0 places
+   the row right under the green header. */
+.inv-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #ECEEE6;
+}
+.inv-table thead th:first-child { border-top-left-radius: var(--radius-control); }
+.inv-table thead th:last-child  { border-top-right-radius: var(--radius-control); }
+.inv-table.is-stuck thead th {
+    box-shadow: 0 1px 0 #E8E5DC, 0 4px 8px rgba(31, 38, 23, .06);
+    border-radius: 0;
 }
 .inv-table-card .data-table tbody tr:last-child td {
     border-bottom: 0;
@@ -128,10 +145,10 @@ $products ??= [];
     margin-top: 0;
 }
 
-/* Fixed column widths; Item name has no width so it takes whatever is
-   left. The table is always exactly as wide as its card (no min-width, no
-   sideways scrolling): on narrower screens Item name shrinks first, and
-   below 1400px a few roomy columns tighten up as well. */
+/* Column widths are percentages (Item name takes the rest: ~20% of the
+   table, about 200px at 1366px). They're sized from each column's real
+   content: the badge, date, size picker and "View order" + ⋯ on one line.
+   The table always fits its card: no min-width, no sideways scrolling. */
 .inv-table-card .data-table-wrap {
     overflow-x: visible;
 }
@@ -139,21 +156,23 @@ $products ??= [];
     width: 100%;
     table-layout: fixed;
 }
-.inv-table col.c-id      { width: 72px; }
-.inv-table col.c-size    { width: 56px; }
-.inv-table col.c-type    { width: 120px; }
-.inv-table col.c-onhand  { width: 88px; }
-.inv-table col.c-rop     { width: 64px; }
-.inv-table col.c-eoq     { width: 64px; }
-.inv-table col.c-stock   { width: 120px; }
-.inv-table col.c-status  { width: 140px; }
-.inv-table col.c-updated { width: 130px; }
-.inv-table col.c-actions { width: 140px; }
+.inv-table col.c-id      { width: 5.7%; }
+.inv-table col.c-size    { width: 6%; }
+.inv-table col.c-type    { width: 9%; }
+.inv-table col.c-onhand  { width: 7%; }
+.inv-table col.c-rop     { width: 5%; }
+.inv-table col.c-eoq     { width: 5%; }
+.inv-table col.c-stock   { width: 9.8%; }
+.inv-table col.c-status  { width: 13.7%; }  /* "Reorder Now · 2XL" */
+.inv-table col.c-updated { width: 10.5%; }  /* "Sep 29, 2026" */
+.inv-table col.c-actions { width: 12.7%; }  /* "View order" + ⋯ */
+/* Item name: no width set, so it gets the rest (~15.6%, ~187px at 1536px). */
 .inv-table th,
 .inv-table td {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
+.inv-table .status-pill { white-space: nowrap; }
 .inv-table th.col-stock,
 .inv-table td.inv-bar-cell {
     padding-left: 28px; /* keep the bar off the EOQ number */
@@ -204,17 +223,24 @@ $products ??= [];
 /* Smaller screens only (your 1536px+ view is unaffected): slightly more
    compact type and controls so every column still fits on one line. */
 @media (max-width: 1400px) {
-    .inv-table col.c-type    { width: 100px; }
-    .inv-table col.c-onhand  { width: 80px; }
-    .inv-table col.c-stock   { width: 100px; }
-    .inv-table col.c-status  { width: 132px; }
-    .inv-table col.c-updated { width: 112px; }
-    .inv-table col.c-actions { width: 128px; }
+    /* Tighter cell padding (8px a side, not 12px) leaves Item name ~20%. */
+    .inv-table th, .inv-table td { padding-left: 8px; padding-right: 8px; }
+    .inv-table col.c-id      { width: 5.8%; }
+    .inv-table col.c-size    { width: 6.2%; }
+    .inv-table col.c-type    { width: 8.5%; }
+    .inv-table col.c-onhand  { width: 6.8%; }
+    .inv-table col.c-rop     { width: 4.7%; }
+    .inv-table col.c-eoq     { width: 4.7%; }
+    .inv-table col.c-stock   { width: 8.5%; }
+    .inv-table col.c-status  { width: 14.4%; }
+    .inv-table col.c-updated { width: 9.9%; }
+    .inv-table col.c-actions { width: 13.6%; }
+    /* Item name gets the rest: ~16.9%, ~174px at 1366px. */
     .inv-table th { font-size: 11px; letter-spacing: .02em; white-space: nowrap; }
     .inv-table td { font-size: 13px; }
     .inv-table th.col-stock,
-    .inv-table td.inv-bar-cell { padding-left: 18px; }
-    .inv-table .stock-bar { width: 100%; max-width: 70px; }
+    .inv-table td.inv-bar-cell { padding-left: 14px; }
+    .inv-table .stock-bar { width: 100%; max-width: 60px; }
     .inv-table .status-pill { padding: 4px 10px; font-size: 11px; }
     .inv-actions { grid-template-columns: auto 32px; gap: 4px; }
     .inv-actions .inv-action-btn { padding: 6px 10px; font-size: 15px; }
@@ -442,6 +468,49 @@ $products ??= [];
 .btn-restore:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; }
 #restoreConfirm { z-index: 1010; }
 
+
+/* Summary cards are links: each applies its status filter. */
+a.stat-pill { text-decoration: none; cursor: pointer; transition: transform 0.12s ease, box-shadow 0.15s ease; }
+a.stat-pill:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(31, 38, 23, .08); }
+a.stat-pill:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; }
+a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
+
+/* Below a 1340px-wide window the tab row is tighter still, and the Archived link shows
+   just its icon + count ("Archived" stays for screen readers and in the
+   tooltip), so the tabs and Archived still fit on one row at 1280px. */
+@media (max-width: 1339px) {
+    .underline-tabs { gap: 2px; }
+    .underline-tabs a { padding-left: 5px; padding-right: 5px; }
+    .underline-tabs a.archived-link { padding-left: 8px; padding-right: 8px; }
+    .archived-link .archived-label {
+        position: absolute; width: 1px; height: 1px; overflow: hidden;
+        clip: rect(0 0 0 0); white-space: nowrap;
+    }
+}
+
+/* Below a 1340px-wide window the columns no longer fit, so instead of letting badges and
+   buttons overflow, the table keeps its 1366px layout and scrolls sideways
+   inside its card. At 1340px and up (so any 1366px screen) there is no scroll container (so the
+   sticky header row keeps working). */
+@media (max-width: 1339px) {
+    .inv-table-card .data-table-wrap { overflow-x: auto; }
+    .data-table.inv-table { min-width: 1030px; }
+}
+
+/* Summary cards are toggles; "Clear filters" sits after the filters. */
+a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColor, 0 3px 8px rgba(31, 38, 23, .08); }
+.clear-filters {
+    align-self: center; display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 2px; font-size: 14px; color: #3B5434; font-weight: 500;
+    text-decoration: none; white-space: nowrap;
+}
+.clear-filters[hidden] { display: none; }
+.clear-filters:hover { text-decoration: underline; color: #2C3A1E; }
+.clear-filters:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; border-radius: 4px; }
+
+/* Size filter: disabled ("No sizes") for categories without sized items. */
+.size-filter-wrap { display: inline-flex; }
+.size-filter-wrap select:disabled { background-color: #F5F3EE; color: #8A8D7E; cursor: not-allowed; opacity: 1; }
 </style>
 
 <div class="page-wrap">
@@ -451,9 +520,27 @@ $products ??= [];
 
         <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
             <div class="d-flex flex-wrap gap-3">
-                <span class="stat-pill green"><i class="bi bi-check-square-fill"></i> In Stock: <?= esc((string) ($inStockCount ?? 0)) ?></span>
-                <span class="stat-pill amber"><i class="bi bi-lightning-fill"></i> Low Stock: <?= esc((string) (is_array($lowStockCount ?? null) ? count((array) ($lowStockCount ?? [])) : ($lowStockCount ?? 0))) ?></span>
-                <span class="stat-pill red"><i class="bi bi-exclamation-triangle-fill"></i> Reorder Now: <?= esc((string) (isset($reorderCount) ? (is_array($reorderCount) ? count($reorderCount) : $reorderCount) : 0)) ?></span>
+                <?php
+                // Summary cards are filters (the same ?status= the Status dropdown sets,
+                // so the two always agree). Clicking the active card again removes the
+                // status filter; clicking another card switches to it.
+                $curStatus = (string) ($status ?? '');
+                $statusUrl = static function (string $st) use ($curStatus) {
+                    $q = array_diff_key($_GET, ['page' => 1, 'status' => 1]);
+                    if ($st !== $curStatus) {
+                        $q['status'] = $st;
+                    }
+                    return site_url('admin/inventory') . ($q ? '?' . http_build_query($q) : '');
+                };
+                $cardAttrs = static function (string $st) use ($curStatus) {
+                    $on = $st === $curStatus;
+                    return ($on ? ' is-active' : '') . '" aria-pressed="' . ($on ? 'true' : 'false') . '" title="'
+                        . esc($on ? 'Click to show all items.' : 'Show only ' . $st . ' items', 'attr');
+                };
+                ?>
+                <a href="<?= $statusUrl('In Stock') ?>" class="stat-pill green<?= $cardAttrs('In Stock') ?>"><i class="bi bi-check-square-fill"></i> In Stock: <?= esc((string) ($inStockCount ?? 0)) ?></a>
+                <a href="<?= $statusUrl('Low Stock') ?>" class="stat-pill amber<?= $cardAttrs('Low Stock') ?>"><i class="bi bi-lightning-fill"></i> Low Stock: <?= esc((string) ($lowStockCount ?? 0)) ?></a>
+                <a href="<?= $statusUrl('Reorder Now') ?>" class="stat-pill red<?= $cardAttrs('Reorder Now') ?>"><i class="bi bi-exclamation-triangle-fill"></i> Reorder Now: <?= esc((string) ($reorderCount ?? 0)) ?></a>
             </div>
             <button type="button" class="btn btn-success" id="openAddModal">
                 <i class="bi bi-plus-lg"></i> Add Item
@@ -481,20 +568,44 @@ $products ??= [];
                 <?php endforeach; ?>
             </select>
 
-            <select id="sizeFilter" class="<?= $filterSize !== '' ? 'has-value' : '' ?>">
-                <option value="">Size</option>
-                <?php foreach (($sizes ?? []) as $itemSize): ?>
-                    <option value="<?= esc($itemSize) ?>" <?= $filterSize === $itemSize ? 'selected' : '' ?>><?= esc($itemSize) ?></option>
-                <?php endforeach; ?>
-            </select>
+            <?php
+            $sizeOptions = $sizeOptions ?? ['disabled' => false, 'groups' => ['' => $sizes ?? []], 'all' => $sizes ?? []];
+            $noSizesTip  = $sizeOptions['disabled'] ? ($filterCategory !== 'All' ? $filterCategory : 'These') . " items don't have sizes" : '';
+            ?>
+            <span class="size-filter-wrap"<?= $noSizesTip !== '' ? ' title="' . esc($noSizesTip, 'attr') . '"' : '' ?>>
+                <select id="sizeFilter" class="<?= $filterSize !== '' ? 'has-value' : '' ?>"<?= $sizeOptions['disabled'] ? ' disabled aria-disabled="true"' : '' ?> aria-label="Size">
+                    <?php if ($sizeOptions['disabled']): ?>
+                        <option value="">No sizes</option>
+                    <?php else: ?>
+                        <option value="">All sizes</option>
+                        <?php foreach ($sizeOptions['groups'] as $groupLabel => $groupSizes): ?>
+                            <?php if ($groupLabel !== ''): ?><optgroup label="<?= esc($groupLabel, 'attr') ?>"><?php endif; ?>
+                            <?php foreach ($groupSizes as $itemSize): ?>
+                                <option value="<?= esc($itemSize) ?>" <?= $filterSize === $itemSize ? 'selected' : '' ?>><?= esc($itemSize) ?></option>
+                            <?php endforeach; ?>
+                            <?php if ($groupLabel !== ''): ?></optgroup><?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </span>
 
             <select id="statusFilter" class="<?= $filterStatus !== '' ? 'has-value' : '' ?>">
-                <option value="">Status</option>
+                <option value="">All statuses</option>
                 <?php foreach ($statuses as $itemStatus): ?>
                     <option value="<?= esc($itemStatus) ?>" <?= $filterStatus === $itemStatus ? 'selected' : '' ?>><?= esc($itemStatus) ?></option>
                 <?php endforeach; ?>
                 <option value="archived" <?= $showArchived ? 'selected' : '' ?>>Archived</option>
             </select>
+
+            <?php
+            // "Clear filters": only when any filter is on (status/card, category, size, search).
+            $hasFilters = ($status ?? '') !== '' || (($category ?? 'All') !== 'All' && ($category ?? '') !== '')
+                || ($size ?? '') !== '' || ($search ?? '') !== '' || ($searchInput ?? '') !== '';
+            $keepPer    = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' => $_GET['per_page']]) : '';
+            ?>
+            <a href="<?= site_url('admin/inventory') . $keepPer ?>" class="clear-filters" id="clearFilters"<?= $hasFilters ? '' : ' hidden' ?>>
+                <i class="bi bi-x-circle" aria-hidden="true"></i> Clear filters
+            </a>
         </div>
 
         <?php $categoryCounts = $categoryCounts ?? []; ?>
@@ -505,8 +616,8 @@ $products ??= [];
                 <a href="<?= site_url('admin/inventory') . '?' . http_build_query(['category' => $itemCategory] + $keepPerPage) ?>" class="<?= $filterCategory === $itemCategory && ! $showArchived ? 'active' : '' ?>"><?= esc($itemCategory) ?> (<?= number_format($categoryCounts[$itemCategory] ?? 0) ?>)</a>
             <?php endforeach; ?>
             <?php /* Always visible, even at 0, so the archive is easy to find. */ ?>
-            <a href="<?= site_url('admin/inventory') . '?' . http_build_query(['status' => 'archived'] + $keepPerPage) ?>" class="archived-link<?= $showArchived ? ' active' : '' ?>"<?= $showArchived ? ' aria-current="page"' : '' ?>>
-                <i class="bi bi-archive" aria-hidden="true"></i> Archived<?= ($archivedCount ?? 0) > 0 ? ' (' . number_format($archivedCount) . ')' : '' ?>
+            <a href="<?= site_url('admin/inventory') . '?' . http_build_query(['status' => 'archived'] + $keepPerPage) ?>" class="archived-link<?= $showArchived ? ' active' : '' ?>" title="Archived items"<?= $showArchived ? ' aria-current="page"' : '' ?>>
+                <i class="bi bi-archive" aria-hidden="true"></i> <span class="archived-label">Archived</span><?= ($archivedCount ?? 0) > 0 ? ' (' . number_format($archivedCount) . ')' : '' ?>
             </a>
         </div>
 
@@ -974,6 +1085,23 @@ function closeArchiveConfirm() {
 }
 document.getElementById('archiveCancelBtn').addEventListener('click', closeArchiveConfirm);
 
+// ----- Sticky table header: shadow only while it's stuck ----------------
+// The table scrolls inside the layout's .main-scroll; the header row is
+// "stuck" once the table's top has scrolled past the top of that area.
+const mainScroll = document.querySelector('.main-scroll');
+function updateStickyHeader() {
+    const table = document.querySelector('.inv-table');
+    if (!table || !mainScroll) return;
+    const stuck = table.getBoundingClientRect().top < mainScroll.getBoundingClientRect().top - 0.5;
+    table.classList.toggle('is-stuck', stuck);
+}
+let stickyFrame = 0;
+mainScroll?.addEventListener('scroll', () => {
+    cancelAnimationFrame(stickyFrame);
+    stickyFrame = requestAnimationFrame(updateStickyHeader);
+}, { passive: true });
+updateStickyHeader();
+
 // ----- Restore (archived view) -------------------------------------------
 let restoreOpener = null;
 document.addEventListener('click', event => {
@@ -1008,6 +1136,32 @@ document.addEventListener('keydown', event => {
 // (and the Order/Edit buttons' underlying data) to that size's own real
 // product row — each size is independently stock-tracked, this is purely
 // a display switch, no page reload.
+// Stock-level bar for one size (same rule as ProductModel::stockFill):
+// fill = on hand ÷ (ROP + EOQ), capped at 100%; color = the size's own status.
+function stockFill(v) {
+    const stock = Number(v.current_stock) || 0;
+    const target = (Number(v.manual_rop_warning) || 0) + (Number(v.eoq_value) || 0);
+    const pct = stock <= 0 ? 0 : (target > 0 ? Math.min(100, Math.round(stock / target * 100)) : 100);
+    const cls = { 'Reorder Now': 'red', 'Low Stock': 'amber', 'Archived': 'archived' }[v.status_label] || 'green';
+    return { pct, cls, empty: stock <= 0 };
+}
+
+// Size picker: the visible label shows only the selected size.
+function syncSizeLabel(select) {
+    const label = select.closest('.size-picker')?.querySelector('.size-picker-label');
+    if (label) label.textContent = select.selectedOptions[0]?.dataset.size || '';
+}
+// "Reorder Now · 2XL" / "Order 2XL" when the selected size isn't the one
+// the warning and the button refer to.
+function rowStatusText(row, selectedIndex, variants) {
+    const status = row.dataset.rowStatus;
+    const target = variants[+row.dataset.worstIndex];
+    const differs = selectedIndex !== +row.dataset.worstIndex && target && target.size
+        && (status === 'Reorder Now' || status === 'Low Stock')
+        && !(status === 'Reorder Now' && variants[selectedIndex]?.status_label === 'Reorder Now' && !variants[selectedIndex]?.open_so);
+    return { status, target, differs, badge: differs ? status + ' · ' + target.size : status };
+}
+
 function pillClassForStatus(label) {
     if (label === 'Low Stock') return 'amber';
     if (label === 'Reorder Now') return 'red';
@@ -1022,26 +1176,33 @@ function applyVariantToRow(row, v) {
     row.querySelector('.inv-eoq-cell').textContent = (v.eoq_value !== null && v.eoq_value !== undefined) ? v.eoq_value : '—';
     row.querySelector('.inv-updated-cell').textContent = v.updated_at_display || '—';
 
-    const rop = Math.max(v.manual_rop_warning, 1);
-    const pct = Math.min(100, Math.round((v.current_stock / (rop * 2)) * 100));
-    const cls = pillClassForStatus(v.status_label);
-
+    const fill = stockFill(v);
     const bar = row.querySelector('.inv-bar-cell .stock-bar');
-    bar.className = 'stock-bar ' + cls;
-    bar.querySelector('span').style.width = pct + '%';
+    bar.className = 'stock-bar ' + fill.cls + (fill.empty ? ' is-empty' : '');
+    bar.title = fill.pct + '% of reorder point + order quantity';
+    bar.querySelector('span').style.width = fill.pct + '%';
 
+    // The status badge stays on the item's worst status (set by the server);
+    // on hand, ROP and the stock bar follow the selected size.
+    // Order shows while any size needs reordering. It orders the selected
+    // size if that one needs it, otherwise the size that does.
+    const variants = JSON.parse(row.dataset.variants || '[]');
+    const selectedIndex = variants.findIndex(x => x.item_id === v.item_id);
+    const info = rowStatusText(row, selectedIndex, variants);
     const statusPill = row.querySelector('.inv-status-cell .status-pill');
-    statusPill.className = 'status-pill ' + cls;
-    statusPill.textContent = v.status_label;
+    if (statusPill && info.status !== 'Archived') statusPill.textContent = info.badge;
 
     const orderBtn = row.querySelector('.open-order-modal');
     if (orderBtn) {
-        orderBtn.style.display = v.status_label === 'Reorder Now' ? '' : 'none';
-        orderBtn.dataset.itemId = v.item_id;
-        orderBtn.dataset.itemName = v.item_name;
-        orderBtn.dataset.supplierId = v.supplier_id;
-        orderBtn.dataset.unitCost = v.unit_cost;
-        orderBtn.dataset.recommendedEoq = v.eoq_value || 1;
+        const target = v.status_label === 'Reorder Now' && !v.open_so ? v : (info.target || v);
+        orderBtn.style.display = row.dataset.rowStatus === 'Reorder Now' ? '' : 'none';
+        // Always just "Order"; the size is in the badge, the modal and this tooltip.
+        if (target.size) orderBtn.title = 'Orders size ' + target.size; else orderBtn.removeAttribute('title');
+        orderBtn.dataset.itemId = target.item_id;
+        orderBtn.dataset.itemName = target.item_name + (target.size ? ' · Size ' + target.size : '');
+        orderBtn.dataset.supplierId = target.supplier_id;
+        orderBtn.dataset.unitCost = target.unit_cost;
+        orderBtn.dataset.recommendedEoq = target.eoq_value || 1;
     }
 
     const editBtn = row.querySelector('.edit-row');
@@ -1061,6 +1222,7 @@ document.addEventListener('change', event => {
     const row = select.closest('tr');
     const variants = JSON.parse(row.dataset.variants || '[]');
     const v = variants[select.value];
+    syncSizeLabel(select);
     if (v) applyVariantToRow(row, v);
 });
 
@@ -1083,6 +1245,9 @@ document.addEventListener('change', event => {
     window.location.href = url.toString();
 });
 
+// Sizes that exist in each category (for resetting Size on category change).
+const SIZES_BY_CATEGORY = <?= json_encode($sizesByCategory ?? new stdClass()) ?>;
+
 ['categoryFilter', 'sizeFilter', 'statusFilter'].forEach(id => {
     document.getElementById(id).addEventListener('change', event => {
         const url = new URL(window.location.href);
@@ -1092,10 +1257,29 @@ document.addEventListener('change', event => {
         } else {
             url.searchParams.delete(parameter);
         }
+        // New category without the selected size → Size back to "All sizes".
+        if (id === 'categoryFilter') {
+            const size = url.searchParams.get('size');
+            const cat = event.target.value;
+            if (size && cat && cat !== 'All' && !(SIZES_BY_CATEGORY[cat] || []).includes(size)) {
+                url.searchParams.delete('size');
+            }
+        }
         url.searchParams.delete('page');
         window.location.href = url.toString();
     });
 });
+
+// "Clear filters" link: shown only while a filter is on. Live search
+// changes the URL without a reload, so re-check after each search.
+function syncClearFilters() {
+    const link = document.getElementById('clearFilters');
+    if (!link) return;
+    const q = new URL(window.location.href).searchParams;
+    const on = ['status', 'size', 'search'].some(k => (q.get(k) || '') !== '')
+        || ((q.get('category') || 'All') !== 'All');
+    link.hidden = !on;
+}
 
 // Live search: fetches the real server-side search result in the
 // background (debounced) and swaps just the table + pagination in place.
@@ -1143,7 +1327,9 @@ document.addEventListener('change', event => {
                 if (request !== latestRequest) return;
                 const current = document.getElementById('inventoryResults');
                 if (current) current.outerHTML = html;
+                updateStickyHeader();
                 window.history.replaceState({}, '', url.toString());
+                syncClearFilters();
                 syncReturnQuery();
             });
     }

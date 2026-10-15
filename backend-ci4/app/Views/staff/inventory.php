@@ -49,6 +49,77 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
 .data-table th.col-center, .data-table td.col-center { text-align: center; }
 .data-table th.col-actions, .data-table td.col-actions { text-align: right; }
 .data-table td.inv-item-id, .data-table td.inv-updated-cell { color: #777; }
+
+/* Summary cards are links: each applies its status filter. */
+a.stat-pill { text-decoration: none; cursor: pointer; transition: transform 0.12s ease, box-shadow 0.15s ease; }
+a.stat-pill:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(31, 38, 23, .08); }
+a.stat-pill:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; }
+a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
+
+/* Status badges (e.g. "Reorder Now · 2XL") and dates stay on one line. */
+.data-table .status-pill, .data-table td.inv-updated-cell { white-space: nowrap; }
+
+/* Same layout as the admin Inventory table: percentage widths from each
+   column's measured content, Item name takes the rest, the table always
+   fits its card at 1366px and up. */
+.inv-table-card .data-table-wrap { overflow-x: visible; }
+.data-table.inv-table { width: 100%; table-layout: fixed; }
+.inv-table col.c-id      { width: 6%; }
+.inv-table col.c-size    { width: 6%; }
+.inv-table col.c-type    { width: 9.5%; }
+.inv-table col.c-onhand  { width: 7.5%; }
+.inv-table col.c-rop     { width: 5.5%; }
+.inv-table col.c-stock   { width: 10%; }
+.inv-table col.c-status  { width: 14%; }   /* "Reorder Now · 2XL" */
+.inv-table col.c-updated { width: 10.5%; } /* "Sep 29, 2026" */
+.inv-table col.c-actions { width: 12.5%; } /* "Notify Admin" */
+/* Item name: no width, so it gets the rest. */
+.inv-table th, .inv-table td { padding-left: 10px; padding-right: 10px; }
+.inv-table th.col-stock, .inv-table td.inv-bar-cell { padding-left: 24px; }
+.inv-table .stock-bar { width: 100%; max-width: 70px; }
+.inv-table .inv-size-select { width: 100%; }
+@media (max-width: 1400px) {
+    .inv-table th, .inv-table td { padding-left: 8px; padding-right: 8px; }
+    .inv-table th { font-size: 11px; letter-spacing: .02em; white-space: nowrap; }
+    .inv-table td { font-size: 13px; }
+    .inv-table th.col-stock, .inv-table td.inv-bar-cell { padding-left: 14px; }
+    .inv-table .stock-bar { max-width: 60px; }
+    .inv-table .status-pill { padding: 4px 10px; font-size: 11px; }
+    .inv-table .notify-btn { padding: 6px 10px; font-size: 13px; }
+    .inv-table col.c-id      { width: 6%; }
+    .inv-table col.c-size    { width: 6.2%; }
+    .inv-table col.c-type    { width: 8.8%; }
+    .inv-table col.c-onhand  { width: 7%; }
+    .inv-table col.c-rop     { width: 5%; }
+    .inv-table col.c-stock   { width: 8.8%; }
+    .inv-table col.c-status  { width: 14.6%; }
+    .inv-table col.c-updated { width: 10%; }
+    .inv-table col.c-actions { width: 13.6%; }
+}
+
+/* Below a 1340px-wide window the columns no longer fit, so instead of letting badges and
+   buttons overflow, the table keeps its 1366px layout and scrolls sideways
+   inside its card. At 1340px and up (so any 1366px screen) there is no scroll container. */
+@media (max-width: 1339px) {
+    .inv-table-card .data-table-wrap { overflow-x: auto; }
+    .data-table.inv-table { min-width: 1030px; }
+}
+
+
+/* Summary cards are toggles; "Clear filters" sits after the filters. */
+a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColor, 0 3px 8px rgba(31, 38, 23, .08); }
+.clear-filters {
+    align-self: center; display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 2px; font-size: 14px; color: #3B5434; font-weight: 500;
+    text-decoration: none; white-space: nowrap;
+}
+.clear-filters[hidden] { display: none; }
+.clear-filters:hover { text-decoration: underline; color: #2C3A1E; }
+.clear-filters:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; border-radius: 4px; }
+
+/* Size filter: disabled ("No sizes") for categories without sized items. */
+.size-filter-wrap { display: inline-flex; }
+.size-filter-wrap select:disabled { background-color: #F5F3EE; color: #8A8D7E; cursor: not-allowed; opacity: 1; }
 </style>
 
 <div class="page-wrap">
@@ -56,9 +127,27 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
 
         <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
             <div class="d-flex flex-wrap gap-3">
-                <span class="stat-pill green"><i class="bi bi-check-square-fill"></i> In Stock: <?= esc((string) ($inStockCount ?? 0)) ?></span>
-                <span class="stat-pill amber"><i class="bi bi-lightning-fill"></i> Low Stock: <?= esc((string) ($lowStockCount ?? 0)) ?></span>
-                <span class="stat-pill red"><i class="bi bi-exclamation-triangle-fill"></i> Reorder Now: <?= esc((string) ($reorderCount ?? 0)) ?></span>
+                <?php
+                // Summary cards are filters (the same ?status= the Status dropdown sets,
+                // so the two always agree). Clicking the active card again removes the
+                // status filter; clicking another card switches to it.
+                $curStatus = (string) ($status ?? '');
+                $statusUrl = static function (string $st) use ($curStatus) {
+                    $q = array_diff_key($_GET, ['page' => 1, 'status' => 1]);
+                    if ($st !== $curStatus) {
+                        $q['status'] = $st;
+                    }
+                    return site_url('staff/inventory') . ($q ? '?' . http_build_query($q) : '');
+                };
+                $cardAttrs = static function (string $st) use ($curStatus) {
+                    $on = $st === $curStatus;
+                    return ($on ? ' is-active' : '') . '" aria-pressed="' . ($on ? 'true' : 'false') . '" title="'
+                        . esc($on ? 'Click to show all items.' : 'Show only ' . $st . ' items', 'attr');
+                };
+                ?>
+                <a href="<?= $statusUrl('In Stock') ?>" class="stat-pill green<?= $cardAttrs('In Stock') ?>"><i class="bi bi-check-square-fill"></i> In Stock: <?= esc((string) ($inStockCount ?? 0)) ?></a>
+                <a href="<?= $statusUrl('Low Stock') ?>" class="stat-pill amber<?= $cardAttrs('Low Stock') ?>"><i class="bi bi-lightning-fill"></i> Low Stock: <?= esc((string) ($lowStockCount ?? 0)) ?></a>
+                <a href="<?= $statusUrl('Reorder Now') ?>" class="stat-pill red<?= $cardAttrs('Reorder Now') ?>"><i class="bi bi-exclamation-triangle-fill"></i> Reorder Now: <?= esc((string) ($reorderCount ?? 0)) ?></a>
             </div>
         </div>
 
@@ -83,19 +172,43 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
                 <?php endforeach; ?>
             </select>
 
-            <select id="sizeFilter" class="<?= $filterSize !== '' ? 'has-value' : '' ?>">
-                <option value="">Size</option>
-                <?php foreach (($sizes ?? []) as $itemSize): ?>
-                    <option value="<?= esc($itemSize) ?>" <?= $filterSize === $itemSize ? 'selected' : '' ?>><?= esc($itemSize) ?></option>
-                <?php endforeach; ?>
-            </select>
+            <?php
+            $sizeOptions = $sizeOptions ?? ['disabled' => false, 'groups' => ['' => $sizes ?? []], 'all' => $sizes ?? []];
+            $noSizesTip  = $sizeOptions['disabled'] ? ($filterCategory !== 'All' ? $filterCategory : 'These') . " items don't have sizes" : '';
+            ?>
+            <span class="size-filter-wrap"<?= $noSizesTip !== '' ? ' title="' . esc($noSizesTip, 'attr') . '"' : '' ?>>
+                <select id="sizeFilter" class="<?= $filterSize !== '' ? 'has-value' : '' ?>"<?= $sizeOptions['disabled'] ? ' disabled aria-disabled="true"' : '' ?> aria-label="Size">
+                    <?php if ($sizeOptions['disabled']): ?>
+                        <option value="">No sizes</option>
+                    <?php else: ?>
+                        <option value="">All sizes</option>
+                        <?php foreach ($sizeOptions['groups'] as $groupLabel => $groupSizes): ?>
+                            <?php if ($groupLabel !== ''): ?><optgroup label="<?= esc($groupLabel, 'attr') ?>"><?php endif; ?>
+                            <?php foreach ($groupSizes as $itemSize): ?>
+                                <option value="<?= esc($itemSize) ?>" <?= $filterSize === $itemSize ? 'selected' : '' ?>><?= esc($itemSize) ?></option>
+                            <?php endforeach; ?>
+                            <?php if ($groupLabel !== ''): ?></optgroup><?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </span>
 
             <select id="statusFilter" class="<?= $filterStatus !== '' ? 'has-value' : '' ?>">
-                <option value="">Status</option>
+                <option value="">All statuses</option>
                 <?php foreach ($statuses as $itemStatus): ?>
                     <option value="<?= esc($itemStatus) ?>" <?= $filterStatus === $itemStatus ? 'selected' : '' ?>><?= esc($itemStatus) ?></option>
                 <?php endforeach; ?>
             </select>
+
+            <?php
+            // "Clear filters": only when any filter is on (status/card, category, size, search).
+            $hasFilters = ($status ?? '') !== '' || (($category ?? 'All') !== 'All' && ($category ?? '') !== '')
+                || ($size ?? '') !== '' || ($search ?? '') !== '' || ($searchInput ?? '') !== '';
+            $keepPer    = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' => $_GET['per_page']]) : '';
+            ?>
+            <a href="<?= site_url('staff/inventory') . $keepPer ?>" class="clear-filters" id="clearFilters"<?= $hasFilters ? '' : ' hidden' ?>>
+                <i class="bi bi-x-circle" aria-hidden="true"></i> Clear filters
+            </a>
         </div>
 
         <?php $categoryCounts = $categoryCounts ?? []; ?>
@@ -130,6 +243,9 @@ document.addEventListener('change', event => {
     window.location.href = url.toString();
 });
 
+// Sizes that exist in each category (for resetting Size on category change).
+const SIZES_BY_CATEGORY = <?= json_encode($sizesByCategory ?? new stdClass()) ?>;
+
 ['categoryFilter', 'sizeFilter', 'statusFilter'].forEach(id => {
     document.getElementById(id).addEventListener('change', event => {
         const url = new URL(window.location.href);
@@ -139,10 +255,29 @@ document.addEventListener('change', event => {
         } else {
             url.searchParams.delete(parameter);
         }
+        // New category without the selected size → Size back to "All sizes".
+        if (id === 'categoryFilter') {
+            const size = url.searchParams.get('size');
+            const cat = event.target.value;
+            if (size && cat && cat !== 'All' && !(SIZES_BY_CATEGORY[cat] || []).includes(size)) {
+                url.searchParams.delete('size');
+            }
+        }
         url.searchParams.delete('page');
         window.location.href = url.toString();
     });
 });
+
+// "Clear filters" link: shown only while a filter is on. Live search
+// changes the URL without a reload, so re-check after each search.
+function syncClearFilters() {
+    const link = document.getElementById('clearFilters');
+    if (!link) return;
+    const q = new URL(window.location.href).searchParams;
+    const on = ['status', 'size', 'search'].some(k => (q.get(k) || '') !== '')
+        || ((q.get('category') || 'All') !== 'All');
+    link.hidden = !on;
+}
 
 // Live search: fetches the real server-side search result in the
 // background (debounced) and swaps just the table + pagination in place.
@@ -191,6 +326,7 @@ document.addEventListener('change', event => {
                 const current = document.getElementById('inventoryResults');
                 if (current) current.outerHTML = html;
                 window.history.replaceState({}, '', url.toString());
+                syncClearFilters();
                 syncReturnQuery();
             });
     }
@@ -218,6 +354,32 @@ document.addEventListener('change', event => {
     });
 })();
 
+// Stock-level bar for one size (same rule as ProductModel::stockFill):
+// fill = on hand ÷ (ROP + EOQ), capped at 100%; color = the size's own status.
+function stockFill(v) {
+    const stock = Number(v.current_stock) || 0;
+    const target = (Number(v.manual_rop_warning) || 0) + (Number(v.eoq_value) || 0);
+    const pct = stock <= 0 ? 0 : (target > 0 ? Math.min(100, Math.round(stock / target * 100)) : 100);
+    const cls = { 'Reorder Now': 'red', 'Low Stock': 'amber', 'Archived': 'archived' }[v.status_label] || 'green';
+    return { pct, cls, empty: stock <= 0 };
+}
+
+// Size picker: the visible label shows only the selected size.
+function syncSizeLabel(select) {
+    const label = select.closest('.size-picker')?.querySelector('.size-picker-label');
+    if (label) label.textContent = select.selectedOptions[0]?.dataset.size || '';
+}
+// "Reorder Now · 2XL" / "Order 2XL" when the selected size isn't the one
+// the warning and the button refer to.
+function rowStatusText(row, selectedIndex, variants) {
+    const status = row.dataset.rowStatus;
+    const target = variants[+row.dataset.worstIndex];
+    const differs = selectedIndex !== +row.dataset.worstIndex && target && target.size
+        && (status === 'Reorder Now' || status === 'Low Stock')
+        && !(status === 'Reorder Now' && variants[selectedIndex]?.status_label === 'Reorder Now' && !variants[selectedIndex]?.open_so);
+    return { status, target, differs, badge: differs ? status + ' · ' + target.size : status };
+}
+
 // Size dropdown is delegated so it keeps working after live search swaps the table.
 // Picking a different size in a row's Size dropdown swaps every other cell
 // (and the Notify Admin button's target) to that size's own real product
@@ -243,28 +405,30 @@ document.addEventListener('change', event => {
         row.querySelector('.inv-rop-cell').textContent = v.manual_rop_warning;
         row.querySelector('.inv-updated-cell').textContent = v.updated_at_display || '—';
 
-        const rop = Math.max(v.manual_rop_warning, 1);
-        const pct = Math.min(100, Math.round((v.current_stock / (rop * 2)) * 100));
-        const cls = pillClassForStatus(v.status_label);
-
+        const fill = stockFill(v);
         const bar = row.querySelector('.inv-bar-cell .stock-bar');
-        bar.className = 'stock-bar ' + cls;
-        bar.querySelector('span').style.width = pct + '%';
+        bar.className = 'stock-bar ' + fill.cls + (fill.empty ? ' is-empty' : '');
+        bar.title = fill.pct + '% of reorder point + order quantity';
+        bar.querySelector('span').style.width = fill.pct + '%';
 
-        const statusPill = row.querySelector('.inv-status-cell .status-pill');
-        statusPill.className = 'status-pill ' + cls;
-        statusPill.textContent = v.status_label;
+        // The status badge stays on the item's worst status (set by the
+        // server); on hand, ROP and the stock bar follow the selected size.
+        // Notify shows while any size needs reordering, for the selected size
+        // if it needs it, otherwise for the size that does.
+        syncSizeLabel(select);
+        const info = rowStatusText(row, +select.value, variants);
+        row.querySelector('.inv-status-cell .status-pill').textContent = info.badge;
 
         const notifyForm = row.querySelector('.notify-form');
         const notifyNone = row.querySelector('.notify-none');
-        if (v.status_label === 'Reorder Now') {
-            notifyForm.action = notifyForm.action.replace(/\/notify\/.*$/, '/notify/' + v.item_id);
-            notifyForm.style.display = '';
-            notifyNone.style.display = 'none';
-        } else {
-            notifyForm.style.display = 'none';
-            notifyNone.style.display = '';
-        }
+        const target = v.status_label === 'Reorder Now' && !v.open_so ? v : (info.target || v);
+        notifyForm.action = notifyForm.action.replace(/\/notify\/.*$/, '/notify/' + target.item_id);
+        const notifyBtn = notifyForm.querySelector('.notify-btn');
+        // Always just "Notify Admin"; the size is in the badge and this tooltip.
+        if (notifyBtn) { if (target.size) notifyBtn.title = 'Notify about size ' + target.size; else notifyBtn.removeAttribute('title'); }
+        const needsReorder = row.dataset.rowStatus === 'Reorder Now' && !row.querySelector('.ordered-tag');
+        notifyForm.style.display = needsReorder ? '' : 'none';
+        notifyNone.style.display = needsReorder ? 'none' : '';
     }
 });
 </script>

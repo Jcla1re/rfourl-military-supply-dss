@@ -42,16 +42,19 @@
                     <?php foreach ($products as $group): ?>
                         <?php
                         $variants = $group['variants'];
-                        $default  = $variants[0];
-                        $itemStatus = $default['status']['label'] ?? 'In Stock';
+                        // Row shows the item's WORST status across sizes; the size
+                        // dropdown starts on that size so its Order/Notify works.
+                        $worstIndex = (int) ($group['worst_index'] ?? 0);
+                        $default    = $variants[$worstIndex];
+                        $itemStatus = $group['status']['label'] ?? ($default['status']['label'] ?? 'In Stock');
                         $pillClass = match ($itemStatus) {
                             'Low Stock' => 'amber',
                             'Reorder Now' => 'red',
                             'Archived' => 'archived',
                             default => 'green',
                         };
-                        $rop = max((int) ($default['manual_rop_warning'] ?? 0), 1);
-                        $pct = min(100, round(((int) $default['current_stock'] / ($rop * 2)) * 100));
+                        // Bar for the selected (default) size: on hand ÷ (ROP + EOQ), its own status color.
+                        $fill = model(\App\Models\ProductModel::class)->stockFill($default);
 
                         // Lean payload embedded on the row — switching the
                         // Size dropdown swaps every other cell (and the
@@ -69,19 +72,26 @@
                             'manual_rop_warning' => (int) ($v['manual_rop_warning'] ?? 0),
                             'eoq_value'          => $v['eoq_value'],
                             'status_label'       => $v['status']['label'] ?? 'In Stock',
+                            'open_so'            => $v['open_so'] ?? null,
                             'updated_at_display'=> date('M j, Y', strtotime($v['updated_at'] ?? 'now')),
                         ], $variants);
                         ?>
-                        <tr class="<?= ! empty($showArchived) ? 'is-archived' : '' ?>" data-category="<?= esc($group['category'] ?? '') ?>" data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
+                        <tr class="<?= ! empty($showArchived) ? 'is-archived' : '' ?>" data-row-status="<?= esc($itemStatus) ?>" data-worst-index="<?= $worstIndex ?>" data-category="<?= esc($group['category'] ?? '') ?>" data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
                             <td class="inv-item-id"><?= esc($default['item_id'] ?? '—') ?></td>
                             <td><strong><?= esc($group['item_name'] ?? 'Unknown item') ?></strong></td>
                             <td class="inv-size-cell col-center">
                                 <?php if (count($variants) > 1): ?>
-                                    <select class="inv-size-select">
-                                        <?php foreach ($variants as $i => $v): ?>
-                                            <option value="<?= $i ?>"><?= esc($v['size'] ?? '—') ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                    <?php // Closed: the label shows only the size. The invisible native select on top opens the full list, with statuses. ?>
+                                    <span class="size-picker">
+                                        <span class="size-picker-label" aria-hidden="true"><?= esc($default['size'] ?? '—') ?></span>
+                                        <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                                        <select class="inv-size-select" aria-label="Size">
+                                            <?php foreach ($variants as $i => $v): ?>
+                                                <?php $vStatus = $v['status']['label'] ?? 'In Stock'; ?>
+                                                <option value="<?= $i ?>" data-size="<?= esc($v['size'] ?? '—') ?>" <?= $i === $worstIndex ? 'selected' : '' ?>><?= esc($v['size'] ?? '—') ?><?= in_array($vStatus, ['Low Stock', 'Reorder Now'], true) ? ' — ' . esc($vStatus) : '' ?><?= ! empty($v['open_so']) && $vStatus === 'Reorder Now' ? ' (ordered)' : '' ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </span>
                                 <?php else: ?>
                                     <?= esc($default['size'] ?? '—') ?>
                                 <?php endif; ?>
@@ -91,9 +101,9 @@
                             <td class="inv-rop-cell col-num"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
                             <td class="inv-eoq-cell col-num"><?= $default['eoq_value'] !== null ? esc($default['eoq_value']) : '—' ?></td>
                             <td class="inv-bar-cell">
-                                <div class="stock-bar <?= $pillClass ?>"><span style="width: <?= $pct ?>%"></span></div>
+                                <div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% of reorder point + order quantity"><span style="width: <?= $fill['pct'] ?>%"></span></div>
                             </td>
-                            <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span></td>
+                            <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span><?php if (! empty($group['on_order'])): ?> <span class="ordered-tag" title="On order: <?= esc($group['open_so']) ?>">Ordered</span><?php endif; ?></td>
                             <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
                             <td class="inv-actions-cell col-actions">
                                 <?php if (! empty($showArchived)): ?>
@@ -102,17 +112,23 @@
                                 </button>
                                 <?php else: ?>
                                 <div class="inv-actions">
+                                <?php if (! empty($group['on_order'])): ?>
+                                <?php // Already on order: link to the order instead, so a duplicate PO can't be created. ?>
+                                <a class="inv-view-order" href="<?= site_url('admin/orders/' . rawurlencode((string) $group['open_so'])) ?>">View order</a>
+                                <?php else: ?>
                                 <button type="button"
                                         class="inv-action-btn open-order-modal"
                                         style="<?= $itemStatus === 'Reorder Now' ? '' : 'display:none;' ?>"
                                         data-item-id="<?= esc($default['item_id']) ?>"
-                                        data-item-name="<?= esc($default['item_name'] ?? '') ?>"
+                                        data-item-name="<?= esc(($default['item_name'] ?? '') . (! empty($default['size']) ? ' · Size ' . $default['size'] : '')) ?>"
                                         data-supplier-id="<?= esc($default['supplier_id'] ?? '') ?>"
                                         data-unit-cost="<?= esc($default['unit_cost'] ?? 0) ?>"
-                                        data-recommended-eoq="<?= esc($default['eoq_value'] ?? 1) ?>">
+                                        data-recommended-eoq="<?= esc($default['eoq_value'] ?? 1) ?>"
+                                        <?= ! empty($default['size']) ? 'title="Orders size ' . esc($default['size'], 'attr') . '"' : '' ?>>
                                     Order
                                 </button>
-                                <button type="button" class="inv-more-btn edit-row" data-item="<?= esc(json_encode($variantsPayload[0]), 'attr') ?>" aria-label="More options"><i class="bi bi-three-dots"></i></button>
+                                <?php endif; ?>
+                                <button type="button" class="inv-more-btn edit-row" data-item="<?= esc(json_encode($variantsPayload[$worstIndex]), 'attr') ?>" aria-label="More options"><i class="bi bi-three-dots"></i></button>
                                 </div>
                                 <?php endif; ?>
                             </td>

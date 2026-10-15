@@ -6,6 +6,7 @@ namespace App\Controllers\Staff;
 use App\Controllers\BaseController;
 use App\Models\NotificationModel;
 use App\Models\NotificationPreferenceModel;
+use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
 
 class InventoryController extends BaseController
@@ -32,22 +33,40 @@ class InventoryController extends BaseController
             $perPage = self::PER_PAGE_OPTIONS[0];
         }
 
+        // EOQ per item: the stock-level bar fills against ROP + EOQ.
+        $eoqByItem = [];
+        foreach ((new PdssComputationModel())->latestPerItem() as $c) {
+            $eoqByItem[$c['item_id']] = $c['eoq_value'];
+        }
+
         $allProducts = $this->productModel->where('is_active', 1)->findAll();
         foreach ($allProducts as &$p) {
-            $p['status'] = $this->productModel->getStatus($p);
+            $p['status']    = $this->productModel->getStatus($p);
+            $p['eoq_value'] = $eoqByItem[$p['item_id']] ?? null;
         }
         unset($p);
 
-        $inStockCount  = count(array_filter($allProducts, fn ($p) => $p['status']['label'] === 'In Stock'));
-        $lowStockCount = count(array_filter($allProducts, fn ($p) => $p['status']['label'] === 'Low Stock'));
-        $reorderCount  = count(array_filter($allProducts, fn ($p) => $p['status']['label'] === 'Reorder Now'));
+        // Summary cards count ITEMS (sizes grouped, like the tabs) by each
+        // item's worst status, so they add up to the All Items count.
+        $statusCounts  = $this->productModel->statusCounts($allProducts);
+        $inStockCount  = $statusCounts['In Stock'];
+        $lowStockCount = $statusCounts['Low Stock'];
+        $reorderCount  = $statusCounts['Reorder Now'];
 
         // Rows per category tab (+ 'All'): same count as the table rows a tab
         // shows, active items only. Shared with the dashboard chart.
         $categoryCounts = $this->productModel->countRowsByCategory($allProducts);
 
-        $sizes = array_values(array_unique(array_filter(array_column($allProducts, 'size'))));
-        sort($sizes, SORT_STRING);
+        // Size filter: only sizes that exist in the selected category, sorted
+        // naturally (grouped when All categories). A size that isn't valid for
+        // the category is dropped, so the filter resets to "All sizes".
+        $sizeSource      = $allProducts;
+        $sizeOptions     = $this->productModel->sizeOptions($sizeSource, $category);
+        $sizesByCategory = $this->productModel->sizesByCategory($sizeSource);
+        $sizes           = $sizeOptions['all'];
+        if ($size && ! in_array($size, $sizes, true)) {
+            $size = '';
+        }
 
         // Same item_name+category grouping as Admin Inventory — one row per
         // item, each size still its own real underlying product underneath.
@@ -64,13 +83,15 @@ class InventoryController extends BaseController
         if ($size) {
             $filtered = array_values(array_filter($filtered, fn ($p) => ($p['size'] ?? '') === $size));
         }
-        if ($status) {
-            $filtered = array_values(array_filter($filtered, fn ($p) => $p['status']['label'] === $status));
-        }
 
         usort($filtered, fn ($a, $b) => [$a['item_name'], $a['size'] ?? ''] <=> [$b['item_name'], $b['size'] ?? '']);
 
-        $groups     = $this->productModel->groupRows($filtered);
+        $groups = $this->productModel->groupRows($filtered);
+        // Status filter works on the item's worst status (same rule as the
+        // cards and the row badge), applied after grouping.
+        if ($status) {
+            $groups = array_values(array_filter($groups, fn ($g) => $g['status']['label'] === $status));
+        }
         $totalItems = count($groups);
         $totalPages = max(1, (int) ceil($totalItems / $perPage));
         $page       = min(max(1, $page), $totalPages);
@@ -97,6 +118,8 @@ class InventoryController extends BaseController
             'categories'    => ProductModel::CATEGORIES,
             'categoryCounts'      => $categoryCounts,
             'sizes'         => $sizes,
+            'sizeOptions'   => $sizeOptions,
+            'sizesByCategory' => $sizesByCategory,
             'statuses'      => ['In Stock', 'Low Stock', 'Reorder Now'],
             'success'       => session()->getFlashdata('success'),
         ];

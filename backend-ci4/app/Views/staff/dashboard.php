@@ -84,8 +84,9 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
         <div class="d-flex align-items-center gap-3">
             <span class="icon"><i class="bi bi-exclamation-triangle"></i></span>
             <div class="title">
-                <?= esc($openAlertCount) ?> item<?= $openAlertCount === 1 ? '' : 's' ?> need<?= $openAlertCount === 1 ? 's' : '' ?> attention today.
-                <?= esc($alertItem['item_name'] ?? 'An item') ?> has reached its Reorder Point.
+                <?php $needs = (int) ($reorderSummary['needs'] ?? 0); $onOrder = (int) ($reorderSummary['on_order'] ?? 0); ?>
+                <?= $needs ?> item<?= $needs === 1 ? '' : 's' ?> need<?= $needs === 1 ? 's' : '' ?> reordering &middot; <?= $onOrder ?> on order.
+                <?= esc(($alertItem['item_name'] ?? 'An item') . (! empty($alertItem['size']) ? ' (Size ' . $alertItem['size'] . ')' : '')) ?> has reached its Reorder Point.
             </div>
         </div>
         <form method="post" action="<?= site_url('staff/dashboard/notify') ?>">

@@ -75,7 +75,8 @@ class DashboardController extends BaseController
             'maxLine'             => $maxLine,
             'lowStockItems'       => $lowStockItems,
             'recentTransactions'  => $recentTransactions,
-            'openAlertCount'      => count($openAlerts),
+            // Items (sizes grouped) that need reordering vs. already on order — same rule as Inventory.
+            'reorderSummary'      => (new \App\Models\ProductModel())->reorderSummary(),
             'alertItem'           => $alertItem,
             'success'             => session()->getFlashdata('success'),
         ];
