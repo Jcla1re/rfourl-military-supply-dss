@@ -59,15 +59,12 @@
                 <?php if (!empty($rows)): ?>
                     <?php foreach ($rows as $r): ?>
                         <?php
-                        $pillClass = match ($r['status']) {
-                            'Reorder Now' => 'red',
-                            'Low Stock'   => 'amber',
-                            default       => 'green',
-                        };
+                        $pillClass = \App\Models\ProductModel::statusColor($r['status']);
                         $statusLabel = match ($r['status']) {
-                            'Reorder Now' => 'At ROP',
-                            'Low Stock'   => 'Approaching',
-                            default       => 'Sufficient',
+                            'Reorder Now'  => 'At ROP',
+                            'Low Stock'    => 'Approaching',
+                            'Out of Stock' => 'Out of Stock',
+                            default        => 'Sufficient',
                         };
                         ?>
                         <tr>

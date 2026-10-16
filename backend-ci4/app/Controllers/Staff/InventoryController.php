@@ -52,6 +52,7 @@ class InventoryController extends BaseController
         $inStockCount  = $statusCounts['In Stock'];
         $lowStockCount = $statusCounts['Low Stock'];
         $reorderCount  = $statusCounts['Reorder Now'];
+        $outOfStockCount = $statusCounts['Out of Stock'];
 
         // Rows per category tab (+ 'All'): same count as the table rows a tab
         // shows, active items only. Shared with the dashboard chart.
@@ -104,6 +105,7 @@ class InventoryController extends BaseController
             'inStockCount'  => $inStockCount,
             'lowStockCount' => $lowStockCount,
             'reorderCount'  => $reorderCount,
+            'outOfStockCount' => $outOfStockCount,
             'totalItems'    => $totalItems,
             'currentPage'   => $page,
             'totalPages'    => $totalPages,
@@ -120,7 +122,7 @@ class InventoryController extends BaseController
             'sizes'         => $sizes,
             'sizeOptions'   => $sizeOptions,
             'sizesByCategory' => $sizesByCategory,
-            'statuses'      => ['In Stock', 'Low Stock', 'Reorder Now'],
+            'statuses'      => ProductModel::STATUSES,
             'success'       => session()->getFlashdata('success'),
         ];
 

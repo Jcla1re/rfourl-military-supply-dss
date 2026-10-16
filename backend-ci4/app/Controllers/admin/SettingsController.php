@@ -3,7 +3,9 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\DssRunner;
 use App\Libraries\PasswordPolicy;
+use App\Libraries\Toast;
 use App\Models\SecurityLogModel;
 use App\Models\DssParameterModel;
 use App\Models\NotificationPreferenceModel;
@@ -31,6 +33,9 @@ class SettingsController extends BaseController
             'active'        => 'settings',
             'tab'           => $tab,
             'dss'           => $this->dssParameterModel->current(),
+            'dssCalculated' => (new DssRunner())->lastCalculatedLabel(),
+            'dssRunning'    => (new DssRunner())->isRunning(),
+            'dssStarted'    => (bool) session()->getFlashdata('dss_started'),
             'notifPrefs'    => $this->notificationPreferenceModel->current(),
             'admin'         => $this->userModel->find(session()->get('user_id')),
             'staffAccounts' => $this->userModel->where('role', 'Staff')->findAll(),
@@ -56,31 +61,36 @@ class SettingsController extends BaseController
     }
 
     /**
-     * Runs the same engine as `php spark dss:run` (EOQ, Safety Stock, ROP,
-     * K-Means classes, reorder alerts) from the UI, so recommendations do not
-     * depend on someone opening a terminal. For unattended runs, schedule
-     * tools/run_dss.bat with Windows Task Scheduler.
+     * "Recalculate now": starts the same engine as `php spark dss:run` (EOQ,
+     * Safety Stock, ROP, K-Means classes, reorder alerts) in the background
+     * and returns at once, so the admin can keep working. Every admin page
+     * polls the run status and shows a toast when it finishes. One run at a
+     * time, shared with the weekly automatic run.
      */
     public function runEngine()
     {
-        @set_time_limit(300);
+        $session = session();
+        $state   = (new DssRunner())->startManual((int) $session->get('user_id'));
 
-        try {
-            $output = command('dss:run');
-        } catch (\Throwable $e) {
-            log_message('error', 'Manual DSS run failed: ' . $e->getMessage());
-            SecurityLogModel::log('dss_run_failed', null, $e->getMessage());
-
-            return redirect()->to('/admin/settings?tab=dss')->with('error', 'The DSS engine could not run: ' . $e->getMessage());
+        if ($state === 'running') {
+            // Stays until the run finishes, then dss-watch.js replaces it in
+            // place with the result toast (same 'dss' key).
+            $session->setFlashdata('toast', Toast::info(
+                'A recalculation is already running',
+                "You'll get a notice when it finishes.",
+                ['key' => 'dss', 'busy' => true]
+            ));
+        } elseif ($state === 'failed') {
+            $session->setFlashdata('toast', Toast::error("Couldn't recalculate", 'The background process could not be started. Please try again.'));
+        } else {
+            $session->setFlashdata('dss_started', true);
         }
 
-        SecurityLogModel::log('dss_run_manual', null, 'run from Settings');
+        // Release the session lock right away so other requests (other
+        // tabs, the status poll) never queue behind this one.
+        $session->close();
 
-        $summary = trim(preg_replace('/\e\[[0-9;]*m/', '', (string) $output));
-        $failed  = stripos($summary, 'failed') !== false || stripos($summary, 'cannot compute') !== false;
-
-        return redirect()->to('/admin/settings?tab=dss')->with($failed ? 'error' : 'success',
-            $failed ? 'DSS run did not complete: ' . $summary : 'DSS engine run complete. Recommendations and reorder alerts are updated.');
+        return redirect()->to('/admin/settings?tab=dss');
     }
 
     public function updateDssParameters()

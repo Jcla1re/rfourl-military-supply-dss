@@ -78,10 +78,13 @@ class ProductModel extends Model
         'current_stock' => 'required|integer',
     ];
 
+    /** Active items that are Low Stock or Reorder Now (same rule as getStatus()). */
     public function getLowStock()
     {
-        return $this->where('current_stock <=', 'manual_rop_warning', false)
-                    ->findAll();
+        return array_values(array_filter(
+            $this->where('is_active', 1)->findAll(),
+            fn ($p) => in_array($this->getStatus($p)['label'], ['Low Stock', 'Reorder Now'], true)
+        ));
     }
 
     /**
@@ -177,8 +180,8 @@ class ProductModel extends Model
      *   fill  = on hand ÷ (ROP + EOQ), capped at 100%
      *           (ROP + EOQ is roughly the stock right after a full reorder);
      *           when ROP + EOQ is 0 there's no target, so any stock fills it;
-     *   color = this size's own status (red Reorder Now, amber Low Stock,
-     *           green In Stock);
+     *   color = this size's own status (statusColor(): red Reorder Now,
+     *           amber Low Stock, gray Out of Stock, green In Stock);
      *   empty = on hand is 0 (drawn with a red outline, not as "no data").
      * The Inventory pages repeat this in JS (stockFill) for size switching.
      *
@@ -190,12 +193,7 @@ class ProductModel extends Model
         $target = (int) ($p['manual_rop_warning'] ?? 0) + (int) ($p['eoq_value'] ?? 0);
         $pct    = $stock <= 0 ? 0 : ($target > 0 ? (int) min(100, round($stock / $target * 100)) : 100);
         $label  = ($p['status'] ?? $this->getStatus($p))['label'];
-        $class  = match ($label) {
-            'Reorder Now' => 'red',
-            'Low Stock'   => 'amber',
-            'Archived'    => 'archived',
-            default       => 'green',
-        };
+        $class  = self::statusColor($label);
 
         return ['pct' => $pct, 'class' => $class, 'empty' => $stock <= 0];
     }
@@ -283,13 +281,13 @@ class ProductModel extends Model
     }
 
     /** Status priority for an item with several sizes: the worst size wins. */
-    public const STATUS_RANK = ['In Stock' => 0, 'Low Stock' => 1, 'Reorder Now' => 2];
+    public const STATUS_RANK = ['In Stock' => 0, 'Out of Stock' => 1, 'Low Stock' => 2, 'Reorder Now' => 3];
 
     /**
      * Groups rows into items (item_name + category; each size stays its own
      * product row in 'variants'). Each group also gets:
-     *   'status'      — the WORST status across its sizes
-     *                   (Reorder Now > Low Stock > In Stock), so a size that
+     *   'status'      — the WORST status across its sizes (STATUS_RANK:
+     *                   Reorder Now > Low Stock > Out of Stock > In Stock), so a size that
      *                   needs reordering is never hidden behind another size;
      *   'worst_index' — which variant has that status (the first such size).
      * Rows without a 'status' are given one via getStatus().
@@ -389,17 +387,18 @@ class ProductModel extends Model
 
     /**
      * Items per status (by each item's worst status). Same unit as the
-     * category tabs, so In Stock + Low Stock + Reorder Now = All Items.
+     * category tabs, so In Stock + Low Stock + Reorder Now + Out of Stock =
+     * All Items.
      *
      * @param array|null $products Active product rows (fetched when null).
      *
-     * @return array{'In Stock': int, 'Low Stock': int, 'Reorder Now': int}
+     * @return array{'In Stock': int, 'Low Stock': int, 'Reorder Now': int, 'Out of Stock': int}
      */
     public function statusCounts(?array $products = null): array
     {
         $products ??= $this->where('is_active', 1)->findAll();
 
-        $counts = ['In Stock' => 0, 'Low Stock' => 0, 'Reorder Now' => 0];
+        $counts = array_fill_keys(self::STATUSES, 0);
         foreach ($this->groupRows($products) as $group) {
             $label = $group['status']['label'];
             if (isset($counts[$label])) {
@@ -410,31 +409,83 @@ class ProductModel extends Model
         return $counts;
     }
 
-    /** Stock up to this multiple of the reorder point is shown as "Low Stock" (120%). */
-    public const LOW_STOCK_BAND = 1.2;
+    /*
+     * The stock status rule. This is the ONE place it is defined: the browser
+     * gets the same settings through statusRule() (assets/js/stock-status.js)
+     * and help texts print LOW_STOCK_HELP / OUT_OF_STOCK_TIP. Checked in order:
+     *
+     *   Out of Stock (gray)  on hand 0 and ROP 0: no sales in the demand window
+     *   Reorder Now  (red)   ROP > 0 and on hand <= ROP
+     *   Low Stock    (amber) ROP > 0 and on hand <= ROP + max(LOW_STOCK_MIN_UNITS, ceil(ROP x LOW_STOCK_PCT))
+     *   In Stock     (green) anything else (including ROP 0 with stock on hand)
+     *
+     * A size with ROP 0 is never Low Stock or Reorder Now: there is no
+     * reorder point to be near.
+     */
+    public const LOW_STOCK_PCT       = 0.5;
+    public const LOW_STOCK_MIN_UNITS = 2;
+
+    /** Card / filter order. */
+    public const STATUSES = ['In Stock', 'Low Stock', 'Reorder Now', 'Out of Stock'];
+
+    public const LOW_STOCK_HELP   = 'Low Stock = within 50% above the reorder point (at least 2 units). Items without a reorder point are never Low Stock.';
+    public const OUT_OF_STOCK_TIP = 'No sales in the last 2 years — reorder only if needed.';
+
+    /** The highest on-hand count that is still Low Stock for this ROP. */
+    public static function lowStockLimit(int $rop): int
+    {
+        return $rop + max(self::LOW_STOCK_MIN_UNITS, (int) ceil($rop * self::LOW_STOCK_PCT));
+    }
+
+    /** The rule's settings for the browser (window.STOCK_RULE). */
+    public static function statusRule(): array
+    {
+        return [
+            'lowStockPct'    => self::LOW_STOCK_PCT,
+            'lowStockMin'    => self::LOW_STOCK_MIN_UNITS,
+            'outOfStockTip'  => self::OUT_OF_STOCK_TIP,
+        ];
+    }
+
+    /** Badge / card / bar color for a status label. */
+    public static function statusColor(string $label): string
+    {
+        return match ($label) {
+            'Reorder Now'  => 'red',
+            'Low Stock'    => 'amber',
+            'Out of Stock' => 'gray',
+            'Archived'     => 'archived',
+            default        => 'green',
+        };
+    }
+
+    /** Tooltip for a status badge ('' when it needs none). */
+    public static function statusTitle(string $label): string
+    {
+        return $label === 'Out of Stock' ? self::OUT_OF_STOCK_TIP : '';
+    }
 
     public function getStatus(array $product): array
     {
         $stock = (int) $product['current_stock'];
-        $rop   = (int) ($product['manual_rop_warning'] ?? 0);
+        $rop   = max(0, (int) ($product['manual_rop_warning'] ?? 0));
 
-        // Zero (or negative) on-hand stock is always a reorder condition,
-        // regardless of ROP — an item that has never sold gets ROP=0 from
-        // the DSS engine, but that must never be read as "safe to be at
-        // zero units." Checking this first prevents a literal stockout
-        // from ever being displayed as "In Stock".
-        if ($stock <= 0) {
-            return ['label' => 'Reorder Now', 'class' => 'status-reorder'];
+        // Nothing on hand and no demand in the window (the DSS engine gives
+        // ROP 0): not a reorder signal, so it isn't counted as Reorder Now
+        // or raised as a reorder alert.
+        if ($stock <= 0 && $rop === 0) {
+            return ['label' => 'Out of Stock', 'class' => 'status-out-of-stock'];
         }
-        if ($rop <= 0) {
-            return ['label' => 'In Stock', 'class' => 'status-in-stock'];
+        if ($rop === 0) {
+            return ['label' => 'In Stock', 'class' => 'status-in-stock']; // no reorder point to be near
         }
         if ($stock <= $rop) {
             return ['label' => 'Reorder Now', 'class' => 'status-reorder'];
         }
-        if ($stock <= $rop * self::LOW_STOCK_BAND) {
+        if ($stock <= self::lowStockLimit($rop)) {
             return ['label' => 'Low Stock', 'class' => 'status-low-stock'];
         }
+
         return ['label' => 'In Stock', 'class' => 'status-in-stock'];
     }
 }

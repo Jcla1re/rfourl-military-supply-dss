@@ -163,6 +163,7 @@ class DssRun extends BaseCommand
         // --- class-based Z-score (falls back to the global default z_score) ---
         $computationRows = [];
         $alertRows       = [];
+        $statusModel     = new \App\Models\ProductModel(); // the shared stock status rule
         $abcUpdates      = [];
         $ropUpdates      = [];
         $classifiedCount = 0;
@@ -223,12 +224,14 @@ class DssRun extends BaseCommand
                 'triggered_by'     => 'spark:dss:run',
             ];
 
-            if ((int) $p['current_stock'] <= $reorderPoint) {
+            // Same rule as the Inventory table (ProductModel::getStatus), with
+            // the ROP the item will have after this run. Out of Stock (nothing
+            // on hand, no demand) is not a reorder signal.
+            $effectiveRop = $reorderPoint > 0 ? $reorderPoint : (int) ($p['manual_rop_warning'] ?? 0);
+            if ($statusModel->getStatus(['current_stock' => $p['current_stock'], 'manual_rop_warning' => $effectiveRop])['label'] === 'Reorder Now') {
                 $alertRows[$itemId] = [
                     'item_id'          => $itemId,
-                    'trigger_reason'   => $reorderPoint > 0
-                        ? "Stock ({$p['current_stock']}) at/below reorder point ({$reorderPoint})"
-                        : 'No recent demand signal — review manually',
+                    'trigger_reason'   => "Stock ({$p['current_stock']}) at/below reorder point ({$effectiveRop})",
                     'recommended_eoq'  => $eoq,
                     'stock_at_trigger' => (int) $p['current_stock'],
                     'status'           => 'Active',

@@ -29,11 +29,8 @@
                         $worstIndex = (int) ($group['worst_index'] ?? 0);
                         $default    = $variants[$worstIndex];
                         $itemStatus = $group['status']['label'] ?? ($default['status']['label'] ?? 'In Stock');
-                        $pillClass = match ($itemStatus) {
-                            'Low Stock' => 'amber',
-                            'Reorder Now' => 'red',
-                            default => 'green',
-                        };
+                        $pillClass = \App\Models\ProductModel::statusColor($itemStatus);
+                        $pillTitle = \App\Models\ProductModel::statusTitle($itemStatus);
                         // Bar for the selected (default) size: on hand ÷ (ROP + EOQ), its own status color.
                         $fill = model(\App\Models\ProductModel::class)->stockFill($default);
 
@@ -60,7 +57,7 @@
                                         <select class="inv-size-select" aria-label="Size">
                                             <?php foreach ($variants as $i => $v): ?>
                                                 <?php $vStatus = $v['status']['label'] ?? 'In Stock'; ?>
-                                                <option value="<?= $i ?>" data-size="<?= esc($v['size'] ?? '—') ?>" <?= $i === $worstIndex ? 'selected' : '' ?>><?= esc($v['size'] ?? '—') ?><?= in_array($vStatus, ['Low Stock', 'Reorder Now'], true) ? ' — ' . esc($vStatus) : '' ?><?= ! empty($v['open_so']) && $vStatus === 'Reorder Now' ? ' (ordered)' : '' ?></option>
+                                                <option value="<?= $i ?>" data-size="<?= esc($v['size'] ?? '—') ?>" <?= $i === $worstIndex ? 'selected' : '' ?>><?= esc($v['size'] ?? '—') ?><?= in_array($vStatus, ['Low Stock', 'Reorder Now', 'Out of Stock'], true) ? ' — ' . esc($vStatus) : '' ?><?= ! empty($v['open_so']) && $vStatus === 'Reorder Now' ? ' (ordered)' : '' ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </span>
@@ -72,7 +69,7 @@
                             <td class="inv-stock-cell col-num"><?= esc($default['current_stock'] ?? 0) ?></td>
                             <td class="inv-rop-cell col-num"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
                             <td class="inv-bar-cell"><div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% of reorder point + order quantity"><span style="width: <?= $fill['pct'] ?>%"></span></div></td>
-                            <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"><?= esc($itemStatus) ?></span><?php if (! empty($group['on_order'])): ?> <span class="ordered-tag" title="On order: <?= esc($group['open_so']) ?>">Ordered</span><?php endif; ?></td>
+                            <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"<?= $pillTitle !== '' ? ' title="' . esc($pillTitle, 'attr') . '"' : '' ?>><?= esc($itemStatus) ?></span><?php if (! empty($group['on_order'])): ?> <span class="ordered-tag" title="On order: <?= esc($group['open_so']) ?>">Ordered</span><?php endif; ?></td>
                             <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
                             <td class="inv-notify-cell col-actions">
                                 <form method="post" action="<?= site_url('staff/inventory/notify/' . $default['item_id']) ?>" class="notify-form" style="<?= $itemStatus === 'Reorder Now' && empty($group['on_order']) ? '' : 'display:none;' ?>">

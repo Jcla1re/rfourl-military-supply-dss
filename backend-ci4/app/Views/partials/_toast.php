@@ -4,21 +4,24 @@
 // 'toast' flash set with App\Libraries\Toast). Behaviour — countdown,
 // pause on hover/focus, × and Esc to dismiss — is in assets/js/toast-timer.js.
 //
-// Expects $toast: ['type' => 'success'|'error', 'title', 'message'?, 'name'?, 'undo'?]
+// Expects $toast: ['type' => 'success'|'info'|'error', 'title', 'message'?, 'name'?, 'undo'?, 'key'?, 'sticky'?, 'busy'?]
 
 if (! is_array($toast ?? null) || empty($toast['title'])) {
     return;
 }
-$isError = ($toast['type'] ?? 'success') === 'error';
+$icons   = ['success' => 'bi-check-circle-fill', 'info' => 'bi-info-circle-fill', 'error' => 'bi-exclamation-circle-fill'];
+$type    = isset($icons[$toast['type'] ?? '']) ? $toast['type'] : 'success';
+$isError = $type === 'error';
 $undoUrl = ! $isError ? ($toast['undo'] ?? null) : null;
-// Success: 4 s, or 6 s when there's an Undo to reach. Errors stay (0).
-$autohide = $isError ? 0 : ($undoUrl ? 6000 : 4000);
+$isBusy  = ! empty($toast['busy']); // in progress: spinner instead of the icon, no countdown
+// Success/info: 4 s, or 6 s when there's an Undo to reach. Errors, sticky and busy toasts stay (0).
+$autohide = $isError || $isBusy || ! empty($toast['sticky']) ? 0 : ($undoUrl ? 6000 : 4000);
 $query    = service('request')->getUri()->getQuery();
 ?>
-<div class="app-toast <?= $isError ? 'is-error' : 'is-success' ?>" data-autohide="<?= $autohide ?>"
+<div class="app-toast is-<?= $type ?><?= $isBusy ? ' is-busy' : '' ?>"<?= $isBusy ? ' aria-busy="true"' : '' ?> data-autohide="<?= $autohide ?>"<?= ! empty($toast['key']) ? ' data-toast-key="' . esc($toast['key'], 'attr') . '"' : '' ?>
      role="<?= $isError ? 'alert' : 'status' ?>" aria-live="<?= $isError ? 'assertive' : 'polite' ?>">
-    <div class="toast-icon <?= $isError ? 'error' : 'success' ?>" aria-hidden="true">
-        <i class="bi <?= $isError ? 'bi-exclamation-circle-fill' : 'bi-check-circle-fill' ?>"></i>
+    <div class="toast-icon <?= $type ?>" aria-hidden="true">
+        <?php if ($isBusy): ?><span class="toast-spinner"></span><i class="bi bi-hourglass-split toast-busy-static"></i><?php else: ?><i class="bi <?= $icons[$type] ?>"></i><?php endif; ?>
     </div>
     <div class="app-toast-body">
         <div class="toast-title"><?= esc($toast['title']) ?></div>

@@ -26,7 +26,9 @@
     --btn-bg-active: #4F8542;
     --btn-text: #FFFFFF;
     --btn-font-weight: 500; /* Medium */
-    --btn-focus-ring: #2C3A1E;
+    /* Keyboard focus outline everywhere (Deep Olive, ~11:1 on white). */
+    --focus-ring: #2C3A1E;
+    --btn-focus-ring: var(--focus-ring);
     --btn-disabled-bg: #E8E5DC;
     --btn-disabled-text: #8A8D7E;
 
@@ -583,7 +585,47 @@ body {
 }
 .app-toast-close:hover { background: #F5F3EE; color: #1F2617; }
 .app-toast-undo:focus-visible,
-.app-toast-close:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; }
+.app-toast-close:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
+/* Info: a neutral notice, not an error (e.g. "A recalculation is already running"). */
+.toast-icon.info { background: #E9ECE3; color: #2C3A1E; }
+.app-toast.is-info .toast-timer { background: #2C3A1E; }
+
+/* Busy: a persistent "in progress" toast. A small spinning ring replaces
+   the icon; with reduced motion a static hourglass is shown instead. */
+.toast-spinner {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2.5px solid rgba(44, 58, 30, .25); border-top-color: #2C3A1E; border-right-color: #2C3A1E;
+    animation: toastSpin 0.8s linear infinite;
+}
+.toast-busy-static { display: none; }
+@keyframes toastSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .toast-spinner { display: none; }
+    .toast-busy-static { display: inline; }
+}
+
+/* Stack: every toast lives in one fixed, top-centred column (built by
+   toast-timer.js), newest on top, 8px apart, so toasts never overlap.
+   Inside it a toast is a normal flex item, so the slide is vertical only. */
+.toast-stack {
+    position: fixed; top: 48px; left: 50%; transform: translateX(-50%);
+    z-index: 2000; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    width: max-content; max-width: calc(100vw - 32px);
+    pointer-events: none; /* only the toasts themselves take clicks */
+}
+.toast-stack .app-toast {
+    position: relative; top: auto; left: auto; pointer-events: auto;
+    animation-name: toastInStack;
+}
+.toast-stack .app-toast.toast-hide { animation-name: toastOutStack; }
+.toast-stack .app-toast.toast-swap { animation: toastSwap 0.25s ease forwards; }
+@keyframes toastInStack { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+@keyframes toastOutStack { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-14px); } }
+@keyframes toastSwap { from { opacity: 0.35; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+    .toast-stack .app-toast, .toast-stack .app-toast.toast-hide, .toast-stack .app-toast.toast-swap { animation-duration: 0.01s; }
+}
 
 /* ===== Shared admin page shell ===== */
 .page-wrap {
@@ -613,6 +655,7 @@ body {
 .stat-pill.green { color: var(--green-text); border-color: #bfe0bf; }
 .stat-pill.amber { color: var(--amber-text); border-color: #f0dca0; }
 .stat-pill.red   { color: var(--red-text); border-color: #f0bcbc; }
+.stat-pill.gray  { color: #5C6152; border-color: #d6d3cb; } /* Out of Stock */
 
 /* ===== Status pills (table rows) ===== */
 .status-pill {
@@ -674,8 +717,11 @@ body {
 .stock-bar.green > span { background: var(--green-text); }
 .stock-bar.amber > span { background: var(--amber-text); }
 .stock-bar.red   > span { background: var(--red-text); }
+.stock-bar.gray  > span { background: #8C8A82; }
 /* On hand 0: an empty bar with a red outline, so it reads "empty", not "no data". */
 .stock-bar.is-empty { box-shadow: inset 0 0 0 1px var(--red-text); background: #FDF2F0; }
+/* Out of Stock (no demand): empty, but not an alarm. */
+.stock-bar.gray.is-empty { box-shadow: inset 0 0 0 1px #A8A59C; background: #F1EFEA; }
 
 /* ===== Underline tabs (Inventory categories) ===== */
 .underline-tabs {
@@ -819,7 +865,7 @@ body {
 }
 .btn-clear-search:active { transform: translateY(0); }
 .btn-clear-search:focus-visible {
-    outline: 3px solid #71AA60;
+    outline: 3px solid var(--focus-ring);
     outline-offset: 2px;
 }
 
@@ -857,7 +903,7 @@ body {
 .size-picker-label { overflow: hidden; text-overflow: ellipsis; }
 .size-picker .bi { font-size: 10px; color: #5C6152; flex-shrink: 0; }
 .size-picker select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 14px; }
-.size-picker:focus-within { outline: 3px solid #71AA60; outline-offset: 1px; }
+.size-picker:focus-within { outline: 3px solid var(--focus-ring); outline-offset: 1px; }
 .ordered-tag {
     display: inline-block; margin-left: 4px; padding: 2px 8px; vertical-align: middle;
     border-radius: var(--radius-pill); background: #E8EEF6; color: #2B4C7E;
@@ -869,7 +915,7 @@ body {
     background: #fff; color: #2C3A1E; font-size: 13px; font-weight: 500; text-decoration: none; white-space: nowrap;
 }
 .inv-view-order:hover { background: #F5F3EE; border-color: #71AA60; color: #2C3A1E; }
-.inv-view-order:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; }
+.inv-view-order:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .on-order-note { font-size: 12px; color: #2B4C7E; font-weight: 600; }
 
 /* ===== Pagination ===== */
@@ -950,7 +996,7 @@ body {
     border-color: #71AA60;
 }
 .pager-footer .admin-pagination a:focus-visible {
-    outline: 3px solid #71AA60;
+    outline: 3px solid var(--focus-ring);
     outline-offset: 2px;
 }
 /* Active page: one class more specific than the white base rule above, so

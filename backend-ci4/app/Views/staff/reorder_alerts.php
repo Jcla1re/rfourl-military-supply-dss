@@ -47,7 +47,7 @@
         <div class="ra-summary">
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-exclamation-triangle"></i></span>
-                <div><span>Out of Stock (Critical)</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
+                <div><span>Zero Stock (Critical)</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-lightning-fill"></i></span>

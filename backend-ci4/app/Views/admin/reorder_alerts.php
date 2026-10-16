@@ -60,7 +60,7 @@ $dss = $dss ?? [];
         <div class="ra-summary">
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-exclamation-triangle"></i></span>
-                <div><span>Out of Stock (Critical)</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
+                <div><span>Zero Stock (Critical)</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-lightning-fill"></i></span>
@@ -71,7 +71,7 @@ $dss = $dss ?? [];
                 <div><span>Received This Week</span><strong><?= esc($receivedCount ?? 0) ?></strong></div>
             </div>
         </div>
-        <p class="text-muted small mb-3">Out of Stock + Still In Stock, At Reorder Point together equal Inventory's "Reorder Now" count. This page's "At Reorder Point" is unrelated to Inventory's separate "Low Stock" tier (items above ROP but within a 1.5&times; buffer) — those don't raise an alert yet.</p>
+        <p class="text-muted small mb-3">Zero Stock + Still In Stock, At Reorder Point together equal Inventory's "Reorder Now" count. This page's "At Reorder Point" is unrelated to Inventory's separate "Low Stock" tier (<?= esc(\App\Models\ProductModel::LOW_STOCK_HELP) ?>) — those don't raise an alert yet. Items with no sales in the last 2 years and nothing on hand show as "Out of Stock" in Inventory and don't raise an alert either.</p>
 
         <?php if (!empty($alerts)): ?>
             <form method="post" action="<?= site_url('admin/reorder-alerts/resolve-all') ?>" onsubmit="return confirm('Dismiss every pending alert without creating orders for them?');">

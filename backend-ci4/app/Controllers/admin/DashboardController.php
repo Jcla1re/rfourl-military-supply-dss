@@ -4,6 +4,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\DssRunner;
 use App\Models\ProductModel;
 use App\Models\ReorderAlertModel;
 use App\Models\SalesItemModel;
@@ -17,6 +18,12 @@ class DashboardController extends BaseController
         $salesTransactionModel = new SalesTransactionModel();
         $salesItemModel        = new SalesItemModel();
         $reorderAlertModel     = new ReorderAlertModel();
+
+        // Weekly DSS recalculation: if the last run is more than 7 days old,
+        // start one in the background (doesn't block this page). Every admin
+        // login lands here, so this also covers "on login".
+        // The layout's status poll shows the toast when it finishes.
+        (new DssRunner())->startWeeklyIfDue();
 
         // Keep the "low stock" count in sync with live inventory rather
         // than whatever dss:run last computed (see ReorderAlertModel).
@@ -59,5 +66,13 @@ class DashboardController extends BaseController
         ];
 
         return view('admin/dashboard', $data);
+    }
+
+    /** JSON for the Dashboard poller: is a DSS run in progress, and how did the last one end. */
+    public function dssStatus()
+    {
+        session()->close(); // polled every few seconds; never hold the session lock
+
+        return $this->response->setJSON((new DssRunner())->status());
     }
 }

@@ -14,7 +14,9 @@
     --btn-bg-active: #4F8542;
     --btn-text: #FFFFFF;
     --btn-font-weight: 500; /* Medium */
-    --btn-focus-ring: #2C3A1E;
+    /* Keyboard focus outline everywhere (Deep Olive, ~11:1 on white). */
+    --focus-ring: #2C3A1E;
+    --btn-focus-ring: var(--focus-ring);
     --btn-disabled-bg: #E8E5DC;
     --btn-disabled-text: #8A8D7E;
 }

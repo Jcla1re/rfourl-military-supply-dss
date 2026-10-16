@@ -242,7 +242,7 @@
                                         : '₱' . number_format($g['min_price'], 0) . '–' . number_format($g['max_price'], 0) ?>
                                 </div>
                                 <div class="stock <?= $g['total_stock'] <= 0 ? 'red' : 'green' ?>">
-                                    <?= $g['total_stock'] <= 0 ? 'Out of Stock' : esc((string) $g['total_stock']) . ' in Stock' ?>
+                                    <?= $g['total_stock'] <= 0 ? 'Sold out' : esc((string) $g['total_stock']) . ' in Stock' ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -847,7 +847,7 @@ if (document.getElementById('posGrid')) {
         updateCardAvailability();
     }
 
-    // Grays out a product card, matching the "Out of Stock" look, once the
+    // Grays out a product card, matching the "Sold out" look, once the
     // quantity already in the cart uses up all remaining stock — so the
     // customer can't add an 11th unit of an item that only had 10 left.
     function updateCardAvailability() {
@@ -863,7 +863,7 @@ if (document.getElementById('posGrid')) {
 
             if (remaining <= 0) {
                 card.classList.add('disabled');
-                if (stockEl) { stockEl.textContent = 'Out of Stock'; stockEl.className = 'stock red'; }
+                if (stockEl) { stockEl.textContent = 'Sold out'; stockEl.className = 'stock red'; }
             } else {
                 card.classList.remove('disabled');
                 if (stockEl) {
@@ -871,8 +871,8 @@ if (document.getElementById('posGrid')) {
                     if (variants.length > 1) {
                         status = { label: `${remaining} in Stock`, cls: 'green' };
                     } else {
-                        const rop = variants[0].manual_rop_warning || 0;
-                        status = rop > 0 && remaining <= rop
+                        // Shared rule (assets/js/stock-status.js): Low Stock or Reorder Now shows as low.
+                        status = ['Low Stock', 'Reorder Now'].includes(stockStatus(remaining, variants[0].manual_rop_warning)[0])
                             ? { label: `${remaining} Left (Low)`, cls: 'amber' }
                             : { label: `${remaining} in Stock`, cls: 'green' };
                     }

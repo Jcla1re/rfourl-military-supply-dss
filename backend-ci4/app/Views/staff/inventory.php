@@ -9,7 +9,7 @@ $filterSize = $size ?? '';
 $filterStatus = $status ?? '';
 $filterSearch = $search ?? '';
 $categories = $categories ?? \App\Models\ProductModel::CATEGORIES;
-$statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
+$statuses = $statuses ?? \App\Models\ProductModel::STATUSES;
 ?>
 
 <style>
@@ -53,7 +53,7 @@ $statuses = $statuses ?? ['In Stock', 'Low Stock', 'Reorder Now'];
 /* Summary cards are links: each applies its status filter. */
 a.stat-pill { text-decoration: none; cursor: pointer; transition: transform 0.12s ease, box-shadow 0.15s ease; }
 a.stat-pill:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(31, 38, 23, .08); }
-a.stat-pill:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; }
+a.stat-pill:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
 
 /* Status badges (e.g. "Reorder Now · 2XL") and dates stay on one line. */
@@ -115,7 +115,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
 }
 .clear-filters[hidden] { display: none; }
 .clear-filters:hover { text-decoration: underline; color: #2C3A1E; }
-.clear-filters:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; border-radius: 4px; }
+.clear-filters:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
 
 /* Size filter: disabled ("No sizes") for categories without sized items. */
 .size-filter-wrap { display: inline-flex; }
@@ -148,6 +148,10 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                 <a href="<?= $statusUrl('In Stock') ?>" class="stat-pill green<?= $cardAttrs('In Stock') ?>"><i class="bi bi-check-square-fill"></i> In Stock: <?= esc((string) ($inStockCount ?? 0)) ?></a>
                 <a href="<?= $statusUrl('Low Stock') ?>" class="stat-pill amber<?= $cardAttrs('Low Stock') ?>"><i class="bi bi-lightning-fill"></i> Low Stock: <?= esc((string) ($lowStockCount ?? 0)) ?></a>
                 <a href="<?= $statusUrl('Reorder Now') ?>" class="stat-pill red<?= $cardAttrs('Reorder Now') ?>"><i class="bi bi-exclamation-triangle-fill"></i> Reorder Now: <?= esc((string) ($reorderCount ?? 0)) ?></a>
+                <?php // Only when there is at least one (the other three still add up to All Items); the Status filter always offers it. ?>
+                <?php if (($outOfStockCount ?? 0) > 0): ?>
+                <a href="<?= $statusUrl('Out of Stock') ?>" class="stat-pill gray<?= $cardAttrs('Out of Stock') ?>"><i class="bi bi-dash-circle-fill"></i> Out of Stock: <?= esc((string) $outOfStockCount) ?></a>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -360,7 +364,7 @@ function stockFill(v) {
     const stock = Number(v.current_stock) || 0;
     const target = (Number(v.manual_rop_warning) || 0) + (Number(v.eoq_value) || 0);
     const pct = stock <= 0 ? 0 : (target > 0 ? Math.min(100, Math.round(stock / target * 100)) : 100);
-    const cls = { 'Reorder Now': 'red', 'Low Stock': 'amber', 'Archived': 'archived' }[v.status_label] || 'green';
+    const cls = stockStatusColor(v.status_label); // assets/js/stock-status.js
     return { pct, cls, empty: stock <= 0 };
 }
 
@@ -375,7 +379,7 @@ function rowStatusText(row, selectedIndex, variants) {
     const status = row.dataset.rowStatus;
     const target = variants[+row.dataset.worstIndex];
     const differs = selectedIndex !== +row.dataset.worstIndex && target && target.size
-        && (status === 'Reorder Now' || status === 'Low Stock')
+        && (status === 'Reorder Now' || status === 'Low Stock' || status === 'Out of Stock')
         && !(status === 'Reorder Now' && variants[selectedIndex]?.status_label === 'Reorder Now' && !variants[selectedIndex]?.open_so);
     return { status, target, differs, badge: differs ? status + ' · ' + target.size : status };
 }
@@ -386,9 +390,7 @@ function rowStatusText(row, selectedIndex, variants) {
 // row — each size is independently stock-tracked, this is purely a display
 // switch, no page reload.
 function pillClassForStatus(label) {
-    if (label === 'Low Stock') return 'amber';
-    if (label === 'Reorder Now') return 'red';
-    return 'green';
+    return stockStatusColor(label); // assets/js/stock-status.js
 }
 
 document.addEventListener('change', event => {

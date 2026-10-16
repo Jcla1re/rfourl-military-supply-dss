@@ -124,3 +124,7 @@ _modules/*
 
 /results/
 /phpunit.xml
+
+# DSS run lock and last-run result (DssRunner)
+/writable/dss-run.lock
+/writable/dss-last-run.json

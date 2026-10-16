@@ -95,6 +95,14 @@ $tabs = [
 .dss-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 @media (max-width: 900px) { .dss-cards { grid-template-columns: 1fr; } }
 .dss-formula { background: var(--content-bg); border-radius: var(--radius-control); padding: 14px 16px; font-size: 13px; text-align: center; margin-top: 14px; }
+.dss-run { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+.dss-run-help { margin: 0 0 18px; font-size: 13px; color: #5C6152; }
+.dss-run-status { margin: 0 0 6px; font-size: 13px; font-weight: 500; color: #2C3A1E; }
+.dss-last-run { font-size: 14px; color: #5C6152; }
+.dss-last-run strong { color: #1F2617; font-weight: 600; }
+.dss-spin { display: inline-block; animation: dssSpin 1s linear infinite; }
+@keyframes dssSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .dss-spin { animation: none; } }
 .dss-warning { background: #eee; border-radius: var(--radius-control); padding: 16px 20px; display: flex; gap: 14px; margin-bottom: 20px; }
 </style>
 
@@ -283,7 +291,7 @@ $tabs = [
                 $notifPrefs = $notifPrefs ?? [];
                 $prefs = [
                     ['rop_alerts', 'Reorder Point (ROP) Alerts', 'Notify when an item reaches its calculated ROP threshold'],
-                    ['low_stock_warnings', 'Low Stock Warnings (Approaching ROP)', 'Early warning when stock drops to 120% of the ROP value'],
+                    ['low_stock_warnings', 'Low Stock Warnings (Approaching ROP)', 'Early warning before stock reaches the ROP. ' . \App\Models\ProductModel::LOW_STOCK_HELP],
                     ['daily_sales_summary', 'Daily Sales Summary', "Receive a summary of the day's transactions every night at 9 PM"],
                     ['procurement_reminders', 'Procurement Schedule Reminders', 'Alert 2 days before a scheduled restock date'],
                     ['weekly_trend_report', 'Weekly Trend Report', 'Auto-generate and display a demand summary every Monday'],
@@ -308,18 +316,59 @@ $tabs = [
 
         <?php elseif ($tab === 'dss'): ?>
             <h4>DSS Parameter</h4>
-            <div class="set-hint">Configure the core EOQ and ROP computation inputs. Changes take effect on the next system circulation.</div>
+            <div class="set-hint">Configure the core EOQ and ROP computation inputs. Changes take effect on the next calculation.</div>
 
             <div class="dss-warning">
                 <i class="bi bi-exclamation-triangle fs-4"></i>
                 <div>Changing these values will affect all procurement recommendations system-wide. Only the owner can modify DSS parameters. The system does not use AI &mdash; all calculations are based on historical transaction data and the formulas below.</div>
             </div>
 
-            <form method="post" action="<?= site_url('admin/settings/run-engine') ?>" class="mb-3"
-                  onsubmit="return confirm('Recompute EOQ, Safety Stock, ROP and classes for all products now? This can take a minute.');">
+            <?php // Recalculate ROP / EOQ / safety stock / classes now (same engine as `php spark dss:run`), in the background. ?>
+            <form method="post" action="<?= site_url('admin/settings/run-engine') ?>" class="dss-run" id="dssRunForm">
                 <?= csrf_field() ?>
-                <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-repeat"></i> Run DSS engine now</button>
+                <button type="submit" class="btn btn-success" id="dssRunBtn"<?= $dssRunning ? ' disabled aria-busy="true"' : '' ?>>
+                    <i class="bi bi-arrow-repeat<?= $dssRunning ? ' dss-spin' : '' ?>" aria-hidden="true"></i> <span class="dss-run-label"><?= $dssRunning ? 'Recalculating…' : 'Recalculate now' ?></span>
+                </button>
+                <span class="dss-last-run">
+                    <?php if ($dssCalculated): ?>
+                        Last calculated: <strong><?= esc($dssCalculated) ?></strong>
+                    <?php else: ?>
+                        Not calculated yet
+                    <?php endif; ?>
+                </span>
             </form>
+            <p class="dss-run-status" id="dssRunStatus" role="status"<?= $dssRunning ? '' : ' hidden' ?>>
+                <?= $dssStarted
+                    ? 'Recalculating in the background. You can leave this page; you&rsquo;ll get a notice when it&rsquo;s done.'
+                    : 'A recalculation is already running. You&rsquo;ll get a notice when it&rsquo;s done.' ?>
+            </p>
+            <p class="dss-run-help">Runs automatically every 7 days. Recalculate now after changing DSS settings or supplier lead times.</p>
+            <script>
+            (function () {
+                const form = document.getElementById('dssRunForm');
+                const btn = document.getElementById('dssRunBtn');
+                const label = btn.querySelector('.dss-run-label');
+                const icon = btn.querySelector('.bi');
+                const busy = on => {
+                    btn.disabled = on;
+                    btn.toggleAttribute('aria-busy', on);
+                    icon.classList.toggle('dss-spin', on);
+                    label.textContent = on ? 'Recalculating…' : 'Recalculate now';
+                };
+                // The request only starts the run, so it returns quickly.
+                form.addEventListener('submit', () => setTimeout(() => busy(true), 0));
+                // Run finished (assets/js/dss-watch.js): enable the button again and refresh "Last calculated".
+                window.addEventListener('dss:finished', e => {
+                    busy(false);
+                    document.getElementById('dssRunStatus').hidden = true;
+                    if (e.detail && e.detail.calculated) {
+                        const strong = document.createElement('strong');
+                        strong.textContent = e.detail.calculated;
+                        form.querySelector('.dss-last-run').replaceChildren('Last calculated: ', strong);
+                    }
+                });
+            })();
+            </script>
 
             <form method="post" action="<?= site_url('admin/settings/dss-parameters') ?>">
                 <?= csrf_field() ?>

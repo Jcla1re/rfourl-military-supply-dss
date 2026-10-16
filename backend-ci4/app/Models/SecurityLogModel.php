@@ -23,15 +23,21 @@ class SecurityLogModel extends Model
     public static function log(string $event, ?array $actor = null, ?string $detail = null): void
     {
         try {
-            $session = session();
+            // A given actor is used as-is (e.g. the automatic DSS run logs as
+            // "system", with no session); otherwise it's the session user.
+            // Command-line runs have no session or client IP.
+            if ($actor === null && ! is_cli()) {
+                $session = session();
+                $actor   = ['user_id' => $session->get('user_id'), 'username' => $session->get('username'), 'role' => $session->get('role')];
+            }
 
             (new self())->insert([
-                'user_id'    => $actor['user_id'] ?? $session->get('user_id'),
-                'username'   => $actor['username'] ?? $session->get('username'),
-                'role'       => $actor['role'] ?? $session->get('role'),
+                'user_id'    => $actor['user_id'] ?? null,
+                'username'   => $actor['username'] ?? null,
+                'role'       => $actor['role'] ?? null,
                 'event'      => $event,
                 'detail'     => $detail !== null ? mb_substr($detail, 0, 255) : null,
-                'ip_address' => service('request')->getIPAddress(),
+                'ip_address' => is_cli() ? null : service('request')->getIPAddress(),
                 'created_at' => date('Y-m-d H:i:s'),
             ]);
         } catch (\Throwable $e) {

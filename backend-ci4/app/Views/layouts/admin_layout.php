@@ -9,6 +9,9 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous" rel="stylesheet">
     <link href="/assets/css/admin-theme.css" rel="stylesheet">
+    <?php // The one stock status rule (ProductModel::getStatus), shared with the browser. ?>
+    <script>window.STOCK_RULE = <?= json_encode(\App\Models\ProductModel::statusRule()) ?>;</script>
+    <script src="/assets/js/stock-status.js"></script>
 </head>
 <body>
 <div class="d-flex app-shell">
@@ -174,5 +177,9 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
 <?php // Shared toast: specific title, bold item name, Undo, × / Esc. Set with App\Libraries\Toast. ?>
     <?= view('partials/_toast', ['toast' => session()->getFlashdata('toast')]) ?>
     <script src="/assets/js/toast-timer.js"></script>
+<?php // DSS recalculation in the background (weekly or "Recalculate now"): toast on whatever page the admin is on when it finishes. ?>
+    <?php $dssStatus = (new \App\Libraries\DssRunner())->status(false); ?>
+    <script>window.DSS_WATCH = <?= json_encode(['running' => $dssStatus['running'], 'lastFinished' => $dssStatus['last']['finished_at'] ?? '', 'statusUrl' => site_url('admin/dss/status')]) ?>;</script>
+    <script src="/assets/js/dss-watch.js"></script>
 </body>
 </html>

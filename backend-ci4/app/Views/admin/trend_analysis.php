@@ -231,7 +231,7 @@ foreach ($products as $p) {
     }
 
     .ta-segment button:focus-visible {
-        outline: 3px solid #71AA60;
+        outline: 3px solid var(--focus-ring);
         outline-offset: 2px;
     }
 
@@ -399,7 +399,7 @@ foreach ($products as $p) {
     }
 
     .abc-tab:focus-visible {
-        outline: 3px solid #71AA60;
+        outline: 3px solid var(--focus-ring);
         outline-offset: 2px;
     }
 

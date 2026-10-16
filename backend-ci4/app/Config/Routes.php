@@ -34,6 +34,7 @@ $routes->post('notification-action/(:num)/(:segment)/(:segment)', 'NotificationA
 
 $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'roleauth:Admin'], static function ($routes) {
     $routes->get('dashboard', 'DashboardController::index');
+    $routes->get('dss/status', 'DashboardController::dssStatus');
 
     $routes->get('inventory', 'InventoryController::index');
     $routes->post('inventory/store', 'InventoryController::store');

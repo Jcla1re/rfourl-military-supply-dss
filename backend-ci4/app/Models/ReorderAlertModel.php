@@ -164,9 +164,9 @@ class ReorderAlertModel extends Model
 
             $newRows[] = [
                 'item_id'          => $itemId,
-                'trigger_reason'   => $rop > 0
-                    ? "Stock ({$p['current_stock']}) at/below reorder point ({$rop})"
-                    : 'Out of stock — no demand history yet; review manually',
+                // Reorder Now always has ROP > 0 now: on hand 0 with ROP 0 is
+                // "Out of Stock" (no demand) and never raises an alert.
+                'trigger_reason'   => "Stock ({$p['current_stock']}) at/below reorder point ({$rop})",
                 'recommended_eoq'  => $computation['eoq_value'] ?? $fallbackEoq,
                 'stock_at_trigger' => (int) $p['current_stock'],
                 'status'           => 'Active',

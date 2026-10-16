@@ -10,7 +10,7 @@ $filterStatus = $status ?? '';
 $filterSearch = $search ?? '';
 $showArchived = ! empty($showArchived);
 $categories ??= \App\Models\ProductModel::CATEGORIES;
-$statuses ??= ['In Stock', 'Low Stock', 'Reorder Now'];
+$statuses ??= \App\Models\ProductModel::STATUSES;
 $suppliers ??= [];
 $lowStockCount ??= 0;
 $totalItems ??= 0;
@@ -18,6 +18,7 @@ $success ??= null;
 $error ??= null;
 $inStockCount ??= 0;
 $reorderCount ??= 0;
+$outOfStockCount ??= 0;
 $sizes ??= [];
 $products ??= [];
 ?>
@@ -105,7 +106,7 @@ $products ??= [];
     background: #dedbd3;
 }
 .inv-more-btn:focus-visible {
-    outline: 2px solid #5d965c;
+    outline: 3px solid var(--focus-ring);
     outline-offset: 2px;
 }
 
@@ -282,7 +283,7 @@ $products ??= [];
     transition: background-color 0.15s ease;
 }
 .im-close:hover { background: #F5F3EE; }
-.im-close:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; }
+.im-close:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
 .im-form { display: flex; flex-direction: column; min-height: 0; flex: 1; margin: 0; }
 .im-body { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 28px 24px; }
@@ -346,7 +347,7 @@ $products ??= [];
 }
 .im-chip:hover span { border-color: #71AA60; }
 .im-chip input:checked + span { background: #71AA60; border-color: #71AA60; color: #fff; }
-.im-chip input:focus-visible + span { outline: 3px solid #71AA60; outline-offset: 2px; }
+.im-chip input:focus-visible + span { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
 .im-margin {
     display: flex; align-items: center; gap: 8px;
@@ -370,7 +371,7 @@ $products ??= [];
 }
 .im-btn-archive:hover { background: #FDECEA; transform: translateY(-1px); }
 .im-btn-archive:active { transform: translateY(0); }
-.im-btn-archive:focus-visible { outline: 3px solid #B42318; outline-offset: 2px; }
+.im-btn-archive:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
 .im-foot {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -391,14 +392,14 @@ $products ??= [];
 }
 .im-btn-secondary:hover { background: #F5F3EE; transform: translateY(-1px); }
 .im-btn-secondary:active { transform: translateY(0); }
-.im-btn-secondary:focus-visible { outline: 3px solid #2C3A1E; outline-offset: 2px; }
+.im-btn-secondary:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .im-btn-danger {
     border: 1px solid #B42318; background: #B42318; color: #fff;
     transition: background-color 0.15s ease, transform 0.12s ease;
 }
 .im-btn-danger:hover { background: #912018; border-color: #912018; transform: translateY(-1px); }
 .im-btn-danger:active { transform: translateY(0); }
-.im-btn-danger:focus-visible { outline: 3px solid #2C3A1E; outline-offset: 2px; }
+.im-btn-danger:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
 #archiveConfirm { z-index: 1010; }
 .im-confirm { width: min(420px, 92vw); padding: 24px; }
@@ -443,7 +444,7 @@ $products ??= [];
     color: #3B5434; font-weight: 600; text-decoration: none; white-space: nowrap;
 }
 .archived-back:hover { color: #3B5434; text-decoration: underline; }
-.archived-back:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; border-radius: 4px; }
+.archived-back:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
 .archived-empty { padding: 40px 16px; text-align: center; }
 .archived-empty-icon {
     display: inline-flex; align-items: center; justify-content: center;
@@ -465,14 +466,14 @@ $products ??= [];
 }
 .btn-restore:hover { background: #F5F3EE; border-color: #71AA60; transform: translateY(-1px); }
 .btn-restore:active { transform: translateY(0); }
-.btn-restore:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; }
+.btn-restore:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 #restoreConfirm { z-index: 1010; }
 
 
 /* Summary cards are links: each applies its status filter. */
 a.stat-pill { text-decoration: none; cursor: pointer; transition: transform 0.12s ease, box-shadow 0.15s ease; }
 a.stat-pill:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(31, 38, 23, .08); }
-a.stat-pill:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; }
+a.stat-pill:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
 
 /* Below a 1340px-wide window the tab row is tighter still, and the Archived link shows
@@ -506,7 +507,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
 }
 .clear-filters[hidden] { display: none; }
 .clear-filters:hover { text-decoration: underline; color: #2C3A1E; }
-.clear-filters:focus-visible { outline: 3px solid #71AA60; outline-offset: 2px; border-radius: 4px; }
+.clear-filters:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
 
 /* Size filter: disabled ("No sizes") for categories without sized items. */
 .size-filter-wrap { display: inline-flex; }
@@ -541,6 +542,10 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                 <a href="<?= $statusUrl('In Stock') ?>" class="stat-pill green<?= $cardAttrs('In Stock') ?>"><i class="bi bi-check-square-fill"></i> In Stock: <?= esc((string) ($inStockCount ?? 0)) ?></a>
                 <a href="<?= $statusUrl('Low Stock') ?>" class="stat-pill amber<?= $cardAttrs('Low Stock') ?>"><i class="bi bi-lightning-fill"></i> Low Stock: <?= esc((string) ($lowStockCount ?? 0)) ?></a>
                 <a href="<?= $statusUrl('Reorder Now') ?>" class="stat-pill red<?= $cardAttrs('Reorder Now') ?>"><i class="bi bi-exclamation-triangle-fill"></i> Reorder Now: <?= esc((string) ($reorderCount ?? 0)) ?></a>
+                <?php // Only when there is at least one (the other three still add up to All Items); the Status filter always offers it. ?>
+                <?php if (($outOfStockCount ?? 0) > 0): ?>
+                <a href="<?= $statusUrl('Out of Stock') ?>" class="stat-pill gray<?= $cardAttrs('Out of Stock') ?>"><i class="bi bi-dash-circle-fill"></i> Out of Stock: <?= esc((string) $outOfStockCount) ?></a>
+                <?php endif; ?>
             </div>
             <button type="button" class="btn btn-success" id="openAddModal">
                 <i class="bi bi-plus-lg"></i> Add Item
@@ -703,7 +708,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                         <div class="im-field">
                             <label for="manual_rop_warning">Reorder point (ROP)</label>
                             <input id="manual_rop_warning" name="manual_rop_warning" type="number" min="0" step="1" value="0">
-                            <small class="im-help">You'll get an alert when stock reaches this number.</small>
+                            <small class="im-help">You'll get an alert when stock reaches this number. <?= esc(\App\Models\ProductModel::LOW_STOCK_HELP) ?></small>
                         </div>
                     </div>
                     <fieldset class="im-reason" id="stockReason" hidden>
@@ -953,15 +958,6 @@ function formValues() {
     };
 }
 
-// Same rule as ProductModel::getStatus() on the server.
-function stockStatus(stock, rop) {
-    if (stock <= 0) return ['Reorder Now', 'red'];
-    if (rop <= 0) return ['In Stock', 'green'];
-    if (stock <= rop) return ['Reorder Now', 'red'];
-    if (stock <= rop * 1.5) return ['Low Stock', 'amber'];
-    return ['In Stock', 'green'];
-}
-
 function refreshItemModal() {
     const stock = Number(stockInput.value || 0);
     const rop = Number(ropInput.value || 0);
@@ -970,6 +966,7 @@ function refreshItemModal() {
     const pill = document.getElementById('imStatus');
     pill.textContent = label;
     pill.className = 'status-pill ' + cls;
+    pill.title = stockStatusTitle(label); // Out of Stock explains itself
 
     // "Was 5 (+1)" + reason chips when On hand changes (Edit mode only).
     const stockHelp = document.getElementById('stockHelp');
@@ -1142,7 +1139,7 @@ function stockFill(v) {
     const stock = Number(v.current_stock) || 0;
     const target = (Number(v.manual_rop_warning) || 0) + (Number(v.eoq_value) || 0);
     const pct = stock <= 0 ? 0 : (target > 0 ? Math.min(100, Math.round(stock / target * 100)) : 100);
-    const cls = { 'Reorder Now': 'red', 'Low Stock': 'amber', 'Archived': 'archived' }[v.status_label] || 'green';
+    const cls = stockStatusColor(v.status_label); // assets/js/stock-status.js
     return { pct, cls, empty: stock <= 0 };
 }
 
@@ -1157,16 +1154,13 @@ function rowStatusText(row, selectedIndex, variants) {
     const status = row.dataset.rowStatus;
     const target = variants[+row.dataset.worstIndex];
     const differs = selectedIndex !== +row.dataset.worstIndex && target && target.size
-        && (status === 'Reorder Now' || status === 'Low Stock')
+        && (status === 'Reorder Now' || status === 'Low Stock' || status === 'Out of Stock')
         && !(status === 'Reorder Now' && variants[selectedIndex]?.status_label === 'Reorder Now' && !variants[selectedIndex]?.open_so);
     return { status, target, differs, badge: differs ? status + ' · ' + target.size : status };
 }
 
 function pillClassForStatus(label) {
-    if (label === 'Low Stock') return 'amber';
-    if (label === 'Reorder Now') return 'red';
-    if (label === 'Archived') return 'archived';
-    return 'green';
+    return stockStatusColor(label); // assets/js/stock-status.js
 }
 
 function applyVariantToRow(row, v) {
