@@ -63,11 +63,14 @@
         <div class="ar-card">
             <h5>2. Remove them from the system</h5>
             <p class="text-muted">This permanently deletes the <?= number_format($summary['receipts']) ?> receipts above. It cannot be undone, so make sure you have saved a copy if you need one.</p>
-            <form method="post" action="<?= site_url('admin/archive/purge') ?>" class="row g-2 align-items-end">
+            <form method="post" action="<?= site_url('admin/archive/purge') ?>" class="row g-2 align-items-end"
+                  data-confirm="This permanently deletes these sales records. It cannot be undone."
+                  data-confirm-title="Permanently remove sales records?"
+                  data-confirm-ok="Remove records" data-confirm-variant="danger">
                 <?= csrf_field() ?>
                 <div class="col-md-4"><label class="fw-bold mb-1 d-block">Type REMOVE</label><input class="form-control" name="confirm_text" autocomplete="off" required></div>
                 <div class="col-md-4"><label class="fw-bold mb-1 d-block">Your password</label><input class="form-control" type="password" name="current_password" autocomplete="current-password" required></div>
-                <div class="col-md-4"><button type="submit" class="btn btn-danger w-100" onclick="return confirm('Permanently remove these sales records?')">Remove old records</button></div>
+                <div class="col-md-4"><button type="submit" class="btn btn-danger w-100">Remove old records</button></div>
             </form>
         </div>
 

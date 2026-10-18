@@ -117,9 +117,12 @@ $archived  = $status === 'archived';
                             </form>
                         <?php else: ?>
                             <a href="<?= site_url('admin/suppliers/edit/' . $s['supplier_id']) ?>" class="edit-link">Edit</a>
-                            <?php $archiveWarning = 'Archive this supplier?' . ($s['has_portal'] ? ' Their portal account will be locked until you restore it.' : '')
-                                . ($s['open_orders'] > 0 ? ' They still have ' . $s['open_orders'] . ' open order(s).' : ''); ?>
-                            <form method="post" action="<?= site_url('admin/suppliers/delete/' . $s['supplier_id']) ?>" style="flex:1;" onsubmit="return confirm(<?= esc(json_encode($archiveWarning), 'attr') ?>);">
+                            <?php $archiveWarning = trim(($s['has_portal'] ? 'Their portal account will be locked until you restore it.' : '')
+                                . ($s['open_orders'] > 0 ? ' They still have ' . $s['open_orders'] . ' open order(s).' : '')) ?: 'You can restore this supplier later.'; ?>
+                            <form method="post" action="<?= site_url('admin/suppliers/delete/' . $s['supplier_id']) ?>" style="flex:1;"
+                                  data-confirm="<?= esc($archiveWarning, 'attr') ?>"
+                                  data-confirm-title="Archive <?= esc($s['company_name'], 'attr') ?>?"
+                                  data-confirm-ok="Archive" data-confirm-variant="danger">
                                 <?= csrf_field() ?>
                                 <button type="submit" class="archive-btn w-100">Archive</button>
                             </form>

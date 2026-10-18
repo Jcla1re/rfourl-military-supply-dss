@@ -199,6 +199,10 @@ class SettingsController extends BaseController
         if ($newPass !== $this->request->getPost('confirm_password')) {
             return redirect()->to($back)->with('error', 'Passwords do not match.');
         }
+        // Staff sign in by password alone, so it must be unique (never say whose it is).
+        if ($this->userModel->staffPasswordInUse((string) $newPass, (int) $user['user_id'])) {
+            return redirect()->to($back)->with('error', "This password can't be used. Please choose a different one.");
+        }
 
         $this->userModel->update((int) $user['user_id'], ['password_hash' => password_hash($newPass, PASSWORD_DEFAULT)]);
         SecurityLogModel::log('password_reset', null, 'staff: ' . $user['username'] . ' reset by owner');
@@ -245,6 +249,9 @@ class SettingsController extends BaseController
         if ($this->request->getPost('password') !== $confirm) {
             return redirect()->to('/admin/settings?tab=accounts')->with('error', 'Passwords do not match.');
         }
+        if ($this->userModel->staffPasswordInUse((string) $this->request->getPost('password'))) {
+            return redirect()->to('/admin/settings?tab=accounts')->with('error', "This password can't be used. Please choose a different one.");
+        }
 
         $this->userModel->insert([
             'username'      => $this->request->getPost('username'),
@@ -267,10 +274,31 @@ class SettingsController extends BaseController
             return redirect()->to('/admin/settings?tab=accounts')->with('error', 'Staff account not found.');
         }
 
+        // Reactivating must not recreate a shared password. Hashes can't be
+        // compared to each other, so this can only catch the known seeded
+        // default (see staff:check-passwords); the login-time check covers the rest.
+        if (! $user['is_active'] && $this->sharesDefaultPasswordWithActiveStaff($user)) {
+            return redirect()->to('/admin/settings?tab=accounts')->with(
+                'error',
+                "{$user['full_name']} can't be reactivated because their password matches another active staff member's. Reset their password first."
+            );
+        }
+
         $this->userModel->update((int) $userId, ['is_active' => $user['is_active'] ? 0 : 1]);
         SecurityLogModel::log($user['is_active'] ? 'account_deactivated' : 'account_reactivated', null, 'staff: ' . $user['username']);
 
         return redirect()->to('/admin/settings?tab=accounts')->with('success', $user['is_active'] ? 'Staff account deactivated.' : 'Staff account reactivated.');
+    }
+
+    private function sharesDefaultPasswordWithActiveStaff(array $user): bool
+    {
+        $default = \App\Database\Seeds\LegacyDataSeeder::DEFAULT_PASSWORD;
+
+        if (! password_verify($default, $user['password_hash'])) {
+            return false;
+        }
+
+        return $this->userModel->staffMatchingPassword($default, true, (int) $user['user_id']) !== [];
     }
 
     /**

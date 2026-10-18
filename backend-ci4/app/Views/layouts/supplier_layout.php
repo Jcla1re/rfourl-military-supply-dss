@@ -132,5 +132,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
 <?php // Shared toast: specific title, bold item name, Undo, × / Esc. Set with App\Libraries\Toast. ?>
     <?= view('partials/_toast', ['toast' => session()->getFlashdata('toast')]) ?>
     <script src="/assets/js/toast-timer.js"></script>
+    <?= view('partials/_confirm_modal') ?>
+    <script src="/assets/js/confirm-modal.js"></script>
 </body>
 </html>

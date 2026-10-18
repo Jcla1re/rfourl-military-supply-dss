@@ -6,6 +6,9 @@ use CodeIgniter\Database\Seeder;
 
 class LegacyDataSeeder extends Seeder
 {
+    /** Every seeded user starts on this password; staff:check-passwords looks for accounts still using it. */
+    public const DEFAULT_PASSWORD = 'Passw0rd!';
+
     private string $dataDir;
 
     /** @var array<int,string> */
@@ -112,7 +115,7 @@ class LegacyDataSeeder extends Seeder
     private function seedUsers(): void
     {
         $rows = $this->readCsv('02_users.csv');
-        $hash = password_hash('Passw0rd!', PASSWORD_DEFAULT);
+        $hash = password_hash(self::DEFAULT_PASSWORD, PASSWORD_DEFAULT);
         $data = [];
         foreach ($rows as $r) {
             $supId = self::intFromFloatString($r['supplier_id']);

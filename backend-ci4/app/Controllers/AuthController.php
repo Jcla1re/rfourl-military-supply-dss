@@ -67,7 +67,7 @@ class AuthController extends BaseController
         return redirect()->to('/admin/dashboard');
     }
 
-    // --- STAFF (each staff member signs in with their own username and password) ---
+    // --- STAFF (password only; each staff member has their own unique password, which identifies them) ---
     public function showStaffLogin()
     {
         return view('auth/login_staff');
@@ -80,26 +80,32 @@ class AuthController extends BaseController
             return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.")->with('attempted_role', 'staff');
         }
 
-        $username = $this->request->getPost('username');
         $password = $this->request->getPost('password');
 
-        if (trim((string) $username) === '' || (string) $password === '') {
+        if ((string) $password === '') {
             return redirect()->back()->with('error', 'Please fill in all fields')->with('attempted_role', 'staff');
         }
 
-        $user = $this->userModel->findByUsername(trim((string) $username));
+        // No username: the password identifies the staff member. Only active,
+        // non-removed Staff accounts are considered.
+        $matches = $this->userModel->staffMatchingPassword((string) $password, true);
 
-        // One generic failure for unknown, wrong-role, inactive, removed and
-        // wrong-password, so the form never reveals which usernames exist.
-        if (
-            ! $user
-            || $user['role'] !== 'Staff'
-            || ! $user['is_active']
-            || ! empty($user['deleted_at'])
-            || ! password_verify($password, $user['password_hash'])
-        ) {
+        if (count($matches) > 1) {
+            // Old data can leave two accounts on the same password. Letting
+            // either in could attribute sales to the wrong cashier, so nobody
+            // signs in until the owner resets one of them.
+            SecurityLogModel::log('login_blocked_shared_password', ['role' => 'Staff', 'username' => null], count($matches) . ' active staff accounts share this password');
+
+            return redirect()->back()
+                ->with('error', 'This password is shared by more than one staff account. Ask the owner to reset it.')
+                ->with('attempted_role', 'staff');
+        }
+
+        if (count($matches) === 0) {
             return $this->failLogin('staff');
         }
+
+        $user = $matches[0];
 
         $this->lockout->reset('staff');
         $this->logUserIn($user);

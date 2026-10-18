@@ -177,6 +177,8 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
 <?php // Shared toast: specific title, bold item name, Undo, × / Esc. Set with App\Libraries\Toast. ?>
     <?= view('partials/_toast', ['toast' => session()->getFlashdata('toast')]) ?>
     <script src="/assets/js/toast-timer.js"></script>
+    <?= view('partials/_confirm_modal') ?>
+    <script src="/assets/js/confirm-modal.js"></script>
 <?php // DSS recalculation in the background (weekly or "Recalculate now"): toast on whatever page the admin is on when it finishes. ?>
     <?php $dssStatus = (new \App\Libraries\DssRunner())->status(false); ?>
     <script>window.DSS_WATCH = <?= json_encode(['running' => $dssStatus['running'], 'lastFinished' => $dssStatus['last']['finished_at'] ?? '', 'statusUrl' => site_url('admin/dss/status')]) ?>;</script>

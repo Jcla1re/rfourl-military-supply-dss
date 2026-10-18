@@ -1096,3 +1096,26 @@ body {
 .notify-btn:active,
 .qa-btn.primary:active,
 .lt-submit:active { transform: translateY(0); }
+
+/* ===== Shared confirmation modal (partials/_confirm_modal.php + confirm-modal.js) ===== */
+.confirm-modal .modal-dialog { max-width: 420px; }
+.confirm-modal .modal-content {
+    border: 0;
+    border-radius: var(--radius-card);
+    box-shadow: 0 12px 36px rgba(28, 28, 28, 0.18);
+    font-family: inherit; /* follow the page font (theme body font) */
+}
+.confirm-modal .modal-body { padding: 28px 28px 8px; }
+.confirm-modal .modal-footer { border-top: 0; padding: 16px 28px 28px; gap: 12px; flex-wrap: nowrap; }
+.confirm-modal .modal-footer .btn { flex: 1 1 0; margin: 0; font-weight: var(--btn-font-weight); }
+.confirm-icon {
+    width: 56px; height: 56px; margin: 0 auto 16px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    background: var(--alert-bg); color: var(--text-dark);
+}
+.confirm-icon.danger  { background: var(--red-bg);   color: var(--red-text); }
+.confirm-icon.success { background: var(--green-bg); color: var(--green-text); }
+.confirm-title { font-weight: 700; margin-bottom: 8px; color: var(--text-dark); }
+.confirm-message { color: #6c757d; margin-bottom: 0; overflow-wrap: anywhere; }

@@ -40,35 +40,21 @@ final class LoginValidationTest extends CIUnitTestCase
         $result->assertSessionHas('error', 'Please fill in all fields');
     }
 
-    /**
-     * Staff now sign in with a username AND password, so either one missing
-     * is refused (the staff form used to be password-only).
-     */
-    public static function staffHalfFilled(): array
+    /** Staff sign in with a password alone, so a blank password is the only thing to refuse. */
+    public function testStaffLoginIsRefusedWithoutAPassword(): void
     {
-        return [
-            'username only' => ['cashier1', ''],
-            'password only' => ['', 'whatever1'],
-        ];
-    }
-
-    /**
-     * @dataProvider staffHalfFilled
-     */
-    public function testStaffNeedsBothUsernameAndPassword(string $username, string $password): void
-    {
-        $result = $this->post('login/staff', ['username' => $username, 'password' => $password]);
+        $result = $this->post('login/staff', ['password' => '']);
 
         $result->assertRedirect();
         $result->assertSessionHas('error', 'Please fill in all fields');
     }
 
-    public function testStaffLoginPageAsksForUsername(): void
+    public function testStaffLoginPageIsPasswordOnly(): void
     {
         $result = $this->get('login/staff');
 
         $result->assertOK();
-        $result->assertSeeElement('input[name=username]');
         $result->assertSeeElement('input[name=password]');
+        $result->assertDontSeeElement('input[name=username]');
     }
 }

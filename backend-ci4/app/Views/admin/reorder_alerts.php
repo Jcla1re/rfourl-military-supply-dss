@@ -74,7 +74,9 @@ $dss = $dss ?? [];
         <p class="text-muted small mb-3">Zero Stock + Still In Stock, At Reorder Point together equal Inventory's "Reorder Now" count. This page's "At Reorder Point" is unrelated to Inventory's separate "Low Stock" tier (<?= esc(\App\Models\ProductModel::LOW_STOCK_HELP) ?>) — those don't raise an alert yet. Items with no sales in the last 2 years and nothing on hand show as "Out of Stock" in Inventory and don't raise an alert either.</p>
 
         <?php if (!empty($alerts)): ?>
-            <form method="post" action="<?= site_url('admin/reorder-alerts/resolve-all') ?>" onsubmit="return confirm('Dismiss every pending alert without creating orders for them?');">
+            <form method="post" action="<?= site_url('admin/reorder-alerts/resolve-all') ?>" data-confirm="Every pending alert will be dismissed without creating orders for them."
+                  data-confirm-title="Dismiss all pending alerts?"
+                  data-confirm-ok="Dismiss all" data-confirm-variant="danger">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn btn-success">Dismiss All Pending</button>
             </form>
@@ -115,7 +117,9 @@ $dss = $dss ?? [];
                                 <button type="submit" class="btn btn-sm btn-outline-secondary">Acknowledge</button>
                             </form>
                         <?php endif; ?>
-                        <form method="post" action="<?= site_url('admin/reorder-alerts/dismiss/' . $alert['alert_id']) ?>" onsubmit="return confirm('Dismiss this alert without ordering?');">
+                        <form method="post" action="<?= site_url('admin/reorder-alerts/dismiss/' . $alert['alert_id']) ?>" data-confirm="This alert will be dismissed without creating an order."
+                              data-confirm-title="Dismiss <?= esc($alert['item_name'] ?? 'this item', 'attr') ?> alert?"
+                              data-confirm-ok="Dismiss" data-confirm-variant="primary">
                             <?= csrf_field() ?>
                             <button type="submit" class="btn btn-sm btn-outline-dark">Dismiss</button>
                         </form>

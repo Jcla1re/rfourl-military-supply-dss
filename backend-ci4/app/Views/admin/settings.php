@@ -214,11 +214,17 @@ $tabs = [
                         <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#resetStaffPwModal"
                                 data-action="<?= site_url('admin/settings/staff-accounts/password/' . $s['user_id']) ?>"
                                 data-name="<?= esc($s['full_name'], 'attr') ?>">Reset Password</button>
-                        <form method="post" action="<?= site_url('admin/settings/staff-accounts/toggle/' . $s['user_id']) ?>">
+                        <form method="post" action="<?= site_url('admin/settings/staff-accounts/toggle/' . $s['user_id']) ?>"
+                              data-confirm="<?= $s['is_active'] ? "They won't be able to sign in until you reactivate the account." : 'They will be able to sign in again with their password.' ?>"
+                              data-confirm-title="<?= ($s['is_active'] ? 'Deactivate ' : 'Reactivate ') . esc($s['full_name'], 'attr') ?>?"
+                              data-confirm-ok="<?= $s['is_active'] ? 'Deactivate' : 'Reactivate' ?>"
+                              data-confirm-variant="<?= $s['is_active'] ? 'danger' : 'success' ?>">
                             <?= csrf_field() ?>
                             <button type="submit" class="btn btn-sm <?= $s['is_active'] ? 'btn-maroon' : 'btn-success' ?>"><?= $s['is_active'] ? 'Deactivate' : 'Reactivate' ?></button>
                         </form>
-                        <form method="post" action="<?= site_url('admin/settings/staff-accounts/delete/' . $s['user_id']) ?>" onsubmit="return confirm('Remove this staff account? They will no longer be able to sign in. Their past sales and records will be kept.');">
+                        <form method="post" action="<?= site_url('admin/settings/staff-accounts/delete/' . $s['user_id']) ?>" data-confirm="They will no longer be able to sign in. Their past sales and records will be kept."
+                              data-confirm-title="Remove <?= esc($s['full_name'], 'attr') ?>?"
+                              data-confirm-ok="Remove" data-confirm-variant="danger">
                             <?= csrf_field() ?>
                             <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
                         </form>
@@ -301,7 +307,7 @@ $tabs = [
                 <div class="col-lg-6">
                     <div class="set-card h-100 mb-0">
                         <h5 class="fw-bold mb-2">Staff Passwords</h5>
-                        <p class="text-muted small mb-0">Each staff member signs in with their own username and password. Use <strong>Reset Password</strong> on their row above if they forget it.</p>
+                        <p class="text-muted small mb-0">Each staff member signs in with their own unique password. The system recognizes who is signing in by their password. Use <strong>Reset Password</strong> on their row if they forget it.</p>
                     </div>
                 </div>
             </div>
