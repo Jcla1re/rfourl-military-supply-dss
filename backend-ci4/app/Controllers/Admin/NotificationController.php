@@ -83,9 +83,8 @@ class NotificationController extends BaseController
 
     /**
      * Approving a staff password-reset request doesn't set a password here
-     * — it hands off to the existing "Change Staff Password" form under
-     * Settings > Security so the admin picks the new password themselves,
-     * the same way any other staff password change happens.
+     * — it hands off to the "Reset Password" button on that staff member's row under
+     * Settings > Manage Accounts so the admin picks the new password themselves.
      */
     public function approve(int $notificationId)
     {
@@ -97,8 +96,8 @@ class NotificationController extends BaseController
 
         $this->notificationModel->approveAccessRequest($notificationId);
 
-        return redirect()->to('/admin/settings?tab=security')
-            ->with('success', 'Request approved. Set a new password for the staff account below.');
+        return redirect()->to('/admin/settings?tab=accounts')
+            ->with('success', 'Request approved. Use Reset Password on their row below.');
     }
 
     public function decline(int $notificationId)

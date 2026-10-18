@@ -9,8 +9,7 @@ $staffAccounts = $staffAccounts ?? [];
 $tab = $tab ?? 'profile';
 $tabs = [
     'profile'  => 'My Profile',
-    'accounts' => 'User Account',
-    'security' => 'Security',
+    'accounts' => 'Manage Accounts',
     'notif'    => 'Notifications',
     'dss'      => 'DSS Parameter',
 ];
@@ -177,15 +176,14 @@ $tabs = [
 
             <?php $activeStaff = count(array_filter($staffAccounts, fn ($u) => ! empty($u['is_active']) && ($u['role'] ?? '') === 'Staff')); ?>
             <div class="set-quick">
-                <a href="<?= site_url('admin/settings?tab=accounts') ?>"><span class="ic"><i class="bi bi-people"></i></span><div><strong>User Accounts</strong><small><?= $activeStaff ?> active staff account<?= $activeStaff === 1 ? '' : 's' ?></small></div></a>
-                <a href="<?= site_url('admin/settings?tab=security') ?>"><span class="ic"><i class="bi bi-shield-lock"></i></span><div><strong>Security</strong><small>Change your owner password</small></div></a>
+                <a href="<?= site_url('admin/settings?tab=accounts') ?>"><span class="ic"><i class="bi bi-people"></i></span><div><strong>Manage Accounts</strong><small><?= $activeStaff ?> active staff &middot; passwords</small></div></a>
                 <a href="<?= site_url('admin/settings?tab=notif') ?>"><span class="ic"><i class="bi bi-bell"></i></span><div><strong>Notifications</strong><small>Choose which alerts you receive</small></div></a>
                 <a href="<?= site_url('admin/settings?tab=dss') ?>"><span class="ic"><i class="bi bi-sliders"></i></span><div><strong>DSS Parameter</strong><small>EOQ and ROP computation inputs</small></div></a>
             </div>
 
         <?php elseif ($tab === 'accounts'): ?>
-            <h4>User Accounts</h4>
-            <div class="set-hint">Manage staff access. Only the owner can add, edit, or deactivate account.</div>
+            <h4>Manage Accounts</h4>
+            <div class="set-hint">Manage staff access and account passwords. Only the owner can add, edit, or deactivate accounts.</div>
 
             <div class="set-card">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -283,29 +281,31 @@ $tabs = [
                 </div>
             </div>
 
-        <?php elseif ($tab === 'security'): ?>
-            <h4>Security</h4>
-            <div class="set-hint">Manage your password and session access</div>
-
-            <div class="set-card">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0">Owner Password</h5>
-                </div>
-                <form method="post" action="<?= site_url('admin/settings/owner-password') ?>">
-                    <?= csrf_field() ?>
-                    <div class="set-grid mb-3" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
-                        <div class="set-field"><label>Current Password</label><input name="current_password" type="password" required autocomplete="current-password"></div>
-                        <div class="set-field"><label>New Password</label><input name="new_password" type="password" placeholder="8+ characters, letter and number" required autocomplete="new-password"></div>
-                        <div class="set-field"><label>Confirm New Password</label><input name="confirm_password" type="password" required autocomplete="new-password"></div>
+            <h5 class="fw-bold mt-4 mb-3">Passwords</h5>
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <div class="set-card h-100 mb-0">
+                        <h5 class="fw-bold mb-3">Owner Password</h5>
+                        <form method="post" action="<?= site_url('admin/settings/owner-password') ?>">
+                            <?= csrf_field() ?>
+                            <div class="d-flex flex-column gap-3 mb-3">
+                                <div class="set-field"><label>Current Password</label><input name="current_password" type="password" required autocomplete="current-password"></div>
+                                <div class="set-field"><label>New Password</label><input name="new_password" type="password" placeholder="8+ characters, letter and number" required autocomplete="new-password"></div>
+                                <div class="set-field"><label>Confirm New Password</label><input name="confirm_password" type="password" required autocomplete="new-password"></div>
+                            </div>
+                            <div class="text-end"><button type="submit" class="btn btn-outline-dark">Change Password</button></div>
+                        </form>
                     </div>
-                    <div class="text-end"><button type="submit" class="btn btn-outline-dark">Change Password</button></div>
-                </form>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="set-card h-100 mb-0">
+                        <h5 class="fw-bold mb-2">Staff Passwords</h5>
+                        <p class="text-muted small mb-0">Each staff member signs in with their own username and password. Use <strong>Reset Password</strong> on their row above if they forget it.</p>
+                    </div>
+                </div>
             </div>
 
-            <div class="set-card">
-                <h5 class="fw-bold mb-2">Staff Passwords</h5>
-                <p class="text-muted small mb-0">Each staff member signs in with their own username and password. Use <strong>Reset Password</strong> on their row in User Accounts if they forget it.</p>
-            </div>
 
         <?php elseif ($tab === 'notif'): ?>
             <h4>Notification Preferences</h4>

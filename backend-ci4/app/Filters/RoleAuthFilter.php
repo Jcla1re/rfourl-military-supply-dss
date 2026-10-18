@@ -53,10 +53,13 @@ class RoleAuthFilter implements FilterInterface
         }
 
         if (! $active) {
+            $archived = $user && $user['role'] === 'Supplier' && $user['is_active'];
             $session->remove(['isLoggedIn', 'user_id', 'role', 'supplier_id']);
 
             return redirect()->to('/login/' . strtolower($requiredRole ?? 'admin'))
-                ->with('error', 'This account has been deactivated.');
+                ->with('error', $archived
+                    ? 'This supplier account is archived. Please contact the owner.'
+                    : 'This account has been deactivated.');
         }
 
         return null;

@@ -199,6 +199,11 @@ class StockOrderController extends BaseController
             return redirect()->back()->with('toast', Toast::error("Couldn't create order", 'Please select a supplier.'));
         }
 
+        $orderSupplier = $this->supplierModel->find($supplierId);
+        if (! $orderSupplier || ! $orderSupplier['is_active']) {
+            return redirect()->back()->with('toast', Toast::error("Couldn't create order", 'This supplier is archived. Restore it before sending an order.'));
+        }
+
         $lines = [];
         foreach ($itemIds as $i => $itemId) {
             if (! $itemId) {

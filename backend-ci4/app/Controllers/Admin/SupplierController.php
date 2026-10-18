@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\PasswordPolicy;
+use App\Libraries\Toast;
 use App\Models\DssParameterModel;
 use App\Models\SecurityLogModel;
 use App\Models\ProductModel;
@@ -27,8 +28,9 @@ class SupplierController extends BaseController
     public function index()
     {
         $search = $this->request->getGet('search');
+        $status = $this->request->getGet('status') === 'archived' ? 'archived' : 'active';
 
-        $builder = $this->supplierModel->where('is_active', 1);
+        $builder = $this->supplierModel->where('is_active', $status === 'archived' ? 0 : 1);
 
         if ($search) {
             $builder = $builder->like('company_name', $search);
@@ -36,16 +38,22 @@ class SupplierController extends BaseController
 
         $suppliers = $builder->orderBy('company_name', 'ASC')->findAll();
 
+        $stockOrderModel = new StockOrderModel();
+
         foreach ($suppliers as &$s) {
             $s['product_count'] = $this->productModel
                 ->where('supplier_id', $s['supplier_id'])
                 ->where('is_active', 1)
                 ->countAllResults();
-            $s['has_portal'] = (bool) $this->userModel->where('supplier_id', $s['supplier_id'])->first();
+            $portal = $this->userModel->where('supplier_id', $s['supplier_id'])->first();
+            $s['has_portal']      = (bool) $portal;
+            $s['portal_username'] = $portal['username'] ?? null;
+            $s['open_orders']     = $stockOrderModel->where('supplier_id', $s['supplier_id'])
+                ->whereNotIn('status', ['Delivered', 'Cancelled'])
+                ->countAllResults();
         }
         unset($s);
 
-        $stockOrderModel = new StockOrderModel();
         $pendingOrders   = $stockOrderModel->whereNotIn('status', ['Delivered', 'Cancelled'])->countAllResults();
         $avgLeadTime     = $suppliers ? round(array_sum(array_column($suppliers, 'lead_time_days')) / count($suppliers), 1) : 0;
 
@@ -57,6 +65,9 @@ class SupplierController extends BaseController
             'avgLeadTime'   => $avgLeadTime,
             'pendingOrders' => $pendingOrders,
             'search'        => $search ?? '',
+            'status'        => $status,
+            'activeCount'   => $this->supplierModel->where('is_active', 1)->countAllResults(),
+            'archivedCount' => $this->supplierModel->where('is_active', 0)->countAllResults(),
             'success'       => session()->getFlashdata('success'),
             'error'         => session()->getFlashdata('error'),
         ];
@@ -205,7 +216,34 @@ class SupplierController extends BaseController
         }
 
         $this->supplierModel->update($supplierId, ['is_active' => 0]);
+        SecurityLogModel::log('supplier_archived', null, $supplierId . ' ' . $supplier['company_name']);
 
-        return redirect()->to('/admin/suppliers')->with('success', 'Supplier archived.');
+        // The supplier's portal user is left as it is: RoleAuthFilter and the login both
+        // check the supplier's own flag, so the account is locked (and any open session
+        // ended) until the supplier is restored.
+        return redirect()->to('/admin/suppliers')->with('toast', Toast::success(
+            'Supplier archived',
+            'moved to Archived. Their portal account is locked until you restore it.',
+            $supplier['company_name'],
+            ['undo' => site_url('admin/suppliers/restore/' . rawurlencode((string) $supplierId))]
+        ));
+    }
+
+    public function restore($supplierId)
+    {
+        $supplier = $this->supplierModel->find($supplierId);
+
+        if (! $supplier) {
+            return redirect()->to('/admin/suppliers?status=archived')->with('error', 'Supplier not found.');
+        }
+
+        $this->supplierModel->update($supplierId, ['is_active' => 1]);
+        SecurityLogModel::log('supplier_restored', null, $supplierId . ' ' . $supplier['company_name']);
+
+        return redirect()->to('/admin/suppliers')->with('toast', Toast::success(
+            'Supplier restored',
+            'is active again. Their portal account can sign in.',
+            $supplier['company_name']
+        ));
     }
 }

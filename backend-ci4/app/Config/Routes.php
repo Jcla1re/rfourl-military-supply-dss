@@ -48,6 +48,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->post('suppliers/store', 'SupplierController::store');
     $routes->post('suppliers/update/(:segment)', 'SupplierController::update/$1');
     $routes->post('suppliers/delete/(:segment)', 'SupplierController::delete/$1');
+    $routes->post('suppliers/restore/(:segment)', 'SupplierController::restore/$1');
 
     $routes->get('orders', 'StockOrderController::index');
     $routes->get('orders/(:segment)', 'StockOrderController::show/$1');

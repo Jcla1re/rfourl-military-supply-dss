@@ -136,7 +136,11 @@ class AuthController extends BaseController
         }
         if (! $this->isAccountActive($user)) {
             SecurityLogModel::log('login_blocked_deactivated', $user);
-            return redirect()->back()->with('error', 'This account has been deactivated')->with('attempted_role', 'supplier');
+            $supplier = (new \App\Models\SupplierModel())->find($user['supplier_id']);
+            $message  = ($supplier && ! $supplier['is_active'])
+                ? 'This supplier account is archived. Please contact the owner.'
+                : 'This account has been deactivated';
+            return redirect()->back()->with('error', $message)->with('attempted_role', 'supplier');
         }
 
         $this->lockout->reset('supplier');
