@@ -178,7 +178,7 @@ $tabs = [
             <?php $activeStaff = count(array_filter($staffAccounts, fn ($u) => ! empty($u['is_active']) && ($u['role'] ?? '') === 'Staff')); ?>
             <div class="set-quick">
                 <a href="<?= site_url('admin/settings?tab=accounts') ?>"><span class="ic"><i class="bi bi-people"></i></span><div><strong>User Accounts</strong><small><?= $activeStaff ?> active staff account<?= $activeStaff === 1 ? '' : 's' ?></small></div></a>
-                <a href="<?= site_url('admin/settings?tab=security') ?>"><span class="ic"><i class="bi bi-shield-lock"></i></span><div><strong>Security</strong><small>Change owner or staff password</small></div></a>
+                <a href="<?= site_url('admin/settings?tab=security') ?>"><span class="ic"><i class="bi bi-shield-lock"></i></span><div><strong>Security</strong><small>Change your owner password</small></div></a>
                 <a href="<?= site_url('admin/settings?tab=notif') ?>"><span class="ic"><i class="bi bi-bell"></i></span><div><strong>Notifications</strong><small>Choose which alerts you receive</small></div></a>
                 <a href="<?= site_url('admin/settings?tab=dss') ?>"><span class="ic"><i class="bi bi-sliders"></i></span><div><strong>DSS Parameter</strong><small>EOQ and ROP computation inputs</small></div></a>
             </div>
@@ -209,21 +209,54 @@ $tabs = [
                         <div class="acct-avatar"><?= esc(strtoupper(substr($s['full_name'], 0, 1))) ?></div>
                         <div class="flex-grow-1">
                             <div class="acct-name"><?= esc($s['full_name']) ?></div>
-                            <div class="acct-email"><?= esc($s['email'] ?? $s['username']) ?></div>
+                            <div class="acct-email">@<?= esc($s['username']) ?><?= ! empty($s['email']) ? ' &middot; ' . esc($s['email']) : '' ?></div>
                         </div>
                         <span class="acct-role-pill">Staff</span>
                         <span class="status-pill <?= $s['is_active'] ? 'green' : 'red' ?>"><?= $s['is_active'] ? 'Active' : 'Inactive' ?></span>
+                        <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#resetStaffPwModal"
+                                data-action="<?= site_url('admin/settings/staff-accounts/password/' . $s['user_id']) ?>"
+                                data-name="<?= esc($s['full_name'], 'attr') ?>">Reset Password</button>
                         <form method="post" action="<?= site_url('admin/settings/staff-accounts/toggle/' . $s['user_id']) ?>">
                             <?= csrf_field() ?>
                             <button type="submit" class="btn btn-sm <?= $s['is_active'] ? 'btn-maroon' : 'btn-success' ?>"><?= $s['is_active'] ? 'Deactivate' : 'Reactivate' ?></button>
                         </form>
-                        <form method="post" action="<?= site_url('admin/settings/staff-accounts/delete/' . $s['user_id']) ?>" onsubmit="return confirm('Permanently delete this staff account? This cannot be undone. Accounts with sales, order, or inventory history can\'t be deleted — deactivate them instead.');">
+                        <form method="post" action="<?= site_url('admin/settings/staff-accounts/delete/' . $s['user_id']) ?>" onsubmit="return confirm('Remove this staff account? They will no longer be able to sign in. Their past sales and records will be kept.');">
                             <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
                         </form>
                     </div>
                 <?php endforeach; ?>
             </div>
+
+            <div class="modal fade" id="resetStaffPwModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form method="post" id="resetStaffPwForm" action="">
+                            <?= csrf_field() ?>
+                            <div class="modal-header">
+                                <h5 class="modal-title">Reset Password &mdash; <span id="resetStaffPwName"></span></h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="set-field mb-3"><label>New Password</label><input name="new_password" type="password" placeholder="8+ characters, letter and number" required autocomplete="new-password"></div>
+                                <div class="set-field"><label>Confirm Password</label><input name="confirm_password" type="password" placeholder="Re-enter password" required autocomplete="new-password"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">Update password</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <script>
+                document.getElementById('resetStaffPwModal').addEventListener('show.bs.modal', function (e) {
+                    var btn = e.relatedTarget;
+                    document.getElementById('resetStaffPwForm').action = btn.dataset.action;
+                    document.getElementById('resetStaffPwName').textContent = btn.dataset.name;
+                    this.querySelectorAll('input[type=password]').forEach(function (i) { i.value = ''; });
+                });
+            </script>
 
             <div class="modal fade" id="addStaffModal" tabindex="-1">
                 <div class="modal-dialog">
@@ -270,16 +303,8 @@ $tabs = [
             </div>
 
             <div class="set-card">
-                <h5 class="fw-bold mb-3">Staff Password</h5>
-                <p class="text-muted small">Staff share a single password to sign in to the POS terminal.</p>
-                <form method="post" action="<?= site_url('admin/settings/staff-password') ?>">
-                    <?= csrf_field() ?>
-                    <div class="set-grid mb-3">
-                        <div class="set-field"><label>New Password</label><input name="new_password" type="password" placeholder="8+ characters, letter and number"></div>
-                        <div class="set-field"><label>Confirm New Password</label><input name="confirm_password" type="password"></div>
-                    </div>
-                    <div class="text-end"><button type="submit" class="btn btn-outline-dark">Change Password</button></div>
-                </form>
+                <h5 class="fw-bold mb-2">Staff Passwords</h5>
+                <p class="text-muted small mb-0">Each staff member signs in with their own username and password. Use <strong>Reset Password</strong> on their row in User Accounts if they forget it.</p>
             </div>
 
         <?php elseif ($tab === 'notif'): ?>

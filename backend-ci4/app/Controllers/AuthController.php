@@ -67,7 +67,7 @@ class AuthController extends BaseController
         return redirect()->to('/admin/dashboard');
     }
 
-    // --- STAFF (password only, per your Figma design) ---
+    // --- STAFF (each staff member signs in with their own username and password) ---
     public function showStaffLogin()
     {
         return view('auth/login_staff');
@@ -80,19 +80,24 @@ class AuthController extends BaseController
             return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.")->with('attempted_role', 'staff');
         }
 
+        $username = $this->request->getPost('username');
         $password = $this->request->getPost('password');
 
-        if ((string) $password === '') {
+        if (trim((string) $username) === '' || (string) $password === '') {
             return redirect()->back()->with('error', 'Please fill in all fields')->with('attempted_role', 'staff');
         }
 
-        // Design simplification: looks up the single active Staff-role account.
-        // Flag to your panel if you expect multiple concurrent staff accounts.
-        $user = $this->userModel->where('role', 'Staff')
-                                 ->where('is_active', 1)
-                                 ->first();
+        $user = $this->userModel->findByUsername(trim((string) $username));
 
-        if (!$user || !password_verify($password, $user['password_hash'])) {
+        // One generic failure for unknown, wrong-role, inactive, removed and
+        // wrong-password, so the form never reveals which usernames exist.
+        if (
+            ! $user
+            || $user['role'] !== 'Staff'
+            || ! $user['is_active']
+            || ! empty($user['deleted_at'])
+            || ! password_verify($password, $user['password_hash'])
+        ) {
             return $this->failLogin('staff');
         }
 
@@ -204,7 +209,7 @@ class AuthController extends BaseController
         return redirect()->to('/');
     }
 
-    // --- FORGOT PASSWORD (Admin & Supplier only — Staff shares one password reset from Settings) ---
+    // --- FORGOT PASSWORD (Admin & Supplier only — the Owner resets a staff member's password from Settings > User Accounts) ---
 
     private const RESET_ROLES = ['admin' => 'Admin', 'supplier' => 'Supplier'];
 

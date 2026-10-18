@@ -38,7 +38,7 @@ class SettingsController extends BaseController
             'dssStarted'    => (bool) session()->getFlashdata('dss_started'),
             'notifPrefs'    => $this->notificationPreferenceModel->current(),
             'admin'         => $this->userModel->find(session()->get('user_id')),
-            'staffAccounts' => $this->userModel->where('role', 'Staff')->findAll(),
+            'staffAccounts' => $this->userModel->activeStaff()->findAll(),
             'success'       => session()->getFlashdata('success'),
             'error'         => session()->getFlashdata('error'),
         ];
@@ -173,15 +173,32 @@ class SettingsController extends BaseController
         return $this->changePasswordFor((int) $user['user_id'], 'owner');
     }
 
-    public function changeStaffPassword()
+    /**
+     * The Owner sets a new password for one staff member (no current password
+     * needed: this is the "forgot it" path). Removed accounts are refused.
+     */
+    public function resetStaffPassword($userId)
     {
-        $staff = $this->userModel->where('role', 'Staff')->first();
+        $back = '/admin/settings?tab=accounts';
+        $user = $this->userModel->activeStaff()->find((int) $userId);
 
-        if (! $staff) {
-            return redirect()->to('/admin/settings?tab=security')->with('error', 'No staff account found.');
+        if (! $user) {
+            return redirect()->to($back)->with('error', 'Staff account not found.');
         }
 
-        return $this->changePasswordFor((int) $staff['user_id'], 'staff');
+        $newPass = $this->request->getPost('new_password');
+
+        if ($error = PasswordPolicy::check($newPass)) {
+            return redirect()->to($back)->with('error', $error);
+        }
+        if ($newPass !== $this->request->getPost('confirm_password')) {
+            return redirect()->to($back)->with('error', 'Passwords do not match.');
+        }
+
+        $this->userModel->update((int) $user['user_id'], ['password_hash' => password_hash($newPass, PASSWORD_DEFAULT)]);
+        SecurityLogModel::log('password_reset', null, 'staff: ' . $user['username'] . ' reset by owner');
+
+        return redirect()->to($back)->with('success', "Password updated for {$user['full_name']}.");
     }
 
     private function changePasswordFor(int $userId, string $label)
@@ -239,9 +256,9 @@ class SettingsController extends BaseController
 
     public function deactivateStaff($userId)
     {
-        $user = $this->userModel->find((int) $userId);
+        $user = $this->userModel->activeStaff()->find((int) $userId);
 
-        if (! $user || $user['role'] !== 'Staff') {
+        if (! $user) {
             return redirect()->to('/admin/settings?tab=accounts')->with('error', 'Staff account not found.');
         }
 
@@ -252,19 +269,19 @@ class SettingsController extends BaseController
     }
 
     /**
-     * A real delete, not just deactivation — but only when the account has
-     * no sales, order, inventory, or notification history tied to it.
-     * Every FK referencing users.user_id is ON DELETE RESTRICT, so deleting
-     * an account with history would fail at the DB level anyway; this
-     * checks up front so the admin gets a clear explanation instead of a
-     * raw SQL error, and old receipts/records never lose their cashier.
+     * Removes a staff account. With no sales, order, inventory, or
+     * notification history it is a real delete. Every FK referencing
+     * users.user_id is ON DELETE RESTRICT, so an account WITH history is
+     * instead marked removed (deleted_at + inactive): it vanishes from the
+     * account list and can't sign in, but the row stays so old receipts,
+     * orders and logs keep the cashier's name.
      */
     public function deleteStaff($userId)
     {
         $userId = (int) $userId;
-        $user   = $this->userModel->find($userId);
+        $user   = $this->userModel->activeStaff()->find($userId);
 
-        if (! $user || $user['role'] !== 'Staff') {
+        if (! $user) {
             return redirect()->to('/admin/settings?tab=accounts')->with('error', 'Staff account not found.');
         }
 
@@ -276,14 +293,13 @@ class SettingsController extends BaseController
             || $db->table('notifications')->where('recipient_id', $userId)->countAllResults() > 0;
 
         if ($hasHistory) {
-            return redirect()->to('/admin/settings?tab=accounts')->with(
-                'error',
-                "{$user['full_name']} has sales, order, or inventory history and can't be deleted — deactivate the account instead so past records keep their cashier/handler."
-            );
+            $this->userModel->update($userId, ['deleted_at' => date('Y-m-d H:i:s'), 'is_active' => 0]);
+        } else {
+            $this->userModel->delete($userId);
         }
 
-        $this->userModel->delete($userId);
+        SecurityLogModel::log('account_removed', null, 'staff: ' . $user['username'] . ($hasHistory ? ' (kept, has history)' : ' (deleted)'));
 
-        return redirect()->to('/admin/settings?tab=accounts')->with('success', "{$user['full_name']}'s account was deleted.");
+        return redirect()->to('/admin/settings?tab=accounts')->with('success', "{$user['full_name']} was removed. Their past sales and records are kept.");
     }
 }

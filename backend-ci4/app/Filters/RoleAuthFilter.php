@@ -45,7 +45,7 @@ class RoleAuthFilter implements FilterInterface
         // archiving a supplier) cuts off that person immediately, not only at
         // their next login.
         $user = (new \App\Models\UserModel())->find((int) $session->get('user_id'));
-        $active = $user && $user['is_active'];
+        $active = $user && $user['is_active'] && empty($user['deleted_at']);
 
         if ($active && $user['role'] === 'Supplier') {
             $supplier = (new \App\Models\SupplierModel())->find($user['supplier_id']);

@@ -47,10 +47,17 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('staff');
                 <form action="/login/staff" method="post">
                     <?= csrf_field() ?>
                     <div class="field-group">
+                        <label>Username</label>
+                        <div class="input-icon-wrap">
+                            <i class="bi bi-person"></i>
+                            <input type="text" name="username" placeholder="Enter your username" autocomplete="username" required>
+                        </div>
+                    </div>
+                    <div class="field-group">
                         <label>Password</label>
                         <div class="input-icon-wrap">
                             <i class="bi bi-lock"></i>
-                            <input type="password" name="password" placeholder="Enter your password" required>
+                            <input type="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
                             <button type="button" class="pw-toggle" aria-label="Show password"><i class="bi bi-eye"></i></button>
                         </div>
                     </div>

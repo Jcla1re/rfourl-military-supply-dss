@@ -37,7 +37,7 @@ class EmailNotifier
      */
     public function toRole(string $role, string $subject, string $message): void
     {
-        $users = (new UserModel())->where('role', $role)->where('is_active', 1)->findAll();
+        $users = (new UserModel())->where('role', $role)->where('is_active', 1)->where('deleted_at', null)->findAll();
 
         foreach ($users as $user) {
             $this->toUser($user, $subject, $message);
@@ -70,7 +70,7 @@ class EmailNotifier
 
     public function toRoleHtml(string $role, string $subject, string $htmlMessage, string $plainTextFallback): void
     {
-        $users = (new UserModel())->where('role', $role)->where('is_active', 1)->findAll();
+        $users = (new UserModel())->where('role', $role)->where('is_active', 1)->where('deleted_at', null)->findAll();
 
         foreach ($users as $user) {
             $this->toUserHtml($user, $subject, $htmlMessage, $plainTextFallback);
