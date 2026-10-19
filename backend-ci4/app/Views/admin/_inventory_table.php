@@ -15,8 +15,8 @@
                 <col class="c-size">    <!-- Size -->
                 <col class="c-type">    <!-- Type -->
                 <col class="c-onhand">  <!-- On hand -->
-                <col class="c-rop">     <!-- ROP -->
-                <col class="c-eoq">     <!-- EOQ -->
+                <col class="c-rop">     <!-- Reorder At (ROP) -->
+                <col class="c-eoq">     <!-- Order Qty (EOQ) -->
                 <col class="c-stock">   <!-- Stock level -->
                 <col class="c-status">  <!-- Status -->
                 <col class="c-updated"> <!-- Last updated -->
@@ -29,11 +29,11 @@
                     <th class="col-center">Size</th>
                     <th>Type</th>
                     <th class="col-num">On Hand</th>
-                    <th class="col-num">ROP</th>
-                    <th class="col-num">EOQ</th>
-                    <th class="col-stock">Stock Level</th>
+                    <th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
+                    <th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('order_qty') ?></th>
+                    <th class="col-stock col-term">Stock Level</th>
                     <th>Status</th>
-                    <th>Last Updated</th>
+                    <th class="col-term">Last Updated</th>
                     <th class="col-actions">Actions</th>
                 </tr>
             </thead>

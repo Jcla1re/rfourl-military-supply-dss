@@ -38,8 +38,8 @@
             <div><span>Demand Lookback</span><strong><?= esc($dss['demand_lookback_days'] ?? 0) ?> days</strong></div>
         </div>
         <div class="pr-formula">
-            EOQ = √( 2 × D<sub>annual</sub> × S / H ) &middot; D<sub>annual</sub> = d × 365<br>
-            ROP = d × L + Safety stock &middot; SS = Z × &sigma;d × √L
+            Order Qty (EOQ) = √( 2 × D<sub>annual</sub> × S / H ) &middot; D<sub>annual</sub> = d × 365<br>
+            Reorder At (ROP) = d × L + Safety stock &middot; SS = Z × &sigma;d × √L
         </div>
     </div>
 
@@ -50,10 +50,10 @@
                     <th>Item Name</th>
                     <th>ABC</th>
                     <th>Stock</th>
-                    <th>ROP</th>
+                    <th><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
                     <th>Status</th>
                     <th>Safety Stock</th>
-                    <th>EOQ</th>
+                    <th><?= \App\Libraries\Glossary::labelWithTip('order_qty') ?></th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -63,7 +63,7 @@
                         <?php
                         $pillClass = \App\Models\ProductModel::statusColor($r['status']);
                         $statusLabel = match ($r['status']) {
-                            'Reorder Now'  => 'At ROP',
+                            'Reorder Now'  => 'Reorder Now',
                             'Low Stock'    => 'Approaching',
                             'Out of Stock' => 'Out of Stock',
                             default        => 'Sufficient',

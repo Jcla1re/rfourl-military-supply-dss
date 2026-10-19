@@ -60,7 +60,7 @@
         </div>
 
         <?php if (empty($alerts)): ?>
-            <div class="ra-empty">No reorder alerts right now. Alerts appear automatically once stock falls at or below an item's Reorder Point (ROP).</div>
+            <div class="ra-empty">No reorder alerts right now. Alerts appear automatically once stock falls to or below an item's Reorder At number.</div>
         <?php else: ?>
             <?php foreach ($alerts as $alert): ?>
                 <?php
@@ -87,7 +87,7 @@
                             <small>units</small>
                         </div>
                         <div class="ra-stat-box eoq">
-                            <span>EOQ Suggest</span>
+                            <span><?= \App\Libraries\Glossary::labelWithTip('order_qty') ?></span>
                             <strong><?= esc($alert['recommended_eoq'] ?? '—') ?></strong>
                             <small>units to order</small>
                         </div>

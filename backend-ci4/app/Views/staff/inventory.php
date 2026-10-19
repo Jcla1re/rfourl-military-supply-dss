@@ -64,18 +64,23 @@ a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
 .inv-table-card .data-table-wrap { overflow-x: visible; }
 .data-table.inv-table { width: 100%; table-layout: fixed; }
 .inv-table col.c-id      { width: 6%; }
-.inv-table col.c-size    { width: 6%; }
-.inv-table col.c-type    { width: 9.5%; }
+.inv-table col.c-size    { width: 68px; } /* size picker (48px) + padding */
+.inv-table col.c-type    { width: 116px; } /* "Accessories" (96px) + padding */
 .inv-table col.c-onhand  { width: 7.5%; }
-.inv-table col.c-rop     { width: 5.5%; }
-.inv-table col.c-stock   { width: 10%; }
-.inv-table col.c-status  { width: 14%; }   /* "Reorder Now · 2XL" */
-.inv-table col.c-updated { width: 10.5%; } /* "Sep 29, 2026" */
+.inv-table col.c-rop     { width: 6.8%; } /* fits "REORDER" (header breaks "Reorder / At (i)") */
+.inv-table col.c-stock   { width: 72px; } /* stock bar */
+.inv-table col.c-status  { width: 139px; } /* 10px + "Reorder Now" badge (115px) + 14px; 24px to the date */
+.inv-table col.c-updated { width: 124px; } /* widest date, "May 28, 2026" (104px) + padding */
 .inv-table col.c-actions { width: 12.5%; } /* "Notify Admin" */
 /* Item name: no width, so it gets the rest. */
 .inv-table th, .inv-table td { padding-left: 10px; padding-right: 10px; }
-.inv-table th.col-stock, .inv-table td.inv-bar-cell { padding-left: 24px; }
+.inv-table th.col-stock, .inv-table td.inv-bar-cell { padding-left: 14px; }
 .inv-table .stock-bar { width: 100%; max-width: 70px; }
+/* Dates never break ("Sep 29, / 2026"); the column fits the widest month. */
+.inv-table td.inv-updated-cell { white-space: nowrap; }
+/* Status right padding + Last Updated left padding = 24px between the badge and the date. */
+.inv-table td.inv-status-cell { padding-right: 14px; }
+.inv-table .status-size { display: block; margin-top: 3px; font-size: 11px; font-weight: 600; color: #5C6152; white-space: nowrap; }
 .inv-table .inv-size-select { width: 100%; }
 @media (max-width: 1400px) {
     .inv-table th, .inv-table td { padding-left: 8px; padding-right: 8px; }
@@ -86,13 +91,14 @@ a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
     .inv-table .status-pill { padding: 4px 10px; font-size: 11px; }
     .inv-table .notify-btn { padding: 6px 10px; font-size: 13px; }
     .inv-table col.c-id      { width: 6%; }
-    .inv-table col.c-size    { width: 6.2%; }
-    .inv-table col.c-type    { width: 8.8%; }
+    .inv-table col.c-size    { width: 64px; }
+    .inv-table col.c-type    { width: 94px; }
     .inv-table col.c-onhand  { width: 7%; }
-    .inv-table col.c-rop     { width: 5%; }
-    .inv-table col.c-stock   { width: 8.8%; }
-    .inv-table col.c-status  { width: 14.6%; }
-    .inv-table col.c-updated { width: 10%; }
+    .inv-table col.c-rop     { width: 6.8%; }
+    .inv-table col.c-stock   { width: 72px; }
+    .inv-table col.c-status  { width: 128px; } /* 8px + badge (104px) + 16px */
+    .inv-table td.inv-status-cell { padding-right: 16px; }
+    .inv-table col.c-updated { width: 100px; } /* "May 28, 2026" (84px) + padding */
     .inv-table col.c-actions { width: 13.6%; }
 }
 
@@ -388,6 +394,23 @@ function rowStatusText(row, selectedIndex, variants) {
 // (and the Notify Admin button's target) to that size's own real product
 // row — each size is independently stock-tracked, this is purely a display
 // switch, no page reload.
+// Status cell: the badge keeps the item's worst status; when it refers to a size other
+// than the selected one, that size goes on a small line under the badge ("Size 2XL"),
+// so the narrow Status column never has to fit "Reorder Now · 2XL" in one badge.
+function setStatusBadge(row, info) {
+    const cell = row.querySelector('.inv-status-cell');
+    const pill = cell && cell.querySelector('.status-pill');
+    if (!pill || info.status === 'Archived') return;
+    pill.textContent = info.status;
+    let size = cell.querySelector('.status-size');
+    if (info.differs) {
+        if (!size) { size = document.createElement('span'); size.className = 'status-size'; pill.after(size); }
+        size.textContent = 'Size ' + info.target.size;
+    } else if (size) {
+        size.remove();
+    }
+}
+
 function pillClassForStatus(label) {
     return stockStatusColor(label); // assets/js/stock-status.js
 }
@@ -418,7 +441,7 @@ document.addEventListener('change', event => {
         // if it needs it, otherwise for the size that does.
         syncSizeLabel(select);
         const info = rowStatusText(row, +select.value, variants);
-        row.querySelector('.inv-status-cell .status-pill').textContent = info.badge;
+        setStatusBadge(row, info);
 
         const notifyForm = row.querySelector('.notify-form');
         const notifyNone = row.querySelector('.notify-none');

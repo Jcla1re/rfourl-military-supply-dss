@@ -15,8 +15,8 @@
             </colgroup>
             <thead>
                 <tr>
-                    <th>Item ID</th><th>Item Name</th><th class="col-center">Size</th><th>Type</th><th class="col-num">On Hand</th><th class="col-num">ROP</th>
-                    <th class="col-stock">Stock Level</th><th>Status</th><th>Last Updated</th><th class="col-actions">Actions</th>
+                    <th>Item ID</th><th>Item Name</th><th class="col-center">Size</th><th>Type</th><th class="col-num">On Hand</th><th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
+                    <th class="col-stock col-term">Stock Level</th><th>Status</th><th class="col-term">Last Updated</th><th class="col-actions">Actions</th>
                 </tr>
             </thead>
             <tbody>

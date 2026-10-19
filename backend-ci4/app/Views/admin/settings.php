@@ -218,7 +218,7 @@ $tabs = [
             <div class="set-quick">
                 <a href="<?= site_url('admin/settings?tab=accounts') ?>"><span class="ic"><i class="bi bi-people"></i></span><div><strong>Manage Accounts</strong><small><?= $activeStaff ?> active staff &middot; passwords</small></div></a>
                 <a href="<?= site_url('admin/settings?tab=notif') ?>"><span class="ic"><i class="bi bi-bell"></i></span><div><strong>Notifications</strong><small>Choose which alerts you receive</small></div></a>
-                <a href="<?= site_url('admin/settings?tab=dss') ?>"><span class="ic"><i class="bi bi-sliders"></i></span><div><strong>DSS Parameter</strong><small>EOQ and ROP computation inputs</small></div></a>
+                <a href="<?= site_url('admin/settings?tab=dss') ?>"><span class="ic"><i class="bi bi-sliders"></i></span><div><strong>DSS Parameter</strong><small>Order Qty and Reorder At inputs</small></div></a>
                 <a href="<?= site_url('admin/settings?tab=records') ?>"><span class="ic"><i class="bi bi-archive"></i></span><div><strong>Data &amp; Records</strong><small>Old sales records &middot; export &amp; clean-up</small></div></a>
             </div>
 
@@ -362,8 +362,8 @@ $tabs = [
                 <?php
                 $notifPrefs = $notifPrefs ?? [];
                 $prefs = [
-                    ['rop_alerts', 'Reorder Point (ROP) Alerts', 'Notify when an item reaches its calculated ROP threshold'],
-                    ['low_stock_warnings', 'Low Stock Warnings (Approaching ROP)', 'Early warning before stock reaches the ROP. ' . \App\Models\ProductModel::LOW_STOCK_HELP],
+                    ['rop_alerts', 'Reorder At Alerts', 'Notify when an item reaches its Reorder At number'],
+                    ['low_stock_warnings', 'Low Stock Warnings (Approaching Reorder At)', 'Early warning before stock reaches the Reorder At number. ' . \App\Models\ProductModel::LOW_STOCK_HELP],
                     ['daily_sales_summary', 'Daily Sales Summary', "Receive a summary of the day's transactions every night at 9 PM"],
                     ['procurement_reminders', 'Procurement Schedule Reminders', 'Alert 2 days before a scheduled restock date'],
                     ['weekly_trend_report', 'Weekly Trend Report', 'Auto-generate and display a demand summary every Monday'],
@@ -388,7 +388,7 @@ $tabs = [
 
         <?php elseif ($tab === 'dss'): ?>
             <h4>DSS Parameter</h4>
-            <div class="set-hint">Configure the core EOQ and ROP computation inputs. Changes take effect on the next calculation.</div>
+            <div class="set-hint">Configure the inputs for Order Qty (EOQ) and Reorder At (ROP). Changes take effect on the next calculation.</div>
 
             <div class="dss-warning">
                 <i class="bi bi-exclamation-triangle fs-4"></i>
@@ -446,7 +446,7 @@ $tabs = [
                 <?= csrf_field() ?>
                 <div class="dss-cards">
                     <div class="set-card">
-                        <h5 class="fw-bold mb-3">EOQ Parameters</h5>
+                        <h5 class="fw-bold mb-3">Order Qty (EOQ) Parameters</h5>
                         <div class="set-field mb-3">
                             <label>Ordering Cost per Order (S) - ₱</label>
                             <input name="ordering_cost" type="number" step="0.01" min="0" value="<?= esc($dss['ordering_cost'] ?? 0) ?>" required>
@@ -460,12 +460,12 @@ $tabs = [
                         <div class="set-field mb-3">
                             <label>Minimum Order Quantity</label>
                             <input name="minimum_order_qty" type="number" min="1" value="<?= esc($dss['minimum_order_qty'] ?? 5) ?>" required>
-                            <small class="text-muted">EOQ floor. An item with no recorded demand (e.g. out of stock all period, or newly added) computes EOQ = 0 by formula alone — this ensures a reorder is still recommended.</small>
+                            <small class="text-muted">Order Qty floor. An item with no recorded demand (e.g. out of stock all period, or newly added) gets an Order Qty of 0 from the formula alone — this ensures a reorder is still recommended.</small>
                         </div>
-                        <div class="dss-formula">EOQ = √( 2 × D<sub>annual</sub> × S / H ) &middot; D<sub>annual</sub> = d × 365</div>
+                        <div class="dss-formula">Order Qty (EOQ) = √( 2 × D<sub>annual</sub> × S / H ) &middot; D<sub>annual</sub> = d × 365</div>
                     </div>
                     <div class="set-card">
-                        <h5 class="fw-bold mb-3">ROP Parameters</h5>
+                        <h5 class="fw-bold mb-3">Reorder At (ROP) Parameters</h5>
                         <div class="set-field mb-3">
                             <label>Default Service Level Target (%)</label>
                             <input name="service_level_target" type="number" step="0.01" min="0" max="100" value="<?= esc($dss['service_level_target'] ?? 95) ?>" required>
@@ -481,7 +481,7 @@ $tabs = [
                             <input name="demand_lookback_days" type="number" min="1" value="<?= esc($dss['demand_lookback_days'] ?? 90) ?>" required>
                             <small class="text-muted">How many days of past sales are used to compute avg demand.</small>
                         </div>
-                        <div class="dss-formula">ROP = d × L + Safety stock &middot; SS = Z × &sigma;d × √L</div>
+                        <div class="dss-formula">Reorder At (ROP) = d × L + Safety stock &middot; SS = Z × &sigma;d × √L</div>
                     </div>
                 </div>
                 <div class="text-end mt-3"><button type="submit" class="btn btn-success">Save Parameters</button></div>

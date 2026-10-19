@@ -122,18 +122,27 @@ $products ??= [];
 /* Sticky column header row. The page scrolls inside .main-scroll (the
    green header sits above it, outside the scroll area), so top: 0 places
    the row right under the green header. */
-.inv-table thead th {
+/* The whole header row is sticky (not each cell), so all header cells share one layer
+   and their backgrounds meet without hairline seams at fractional pixel positions. */
+.inv-table thead {
     position: sticky;
     top: 0;
     z-index: 5;
-    background: #ECEEE6;
+}
+.inv-table thead th {
+    --th-bg: #ECEEE6;
+    background: var(--th-bg);
 }
 .inv-table thead th:first-child { border-top-left-radius: var(--radius-control); }
 .inv-table thead th:last-child  { border-top-right-radius: var(--radius-control); }
+/* Stuck: one crisp 1px line under the header. (A blurred shadow on each header cell showed
+   as light vertical bands at every column edge and a pale strip over the first row.)
+   The 1px right-hand overlap is kept so neighbouring header cells meet without seams. */
 .inv-table.is-stuck thead th {
-    box-shadow: 0 1px 0 #E8E5DC, 0 4px 8px rgba(31, 38, 23, .06);
+    box-shadow: 1px 0 0 0 var(--th-bg), inset 0 -1px 0 #E8E5DC;
     border-radius: 0;
 }
+.inv-table.is-stuck thead th:last-child { box-shadow: inset 0 -1px 0 #E8E5DC; }
 .inv-table-card .data-table tbody tr:last-child td {
     border-bottom: 0;
 }
@@ -155,27 +164,41 @@ $products ??= [];
 .data-table.inv-table {
     width: 100%;
     table-layout: fixed;
+    /* Separate (zero-gap) borders: with collapsed borders the sticky header shows thin light
+       seams between header cells at fractional pixel positions (e.g. 125% display scaling).
+       Rows only have bottom borders, so the table looks the same. */
+    border-collapse: separate;
+    border-spacing: 0;
 }
 .inv-table col.c-id      { width: 5.7%; }
-.inv-table col.c-size    { width: 6%; }
-.inv-table col.c-type    { width: 9%; }
+.inv-table col.c-size    { width: 68px; } /* size picker (48px) + padding */
+.inv-table col.c-type    { width: 116px; } /* "Accessories" (96px) + padding */
 .inv-table col.c-onhand  { width: 7%; }
-.inv-table col.c-rop     { width: 5%; }
-.inv-table col.c-eoq     { width: 5%; }
-.inv-table col.c-stock   { width: 9.8%; }
-.inv-table col.c-status  { width: 13.7%; }  /* "Reorder Now · 2XL" */
-.inv-table col.c-updated { width: 10.5%; }  /* "Sep 29, 2026" */
+/* Reorder At / Order Qty: wide enough for "REORDER" on its own line (header breaks "Reorder / At (i)"). */
+.inv-table col.c-rop     { width: 6.8%; }
+.inv-table col.c-eoq     { width: 6.8%; }
+.inv-table col.c-stock   { width: 72px; } /* stock bar */
+.inv-table col.c-status  { width: 139px; } /* 10px + "Reorder Now" badge (115px) + 14px; 24px to the date */
+.inv-table col.c-updated { width: 124px; } /* widest date, "May 28, 2026" (104px) + padding */
 .inv-table col.c-actions { width: 12.7%; }  /* "View order" + ⋯ */
-/* Item name: no width set, so it gets the rest (~15.6%, ~187px at 1536px). */
+/* Item name: no width set, so it gets everything left over. Size, Type, Status,
+   Last Updated and Stock Level are sized to their content, so the room goes here. */
 .inv-table th,
 .inv-table td {
     padding-left: 10px;
     padding-right: 10px;
 }
 .inv-table .status-pill { white-space: nowrap; }
+/* Dates never break ("Sep 29, / 2026"); the column fits the widest month. */
+.inv-table td.inv-updated-cell { white-space: nowrap; }
+/* Status right padding + Last Updated left padding = 24px between the badge and the date. */
+.inv-table td.inv-status-cell { padding-right: 14px; }
+.inv-table .status-size { display: block; margin-top: 3px; font-size: 11px; font-weight: 600; color: #5C6152; white-space: nowrap; }
+/* The bar shrinks with its 72px column instead of keeping a fixed 70px. */
+.inv-table .stock-bar { width: 100%; max-width: 70px; }
 .inv-table th.col-stock,
 .inv-table td.inv-bar-cell {
-    padding-left: 28px; /* keep the bar off the EOQ number */
+    padding-left: 14px; /* keeps the bar off the Order Qty number */
 }
 .inv-table .inv-size-select {
     width: 100%;
@@ -222,20 +245,25 @@ $products ??= [];
 
 /* Smaller screens only (your 1536px+ view is unaffected): slightly more
    compact type and controls so every column still fits on one line. */
+/* ~1440px screens: 4px from Actions so longer names ("4S Blue With Patch") stay on one line. */
+@media (min-width: 1401px) and (max-width: 1500px) {
+    .inv-table col.c-actions { width: 12.35%; } /* 4px less than 12.7% on a ~1130px table (calc() is ignored on <col>) */
+}
 @media (max-width: 1400px) {
     /* Tighter cell padding (8px a side, not 12px) leaves Item name ~20%. */
     .inv-table th, .inv-table td { padding-left: 8px; padding-right: 8px; }
     .inv-table col.c-id      { width: 5.8%; }
-    .inv-table col.c-size    { width: 6.2%; }
-    .inv-table col.c-type    { width: 8.5%; }
+    .inv-table col.c-size    { width: 64px; }
+    .inv-table col.c-type    { width: 94px; }
     .inv-table col.c-onhand  { width: 6.8%; }
-    .inv-table col.c-rop     { width: 4.7%; }
-    .inv-table col.c-eoq     { width: 4.7%; }
-    .inv-table col.c-stock   { width: 8.5%; }
-    .inv-table col.c-status  { width: 14.4%; }
-    .inv-table col.c-updated { width: 9.9%; }
+    .inv-table col.c-rop     { width: 6.8%; }
+    .inv-table col.c-eoq     { width: 6.8%; }
+    .inv-table col.c-stock   { width: 72px; }
+    .inv-table col.c-status  { width: 128px; } /* 8px + badge (104px) + 16px */
+    .inv-table td.inv-status-cell { padding-right: 16px; }
+    .inv-table col.c-updated { width: 100px; } /* "May 28, 2026" (84px) + padding */
     .inv-table col.c-actions { width: 13.6%; }
-    /* Item name gets the rest: ~16.9%, ~174px at 1366px. */
+    /* Item name gets the rest. */
     .inv-table th { font-size: 11px; letter-spacing: .02em; white-space: nowrap; }
     .inv-table td { font-size: 13px; }
     .inv-table th.col-stock,
@@ -705,7 +733,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                             <small class="im-help" id="stockHelp">Current units in the store.</small>
                         </div>
                         <div class="im-field">
-                            <label for="manual_rop_warning">Reorder point (ROP)</label>
+                            <label for="manual_rop_warning"><?= esc(\App\Libraries\Glossary::label('reorder_at')) ?></label><?= \App\Libraries\Glossary::tip('reorder_at') ?>
                             <input id="manual_rop_warning" name="manual_rop_warning" type="number" min="0" step="1" value="0">
                             <small class="im-help">You'll get an alert when stock reaches this number. <?= esc(\App\Models\ProductModel::LOW_STOCK_HELP) ?></small>
                         </div>
@@ -1158,6 +1186,23 @@ function rowStatusText(row, selectedIndex, variants) {
     return { status, target, differs, badge: differs ? status + ' · ' + target.size : status };
 }
 
+// Status cell: the badge keeps the item's worst status; when it refers to a size other
+// than the selected one, that size goes on a small line under the badge ("Size 2XL"),
+// so the narrow Status column never has to fit "Reorder Now · 2XL" in one badge.
+function setStatusBadge(row, info) {
+    const cell = row.querySelector('.inv-status-cell');
+    const pill = cell && cell.querySelector('.status-pill');
+    if (!pill || info.status === 'Archived') return;
+    pill.textContent = info.status;
+    let size = cell.querySelector('.status-size');
+    if (info.differs) {
+        if (!size) { size = document.createElement('span'); size.className = 'status-size'; pill.after(size); }
+        size.textContent = 'Size ' + info.target.size;
+    } else if (size) {
+        size.remove();
+    }
+}
+
 function pillClassForStatus(label) {
     return stockStatusColor(label); // assets/js/stock-status.js
 }
@@ -1182,8 +1227,7 @@ function applyVariantToRow(row, v) {
     const variants = JSON.parse(row.dataset.variants || '[]');
     const selectedIndex = variants.findIndex(x => x.item_id === v.item_id);
     const info = rowStatusText(row, selectedIndex, variants);
-    const statusPill = row.querySelector('.inv-status-cell .status-pill');
-    if (statusPill && info.status !== 'Archived') statusPill.textContent = info.badge;
+    setStatusBadge(row, info);
 
     const orderBtn = row.querySelector('.open-order-modal');
     if (orderBtn) {

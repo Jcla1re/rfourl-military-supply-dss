@@ -715,7 +715,7 @@ foreach ($products as $p) {
                 </div>
                 <?php if (empty($variability)): ?>
                     <div class="text-muted small">No PDSS computations yet for this period's best sellers. This
-                        populates once EOQ/ROP has run for an item.</div>
+                        populates once Order Qty and Reorder At have been calculated for an item.</div>
                 <?php else: ?>
                     <table class="var-table">
                         <thead>

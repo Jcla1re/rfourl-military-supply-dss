@@ -685,7 +685,8 @@ body {
 .data-table-wrap { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; }
 .data-table th {
-    background: #e6e1da;
+    --th-bg: #e6e1da;
+    background: var(--th-bg);
     padding: 13px 10px;
     text-align: left;
     font-size: 12px;
@@ -1119,3 +1120,30 @@ body {
 .confirm-icon.success { background: var(--green-bg); color: var(--green-text); }
 .confirm-title { font-weight: 700; margin-bottom: 8px; color: var(--text-dark); }
 .confirm-message { color: #6c757d; margin-bottom: 0; overflow-wrap: anywhere; }
+
+/* Info icon with tooltip (App\Libraries\Glossary::tip(), assets/js/info-tip.js),
+   e.g. "Reorder At (i)" / "Order Qty (i)" in table headers. */
+.info-tip {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; margin-left: 4px; padding: 0; vertical-align: -3px;
+    border: 0; border-radius: 50%; background: none; color: #5C6152;
+    font-size: 14px; line-height: 1; cursor: help;
+}
+.info-tip i { font-size: 14px; line-height: 1; }
+.info-tip i::before { vertical-align: 0; }
+.info-tip:hover { color: #1F2617; }
+.info-tip:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+/* "Reorder At (i)" / "Order Qty (i)" headers may break onto two lines in narrow columns. */
+.term-tail { white-space: nowrap; }
+.inv-table th.col-term { white-space: normal; line-height: 1.3; }
+.info-tip-bubble {
+    position: fixed; z-index: 3000; max-width: 260px; padding: 8px 11px; border-radius: 8px;
+    background: #1F2617; color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.18);
+    font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 400; line-height: 1.45;
+    text-transform: none; letter-spacing: normal; text-align: left; white-space: normal; pointer-events: none;
+}
+
+/* Table header seams: at fractional pixel positions (e.g. 125% display scaling) two
+   neighbouring header cells' backgrounds don't quite meet and the card shows through as a
+   thin light line. Each header cell's background reaches 1px into its right neighbour. */
+.data-table thead th:not(:last-child) { box-shadow: 1px 0 0 0 var(--th-bg); }
