@@ -70,7 +70,6 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->get('archive/pdf', 'ArchiveController::pdf');
     $routes->get('archive/print', 'ArchiveController::print');
     $routes->post('archive/purge', 'ArchiveController::purge');
-    $routes->post('archive/later', 'ArchiveController::later');
 
     $routes->get('sales', 'SalesController::index');
     $routes->post('sales/checkout', 'SalesController::checkout');
@@ -80,6 +79,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->get('settings', 'SettingsController::index');
     $routes->post('settings/dss-parameters', 'SettingsController::updateDssParameters');
     $routes->post('settings/run-engine', 'SettingsController::runEngine');
+    $routes->post('settings/retention', 'SettingsController::updateRetention');
     $routes->post('settings/notification-preference', 'SettingsController::updateNotificationPreference');
     $routes->post('settings/account', 'SettingsController::updateAccount');
     $routes->post('settings/owner-password', 'SettingsController::changeOwnerPassword');

@@ -8,19 +8,24 @@ use App\Models\SecurityLogModel;
 use App\Models\UserModel;
 
 /**
- * The Owner's choice for sales that are 3+ years old: save a copy (PDF or
- * print) and remove them, remove without a copy, or keep them for now.
+ * Old Sales Records (opened from Settings > Data & Records or the bell): sales
+ * older than the retention period. The Owner can save a copy (PDF or print)
+ * and then remove them with their password.
  */
 class ArchiveController extends BaseController
 {
     public function index()
     {
+        $summary = SalesArchive::summary();
+
         return view('admin/archive', [
-            'title'   => 'Old Sales Records',
-            'active'  => 'trend_analysis',
-            'summary' => SalesArchive::summary(),
-            'success' => session()->getFlashdata('success'),
-            'error'   => session()->getFlashdata('error'),
+            'title'     => 'Old Sales Records',
+            'active'    => 'settings',
+            'summary'   => $summary,
+            'years'     => SalesArchive::years(),
+            'savedCopy' => $this->savedCopy($summary),
+            'success'   => session()->getFlashdata('success'),
+            'error'     => session()->getFlashdata('error'),
         ]);
     }
 
@@ -41,11 +46,14 @@ class ArchiveController extends BaseController
         $dompdf->loadHtml($html);
         $dompdf->render();
 
+        $file = 'sales-before-' . $summary['cutoff'] . '.pdf';
+        // Step 1 shows a check mark and this file name while the same records are listed.
+        session()->set('archive_copy', ['file' => $file, 'cutoff' => $summary['cutoff'], 'receipts' => $summary['receipts']]);
         SecurityLogModel::log('archive_pdf_saved', null, "sales before {$summary['cutoff']}: {$summary['receipts']} receipts");
 
         return $this->response
             ->setHeader('Content-Type', 'application/pdf')
-            ->setHeader('Content-Disposition', 'attachment; filename="sales-before-' . $summary['cutoff'] . '.pdf"')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $file . '"')
             ->setBody($dompdf->output());
     }
 
@@ -65,27 +73,29 @@ class ArchiveController extends BaseController
     {
         $user = (new UserModel())->find((int) session()->get('user_id'));
 
-        if (trim((string) $this->request->getPost('confirm_text')) !== 'REMOVE') {
-            return redirect()->to('/admin/archive')->with('error', 'Type REMOVE to confirm.');
-        }
-
         if (! $user || ! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
             SecurityLogModel::log('archive_purge_failed', null, 'wrong current password');
+
             return redirect()->to('/admin/archive')->with('error', 'Current password is incorrect.');
         }
 
-        $summary = SalesArchive::summary();
+        $years   = SalesArchive::years();
+        $cutoff  = SalesArchive::cutoff();
         $removed = SalesArchive::purge();
-        SecurityLogModel::log('archive_purged', null, "removed {$removed} receipts dated before " . ($summary['cutoff'] ?? SalesArchive::cutoff()));
+        SecurityLogModel::log('archive_purged', null, "removed {$removed} receipts dated before {$cutoff}");
+        session()->remove('archive_copy');
+        SalesArchive::syncNotification(); // the bell notice goes away once nothing is past the period
 
-        return redirect()->to('/admin/archive')->with('success', "Removed {$removed} sales records older than " . SalesArchive::YEARS . ' years.');
+        return redirect()->to('/admin/archive')->with('success', "Removed {$removed} sales records older than {$years} years.");
     }
 
-    /** "Remind me later": hides the notice for the rest of today. */
-    public function later()
+    /** The PDF saved this session for exactly these records, or null. */
+    private function savedCopy(?array $summary): ?array
     {
-        session()->set('archive_snoozed_on', date('Y-m-d'));
+        $copy = session()->get('archive_copy');
 
-        return redirect()->back();
+        return $summary && is_array($copy) && $copy['cutoff'] === $summary['cutoff'] && (int) $copy['receipts'] === (int) $summary['receipts']
+            ? $copy
+            : null;
     }
 }

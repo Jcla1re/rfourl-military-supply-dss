@@ -12,11 +12,11 @@ $tabs = [
     'accounts' => 'Manage Accounts',
     'notif'    => 'Notifications',
     'dss'      => 'DSS Parameter',
+    'records'  => 'Data & Records',
 ];
 ?>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
 /* Tabs row (bottom of header) */
 .set-tabs {
@@ -52,7 +52,7 @@ $tabs = [
 .set-tabs a.active {
     background: #F3F1EB;
     color: #1E2616;
-    font-weight: 500;
+    font-weight: 600;
     border: none;
 }
 
@@ -69,6 +69,46 @@ $tabs = [
 .set-quick small { color: #777; font-size: 12px; }
 .set-body h4 { font-weight: 800; }
 .set-hint { color: #666; margin-bottom: 20px; }
+/* Data & Records tab (exact design spec). Poppins like the rest of the app. */
+.rec-tab { font-family: 'Poppins', sans-serif; }
+.rec-tab h4, .rec-tab h5, .rec-tab label { font-family: inherit; }
+.set-body .rec-page-title { font-size: 30px; font-weight: 700; color: #1F2617; margin: 0; }
+.rec-page-sub { font-size: 14px; color: #5C6152; margin: 4px 0 20px; }
+.rec-card { background: #FFFFFF; border: 1px solid #E8E5DC; border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; box-shadow: none; }
+.rec-title { font-size: 19px; font-weight: 600; color: #1F2617; margin: 0; line-height: 1.3; }
+.rec-desc { font-size: 14px; color: #5C6152; line-height: 1.55; margin: 4px 0 0; }
+.rec-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; }
+.rec-text { flex: 1 1 320px; min-width: 0; max-width: 560px; }
+.rec-controls { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.rec-select {
+    width: 290px; height: 46px; padding: 0 40px 0 14px; font-size: 15px; /* fits "Keep 10 years (recommended)" */
+    border: 1px solid #D6D2C6; border-radius: 10px; color: #1F2617;
+    background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%235C6152' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 14px center;
+    font-family: 'Poppins', sans-serif; appearance: none; -webkit-appearance: none; -moz-appearance: none; cursor: pointer;
+}
+.rec-select:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.rec-btn {
+    display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 18px;
+    border: 0; border-radius: 10px; background: #71AA60; color: #fff; font-family: 'Poppins', sans-serif;
+    font-size: 15px; font-weight: 600; text-decoration: none; white-space: nowrap; cursor: pointer;
+    transition: background-color .15s ease;
+}
+.rec-btn:hover { background: #5F9850; color: #fff; }
+.rec-btn:active { background: #4F8542; }
+.rec-btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.rec-btn:disabled { background: #E8E5DC; color: #8A8D7E; cursor: not-allowed; }
+/* Old sales records: yellow box when some are due, neutral box when none. */
+.rec-box { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 16px; margin-top: 16px; padding: 18px 20px; border-radius: 12px; }
+.rec-box.is-due { background: #FFF8E6; border: 1px solid #F3E2B3; }
+.rec-box.is-clear { background: #F5F3EE; }
+.rec-box-ic { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.rec-box.is-due .rec-box-ic { background: #FFF0C7; color: #7A5300; }
+.rec-box.is-clear .rec-box-ic { background: #EAF1E3; color: #3B5434; }
+.rec-box-ic i { line-height: 1; }
+.rec-box-ic i::before { vertical-align: 0; }
+.rec-box-text { flex: 1 1 260px; min-width: 0; }
+.rec-box-title { font-size: 16px; font-weight: 600; color: #1F2617; margin: 0; }
+.rec-box-sub { font-size: 14px; color: #5C6152; margin: 2px 0 0; line-height: 1.5; }
 
 .set-card { background: #fff; border-radius: var(--radius-card); padding: 22px 26px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 20px; }
 .set-profile-head { display: flex; align-items: center; gap: 18px; }
@@ -179,6 +219,7 @@ $tabs = [
                 <a href="<?= site_url('admin/settings?tab=accounts') ?>"><span class="ic"><i class="bi bi-people"></i></span><div><strong>Manage Accounts</strong><small><?= $activeStaff ?> active staff &middot; passwords</small></div></a>
                 <a href="<?= site_url('admin/settings?tab=notif') ?>"><span class="ic"><i class="bi bi-bell"></i></span><div><strong>Notifications</strong><small>Choose which alerts you receive</small></div></a>
                 <a href="<?= site_url('admin/settings?tab=dss') ?>"><span class="ic"><i class="bi bi-sliders"></i></span><div><strong>DSS Parameter</strong><small>EOQ and ROP computation inputs</small></div></a>
+                <a href="<?= site_url('admin/settings?tab=records') ?>"><span class="ic"><i class="bi bi-archive"></i></span><div><strong>Data &amp; Records</strong><small>Old sales records &middot; export &amp; clean-up</small></div></a>
             </div>
 
         <?php elseif ($tab === 'accounts'): ?>
@@ -445,6 +486,62 @@ $tabs = [
                 </div>
                 <div class="text-end mt-3"><button type="submit" class="btn btn-success">Save Parameters</button></div>
             </form>
+
+        <?php elseif ($tab === 'records'): ?>
+            <div class="rec-tab">
+            <h4 class="rec-page-title">Data &amp; Records</h4>
+            <p class="rec-page-sub">Keep sales history tidy. Old records can be saved as PDF before they are removed.</p>
+
+            <div class="rec-card">
+                <form method="post" action="<?= site_url('admin/settings/retention') ?>" class="rec-row" id="retentionForm">
+                    <?= csrf_field() ?>
+                    <div class="rec-text">
+                        <h5 class="rec-title"><label for="retentionYears" class="m-0">Retention period</label></h5>
+                        <p class="rec-desc" id="retentionHelp">Sales records older than this can be saved as PDF and removed.<br>Check BIR record-keeping requirements before lowering this.</p>
+                    </div>
+                    <div class="rec-controls">
+                        <select id="retentionYears" name="retention_years" class="rec-select" aria-describedby="retentionHelp" data-saved="<?= $retentionYears ?>">
+                            <?php foreach ($retentionOptions as $y): ?>
+                                <option value="<?= $y ?>" <?= $y === $retentionYears ? 'selected' : '' ?>>Keep <?= $y ?> years<?= $y === $retentionDefault ? ' (recommended)' : '' ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="submit" class="rec-btn" id="retentionSave" disabled>Save</button>
+                    </div>
+                </form>
+                <script>
+                (function () {
+                    // Save turns on only when the choice differs from the saved one.
+                    const sel = document.getElementById('retentionYears');
+                    const btn = document.getElementById('retentionSave');
+                    const sync = () => { btn.disabled = sel.value === sel.dataset.saved; };
+                    sel.addEventListener('change', sync);
+                    window.addEventListener('pageshow', () => { sel.value = sel.dataset.saved; sync(); });
+                })();
+                </script>
+            </div>
+
+            <div class="rec-card">
+                <h5 class="rec-title">Old sales records</h5>
+                <?php if ($oldRecords === 0 || empty($oldRange)): ?>
+                    <div class="rec-box is-clear">
+                        <span class="rec-box-ic" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                        <div class="rec-box-text">
+                            <p class="rec-box-title">No sales records are older than <?= $retentionYears ?> years</p>
+                            <p class="rec-box-sub">All sales history is kept. Nothing to do.</p>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="rec-box is-due">
+                        <span class="rec-box-ic" aria-hidden="true"><i class="bi bi-database"></i></span>
+                        <div class="rec-box-text">
+                            <p class="rec-box-title"><?= number_format($oldRecords) ?> sales records are older than <?= $retentionYears ?> years</p>
+                            <p class="rec-box-sub">Sales from <?= esc(date('Y', strtotime($oldRange['first']))) ?> to <?= esc(date('M j, Y', strtotime($oldRange['last']))) ?>. Review them to save a copy or remove them.</p>
+                        </div>
+                        <a href="<?= site_url('admin/archive') ?>" class="rec-btn">Review records</a>
+                    </div>
+                <?php endif; ?>
+            </div>
+            </div>
         <?php endif; ?>
     </div>
 </div>

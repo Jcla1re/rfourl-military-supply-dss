@@ -10,7 +10,6 @@
 <?php $tab = $tab ?? 'pos'; ?>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
 .pos-tabs {
     display: flex;
@@ -197,7 +196,6 @@
         <a href="?tab=receipts" class="<?= $tab === 'receipts' ? 'active' : '' ?>">Sales &amp; Receipts</a>
     </div>
 
-    <?php if ($tab === 'receipts'): ?><?= view('admin/_archive_notice', ['archiveNotice' => $archiveNotice ?? null]) ?><?php endif; ?>
 
     <?php if ($tab === 'pos'): ?>
         <?php $groups = $groups ?? []; ?>

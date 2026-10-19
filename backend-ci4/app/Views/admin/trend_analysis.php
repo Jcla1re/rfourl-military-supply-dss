@@ -79,7 +79,6 @@ foreach ($products as $p) {
 <?= $this->section('content') ?>
 
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
     .page-wrap.ta-page {
         font-family: 'Poppins', sans-serif;
@@ -530,7 +529,6 @@ foreach ($products as $p) {
     $changePct = $changePct ?? null;
     $changeDir = $changePct === null ? 'flat' : ($changePct > 0.05 ? 'up' : ($changePct < -0.05 ? 'down' : 'flat'));
     ?>
-    <?= view('admin/_archive_notice', ['archiveNotice' => $archiveNotice ?? null]) ?>
     <div class="row g-3 mb-1">
         <div class="col-sm-6 col-xl-3">
             <div class="ta-card">

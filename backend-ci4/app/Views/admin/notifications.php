@@ -125,13 +125,14 @@ $unreadCount = $unreadCount ?? 0;
                     $isDamagedLost => 'bi-exclamation',
                     $n['category'] === 'access_request' => 'bi-exclamation',
                     $n['category'] === 'order_status' => 'bi-clipboard-check',
+                    $n['category'] === 'sales_records' => 'bi-archive',
                     default => 'bi-bell',
                 };
                 ?>
 
                 <?php $isRead = !empty($n['is_read']); ?>
 
-                <?php if ($n['category'] === 'order_status'): ?>
+                <?php if (in_array($n['category'], ['order_status', 'sales_records'], true)): // opens its link ?>
                     <form method="post" action="<?= site_url('admin/notifications/open/' . $n['notification_id']) ?>" class="notif-card-openform">
                         <?= csrf_field() ?>
                         <button type="submit" class="notif-card-open <?= $isRead ? 'is-read' : '' ?>">

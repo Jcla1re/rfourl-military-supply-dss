@@ -138,7 +138,7 @@
 
 body {
     background-color: var(--content-bg);
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Poppins', 'Segoe UI', sans-serif; /* loaded once in each layout (400/500/600/700) */
     color: var(--text-dark);
     margin: 0;
 }

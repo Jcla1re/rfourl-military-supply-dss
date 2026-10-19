@@ -13,7 +13,6 @@ $statuses = $statuses ?? \App\Models\ProductModel::STATUSES;
 ?>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
 .page-wrap { font-family: 'Poppins', sans-serif; }
 

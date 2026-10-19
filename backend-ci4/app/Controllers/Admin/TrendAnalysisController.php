@@ -3,7 +3,6 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use App\Libraries\SalesArchive;
 use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
 use App\Models\SalesItemModel;
@@ -155,7 +154,6 @@ class TrendAnalysisController extends BaseController
             'title' => 'Trend Analysis',
             'active' => 'trend_analysis',
             'years' => $this->yearsWithSales(),
-            'archiveNotice' => SalesArchive::notice(),
             'selectedYear' => $year,
             'products' => $products,
             'selectedItem' => $itemId,

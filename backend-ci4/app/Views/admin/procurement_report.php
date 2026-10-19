@@ -24,6 +24,8 @@
 .pr-order-btn {
     border: 1px solid #333; background: #fff; border-radius: var(--radius-control); padding: 8px 14px; font-weight: 700; cursor: pointer;
 }
+/* Short column headers stay on one line ("Safety Stock" wrapped with Poppins at 1366px). */
+.page-panel .data-table th { white-space: nowrap; }
 </style>
 
 <div class="page-wrap">

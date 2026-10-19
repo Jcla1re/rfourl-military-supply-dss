@@ -200,5 +200,14 @@ class Database extends Config
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';
         }
+
+        // Every MySQLi group uses the app's MySQLi driver, which sets the
+        // session time zone to the app's (Asia/Manila) on connect. Done
+        // here so it applies even when .env says "DBDriver = MySQLi".
+        foreach (get_object_vars($this) as $name => $group) {
+            if (is_array($group) && ($group['DBDriver'] ?? null) === 'MySQLi') {
+                $this->{$name}['DBDriver'] = 'App\Database\MySQLi';
+            }
+        }
     }
 }

@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\DssRunner;
+use App\Libraries\SalesArchive;
 use App\Libraries\PasswordPolicy;
 use App\Libraries\Toast;
 use App\Models\SecurityLogModel;
@@ -47,6 +48,15 @@ class SettingsController extends BaseController
             'success'       => session()->getFlashdata('success'),
             'error'         => session()->getFlashdata('error'),
         ];
+
+        if ($tab === 'records') {
+            SalesArchive::syncNotification();
+            $data['retentionYears']   = SalesArchive::years();
+            $data['retentionOptions'] = SalesArchive::YEAR_OPTIONS;
+            $data['retentionDefault'] = SalesArchive::DEFAULT_YEARS;
+            $data['oldRecords']       = SalesArchive::count();
+            $data['oldRange']         = SalesArchive::range();
+        }
 
         return view('admin/settings', $data);
     }
@@ -96,6 +106,24 @@ class SettingsController extends BaseController
         $session->close();
 
         return redirect()->to('/admin/settings?tab=dss');
+    }
+
+    /** Settings > Data & Records: how many years sales records are kept (3 / 5 / 7 / 10). */
+    public function updateRetention()
+    {
+        $years = (int) $this->request->getPost('retention_years');
+        if (! in_array($years, SalesArchive::YEAR_OPTIONS, true)) {
+            return redirect()->to('/admin/settings?tab=records')->with('error', 'Choose 3, 5, 7 or 10 years.');
+        }
+
+        $before = SalesArchive::years();
+        SalesArchive::setYears($years, (int) session()->get('user_id'));
+        SalesArchive::syncNotification();
+        if ($before !== $years) {
+            SecurityLogModel::log('retention_changed', null, "sales retention {$before} -> {$years} years");
+        }
+
+        return redirect()->to('/admin/settings?tab=records')->with('toast', Toast::success('Retention period saved', "Sales records are kept for {$years} years."));
     }
 
     public function updateDssParameters()

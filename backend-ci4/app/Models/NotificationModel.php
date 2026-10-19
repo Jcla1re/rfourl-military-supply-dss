@@ -25,7 +25,7 @@ class NotificationModel extends Model
         'action_token',
     ];
 
-    public const CATEGORIES = ['order_status', 'staff_activity', 'access_request'];
+    public const CATEGORIES = ['order_status', 'staff_activity', 'access_request', 'sales_records'];
 
     protected $useTimestamps = false;
     protected $createdField  = 'created_at';

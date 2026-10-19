@@ -4,7 +4,6 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\PosPricing;
-use App\Libraries\SalesArchive;
 use App\Models\InventoryLogModel;
 use App\Models\ProductModel;
 use App\Models\SalesItemModel;
@@ -57,7 +56,6 @@ class SalesController extends BaseController
             $weekRange    = $this->salesTransactionModel->weeklyTotals();
 
             $data['transactions'] = $transactions;
-            $data['archiveNotice'] = SalesArchive::notice();
             $data['date']         = $date;
             $data['salesToday']   = $this->salesTransactionModel->totalForToday();
             $data['salesWeek']    = array_sum($weekRange['data']);

@@ -25,6 +25,9 @@ class DashboardController extends BaseController
         // The layout's status poll shows the toast when it finishes.
         (new DssRunner())->startWeeklyIfDue();
 
+        // One bell notification when sales pass the retention period (Settings > Data & Records).
+        \App\Libraries\SalesArchive::syncNotification();
+
         // Keep the "low stock" count in sync with live inventory rather
         // than whatever dss:run last computed (see ReorderAlertModel).
         $reorderAlertModel->syncFromLiveInventory();
