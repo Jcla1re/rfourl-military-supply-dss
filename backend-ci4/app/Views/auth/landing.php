@@ -17,6 +17,9 @@ $lockedSeconds = [
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RfourL Military Supply</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="/assets/css/auth-theme.css" rel="stylesheet">
 </head>
 <body class="landing-body">
@@ -44,10 +47,6 @@ $lockedSeconds = [
                 <h1 class="signing-in-role" id="signingInRoleName">Admin</h1>
                 <p class="signing-in-desc" id="signingInRoleDesc"></p>
 
-                <div class="dark-divider"></div>
-
-                <div class="switch-role-label">Not you? Switch role</div>
-                <div class="switch-role-buttons" id="switchRoleButtons"></div>
             </div>
 
             <div class="landing-footer-line">
@@ -75,7 +74,7 @@ $lockedSeconds = [
                         <span class="role-icon"><i class="bi bi-receipt"></i></span>
                         <span class="role-text">
                             <strong>Staff</strong>
-                            <span>Process sales and print receipts at the point of sale.</span>
+                            <span>Process sales and print receipts.</span>
                         </span>
                         <i class="bi bi-chevron-right role-arrow"></i>
                     </button>
@@ -200,10 +199,9 @@ $lockedSeconds = [
     <script>
         const ROLES = {
             admin:    { label: 'Admin',    description: 'Manage inventory, reorders, reports, and settings.' },
-            staff:    { label: 'Staff',    description: 'Process sales and print receipts at the point of sale.' },
+            staff:    { label: 'Staff',    description: 'Process sales and print receipts.' },
             supplier: { label: 'Supplier', description: 'View purchase orders and update deliveries.' },
         };
-        const ROLE_ORDER = ['admin', 'staff', 'supplier'];
 
         const darkPanel = document.getElementById('darkPanel');
         const contentPanel = document.getElementById('contentPanel');
@@ -211,22 +209,10 @@ $lockedSeconds = [
         const darkRoleView = document.getElementById('darkRoleView');
         const signingInRoleName = document.getElementById('signingInRoleName');
         const signingInRoleDesc = document.getElementById('signingInRoleDesc');
-        const switchRoleButtons = document.getElementById('switchRoleButtons');
         const roleSelectView = document.getElementById('roleSelectView');
         const loginViews = [...document.querySelectorAll('.login-form-view')];
         const allFadeViews = [darkBrandView, darkRoleView, roleSelectView, ...loginViews];
 
-        function renderSwitchButtons(currentRole) {
-            switchRoleButtons.innerHTML = '';
-            ROLE_ORDER.filter(r => r !== currentRole).forEach(r => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'switch-role-btn';
-                btn.innerHTML = `<span>Sign in as ${ROLES[r].label}</span><i class="bi bi-arrow-right"></i>`;
-                btn.addEventListener('click', () => showRole(r, true));
-                switchRoleButtons.appendChild(btn);
-            });
-        }
 
         function showRole(role, animate) {
             if (!animate) {
@@ -240,7 +226,6 @@ $lockedSeconds = [
             darkRoleView.classList.add('is-active');
             signingInRoleName.textContent = ROLES[role].label;
             signingInRoleDesc.textContent = ROLES[role].description;
-            renderSwitchButtons(role);
             roleSelectView.classList.remove('is-active');
             loginViews.forEach(v => { v.classList.toggle('is-active', v.dataset.role === role); });
             if (!animate) {

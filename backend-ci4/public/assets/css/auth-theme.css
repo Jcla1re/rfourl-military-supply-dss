@@ -27,7 +27,7 @@ body.auth-body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
 }
 .auth-frame {
     background: #fff;
@@ -106,7 +106,7 @@ html, body.landing-body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
 }
 
 .landing-shell {
@@ -238,7 +238,7 @@ html, body.landing-body {
 .landing-tagline {
     font-size: 1.05rem;
     color: rgba(255, 255, 255, 0.85);
-    max-width: 380px;
+    max-width: 560px; /* one line; balance (below) only kicks in on narrow screens */
     margin: 0;
 }
 
@@ -367,51 +367,8 @@ html, body.landing-body {
 .signing-in-desc {
     font-size: 1rem;
     color: rgba(255, 255, 255, 0.8);
-    max-width: 340px;
+    max-width: 560px; /* each role description fits on one line; balance (below) only kicks in on narrow screens */
     margin: 0 0 28px;
-}
-
-.dark-divider {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.18);
-    margin-bottom: 20px;
-    max-width: 380px;
-}
-
-.switch-role-label {
-    font-size: 0.85rem;
-    color: #B9C4AD;
-    margin-bottom: 14px;
-}
-
-.switch-role-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-width: 380px;
-}
-
-.switch-role-btn {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 14px 18px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    border-radius: var(--radius-control);
-    color: #fff;
-    font-weight: 700;
-    font-size: 0.95rem;
-    cursor: pointer;
-    text-decoration: none;
-    box-sizing: border-box;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.switch-role-btn:hover {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.6);
 }
 
 /* Login form views */
@@ -507,3 +464,72 @@ input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
     display: none;
 }
+
+/* ===== Login pages: app fonts and form typography =====
+   Poppins throughout (each page loads it). Controls don't inherit fonts by default. */
+.landing-body button,
+.landing-body input,
+.landing-body select,
+.landing-body textarea,
+.auth-body button,
+.auth-body input,
+.auth-body select,
+.auth-body textarea { font-family: inherit; }
+
+/* Big titles: same as the app's page titles (e.g. "Inventory"): Poppins 800, -0.02em. */
+.landing-brand h1,
+.panel-content h2,
+.signing-in-role { font-family: 'Poppins', 'Segoe UI', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
+
+/* No lonely last word in the photo-panel descriptions. */
+.landing-tagline,
+.signing-in-desc { text-wrap: balance; }
+
+/* Sign in: Poppins 16px semibold, white; same 41px height as before. */
+.landing-body .btn-login,
+.auth-body .btn-login {
+    font-size: 16px; font-weight: 600; color: #fff;
+    height: 41px; padding-top: 0; padding-bottom: 0; line-height: 1;
+}
+
+/* Labels: 14px semibold, 7px above the input. */
+.login-form-view label { font-size: 14px; font-weight: 600; color: #1F2617; margin-bottom: 7px; }
+
+/* Inputs: Poppins 15px; stay white when the browser autofills them. */
+.input-icon-wrap input { font-size: 15px; color: #1F2617; height: 41px; padding-top: 0; padding-bottom: 0; } /* same 41px as before */
+.input-icon-wrap input:-webkit-autofill,
+.input-icon-wrap input:-webkit-autofill:hover,
+.input-icon-wrap input:-webkit-autofill:focus,
+.auth-card input:-webkit-autofill,
+.auth-card input:-webkit-autofill:hover,
+.auth-card input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #fff inset;
+    box-shadow: 0 0 0 1000px #fff inset;
+    -webkit-text-fill-color: #1F2617;
+    caret-color: #1F2617;
+    transition: background-color 9999s ease-out 0s;
+}
+.input-icon-wrap input:-webkit-autofill::first-line,
+.auth-card input:-webkit-autofill::first-line { font-family: 'Poppins', 'Segoe UI', sans-serif; font-size: 15px; }
+
+/* Forgot password?: 14px medium, green, underline only on hover / keyboard focus. */
+.forgot-link-inline { font-size: 14px; font-weight: 500; color: #4A6741; text-decoration: none; }
+.forgot-link-inline:hover,
+.forgot-link-inline:focus-visible { color: #4A6741; text-decoration: underline; }
+
+/* ===== Forgot password / Code verification / Reset password (and Staff "Can't access") =====
+   Same typography as the sign-in pages. Sizes stay as before (inputs 36px, button 41px). */
+.auth-card h2 { font-family: 'Poppins', 'Segoe UI', sans-serif; font-weight: 800; letter-spacing: -0.02em; color: #1c1c1c; }
+.auth-card label { font-size: 14px; font-weight: 600; color: #1F2617; margin-bottom: 7px; }
+/* Inputs fill the card's inner width exactly (padding and border counted inside), 41px tall like
+   the sign-in pages. */
+.auth-card input { font-size: 15px; color: #1F2617; box-sizing: border-box; width: 100%; height: 41px; padding-top: 0; padding-bottom: 0; }
+/* All password-flow cards share the Forgot password card's width: 420px content + 40px padding
+   each side = 500px (narrower only on very small screens). */
+.auth-body .auth-card { width: 420px; max-width: calc(100vw - 112px); }
+.auth-back a,
+.auth-resend button { font-size: 14px; font-weight: 500; color: #4A6741; text-decoration: none; }
+.auth-back a:hover,
+.auth-back a:focus-visible,
+.auth-resend button:hover,
+.auth-resend button:focus-visible { color: #4A6741; text-decoration: underline; }
