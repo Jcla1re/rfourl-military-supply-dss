@@ -10,6 +10,9 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('staff');
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Staff Login - RfourL</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="/assets/css/auth-theme.css" rel="stylesheet">
 </head>
 <body class="landing-body">
@@ -22,15 +25,8 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('staff');
 
                 <div class="signing-in-label">SIGNING IN AS</div>
                 <h1 class="signing-in-role">Staff</h1>
-                <p class="signing-in-desc">Process sales and print receipts at the point of sale.</p>
+                <p class="signing-in-desc">Process sales and print receipts.</p>
 
-                <div class="dark-divider"></div>
-
-                <div class="switch-role-label">Not you? Switch role</div>
-                <div class="switch-role-buttons">
-                    <a href="<?= site_url('login/admin') ?>" class="switch-role-btn"><span>Sign in as Admin</span> <i class="bi bi-arrow-right"></i></a>
-                    <a href="<?= site_url('login/supplier') ?>" class="switch-role-btn"><span>Sign in as Supplier</span> <i class="bi bi-arrow-right"></i></a>
-                </div>
             </div>
 
             <div class="landing-footer-line">
