@@ -12,6 +12,8 @@ $categories = $categories ?? \App\Models\ProductModel::CATEGORIES;
 $statuses = $statuses ?? \App\Models\ProductModel::STATUSES;
 ?>
 
+<link href="/assets/css/inventory-table.css" rel="stylesheet">
+<script src="/assets/js/inventory-table.js" defer></script>
 <style>
 
 .page-wrap { font-family: 'Poppins', sans-serif; }
@@ -32,22 +34,7 @@ $statuses = $statuses ?? \App\Models\ProductModel::STATUSES;
 }
 .inv-search i { color: #888; font-size: 16px; flex-shrink: 0; }
 .inv-search input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; padding: 0; }
-.notify-btn { border: 0; padding: 8px 14px; cursor: pointer; white-space: nowrap; } /* colors: shared primary-button rules */
-.notify-none { display: inline-block; padding: 0 10px; color: #666; font-size: 18px; line-height: 1; vertical-align: middle; }
 
-/* Only the table + pagination sit in a card; the summary pills, filters
-   and tabs sit directly on the page background. */
-.inv-table-card { background: var(--card-bg); border: 1px solid #e4e1d9; border-radius: var(--radius-control); overflow: hidden; }
-.inv-table-card .data-table tbody tr:last-child td { border-bottom: 0; }
-.inv-table-footer { padding: 14px 16px; border-top: 1px solid #e2e2e2; }
-.inv-table-footer .admin-pagination { margin-top: 0; }
-
-/* Column alignment: text left (default), numbers right, short codes
-   centered, actions right. */
-.data-table th.col-num, .data-table td.col-num { text-align: right; font-variant-numeric: tabular-nums; }
-.data-table th.col-center, .data-table td.col-center { text-align: center; }
-.data-table th.col-actions, .data-table td.col-actions { text-align: right; }
-.data-table td.inv-item-id, .data-table td.inv-updated-cell { color: #777; }
 
 /* Summary cards are links: each applies its status filter. */
 a.stat-pill { text-decoration: none; cursor: pointer; transition: transform 0.12s ease, box-shadow 0.15s ease; }
@@ -55,60 +42,7 @@ a.stat-pill:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(31, 
 a.stat-pill:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
 
-/* Status badges (e.g. "Reorder Now · 2XL") and dates stay on one line. */
-.data-table .status-pill, .data-table td.inv-updated-cell { white-space: nowrap; }
 
-/* Same layout as the admin Inventory table: percentage widths from each
-   column's measured content, Item name takes the rest, the table always
-   fits its card at 1366px and up. */
-.inv-table-card .data-table-wrap { overflow-x: visible; }
-.data-table.inv-table { width: 100%; table-layout: fixed; }
-.inv-table col.c-id      { width: 6%; }
-.inv-table col.c-size    { width: 68px; } /* size picker (48px) + padding */
-.inv-table col.c-type    { width: 116px; } /* "Accessories" (96px) + padding */
-.inv-table col.c-onhand  { width: 7.5%; }
-.inv-table col.c-rop     { width: 6.8%; } /* fits "REORDER" (header breaks "Reorder / At (i)") */
-.inv-table col.c-stock   { width: 72px; } /* stock bar */
-.inv-table col.c-status  { width: 139px; } /* 10px + "Reorder Now" badge (115px) + 14px; 24px to the date */
-.inv-table col.c-updated { width: 124px; } /* widest date, "May 28, 2026" (104px) + padding */
-.inv-table col.c-actions { width: 12.5%; } /* "Notify Admin" */
-/* Item name: no width, so it gets the rest. */
-.inv-table th, .inv-table td { padding-left: 10px; padding-right: 10px; }
-.inv-table th.col-stock, .inv-table td.inv-bar-cell { padding-left: 14px; }
-.inv-table .stock-bar { width: 100%; max-width: 70px; }
-/* Dates never break ("Sep 29, / 2026"); the column fits the widest month. */
-.inv-table td.inv-updated-cell { white-space: nowrap; }
-/* Status right padding + Last Updated left padding = 24px between the badge and the date. */
-.inv-table td.inv-status-cell { padding-right: 14px; }
-.inv-table .status-size { display: block; margin-top: 3px; font-size: 11px; font-weight: 600; color: #5C6152; white-space: nowrap; }
-.inv-table .inv-size-select { width: 100%; }
-@media (max-width: 1400px) {
-    .inv-table th, .inv-table td { padding-left: 8px; padding-right: 8px; }
-    .inv-table th { font-size: 11px; letter-spacing: .02em; white-space: nowrap; }
-    .inv-table td { font-size: 13px; }
-    .inv-table th.col-stock, .inv-table td.inv-bar-cell { padding-left: 14px; }
-    .inv-table .stock-bar { max-width: 60px; }
-    .inv-table .status-pill { padding: 4px 10px; font-size: 11px; }
-    .inv-table .notify-btn { padding: 6px 10px; font-size: 13px; }
-    .inv-table col.c-id      { width: 6%; }
-    .inv-table col.c-size    { width: 64px; }
-    .inv-table col.c-type    { width: 94px; }
-    .inv-table col.c-onhand  { width: 7%; }
-    .inv-table col.c-rop     { width: 6.8%; }
-    .inv-table col.c-stock   { width: 72px; }
-    .inv-table col.c-status  { width: 128px; } /* 8px + badge (104px) + 16px */
-    .inv-table td.inv-status-cell { padding-right: 16px; }
-    .inv-table col.c-updated { width: 100px; } /* "May 28, 2026" (84px) + padding */
-    .inv-table col.c-actions { width: 13.6%; }
-}
-
-/* Below a 1340px-wide window the columns no longer fit, so instead of letting badges and
-   buttons overflow, the table keeps its 1366px layout and scrolls sideways
-   inside its card. At 1340px and up (so any 1366px screen) there is no scroll container. */
-@media (max-width: 1339px) {
-    .inv-table-card .data-table-wrap { overflow-x: auto; }
-    .data-table.inv-table { min-width: 1030px; }
-}
 
 
 /* Summary cards are toggles; "Clear filters" sits after the filters. */
@@ -221,7 +155,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
         </div>
 
         <?php $categoryCounts = $categoryCounts ?? []; ?>
-        <div class="underline-tabs sticky-tabs">
+        <div class="underline-tabs">
             <?php $keepPerPage = (int) ($perPage ?? 10) !== (int) (($perPageOptions ?? [10])[0]) ? ['per_page' => (int) $perPage] : []; ?>
             <a href="<?= site_url('staff/inventory') . ($keepPerPage ? '?' . http_build_query($keepPerPage) : '') ?>" class="<?= $filterCategory === 'All' ? 'active' : '' ?>">All Items (<?= number_format($categoryCounts['All'] ?? 0) ?>)</a>
                         <?php foreach ($categories as $itemCategory): ?>

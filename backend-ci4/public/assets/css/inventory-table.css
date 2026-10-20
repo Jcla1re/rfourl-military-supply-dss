@@ -1,0 +1,164 @@
+/* public/assets/css/inventory-table.css
+ *
+ * The Inventory table, shared by admin and staff (app/Views/admin|staff/inventory.php
+ * and their _inventory_table.php partials), so the two pages can't drift apart.
+ * Staff simply has no Order Qty column (Item name takes that room) and a
+ * "Notify Admin" button where admin has "Order" + the ··· menu.
+ */
+
+/* Only the table + pagination sit in a card; the summary pills, filters and tabs
+   sit directly on the page background. No overflow clipping on the card: it would
+   make the card the sticky container and push the header row down inside it. The
+   header row rounds its own top corners instead. */
+.inv-table-card {
+    background: var(--card-bg);
+    border: 1px solid #e4e1d9;
+    border-radius: var(--radius-control); /* matches the search bar, filters and summary cards */
+}
+
+/* Sticky column header row. Only .main-scroll scrolls (the green header sits above
+   it), and the category tabs scroll away, so the row sticks flush under the green
+   header (--sticky-top is 0 on this page). The whole row is sticky, not each cell,
+   so all header cells share one layer and meet without hairline seams. */
+@media (min-width: 992px) {
+    .inv-table thead {
+        position: sticky;
+        top: var(--sticky-top, 0px);
+        z-index: 10;
+    }
+}
+.inv-table thead th {
+    --th-bg: #ECEEE6;
+    background: var(--th-bg);
+}
+.inv-table thead th:first-child { border-top-left-radius: var(--radius-control); }
+.inv-table thead th:last-child  { border-top-right-radius: var(--radius-control); }
+/* Stuck: one crisp 1px line under the header (a blurred per-cell shadow showed as light
+   vertical bands). The 1px right-hand overlap keeps neighbouring cells seamless. */
+.inv-table.is-stuck thead th {
+    box-shadow: 1px 0 0 0 var(--th-bg), inset 0 -1px 0 #E8E5DC;
+    border-radius: 0;
+}
+.inv-table.is-stuck thead th:last-child { box-shadow: inset 0 -1px 0 #E8E5DC; }
+.inv-table-card .data-table tbody tr:last-child td { border-bottom: 0; }
+.inv-table-footer {
+    padding: 14px 16px;
+    border-top: 1px solid #e2e2e2;
+}
+.inv-table-footer .admin-pagination { margin-top: 0; }
+
+/* The table always fits its card from 1340px up: no min-width, no sideways scrolling. */
+.inv-table-card .data-table-wrap { overflow-x: visible; }
+.data-table.inv-table {
+    width: 100%;
+    table-layout: fixed;
+    /* Separate (zero-gap) borders: with collapsed borders the sticky header shows thin light
+       seams between header cells at fractional pixel positions (e.g. 125% scaling). */
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* Column widths. Item name has no width, so it gets everything left over. */
+.inv-table col.c-id      { width: 5.7%; }
+.inv-table col.c-size    { width: 68px; }  /* size picker (48px) + padding */
+.inv-table col.c-type    { width: 116px; } /* "Accessories" (96px) + padding */
+.inv-table col.c-onhand  { width: 7%; }
+/* Reorder At / Order Qty: wide enough for "REORDER" on its own line (header breaks "Reorder / At (i)"). */
+.inv-table col.c-rop     { width: 6.8%; }
+.inv-table col.c-eoq     { width: 6.8%; }
+.inv-table col.c-stock   { width: 72px; }  /* stock bar */
+.inv-table col.c-status  { width: 139px; } /* 10px + "Reorder Now" badge (115px) + 14px; 24px to the date */
+.inv-table col.c-updated { width: 124px; } /* widest date, "May 28, 2026" (104px) + padding */
+.inv-table col.c-actions { width: 12.7%; } /* "View order" / "Notify Admin" + ··· */
+
+.inv-table th,
+.inv-table td {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.inv-table .status-pill { white-space: nowrap; }
+/* Dates never break ("Sep 29, / 2026"); the column fits the widest month. */
+.inv-table td.inv-updated-cell { white-space: nowrap; }
+/* Status right padding + Last Updated left padding = 24px between the badge and the date. */
+.inv-table td.inv-status-cell { padding-right: 14px; }
+.inv-table .status-size { display: block; margin-top: 3px; font-size: 11px; font-weight: 600; color: #5C6152; white-space: nowrap; }
+/* The bar shrinks with its 72px column instead of keeping a fixed 70px. */
+.inv-table .stock-bar { width: 100%; max-width: 70px; }
+.inv-table th.col-stock,
+.inv-table td.inv-bar-cell { padding-left: 14px; } /* keeps the bar off the number before it */
+.inv-table .inv-size-select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Column alignment: text left (default), numbers right, short codes centered, actions right. */
+.data-table th.col-num,
+.data-table td.col-num { text-align: right; font-variant-numeric: tabular-nums; }
+.data-table th.col-center,
+.data-table td.col-center { text-align: center; }
+.data-table th.col-actions,
+.data-table td.col-actions { text-align: right; }
+.data-table td.inv-item-id,
+.data-table td.inv-updated-cell { color: #777; }
+
+/* Row actions: admin's "Order" and staff's "Notify Admin" are the same size (colours come
+   from the shared primary-button rules in admin-theme.css). Staff's placeholder (··· or
+   "On order") takes the same height as admin's ··· button, so rows are equally tall. */
+.inv-action-btn,
+.notify-btn {
+    border: 0;
+    padding: 8px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.inv-table .notify-none {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 10px;
+    color: #666;
+    font-size: 18px;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+/* ~1440px screens: 4px from Actions so longer names ("4S Blue With Patch") stay on one line. */
+@media (min-width: 1401px) and (max-width: 1500px) {
+    .inv-table col.c-actions { width: 12.35%; } /* 4px less than 12.7% on a ~1130px table (calc() is ignored on <col>) */
+}
+
+/* 1400px and below: slightly more compact type and controls so every column still fits. */
+@media (max-width: 1400px) {
+    .inv-table th, .inv-table td { padding-left: 8px; padding-right: 8px; }
+    .inv-table col.c-id      { width: 5.8%; }
+    .inv-table col.c-size    { width: 64px; }
+    .inv-table col.c-type    { width: 94px; }
+    .inv-table col.c-onhand  { width: 6.8%; }
+    .inv-table col.c-rop     { width: 6.8%; }
+    .inv-table col.c-eoq     { width: 6.8%; }
+    .inv-table col.c-stock   { width: 72px; }
+    .inv-table col.c-status  { width: 128px; } /* 8px + badge (104px) + 16px */
+    .inv-table td.inv-status-cell { padding-right: 16px; }
+    .inv-table col.c-updated { width: 100px; } /* "May 28, 2026" (84px) + padding */
+    .inv-table col.c-actions { width: 13.6%; }
+    .inv-table th { font-size: 11px; letter-spacing: .02em; white-space: nowrap; }
+    .inv-table td { font-size: 13px; }
+    .inv-table th.col-stock,
+    .inv-table td.inv-bar-cell { padding-left: 14px; }
+    .inv-table .stock-bar { width: 100%; max-width: 60px; }
+    .inv-table .status-pill { padding: 4px 10px; font-size: 11px; }
+    .inv-table .inv-action-btn,
+    .inv-table .notify-btn { padding: 6px 10px; font-size: 15px; }
+    .inv-table .notify-none { min-width: 32px; height: 32px; }
+}
+
+/* Below a 1340px-wide window the columns no longer fit, so the table keeps its 1366px
+   layout and scrolls sideways inside its card. */
+@media (max-width: 1339px) {
+    .inv-table-card .data-table-wrap { overflow-x: auto; }
+    .data-table.inv-table { min-width: 1030px; }
+}

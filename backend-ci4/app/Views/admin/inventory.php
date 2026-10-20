@@ -23,6 +23,8 @@ $sizes ??= [];
 $products ??= [];
 ?>
 
+<link href="/assets/css/inventory-table.css" rel="stylesheet">
+<script src="/assets/js/inventory-table.js" defer></script>
 <style>
 
 .page-wrap, .order-modal { font-family: 'Poppins', sans-serif; }
@@ -73,14 +75,6 @@ $products ??= [];
     padding: 0;
 }
 
-/* Colors and states come from the shared primary-button rules in
-   admin-theme.css. */
-.inv-action-btn {
-    border: 0;
-    padding: 8px 12px;
-    cursor: pointer;
-    white-space: nowrap;
-}
 .inv-more-btn {
     display: inline-flex;
     align-items: center;
@@ -109,125 +103,6 @@ $products ??= [];
     outline-offset: 2px;
 }
 
-/* Only the table + pagination sit in a card; the summary pills, filters
-   and tabs sit directly on the page background. */
-.inv-table-card {
-    background: var(--card-bg);
-    border: 1px solid #e4e1d9;
-    border-radius: var(--radius-control); /* matches the search bar, filters and summary cards */
-    /* No overflow clipping here: it would stop the sticky header row below
-       from sticking. The header row rounds its own top corners instead. */
-}
-
-/* Sticky column header row. The page scrolls inside .main-scroll (the
-   green header sits above it, outside the scroll area), so top: 0 places
-   the row right under the green header. */
-/* The whole header row is sticky (not each cell), so all header cells share one layer
-   and their backgrounds meet without hairline seams at fractional pixel positions. */
-@media (min-width: 992px) {
-    .inv-table thead {
-        position: sticky;
-        top: var(--sticky-top, 0px); /* directly under the category tabs */
-        z-index: 10;
-    }
-}
-.inv-table thead th {
-    --th-bg: #ECEEE6;
-    background: var(--th-bg);
-}
-.inv-table thead th:first-child { border-top-left-radius: var(--radius-control); }
-.inv-table thead th:last-child  { border-top-right-radius: var(--radius-control); }
-/* Stuck: one crisp 1px line under the header. (A blurred shadow on each header cell showed
-   as light vertical bands at every column edge and a pale strip over the first row.)
-   The 1px right-hand overlap is kept so neighbouring header cells meet without seams. */
-.inv-table.is-stuck thead th {
-    box-shadow: 1px 0 0 0 var(--th-bg), inset 0 -1px 0 #E8E5DC;
-    border-radius: 0;
-}
-.inv-table.is-stuck thead th:last-child { box-shadow: inset 0 -1px 0 #E8E5DC; }
-.inv-table-card .data-table tbody tr:last-child td {
-    border-bottom: 0;
-}
-.inv-table-footer {
-    padding: 14px 16px;
-    border-top: 1px solid #e2e2e2;
-}
-.inv-table-footer .admin-pagination {
-    margin-top: 0;
-}
-
-/* Column widths are percentages (Item name takes the rest: ~20% of the
-   table, about 200px at 1366px). They're sized from each column's real
-   content: the badge, date, size picker and "View order" + ⋯ on one line.
-   The table always fits its card: no min-width, no sideways scrolling. */
-.inv-table-card .data-table-wrap {
-    overflow-x: visible;
-}
-.data-table.inv-table {
-    width: 100%;
-    table-layout: fixed;
-    /* Separate (zero-gap) borders: with collapsed borders the sticky header shows thin light
-       seams between header cells at fractional pixel positions (e.g. 125% display scaling).
-       Rows only have bottom borders, so the table looks the same. */
-    border-collapse: separate;
-    border-spacing: 0;
-}
-.inv-table col.c-id      { width: 5.7%; }
-.inv-table col.c-size    { width: 68px; } /* size picker (48px) + padding */
-.inv-table col.c-type    { width: 116px; } /* "Accessories" (96px) + padding */
-.inv-table col.c-onhand  { width: 7%; }
-/* Reorder At / Order Qty: wide enough for "REORDER" on its own line (header breaks "Reorder / At (i)"). */
-.inv-table col.c-rop     { width: 6.8%; }
-.inv-table col.c-eoq     { width: 6.8%; }
-.inv-table col.c-stock   { width: 72px; } /* stock bar */
-.inv-table col.c-status  { width: 139px; } /* 10px + "Reorder Now" badge (115px) + 14px; 24px to the date */
-.inv-table col.c-updated { width: 124px; } /* widest date, "May 28, 2026" (104px) + padding */
-.inv-table col.c-actions { width: 12.7%; }  /* "View order" + ⋯ */
-/* Item name: no width set, so it gets everything left over. Size, Type, Status,
-   Last Updated and Stock Level are sized to their content, so the room goes here. */
-.inv-table th,
-.inv-table td {
-    padding-left: 10px;
-    padding-right: 10px;
-}
-.inv-table .status-pill { white-space: nowrap; }
-/* Dates never break ("Sep 29, / 2026"); the column fits the widest month. */
-.inv-table td.inv-updated-cell { white-space: nowrap; }
-/* Status right padding + Last Updated left padding = 24px between the badge and the date. */
-.inv-table td.inv-status-cell { padding-right: 14px; }
-.inv-table .status-size { display: block; margin-top: 3px; font-size: 11px; font-weight: 600; color: #5C6152; white-space: nowrap; }
-/* The bar shrinks with its 72px column instead of keeping a fixed 70px. */
-.inv-table .stock-bar { width: 100%; max-width: 70px; }
-.inv-table th.col-stock,
-.inv-table td.inv-bar-cell {
-    padding-left: 14px; /* keeps the bar off the Order Qty number */
-}
-.inv-table .inv-size-select {
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-    box-sizing: border-box;
-}
-
-/* Column alignment: text left (default), numbers right, short codes
-   centered, actions right in fixed slots. */
-.data-table th.col-num,
-.data-table td.col-num {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
-.data-table th.col-center,
-.data-table td.col-center {
-    text-align: center;
-}
-.data-table th.col-actions,
-.data-table td.col-actions {
-    text-align: right;
-}
-.data-table td.inv-item-id,
-.data-table td.inv-updated-cell {
-    color: #777;
-}
 
 /* Two fixed slots: Order (shown only when reordering) + the ··· button,
    so the ··· sits in the same spot on every row. */
@@ -245,35 +120,10 @@ $products ??= [];
     grid-column: 2;
 }
 
-/* Smaller screens only (your 1536px+ view is unaffected): slightly more
-   compact type and controls so every column still fits on one line. */
-/* ~1440px screens: 4px from Actions so longer names ("4S Blue With Patch") stay on one line. */
-@media (min-width: 1401px) and (max-width: 1500px) {
-    .inv-table col.c-actions { width: 12.35%; } /* 4px less than 12.7% on a ~1130px table (calc() is ignored on <col>) */
-}
+/* 1400px and below: the admin-only action slots get a little tighter
+   (the rest of the table's compact rules are in inventory-table.css). */
 @media (max-width: 1400px) {
-    /* Tighter cell padding (8px a side, not 12px) leaves Item name ~20%. */
-    .inv-table th, .inv-table td { padding-left: 8px; padding-right: 8px; }
-    .inv-table col.c-id      { width: 5.8%; }
-    .inv-table col.c-size    { width: 64px; }
-    .inv-table col.c-type    { width: 94px; }
-    .inv-table col.c-onhand  { width: 6.8%; }
-    .inv-table col.c-rop     { width: 6.8%; }
-    .inv-table col.c-eoq     { width: 6.8%; }
-    .inv-table col.c-stock   { width: 72px; }
-    .inv-table col.c-status  { width: 128px; } /* 8px + badge (104px) + 16px */
-    .inv-table td.inv-status-cell { padding-right: 16px; }
-    .inv-table col.c-updated { width: 100px; } /* "May 28, 2026" (84px) + padding */
-    .inv-table col.c-actions { width: 13.6%; }
-    /* Item name gets the rest. */
-    .inv-table th { font-size: 11px; letter-spacing: .02em; white-space: nowrap; }
-    .inv-table td { font-size: 13px; }
-    .inv-table th.col-stock,
-    .inv-table td.inv-bar-cell { padding-left: 14px; }
-    .inv-table .stock-bar { width: 100%; max-width: 60px; }
-    .inv-table .status-pill { padding: 4px 10px; font-size: 11px; }
     .inv-actions { grid-template-columns: auto 32px; gap: 4px; }
-    .inv-actions .inv-action-btn { padding: 6px 10px; font-size: 15px; }
     .inv-actions .inv-more-btn { width: 32px; height: 32px; font-size: 16px; }
 }
 
@@ -518,14 +368,6 @@ a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
     }
 }
 
-/* Below a 1340px-wide window the columns no longer fit, so instead of letting badges and
-   buttons overflow, the table keeps its 1366px layout and scrolls sideways
-   inside its card. At 1340px and up (so any 1366px screen) there is no scroll container (so the
-   sticky header row keeps working). */
-@media (max-width: 1339px) {
-    .inv-table-card .data-table-wrap { overflow-x: auto; }
-    .data-table.inv-table { min-width: 1030px; }
-}
 
 /* Summary cards are toggles; "Clear filters" sits after the filters. */
 a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColor, 0 3px 8px rgba(31, 38, 23, .08); }
@@ -643,7 +485,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
         </div>
 
         <?php $categoryCounts = $categoryCounts ?? []; ?>
-        <div class="underline-tabs sticky-tabs">
+        <div class="underline-tabs">
             <?php $keepPerPage = (int) ($perPage ?? 10) !== (int) (($perPageOptions ?? [10])[0]) ? ['per_page' => (int) $perPage] : []; ?>
             <a href="<?= site_url('admin/inventory') . ($keepPerPage ? '?' . http_build_query($keepPerPage) : '') ?>" class="<?= $filterCategory === 'All' && ! $showArchived ? 'active' : '' ?>">All Items (<?= number_format($categoryCounts['All'] ?? 0) ?>)</a>
                         <?php foreach ($categories as $itemCategory): ?>
@@ -1111,23 +953,7 @@ function closeArchiveConfirm() {
 }
 document.getElementById('archiveCancelBtn').addEventListener('click', closeArchiveConfirm);
 
-// ----- Sticky table header: shadow only while it's stuck ----------------
-// The table scrolls inside the layout's .main-scroll; the header row is
-// "stuck" once the table's top has scrolled past the top of that area.
-const mainScroll = document.querySelector('.main-scroll');
-function updateStickyHeader() {
-    const table = document.querySelector('.inv-table');
-    if (!table || !mainScroll) return;
-    const offset = parseFloat(getComputedStyle(mainScroll).getPropertyValue('--sticky-top')) || 0;
-    const stuck = table.getBoundingClientRect().top < mainScroll.getBoundingClientRect().top + offset - 0.5;
-    table.classList.toggle('is-stuck', stuck);
-}
-let stickyFrame = 0;
-mainScroll?.addEventListener('scroll', () => {
-    cancelAnimationFrame(stickyFrame);
-    stickyFrame = requestAnimationFrame(updateStickyHeader);
-}, { passive: true });
-updateStickyHeader();
+// Sticky table header state: assets/js/inventory-table.js (shared with staff).
 
 // ----- Restore (archived view) -------------------------------------------
 let restoreOpener = null;
