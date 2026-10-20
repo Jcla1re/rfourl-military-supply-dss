@@ -160,7 +160,7 @@ $tabs = [
 </style>
 
 <div class="page-wrap" style="padding:0;">
-    <div class="set-tabs">
+    <div class="set-tabs sticky-tabs">
         <?php foreach ($tabs as $key => $label): ?>
             <a href="?tab=<?= $key ?>" class="<?= $tab === $key ? 'active' : '' ?>"><?= esc($label) ?></a>
         <?php endforeach; ?>

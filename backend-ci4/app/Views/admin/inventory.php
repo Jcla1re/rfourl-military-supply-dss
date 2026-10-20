@@ -124,10 +124,12 @@ $products ??= [];
    the row right under the green header. */
 /* The whole header row is sticky (not each cell), so all header cells share one layer
    and their backgrounds meet without hairline seams at fractional pixel positions. */
-.inv-table thead {
-    position: sticky;
-    top: 0;
-    z-index: 5;
+@media (min-width: 992px) {
+    .inv-table thead {
+        position: sticky;
+        top: var(--sticky-top, 0px); /* directly under the category tabs */
+        z-index: 10;
+    }
 }
 .inv-table thead th {
     --th-bg: #ECEEE6;
@@ -641,7 +643,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
         </div>
 
         <?php $categoryCounts = $categoryCounts ?? []; ?>
-        <div class="underline-tabs">
+        <div class="underline-tabs sticky-tabs">
             <?php $keepPerPage = (int) ($perPage ?? 10) !== (int) (($perPageOptions ?? [10])[0]) ? ['per_page' => (int) $perPage] : []; ?>
             <a href="<?= site_url('admin/inventory') . ($keepPerPage ? '?' . http_build_query($keepPerPage) : '') ?>" class="<?= $filterCategory === 'All' && ! $showArchived ? 'active' : '' ?>">All Items (<?= number_format($categoryCounts['All'] ?? 0) ?>)</a>
                         <?php foreach ($categories as $itemCategory): ?>
@@ -1116,7 +1118,8 @@ const mainScroll = document.querySelector('.main-scroll');
 function updateStickyHeader() {
     const table = document.querySelector('.inv-table');
     if (!table || !mainScroll) return;
-    const stuck = table.getBoundingClientRect().top < mainScroll.getBoundingClientRect().top - 0.5;
+    const offset = parseFloat(getComputedStyle(mainScroll).getPropertyValue('--sticky-top')) || 0;
+    const stuck = table.getBoundingClientRect().top < mainScroll.getBoundingClientRect().top + offset - 0.5;
     table.classList.toggle('is-stuck', stuck);
 }
 let stickyFrame = 0;

@@ -67,7 +67,7 @@ $archived  = $status === 'archived';
     </div>
     <?php endif; ?>
 
-    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2 sticky-tabs">
         <div class="sup-tabs">
             <a href="<?= site_url('admin/suppliers') ?>" class="<?= $archived ? '' : 'active' ?>">Active (<?= esc($activeCount ?? 0) ?>)</a>
             <a href="<?= site_url('admin/suppliers?status=archived') ?>" class="<?= $archived ? 'active' : '' ?>">Archived (<?= esc($archivedCount ?? 0) ?>)</a>

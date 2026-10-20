@@ -674,7 +674,7 @@ foreach ($products as $p) {
                             Order less.</li>
                     </ul>
 
-                    <div class="abc-tabs" role="group" aria-label="Filter by class">
+                    <div class="abc-tabs sticky-subtabs" style="--sticky-sub-bg:#fff;" role="group" aria-label="Filter by class">
                         <button type="button" class="abc-tab active" data-tab="all" aria-pressed="true">All</button>
                         <button type="button" class="abc-tab" data-tab="A" aria-pressed="false">A
                             (<?= (int) $abcClassCounts['A'] ?>)</button>

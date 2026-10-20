@@ -14,7 +14,7 @@
 </style>
 
 <div class="page-wrap">
-    <div class="cp-tabs">
+    <div class="cp-tabs sticky-tabs">
         <a href="?range=month" class="<?= $range === 'month' ? 'active' : '' ?>">This Month</a>
         <a href="?range=3months" class="<?= $range === '3months' ? 'active' : '' ?>">Last 3 Months</a>
         <a href="?range=all" class="<?= $range === 'all' ? 'active' : '' ?>">All Time</a>

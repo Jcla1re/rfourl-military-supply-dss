@@ -97,7 +97,7 @@ $restockDates = $restockDates ?? [];
 .ord-actions form { flex: 1; }
 .ord-actions button { width: 100%; padding: 12px; border-radius: var(--radius-control); border: 1px solid #333; background: #fff; font-weight: 700; cursor: pointer; }
 
-.cal-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); padding: 18px; position: sticky; top: 16px; }
+.cal-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); padding: 18px; position: sticky; top: calc(var(--sticky-top, 0px) + 16px); }
 .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .cal-nav a, .cal-nav span { padding: 8px 12px; border: 1px solid #ddd; border-radius: var(--radius-icon); text-decoration: none; color: #333; font-weight: 600; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
@@ -125,7 +125,7 @@ $restockDates = $restockDates ?? [];
     <?php if (!empty($success)): ?><div class="alert alert-success"><?= esc($success) ?></div><?php endif; ?>
     <?php if (!empty($error)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
 
-    <div class="ord-tabs">
+    <div class="ord-tabs sticky-tabs">
         <a href="<?= site_url('admin/orders') ?>?tab=status" class="<?= $tab === 'status' ? 'active' : '' ?>">Order Status</a>
         <a href="<?= site_url('admin/orders') ?>?tab=history" class="<?= $tab === 'history' ? 'active' : '' ?>">History</a>
     </div>

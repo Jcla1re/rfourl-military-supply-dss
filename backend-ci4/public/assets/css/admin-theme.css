@@ -1176,3 +1176,55 @@ body {
    neighbouring header cells' backgrounds don't quite meet and the card shows through as a
    thin light line. Each header cell's background reaches 1px into its right neighbour. */
 .data-table thead th:not(:last-child) { box-shadow: 1px 0 0 0 var(--th-bg); }
+
+/* ===== Sticky page tabs and table headers =====
+   Only .main-scroll scrolls (see .app-shell). Page-level tab bars carry
+   .sticky-tabs and stay under the green header; list-table headers stick right
+   under them. public/assets/js/sticky-offset.js measures the tab bar and sets
+   --sticky-top on .main-scroll (0 when the page has no tabs). */
+.sticky-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 20; /* above sticky table headers (10); below modals (1050+), toasts and tooltips */
+    background: var(--content-bg);
+    /* The bar sits inside the page's 24px padding: the side shadows (same colour, no blur)
+       fill that gutter so scrolled content can't peek through beside the bar. */
+    box-shadow: -24px 0 0 var(--content-bg), 24px 0 0 var(--content-bg);
+}
+/* Green full-bleed bars (Settings, Orders, POS) already span the whole width. */
+.set-tabs.sticky-tabs,
+.ord-tabs.sticky-tabs,
+.pos-tabs.sticky-tabs { box-shadow: none; }
+
+/* A second row of filters that stacks under the page tabs (POS categories, ABC classes). */
+.sticky-subtabs {
+    position: sticky;
+    top: var(--sticky-top, 0px);
+    z-index: 15;
+    background: var(--sticky-sub-bg, var(--content-bg));
+    padding-top: 8px;
+    margin-top: -8px;
+}
+
+@media (min-width: 992px) {
+    /* Overflow on the wrapper would make the header stick to the wrapper instead of .main-scroll. */
+    .data-table-wrap { overflow: visible; }
+
+    .data-table thead,
+    .ar-table thead,
+    .var-table thead {
+        position: sticky;
+        top: var(--sticky-top, 0px);
+        z-index: 10;
+    }
+    .ar-table thead,
+    .var-table thead { background: var(--card-bg); }
+    /* Small tables inside dialogs stay put. */
+    .modal .data-table thead,
+    .receipt-modal .data-table thead { position: static; }
+}
+
+/* Separate borders (zero gap), as the Inventory table already uses: with collapsed borders a
+   sticky header shows thin light seams between cells at fractional pixel positions.
+   Rows only have bottom borders, so nothing looks different. */
+.data-table { border-collapse: separate; border-spacing: 0; }

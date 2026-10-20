@@ -221,7 +221,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
         </div>
 
         <?php $categoryCounts = $categoryCounts ?? []; ?>
-        <div class="underline-tabs">
+        <div class="underline-tabs sticky-tabs">
             <?php $keepPerPage = (int) ($perPage ?? 10) !== (int) (($perPageOptions ?? [10])[0]) ? ['per_page' => (int) $perPage] : []; ?>
             <a href="<?= site_url('staff/inventory') . ($keepPerPage ? '?' . http_build_query($keepPerPage) : '') ?>" class="<?= $filterCategory === 'All' ? 'active' : '' ?>">All Items (<?= number_format($categoryCounts['All'] ?? 0) ?>)</a>
                         <?php foreach ($categories as $itemCategory): ?>

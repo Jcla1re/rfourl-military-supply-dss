@@ -82,7 +82,7 @@
 
 .cart-panel {
     background: #fff; border-radius: var(--radius-card); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
-    position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto;
+    position: sticky; top: calc(var(--sticky-top, 0px) + 16px); max-height: calc(100vh - var(--sticky-top, 0px) - 32px); overflow-y: auto;
 }
 .cart-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
 .cart-head .count { background: var(--sidebar-bg); color: #fff; border-radius: var(--radius-pill); padding: 2px 10px; font-size: 12px; margin-left: 6px; }
@@ -191,7 +191,7 @@
     <?php if (!empty($success)): ?><div class="alert alert-success"><?= esc($success) ?></div><?php endif; ?>
     <?php if (!empty($error)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
 
-    <div class="pos-tabs">
+    <div class="pos-tabs sticky-tabs">
         <a href="?tab=pos" class="<?= $tab === 'pos' ? 'active' : '' ?>">Point of Sale</a>
         <a href="?tab=receipts" class="<?= $tab === 'receipts' ? 'active' : '' ?>">Sales &amp; Receipts</a>
     </div>
@@ -201,7 +201,7 @@
         <?php $groups = $groups ?? []; ?>
         <div class="pos-layout">
             <div>
-                <div class="pill-tabs mb-3">
+                <div class="pill-tabs sticky-subtabs mb-3">
                     <button type="button" class="active" data-cat="">All Items</button>
                     <?php foreach (($categories ?? []) as $c): ?>
                         <button type="button" data-cat="<?= esc($c) ?>"><?= esc($c) ?></button>
