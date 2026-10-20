@@ -134,7 +134,7 @@
                     <?php if (($search ?? '') !== ''): ?>
                         <tr>
                             <td colspan="11" class="inv-empty-search">
-                                <div class="title">No items match &ldquo;<?= esc($search) ?>&rdquo;</div>
+                                <div class="title">No items match &ldquo;<?= esc($search ?? '') ?>&rdquo;</div>
                                 <p class="hint">Check the spelling or try a shorter word.</p>
                                 <button type="button" class="btn-clear-search">Clear search</button>
                             </td>

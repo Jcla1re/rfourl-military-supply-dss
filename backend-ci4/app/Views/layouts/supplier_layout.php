@@ -82,7 +82,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
         </div>
 
         <div class="user-footer">
-            <a href="<?= site_url('supplier/profile') ?>" class="d-flex align-items-center gap-2" style="color:inherit; text-decoration:none;">
+            <a href="<?= site_url('supplier/profile') ?>" class="user-footer-link <?= ($active ?? '') === 'profile' ? 'active' : '' ?>" title="My account">
                 <i class="bi bi-person-circle fs-4"></i>
                 <div class="user-text">
                     <div style="font-weight:600; color:#fff; font-size:0.9rem;"><?= esc(session()->get('full_name')) ?></div>

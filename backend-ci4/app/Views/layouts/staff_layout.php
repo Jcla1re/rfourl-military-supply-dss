@@ -92,16 +92,25 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
                 </span>
                 <span class="nav-label">POS &amp; Sales</span>
             </a>
+
+            <div class="nav-section-label">ACCOUNT</div>
+            <a href="<?= site_url('staff/account') ?>" class="nav-link <?= ($active ?? '') === 'account' ? 'active' : '' ?>" data-tooltip="My Account">
+                <span class="nav-icon">
+                    <i class="bi bi-person icon-outline"></i>
+                    <i class="bi bi-person-fill icon-fill"></i>
+                </span>
+                <span class="nav-label">My Account</span>
+            </a>
         </div>
 
         <div class="user-footer">
-            <div class="d-flex align-items-center gap-2">
+            <a href="<?= site_url('staff/account') ?>" class="user-footer-link <?= ($active ?? '') === 'account' ? 'active' : '' ?>" title="My account">
                 <i class="bi bi-person-circle fs-4"></i>
                 <div class="user-text">
                     <div style="font-weight:600; color:#fff; font-size:0.9rem;"><?= esc(session()->get('full_name')) ?></div>
                     <small><?= esc(session()->get('role')) ?></small>
                 </div>
-            </div>
+            </a>
             <form method="post" action="<?= site_url('logout') ?>" class="m-0 d-inline"><?= csrf_field() ?><button type="submit" class="logout-link" title="Logout"><i class="bi bi-box-arrow-right"></i></button></form>
         </div>
     </div>

@@ -224,6 +224,20 @@ $tabs = [
                 </div>
             </div>
 
+            <?php // Full width, fields side by side, so the card fills the row instead of leaving the right half empty. ?>
+            <div class="set-card">
+                <h5 class="pf-title">Change Password</h5>
+                <form method="post" action="<?= site_url('admin/settings/owner-password') ?>">
+                    <?= csrf_field() ?>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-6 col-xl-3 set-field"><label for="pwCurrent">Current Password</label><input id="pwCurrent" name="current_password" type="password" required autocomplete="current-password"></div>
+                        <div class="col-md-6 col-xl-3 set-field"><label for="pwNew">New Password</label><input id="pwNew" name="new_password" type="password" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" required autocomplete="new-password"></div>
+                        <div class="col-md-6 col-xl-3 set-field"><label for="pwConfirm">Confirm New Password</label><input id="pwConfirm" name="confirm_password" type="password" required autocomplete="new-password"></div>
+                        <div class="col-md-6 col-xl-3"><button type="submit" class="btn btn-success pf-save w-100" style="padding:11px;">Change Password</button></div>
+                    </div>
+                </form>
+            </div>
+
         <?php elseif ($tab === 'accounts'): ?>
             <h4>Manage Accounts</h4>
             <div class="set-hint">Manage staff access and account passwords. Only the owner can add, edit, or deactivate accounts.</div>
@@ -330,31 +344,10 @@ $tabs = [
                 </div>
             </div>
 
-            <h5 class="fw-bold mt-4 mb-3">Passwords</h5>
-            <div class="row g-3">
-                <div class="col-lg-6">
-                    <div class="set-card h-100 mb-0">
-                        <h5 class="fw-bold mb-3">Owner Password</h5>
-                        <form method="post" action="<?= site_url('admin/settings/owner-password') ?>">
-                            <?= csrf_field() ?>
-                            <div class="d-flex flex-column gap-3 mb-3">
-                                <div class="set-field"><label>Current Password</label><input name="current_password" type="password" required autocomplete="current-password"></div>
-                                <div class="set-field"><label>New Password</label><input name="new_password" type="password" placeholder="8+ characters, letter and number" required autocomplete="new-password"></div>
-                                <div class="set-field"><label>Confirm New Password</label><input name="confirm_password" type="password" required autocomplete="new-password"></div>
-                            </div>
-                            <div class="text-end"><button type="submit" class="btn btn-outline-dark">Change Password</button></div>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="set-card h-100 mb-0">
-                        <h5 class="fw-bold mb-2">Staff Passwords</h5>
-                        <p class="text-muted small mb-0">Each staff member signs in with their own unique password. The system recognizes who is signing in by their password. Use <strong>Reset Password</strong> on their row if they forget it.</p>
-                    </div>
-                </div>
+            <div class="set-card">
+                <h5 class="fw-bold mb-2">Staff Passwords</h5>
+                <p class="text-muted small mb-0">Each staff member signs in with their own unique password. The system recognizes who is signing in by their password. Use <strong>Reset Password</strong> on their row if they forget it.</p>
             </div>
-
 
         <?php elseif ($tab === 'notif'): ?>
             <h4>Notification Preferences</h4>

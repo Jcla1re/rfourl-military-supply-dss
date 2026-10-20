@@ -130,13 +130,13 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
         </div>
 
         <div class="user-footer">
-            <div class="d-flex align-items-center gap-2">
+            <a href="<?= site_url('admin/settings?tab=profile') ?>" class="user-footer-link <?= (($active ?? '') === 'settings' && ($tab ?? 'profile') === 'profile') ? 'active' : '' ?>" title="My account">
                 <i class="bi bi-person-circle fs-4"></i>
                 <div class="user-text">
                     <div style="font-weight:600; color:#fff; font-size:0.9rem;"><?= esc(session()->get('full_name')) ?></div>
                     <small><?= esc(session()->get('role')) ?></small>
                 </div>
-            </div>
+            </a>
             <form method="post" action="<?= site_url('logout') ?>" class="m-0 d-inline"><?= csrf_field() ?><button type="submit" class="logout-link" title="Logout"><i class="bi bi-box-arrow-right"></i></button></form>
         </div>
     </div>

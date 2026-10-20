@@ -23,9 +23,11 @@ class NotificationModel extends Model
         'is_read',
         'status',
         'action_token',
+        'action_user_id',
+        'action_expires_at',
     ];
 
-    public const CATEGORIES = ['order_status', 'staff_activity', 'access_request', 'sales_records'];
+    public const CATEGORIES = ['order_status', 'staff_activity', 'access_request', 'sales_records', 'security'];
 
     protected $useTimestamps = false;
     protected $createdField  = 'created_at';

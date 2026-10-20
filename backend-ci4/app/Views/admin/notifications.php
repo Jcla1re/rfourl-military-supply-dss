@@ -120,10 +120,11 @@ $unreadCount = $unreadCount ?? 0;
                 <?php
                 $typeLower = strtolower($n['type']);
                 $isDamagedLost = str_contains($typeLower, 'damaged') || str_contains($typeLower, 'lost');
-                $color = $isDamagedLost ? 'red' : ($n['category'] === 'access_request' ? 'amber' : 'green');
+                $color = $isDamagedLost ? 'red' : (in_array($n['category'], ['access_request', 'security'], true) ? 'amber' : 'green');
                 $icon = match (true) {
                     $isDamagedLost => 'bi-exclamation',
                     $n['category'] === 'access_request' => 'bi-exclamation',
+                    $n['category'] === 'security' => 'bi-shield-exclamation',
                     $n['category'] === 'order_status' => 'bi-clipboard-check',
                     $n['category'] === 'sales_records' => 'bi-archive',
                     default => 'bi-bell',
@@ -145,6 +146,36 @@ $unreadCount = $unreadCount ?? 0;
                             <span class="go"><i class="bi bi-arrow-right-circle"></i></span>
                         </button>
                     </form>
+
+                <?php elseif ($n['category'] === 'security'): ?>
+                    <div class="notif-card <?= $color ?> <?= $isRead ? 'is-read' : '' ?>">
+                        <div class="icn"><i class="bi <?= $icon ?>"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="title"><?= esc($n['title']) ?><?php if (!$isRead): ?><span class="new-pill">NEW</span><?php endif; ?></div>
+                            <?php if (!empty($n['message'])): ?><div class="msg"><?= esc($n['message']) ?></div><?php endif; ?>
+                            <span class="type-pill"><?= esc($n['type']) ?></span>
+                            <div class="notif-actions">
+                                <?php if (empty($n['status']) && !empty($n['action_user_id'])): ?>
+                                    <form method="post" action="<?= site_url('admin/notifications/lock/' . $n['notification_id']) ?>"
+                                          data-confirm="They won't be able to sign in until you reset their password from Manage Accounts."
+                                          data-confirm-title="Lock this account?"
+                                          data-confirm-ok="Lock account"
+                                          data-confirm-variant="danger">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="decline">Lock account</button>
+                                    </form>
+                                <?php elseif (($n['status'] ?? '') === 'locked'): ?>
+                                    <div class="msg"><em>Account locked</em></div>
+                                <?php endif; ?>
+                                <?php if (!$isRead && empty($n['status'])): ?>
+                                    <form method="post" action="<?= site_url('admin/notifications/mark-read/' . $n['notification_id']) ?>">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="done">Mark as Done</button>
+                                    </form>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
 
                 <?php elseif ($n['category'] === 'access_request'): ?>
                     <div class="notif-card <?= $color ?> <?= $isRead ? 'is-read' : '' ?>">

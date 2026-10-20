@@ -94,6 +94,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->post('notifications/open/(:segment)', 'NotificationController::open/$1');
     $routes->post('notifications/approve/(:segment)', 'NotificationController::approve/$1');
     $routes->post('notifications/decline/(:segment)', 'NotificationController::decline/$1');
+    $routes->post('notifications/lock/(:segment)', 'NotificationController::lock/$1');
 });
 
 $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'roleauth:Staff'], static function ($routes) {
@@ -120,6 +121,9 @@ $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'ro
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');
     $routes->post('notifications/mark-all-read', 'NotificationController::markAllRead');
     $routes->post('notifications/open/(:segment)', 'NotificationController::open/$1');
+
+    $routes->get('account', 'AccountController::index');
+    $routes->post('account/password', 'AccountController::changePassword');
 });
 
 $routes->group('supplier', ['namespace' => 'App\Controllers\Supplier', 'filter' => 'roleauth:Supplier'], static function ($routes) {

@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\StaffPasswordAlert;
 use App\Models\NotificationModel;
 
 /**
@@ -19,10 +20,18 @@ use App\Models\NotificationModel;
  */
 class NotificationActionController extends BaseController
 {
-    private const ACTIONS = ['approve', 'decline'];
+    private const ACTIONS = ['approve', 'decline', 'lock'];
 
     public function confirm($notificationId, string $token, string $action)
     {
+        if ($action === 'lock') {
+            $notification = $this->lockRequest($notificationId, $token);
+
+            return $notification
+                ? view('notification_action/confirm', ['notification' => $notification, 'action' => 'lock'])
+                : view('notification_action/problem', ['message' => 'This link is no longer valid.']);
+        }
+
         $notification = $this->validRequest($notificationId, $token, $action);
 
         if (! $notification) {
@@ -45,6 +54,19 @@ class NotificationActionController extends BaseController
 
     public function submit($notificationId, string $token, string $action)
     {
+        if ($action === 'lock') {
+            $notification = $this->lockRequest($notificationId, $token);
+            $staff        = $notification ? StaffPasswordAlert::lockableByToken($notification, $token) : null;
+
+            if (! $notification || ! $staff) {
+                return view('notification_action/problem', ['message' => 'This link is no longer valid.']);
+            }
+
+            StaffPasswordAlert::lock($notification, $staff, 'account_locked_via_email', 'owner (email link)');
+
+            return view('notification_action/done', ['action' => 'lock', 'staffName' => $staff['full_name']]);
+        }
+
         $notification = $this->validRequest($notificationId, $token, $action);
 
         if (! $notification || ! empty($notification['status'])) {
@@ -64,6 +86,18 @@ class NotificationActionController extends BaseController
         return view('notification_action/done', ['action' => $action]);
     }
 
+    /** The security alert behind a Lock link, only if the token is valid, unused and unexpired. */
+    private function lockRequest($notificationId, string $token): ?array
+    {
+        if (! is_numeric($notificationId)) {
+            return null;
+        }
+
+        $notification = (new NotificationModel())->find((int) $notificationId);
+
+        return StaffPasswordAlert::lockableByToken($notification, $token) ? $notification : null;
+    }
+
     private function validRequest($notificationId, string $token, string $action): ?array
     {
         if (! is_numeric($notificationId) || ! in_array($action, self::ACTIONS, true)) {
@@ -72,7 +106,8 @@ class NotificationActionController extends BaseController
 
         $notification = (new NotificationModel())->find((int) $notificationId);
 
-        if (! $notification || empty($notification['action_token']) || ! hash_equals($notification['action_token'], $token)) {
+        if (! $notification || ($notification['category'] ?? null) === StaffPasswordAlert::CATEGORY
+            || empty($notification['action_token']) || ! hash_equals($notification['action_token'], $token)) {
             return null;
         }
 

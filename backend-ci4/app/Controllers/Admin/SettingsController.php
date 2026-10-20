@@ -200,7 +200,7 @@ class SettingsController extends BaseController
         // or left-open session cannot be used to lock the Owner out.
         if (! $user || ! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
             SecurityLogModel::log('password_change_failed', null, 'wrong current password');
-            return redirect()->to('/admin/settings?tab=accounts')->with('error', 'Current password is incorrect.');
+            return redirect()->to('/admin/settings?tab=profile')->with('error', 'Current password is incorrect.');
         }
 
         return $this->changePasswordFor((int) $user['user_id'], 'owner');
@@ -244,16 +244,16 @@ class SettingsController extends BaseController
         $confirm = $this->request->getPost('confirm_password');
 
         if ($error = PasswordPolicy::check($newPass)) {
-            return redirect()->to('/admin/settings?tab=accounts')->with('error', $error);
+            return redirect()->to('/admin/settings?tab=profile')->with('error', $error);
         }
         if ($newPass !== $confirm) {
-            return redirect()->to('/admin/settings?tab=accounts')->with('error', 'Passwords do not match.');
+            return redirect()->to('/admin/settings?tab=profile')->with('error', 'Passwords do not match.');
         }
 
         $this->userModel->update($userId, ['password_hash' => password_hash($newPass, PASSWORD_DEFAULT)]);
         SecurityLogModel::log('password_changed', null, "{$label} password changed by admin session");
 
-        return redirect()->to('/admin/settings?tab=accounts')->with('success', ucfirst($label) . ' password updated.');
+        return redirect()->to('/admin/settings?tab=profile')->with('success', ucfirst($label) . ' password updated.');
     }
 
     public function addStaffAccount()

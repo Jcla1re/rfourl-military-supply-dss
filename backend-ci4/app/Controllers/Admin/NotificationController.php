@@ -3,6 +3,8 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\StaffPasswordAlert;
+use App\Libraries\Toast;
 use App\Models\NotificationModel;
 
 class NotificationController extends BaseController
@@ -111,5 +113,20 @@ class NotificationController extends BaseController
         $this->notificationModel->declineAccessRequest($notificationId);
 
         return redirect()->to('/admin/notifications')->with('success', 'Request declined.');
+    }
+
+    /** "Lock account" on a staff password-change alert, from the logged-in owner. */
+    public function lock(int $notificationId)
+    {
+        $notification = $this->notificationModel->find($notificationId);
+        $staff        = StaffPasswordAlert::lockableStaff($notification);
+
+        if (! $staff) {
+            return redirect()->to('/admin/notifications')->with('toast', Toast::error("Couldn't lock the account", 'It was already locked, or no longer exists.'));
+        }
+
+        StaffPasswordAlert::lock($notification, $staff, 'account_locked_via_notification', (string) session()->get('username'));
+
+        return redirect()->to('/admin/notifications')->with('toast', Toast::success('Account locked', "{$staff['full_name']}'s account is locked. Reset their password from Manage Accounts to unlock it."));
     }
 }
