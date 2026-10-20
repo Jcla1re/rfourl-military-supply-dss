@@ -57,16 +57,10 @@ $tabs = [
 }
 
 .set-body { padding: 24px; }
-.set-detail { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-bottom: 1px solid #f2f2f2; font-size: 14px; }
+.set-detail { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 11px 0; border-bottom: 1px solid #f2f2f2; font-size: 14px; }
 .set-detail:last-child { border-bottom: none; }
-.set-detail span { color: #777; }
-.set-detail strong { text-align: right; word-break: break-word; }
-.set-quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-.set-quick a { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: var(--radius-card); padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); text-decoration: none; color: inherit; transition: box-shadow .15s ease, transform .15s ease; }
-.set-quick a:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-1px); }
-.set-quick .ic { width: 40px; height: 40px; border-radius: var(--radius-icon); background: var(--green-bg); color: var(--green-text); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-.set-quick strong { display: block; font-size: 14px; }
-.set-quick small { color: #777; font-size: 12px; }
+.set-detail span { color: #5C6152; font-weight: 400; }
+.set-detail strong { text-align: right; word-break: break-word; font-weight: 500; color: #1F2617; }
 .set-body h4 { font-weight: 800; }
 .set-hint { color: #666; margin-bottom: 20px; }
 /* Data & Records tab (exact design spec). Poppins like the rest of the app. */
@@ -116,8 +110,28 @@ $tabs = [
 .set-role-pill { display: inline-flex; align-items: center; gap: 6px; background: #e9e7e1; border-radius: var(--radius-pill); padding: 4px 14px; font-size: 13px; font-weight: 600; margin: 4px 0; }
 .set-field label { font-weight: 600; margin-bottom: 6px; display: block; }
 .set-field input, .set-field select { width: 100%; padding: 11px; border: 1px solid #ccc; border-radius: var(--radius-control); }
-.set-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-@media (max-width: 800px) { .set-grid { grid-template-columns: 1fr; } }
+/* My Profile */
+.set-body .pf-title { font-size: 19px; font-weight: 600; color: #1F2617; margin: 0 0 16px; }
+.pf-form .pf-field label { display: block; margin: 0 0 7px; font-size: 14px; font-weight: 600; color: #1F2617; }
+.pf-form .pf-field input {
+    width: 100%; height: 46px; padding: 0 14px; font-family: inherit; font-size: 15px; color: #1F2617;
+    border: 1px solid #D6D2C6; border-radius: 10px; background: #fff;
+}
+.pf-form .pf-field input:focus { outline: none; border-color: #71AA60; box-shadow: 0 0 0 3px rgba(113, 170, 96, .25); }
+.pf-form > .pf-field { margin-bottom: 18px; }
+.pf-row { display: grid; grid-template-columns: 3fr 2fr; gap: 18px; } /* long email addresses need the room */
+@media (max-width: 800px) { .pf-row { grid-template-columns: 1fr; } }
+.pf-actions { display: flex; justify-content: flex-end; margin-top: 20px; }
+.pf-save { background: #71AA60; border-color: #71AA60; }
+.pf-save:hover, .pf-save:focus { background: #5F9850; border-color: #5F9850; }
+.set-detail .status-pill { align-self: center; }
+/* Account status pills (My Profile and Manage Accounts): the shared .status-pill, sized 13px. */
+.status-pill.acct { font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: var(--radius-pill); gap: 6px; white-space: nowrap; }
+.status-pill.acct::before { width: 6px; height: 6px; }
+.status-pill.acct.green { background: #EAF1E3; color: #2F5A27; }
+.status-pill.acct.green::before { background: #4F9A3C; }
+.status-pill.acct.gray { background: #ECEAE4; color: #5C6152; }
+.status-pill.acct.gray::before { background: #8C8A82; }
 
 .acct-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid #eee; }
 .acct-row:last-child { border-bottom: none; }
@@ -157,15 +171,16 @@ $tabs = [
         <?php if (!empty($error)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
 
         <?php if ($tab === 'profile'): ?>
+            <?php $roleLabel = 'Owner / Administrator'; // badge and Account Details show the same words ?>
             <h4>My Profile</h4>
-            <div class="set-hint">Manage your personal information and login credentials</div>
+            <div class="set-hint">Manage your personal information.</div>
 
             <div class="set-card">
                 <div class="set-profile-head">
                     <div class="set-avatar"><i class="bi bi-person-fill"></i></div>
                     <div>
                         <div class="fw-bold fs-5"><?= esc($admin['full_name'] ?? '') ?></div>
-                        <div class="set-role-pill">★ Owner - Administrator</div>
+                        <div class="set-role-pill">★ <?= esc($roleLabel) ?></div>
                         <div class="text-muted small">Last login: <?= !empty($admin['last_login']) ? esc(date('M j, Y g:i A', strtotime($admin['last_login']))) : '—' ?></div>
                     </div>
                 </div>
@@ -174,52 +189,39 @@ $tabs = [
             <div class="row g-3 mb-3">
                 <div class="col-lg-7">
                     <div class="set-card h-100 mb-0">
-                        <h5 class="fw-bold mb-3">Personal Information</h5>
-                <form method="post" action="<?= site_url('admin/settings/account') ?>">
+                        <h5 class="pf-title">Personal Information</h5>
+                <?php // Role isn't editable here (it's in the badge and Account Details); Save only sends name, email and phone. ?>
+                <form method="post" action="<?= site_url('admin/settings/account') ?>" class="pf-form">
                     <?= csrf_field() ?>
-                    <div class="set-grid mb-3">
-                        <div class="set-field">
-                            <label>Full Name</label>
-                            <input name="full_name" value="<?= esc($admin['full_name'] ?? '') ?>" required>
+                    <div class="pf-field">
+                        <label for="pfFullName">Full Name</label>
+                        <input id="pfFullName" name="full_name" value="<?= esc($admin['full_name'] ?? '') ?>" required>
+                    </div>
+                    <div class="pf-row">
+                        <div class="pf-field">
+                            <label for="pfEmail">Email Address</label>
+                            <input id="pfEmail" name="email" type="email" value="<?= esc($admin['email'] ?? '') ?>">
                         </div>
-                        <div class="set-field">
-                            <label>Role</label>
-                            <input value="Owner / Administrator" readonly style="color:#888;">
+                        <div class="pf-field">
+                            <label for="pfPhone">Contact Number</label>
+                            <input id="pfPhone" name="phone" value="<?= esc($admin['phone'] ?? '') ?>" placeholder="e.g. 0917 123 4567">
                         </div>
                     </div>
-                    <div class="set-grid mb-3">
-                        <div class="set-field">
-                            <label>Email Address</label>
-                            <input name="email" type="email" value="<?= esc($admin['email'] ?? '') ?>">
-                        </div>
-                        <div class="set-field">
-                            <label>Contact number</label>
-                            <input name="phone" value="<?= esc($admin['phone'] ?? '') ?>" placeholder="e.g. 0917 123 4567">
-                        </div>
-                    </div>
-                    <div class="text-end"><button type="submit" class="btn btn-success">Save</button></div>
+                    <div class="pf-actions"><button type="submit" class="btn btn-success pf-save">Save</button></div>
                 </form>
                     </div>
                 </div>
 
                 <div class="col-lg-5">
                     <div class="set-card h-100 mb-0">
-                        <h5 class="fw-bold mb-2">Account Details</h5>
+                        <h5 class="pf-title">Account Details</h5>
                         <div class="set-detail"><span>Username</span><strong><?= esc($admin['username'] ?? '—') ?></strong></div>
-                        <div class="set-detail"><span>Role</span><strong>Owner / Administrator</strong></div>
-                        <div class="set-detail"><span>Account Status</span><strong><?= !empty($admin['is_active']) ? 'Active' : 'Inactive' ?></strong></div>
+                        <div class="set-detail"><span>Role</span><strong><?= esc($roleLabel) ?></strong></div>
+                        <div class="set-detail"><span>Account Status</span><span class="status-pill acct <?= ! empty($admin['is_active']) ? 'green' : 'gray' ?>"><?= ! empty($admin['is_active']) ? 'Active' : 'Inactive' ?></span></div>
                         <div class="set-detail"><span>Member Since</span><strong><?= !empty($admin['created_at']) ? esc(date('F j, Y', strtotime($admin['created_at']))) : '—' ?></strong></div>
                         <div class="set-detail"><span>Last Login</span><strong><?= !empty($admin['last_login']) ? esc(date('M j, Y g:i A', strtotime($admin['last_login']))) : '—' ?></strong></div>
                     </div>
                 </div>
-            </div>
-
-            <?php $activeStaff = count(array_filter($staffAccounts, fn ($u) => ! empty($u['is_active']) && ($u['role'] ?? '') === 'Staff')); ?>
-            <div class="set-quick">
-                <a href="<?= site_url('admin/settings?tab=accounts') ?>"><span class="ic"><i class="bi bi-people"></i></span><div><strong>Manage Accounts</strong><small><?= $activeStaff ?> active staff &middot; passwords</small></div></a>
-                <a href="<?= site_url('admin/settings?tab=notif') ?>"><span class="ic"><i class="bi bi-bell"></i></span><div><strong>Notifications</strong><small>Choose which alerts you receive</small></div></a>
-                <a href="<?= site_url('admin/settings?tab=dss') ?>"><span class="ic"><i class="bi bi-sliders"></i></span><div><strong>DSS Parameter</strong><small>Order Qty and Reorder At inputs</small></div></a>
-                <a href="<?= site_url('admin/settings?tab=records') ?>"><span class="ic"><i class="bi bi-archive"></i></span><div><strong>Data &amp; Records</strong><small>Old sales records &middot; export &amp; clean-up</small></div></a>
             </div>
 
         <?php elseif ($tab === 'accounts'): ?>
@@ -239,7 +241,7 @@ $tabs = [
                         <div class="acct-email"><?= esc($admin['email'] ?? '') ?></div>
                     </div>
                     <span class="acct-role-pill" style="background:#fdf1c0;">Owner</span>
-                    <span class="status-pill green">Active</span>
+                    <span class="status-pill acct green">Active</span>
                     <span class="text-muted small">(You)</span>
                 </div>
 
@@ -251,7 +253,7 @@ $tabs = [
                             <div class="acct-email">@<?= esc($s['username']) ?><?= ! empty($s['email']) ? ' &middot; ' . esc($s['email']) : '' ?></div>
                         </div>
                         <span class="acct-role-pill">Staff</span>
-                        <span class="status-pill <?= $s['is_active'] ? 'green' : 'red' ?>"><?= $s['is_active'] ? 'Active' : 'Inactive' ?></span>
+                        <span class="status-pill acct <?= $s['is_active'] ? 'green' : 'gray' ?>"><?= $s['is_active'] ? 'Active' : 'Inactive' ?></span>
                         <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#resetStaffPwModal"
                                 data-action="<?= site_url('admin/settings/staff-accounts/password/' . $s['user_id']) ?>"
                                 data-name="<?= esc($s['full_name'], 'attr') ?>">Reset Password</button>
