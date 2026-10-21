@@ -76,6 +76,22 @@
     padding-left: 10px;
     padding-right: 10px;
 }
+/* Item name: semibold, not the browser's bold <strong>. Long names wrap onto at most two
+   balanced lines; beyond that they end in "…" and clamp-tip.js adds the full name as
+   a tooltip (hover / keyboard focus) and aria-label. Other cells stay vertically centred. */
+.inv-table tbody td:nth-child(2) > strong {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    font-weight: 600;
+    line-height: 1.35;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+}
+.inv-table .name-clamped { cursor: help; }
+.inv-table .name-clamped:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: 2px; }
 .inv-table .status-pill { white-space: nowrap; }
 /* Dates never break ("Sep 29, / 2026"); the column fits the widest month. */
 .inv-table td.inv-updated-cell { white-space: nowrap; }
@@ -124,6 +140,32 @@
     font-size: 18px;
     line-height: 1;
     vertical-align: middle;
+}
+/* Staff "✓ Admin notified": the Notify Admin box (its hidden label sets the width, padding the
+   height) in a gray outline; aria-disabled, so it stays focusable for its tooltip. */
+.inv-table .notify-btn.notify-done,
+.inv-table .notify-btn.notify-done:hover,
+.inv-table .notify-btn.notify-done:focus-visible,
+.inv-table .notify-btn.notify-done:active {
+    display: inline-grid;
+    place-items: center;
+    background: #fff;
+    color: #5C6152;
+    box-shadow: inset 0 0 0 1px #D6D2C6;
+    cursor: default;
+    transform: none;
+    vertical-align: middle;
+}
+.inv-table .notify-done > span { grid-area: 1 / 1; white-space: nowrap; }
+.inv-table .notify-done-sizer { visibility: hidden; }
+/* The longer label may use 7px of the side padding, so the box keeps the Notify Admin size. */
+.inv-table .notify-done-label { margin: 0 -7px; font-size: 0.8em; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; color: #5C6152; }
+/* Same check-circle as the success toast (Bootstrap Icons), as an inline SVG. */
+.inv-table .notify-done-icon { flex: none; width: 14px; height: 14px; color: #5C6152; }
+/* Empty placeholder (staff rows with nothing to act on): invisible, not clickable. */
+.inv-table .notify-none:empty {
+    visibility: hidden;
+    pointer-events: none;
 }
 
 /* ~1440px screens: 4px from Actions so longer names ("4S Blue With Patch") stay on one line. */

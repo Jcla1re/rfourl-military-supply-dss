@@ -41,14 +41,19 @@ class InventoryController extends BaseController
         }
 
         $eoqByItem = [];
+        $ropCalculatedAt = []; // items whose Reorder At comes from the DSS (latest run gave ROP > 0)
         foreach ($this->pdssComputationModel->latestPerItem() as $c) {
             $eoqByItem[$c['item_id']] = $c['eoq_value'];
+            if ((int) $c['reorder_point'] > 0) {
+                $ropCalculatedAt[$c['item_id']] = $c['computed_at'];
+            }
         }
 
         $allProducts = $this->productModel->where('is_active', 1)->findAll();
         foreach ($allProducts as &$p) {
             $p['status']    = $this->productModel->getStatus($p);
             $p['eoq_value'] = $eoqByItem[$p['item_id']] ?? null;
+            $p['rop_calculated_at'] = $ropCalculatedAt[$p['item_id']] ?? null;
         }
         unset($p);
 
@@ -60,6 +65,7 @@ class InventoryController extends BaseController
         foreach ($archivedProducts as &$p) {
             $p['status']    = ['label' => 'Archived', 'class' => 'status-archived'];
             $p['eoq_value'] = $eoqByItem[$p['item_id']] ?? null;
+            $p['rop_calculated_at'] = $ropCalculatedAt[$p['item_id']] ?? null;
         }
         unset($p);
         $archivedCount = $this->productModel->countRowsByCategory($archivedProducts)['All'];
@@ -144,6 +150,8 @@ class InventoryController extends BaseController
             'sizes'               => $sizes,
             'sizeOptions'         => $sizeOptions,
             'sizesByCategory'     => $sizesByCategory,
+            // Add/Edit item: suggestions for the Size field, every size ever used per category.
+            'sizeSuggestions'     => $this->productModel->sizesByCategory($this->productModel->select('category, size')->where('size IS NOT NULL')->findAll()),
             'statuses'            => ProductModel::STATUSES,
             'showArchived'        => $showArchived,
             'archivedCount'       => $archivedCount,
@@ -166,18 +174,19 @@ class InventoryController extends BaseController
     public function store()
     {
         $rules = [
-            'item_name'     => 'required|max_length[100]',
+            'item_name'     => ['rules' => 'required|max_length[60]', 'errors' => ['max_length' => 'Item name can be up to 60 characters.']],
             'category'      => 'required',
             'unit_cost'     => 'required|numeric|greater_than_equal_to[0]',
             'selling_price' => 'required|numeric|greater_than_equal_to[0]',
             'current_stock' => 'permit_empty|integer|greater_than_equal_to[0]',
+            'size'          => 'permit_empty|max_length[10]',
         ];
 
         if (! $this->validate($rules)) {
             return redirect()->to($this->listUrl())->with('toast', Toast::error("Couldn't add item", implode(' ', $this->validator->getErrors())));
         }
 
-        if ($this->isDuplicateItem((string) $this->request->getPost('item_name'), $this->request->getPost('size'), null)) {
+        if ($this->isDuplicateItem((string) $this->request->getPost('item_name'), $this->postedSize(null), null)) {
             return redirect()->to('/admin/inventory')->with('error', 'An item with this name and size already exists.');
         }
 
@@ -188,7 +197,7 @@ class InventoryController extends BaseController
             'supplier_id'        => $this->request->getPost('supplier_id') ?: null,
             'item_name'          => $this->request->getPost('item_name'),
             'category'           => $this->request->getPost('category'),
-            'size'               => $this->request->getPost('size') ?: null,
+            'size'               => $this->postedSize(null),
             'unit_cost'          => (float) $this->request->getPost('unit_cost'),
             'selling_price'      => (float) $this->request->getPost('selling_price'),
             'current_stock'      => (int) ($this->request->getPost('current_stock') ?: 0),
@@ -209,6 +218,22 @@ class InventoryController extends BaseController
         }
 
         return redirect()->to($this->listUrl())->with('toast', Toast::success('Item added', 'was added to inventory.', (string) $this->request->getPost('item_name')));
+    }
+
+    /**
+     * Size to save. No size field in the form (a category without sizes, or an
+     * older form) keeps the item's current size: a size is only cleared when
+     * the field is sent empty. Trimmed and uppercased; "XXL" is saved as "2XL".
+     */
+    private function postedSize(?string $current): ?string
+    {
+        $posted = $this->request->getPost('size');
+        if ($posted === null) {
+            return $current;
+        }
+        $size = strtoupper(trim((string) $posted));
+
+        return $size === '' ? null : ($size === 'XXL' ? '2XL' : $size);
     }
 
     /** True when another active item has the same name (case-insensitive) and size. */
@@ -241,33 +266,42 @@ class InventoryController extends BaseController
         }
 
         $rules = [
-            'item_name'     => 'required|max_length[100]',
+            'item_name'     => ['rules' => 'required|max_length[60]', 'errors' => ['max_length' => 'Item name can be up to 60 characters.']],
             'category'      => 'required',
             'unit_cost'     => 'required|numeric|greater_than_equal_to[0]',
             'selling_price' => 'required|numeric|greater_than_equal_to[0]',
             'current_stock' => 'permit_empty|integer|greater_than_equal_to[0]',
+            'size'          => 'permit_empty|max_length[10]',
         ];
 
         if (! $this->validate($rules)) {
             return redirect()->to($this->listUrl())->with('toast', Toast::error("Couldn't save changes", implode(' ', $this->validator->getErrors())));
         }
 
-        if ($this->isDuplicateItem((string) $this->request->getPost('item_name'), $this->request->getPost('size'), (string) $itemId)) {
+        if ($this->isDuplicateItem((string) $this->request->getPost('item_name'), $this->postedSize($product['size']), (string) $itemId)) {
             return redirect()->to('/admin/inventory')->with('error', 'Another item with this name and size already exists.');
         }
 
         $newStock = (int) ($this->request->getPost('current_stock') ?: 0);
         $delta    = $newStock - (int) $product['current_stock'];
 
+        // Reorder At from the form is a starting value: accepted only while the
+        // item has no ROP calculated from sales. Once the DSS calculates one, a
+        // posted value is ignored and the calculated ROP stays.
+        $postedRop = $this->request->getPost('manual_rop_warning');
+        $rop = ($postedRop === null || $this->pdssComputationModel->ropCalculatedAt((string) $itemId) !== null)
+            ? $product['manual_rop_warning']
+            : (int) ($postedRop ?: 0);
+
         $this->productModel->update($itemId, [
             'supplier_id'        => $this->request->getPost('supplier_id') ?: null,
             'item_name'          => $this->request->getPost('item_name'),
             'category'           => $this->request->getPost('category'),
-            'size'               => $this->request->getPost('size') ?: null,
+            'size'               => $this->postedSize($product['size']),
             'unit_cost'          => (float) $this->request->getPost('unit_cost'),
             'selling_price'      => (float) $this->request->getPost('selling_price'),
             'current_stock'      => $newStock,
-            'manual_rop_warning' => (int) ($this->request->getPost('manual_rop_warning') ?: 0),
+            'manual_rop_warning' => $rop,
         ]);
 
         if ($delta !== 0) {

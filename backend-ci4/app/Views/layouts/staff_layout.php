@@ -162,6 +162,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
     <?= view('partials/_toast', ['toast' => session()->getFlashdata('toast')]) ?>
     <script src="/assets/js/toast-timer.js"></script>
     <script src="/assets/js/sticky-offset.js"></script>
+    <script src="/assets/js/info-tip.js"></script>
     <script src="/assets/js/help-tip.js"></script>
     <?= view('partials/_confirm_modal') ?>
     <script src="/assets/js/confirm-modal.js"></script>

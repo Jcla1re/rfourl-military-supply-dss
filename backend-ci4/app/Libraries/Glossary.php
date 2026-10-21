@@ -55,12 +55,13 @@ class Glossary
     /**
      * The (i) button for a term. A real button, so it can be reached and
      * opened with the keyboard as well as by click or tap.
+     * $text replaces the standard explanation where a screen needs more detail.
      */
-    public static function tip(string $term): string
+    public static function tip(string $term, ?string $text = null): string
     {
         $t = self::TERMS[$term];
 
-        return help_tip($t['label'], $t['tip']);
+        return help_tip($t['label'], $text ?? $t['tip']);
     }
 
     /**

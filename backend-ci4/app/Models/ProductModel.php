@@ -78,6 +78,23 @@ class ProductModel extends Model
         'current_stock' => 'required|integer',
     ];
 
+    protected $afterUpdate = ['clearReorderNotices'];
+
+    /**
+     * Stock or reorder point changed (sale, logged transaction, delivery,
+     * admin edit): a staff "Admin notified" for an item that no longer needs
+     * reordering is closed (see ReorderNoticeModel).
+     */
+    protected function clearReorderNotices(array $data): array
+    {
+        if (! empty($data['result']) && array_intersect_key($data['data'] ?? [], ['current_stock' => 1, 'manual_rop_warning' => 1])) {
+            $ids = array_filter(array_map('strval', (array) ($data['id'] ?? [])));
+            (new ReorderNoticeModel())->clearResolved($ids === [] ? null : array_values($ids));
+        }
+
+        return $data;
+    }
+
     /** Active items that are Low Stock or Reorder Now (same rule as getStatus()). */
     public function getLowStock()
     {

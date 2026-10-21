@@ -8,6 +8,7 @@
 <?= $this->section('content') ?>
 
 <?php $tab = $tab ?? 'pos'; ?>
+<script src="/assets/js/clamp-tip.js" defer></script>
 
 <style>
 
@@ -60,7 +61,13 @@
 .pos-card.selected { border-color: #3d5230; }
 .pos-card.disabled { opacity: .5; cursor: not-allowed; background: #eee; }
 .pos-card .icon { font-size: 34px; margin-bottom: 8px; }
-.pos-card .name { font-weight: 700; }
+/* Item name: at most two lines, then "…"; clamp-tip.js adds the full name as tooltip + aria-label. */
+.pos-card .name {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+    overflow: hidden; overflow-wrap: anywhere; font-weight: 600;
+}
+.pos-card .name.name-clamped { cursor: help; }
+.pos-card .name.name-clamped:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: 2px; }
 .pos-card .size { color: #777; font-size: 12px; }
 .pos-card .price { font-weight: 800; font-size: 20px; margin: 6px 0; }
 .pos-card .stock { font-size: 12px; }
@@ -88,7 +95,7 @@
 .cart-head .count { background: var(--sidebar-bg); color: #fff; border-radius: var(--radius-pill); padding: 2px 10px; font-size: 12px; margin-left: 6px; }
 .cart-line { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .cart-line .info { flex: 1; }
-.cart-line .name { font-weight: 700; font-size: 14px; }
+.cart-line .name { font-weight: 600; font-size: 14px; }
 .cart-line .price { color: #777; font-size: 12px; }
 .cart-line .badge-disc { display: inline-block; background: #fff3cd; color: #8a6300; border-radius: var(--radius-pill); padding: 1px 8px; font-size: 11px; font-weight: 700; margin-left: 6px; }
 .cart-line .qty-ctrl { display: flex; align-items: center; gap: 6px; }

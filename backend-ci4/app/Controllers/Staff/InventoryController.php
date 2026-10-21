@@ -8,6 +8,7 @@ use App\Models\NotificationModel;
 use App\Models\NotificationPreferenceModel;
 use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
+use App\Models\ReorderNoticeModel;
 
 class InventoryController extends BaseController
 {
@@ -98,6 +99,21 @@ class InventoryController extends BaseController
         $page       = min(max(1, $page), $totalPages);
         $products   = array_slice($groups, ($page - 1) * $perPage, $perPage);
 
+        // "✓ Admin notified" per size that needs reordering and isn't on order yet.
+        $itemIds = [];
+        foreach ($products as $g) {
+            $itemIds = array_merge($itemIds, array_column($g['variants'], 'item_id'));
+        }
+        $notices = (new ReorderNoticeModel())->openFor($itemIds);
+        foreach ($products as &$g) {
+            foreach ($g['variants'] as &$v) {
+                $n = $notices[$v['item_id']] ?? null;
+                $v['notice'] = $n && $v['status']['label'] === 'Reorder Now' && empty($v['open_so']) ? ReorderNoticeModel::tooltip($n) : null;
+            }
+            unset($v);
+        }
+        unset($g);
+
         $data = [
             'title'         => 'Inventory',
             'active'        => 'inventory',
@@ -141,19 +157,51 @@ class InventoryController extends BaseController
     public function notifyAdmin($itemId)
     {
         $product = $this->productModel->find($itemId);
+        if (! $product) {
+            return redirect()->to($this->listUrl());
+        }
+        $done = 'Owner notified about ' . $product['item_name'] . '.';
 
-        if ((new NotificationPreferenceModel())->isEnabled('rop_alerts')) {
-            (new NotificationModel())->push(
-                'Admin',
-                'Reorder Point Notice',
-                'Staff flagged ' . ($product['item_name'] ?? $itemId) . ' as needing reorder attention.',
-                'Current stock: ' . ($product['current_stock'] ?? '—'),
-                null,
-                'staff_activity'
-            );
+        // One open notice per item, whichever staff account clicks: the row
+        // lock keeps two clicks at the same moment from both notifying.
+        $db      = db_connect();
+        $notices = new ReorderNoticeModel();
+        $db->transStart();
+        $db->query('SELECT item_id FROM products WHERE item_id = ? FOR UPDATE', [$product['item_id']]);
+        $existing = $notices->openFor([$product['item_id']])[$product['item_id']] ?? null;
+
+        if ($existing === null) {
+            $notificationId = null;
+            if ((new NotificationPreferenceModel())->isEnabled('rop_alerts')) {
+                $notificationId = (new NotificationModel())->push(
+                    'Admin',
+                    'Reorder Point Notice',
+                    'Staff flagged ' . $product['item_name'] . ' as needing reorder attention.',
+                    'Current stock: ' . $product['current_stock'],
+                    null,
+                    'staff_activity'
+                ) ?: null;
+            }
+            // Remembered only while the item still needs reordering and isn't
+            // on order: otherwise there's nothing for the row to show.
+            $status = $this->productModel->getStatus($product)['label'];
+            if ($status === 'Reorder Now' && ! isset($this->productModel->openOrders()[$product['item_id']])) {
+                $notices->insert([
+                    'item_id'         => $product['item_id'],
+                    'notified_by'     => (int) session()->get('user_id') ?: null,
+                    'notification_id' => $notificationId,
+                    'created_at'      => date('Y-m-d H:i:s'),
+                ]);
+            }
+        }
+        $db->transComplete();
+
+        if ($existing !== null) {
+            // Already notified and not ordered yet: no second notification.
+            $done .= ' ' . ReorderNoticeModel::summary($existing) . '.';
         }
 
-        return redirect()->to($this->listUrl())->with('success', 'Owner notified: reorder notice');
+        return redirect()->to($this->listUrl())->with('success', $done);
     }
 
     /**

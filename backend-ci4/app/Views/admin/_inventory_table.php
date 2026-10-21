@@ -27,7 +27,7 @@
                     <th>Item ID</th>
                     <th>Item Name</th>
                     <th class="col-center">Size</th>
-                    <th>Type</th>
+                    <th>Category</th>
                     <th class="col-num">On Hand</th>
                     <th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
                     <th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('order_qty') ?></th>
@@ -72,6 +72,8 @@
                             'current_stock'      => (int) ($v['current_stock'] ?? 0),
                             'manual_rop_warning' => (int) ($v['manual_rop_warning'] ?? 0),
                             'eoq_value'          => $v['eoq_value'],
+                            // Edit item: Reorder At is read-only ("Auto") once the DSS has calculated it.
+                            'rop_calculated_at'  => ! empty($v['rop_calculated_at']) ? date('M j, Y', strtotime($v['rop_calculated_at'])) : null,
                             'status_label'       => $v['status']['label'] ?? 'In Stock',
                             'open_so'            => $v['open_so'] ?? null,
                             'updated_at_display'=> date('M j, Y', strtotime($v['updated_at'] ?? 'now')),

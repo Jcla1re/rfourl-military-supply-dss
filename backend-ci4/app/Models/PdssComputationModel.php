@@ -46,6 +46,19 @@ class PdssComputationModel extends Model
      * Latest computation for every item that has one (used by the
      * procurement report table).
      */
+    /**
+     * When the item's Reorder At (ROP) was last calculated from sales, or null
+     * when it has no calculated ROP (new item, or no sales in the demand window:
+     * the latest run gave ROP 0). The DSS run only writes a ROP above 0 to the
+     * item, so a null here means the item's current value was typed in.
+     */
+    public function ropCalculatedAt(string $itemId): ?string
+    {
+        $latest = $this->where('item_id', $itemId)->orderBy('computation_id', 'DESC')->first();
+
+        return $latest && (int) $latest['reorder_point'] > 0 ? $latest['computed_at'] : null;
+    }
+
     public function latestPerItem(): array
     {
         $db = $this->db;
