@@ -31,12 +31,13 @@ class Glossary
     /**
      * The small info icon with the term's tooltip (assets/js/info-tip.js).
      * A real button, so it can be reached and opened with the keyboard.
+     * $text replaces the standard tooltip where a screen needs more detail.
      */
-    public static function tip(string $term): string
+    public static function tip(string $term, ?string $text = null): string
     {
         $t = self::TERMS[$term];
 
-        return '<button type="button" class="info-tip" data-tip="' . esc($t['tip'], 'attr') . '" aria-label="' . esc('About ' . $t['label'], 'attr') . '">'
+        return '<button type="button" class="info-tip" data-tip="' . esc($text ?? $t['tip'], 'attr') . '" aria-label="' . esc('About ' . $t['label'], 'attr') . '">'
             . '<i class="bi bi-info-circle" aria-hidden="true"></i></button>';
     }
 

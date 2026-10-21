@@ -14,6 +14,7 @@ $statuses = $statuses ?? \App\Models\ProductModel::STATUSES;
 
 <link href="/assets/css/inventory-table.css" rel="stylesheet">
 <script src="/assets/js/inventory-table.js" defer></script>
+<script src="/assets/js/clamp-tip.js" defer></script>
 <style>
 
 .page-wrap { font-family: 'Poppins', sans-serif; }
@@ -385,7 +386,11 @@ document.addEventListener('change', event => {
         // Always just "Notify Admin"; the size is in the badge and this tooltip.
         if (notifyBtn) { if (target.size) notifyBtn.title = 'Notify about size ' + target.size; else notifyBtn.removeAttribute('title'); }
         const needsReorder = row.dataset.rowStatus === 'Reorder Now' && !row.querySelector('.ordered-tag');
-        notifyForm.style.display = needsReorder ? '' : 'none';
+        // Already notified for that size (any staff account): "✓ Admin notified" instead.
+        const notifyDone = row.querySelector('.notify-done');
+        notifyDone.dataset.tip = target.notice || '';
+        notifyForm.style.display = needsReorder && !target.notice ? '' : 'none';
+        notifyDone.style.display = needsReorder && target.notice ? '' : 'none';
         notifyNone.style.display = needsReorder ? 'none' : '';
     }
 });

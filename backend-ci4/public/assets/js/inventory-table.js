@@ -27,3 +27,5 @@ function updateStickyHeader() {
     }, { passive: true });
     updateStickyHeader();
 })();
+
+/* Item names cut off after two lines: tooltip + accessible name in assets/js/clamp-tip.js. */

@@ -15,7 +15,7 @@
             </colgroup>
             <thead>
                 <tr>
-                    <th>Item ID</th><th>Item Name</th><th class="col-center">Size</th><th>Type</th><th class="col-num">On Hand</th><th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
+                    <th>Item ID</th><th>Item Name</th><th class="col-center">Size</th><th>Category</th><th class="col-num">On Hand</th><th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
                     <th class="col-stock col-term">Stock Level</th><th>Status</th><th class="col-term">Last Updated</th><th class="col-actions">Actions</th>
                 </tr>
             </thead>
@@ -42,6 +42,7 @@
                             'eoq_value'          => $v['eoq_value'] ?? null,
                             'status_label'       => $v['status']['label'] ?? 'In Stock',
                             'open_so'            => $v['open_so'] ?? null,
+                            'notice'             => $v['notice'] ?? null,
                             'updated_at_display' => date('M j, Y', strtotime($v['updated_at'] ?? 'now')),
                         ], $variants);
                         ?>
@@ -71,13 +72,17 @@
                             <td class="inv-bar-cell"><div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% of reorder point + order quantity"><span style="width: <?= $fill['pct'] ?>%"></span></div></td>
                             <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"<?= $pillTitle !== '' ? ' title="' . esc($pillTitle, 'attr') . '"' : '' ?>><?= esc($itemStatus) ?></span><?php if (! empty($group['on_order'])): ?> <span class="ordered-tag" title="On order: <?= esc($group['open_so']) ?>">Ordered</span><?php endif; ?></td>
                             <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
+                            <?php $needsReorder = $itemStatus === 'Reorder Now' && empty($group['on_order']); ?>
                             <td class="inv-notify-cell col-actions">
-                                <form method="post" action="<?= site_url('staff/inventory/notify/' . $default['item_id']) ?>" class="notify-form" style="<?= $itemStatus === 'Reorder Now' && empty($group['on_order']) ? '' : 'display:none;' ?>">
+                                <form method="post" action="<?= site_url('staff/inventory/notify/' . $default['item_id']) ?>" class="notify-form" style="<?= $needsReorder && empty($default['notice']) ? '' : 'display:none;' ?>">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="return_query" value="<?= esc($_SERVER['QUERY_STRING'] ?? '') ?>">
                                     <button type="submit" class="notify-btn"<?= ! empty($default['size']) ? ' title="Notify about size ' . esc($default['size'], 'attr') . '"' : '' ?>>Notify Admin</button>
                                 </form>
-                                <span class="notify-none" style="<?= $itemStatus === 'Reorder Now' && empty($group['on_order']) ? 'display:none;' : '' ?>"><?= ! empty($group['on_order']) ? '<span class="on-order-note">On order</span>' : '<i class="bi bi-three-dots"></i>' ?></span>
+                                <?php /* Already notified (any staff account) and not ordered yet. Same box as Notify Admin: the hidden copy of that label sets the width. */ ?>
+                                <button type="button" class="notify-btn notify-done" aria-disabled="true" data-tip="<?= esc($default['notice'] ?? '', 'attr') ?>" style="<?= $needsReorder && ! empty($default['notice']) ? '' : 'display:none;' ?>"><span class="notify-done-sizer" aria-hidden="true">Notify Admin</span><span class="notify-done-label"><svg class="notify-done-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>Admin notified</span></button>
+                                <?php /* Staff have no row actions (no ··· menu; "On order" shows as the Status column's Ordered tag): the empty placeholder only keeps the row as tall as admin's. */ ?>
+                                <span class="notify-none" style="<?= $itemStatus === 'Reorder Now' && empty($group['on_order']) ? 'display:none;' : '' ?>" aria-hidden="true"></span>
                             </td>
                         </tr>
                     <?php endforeach; ?>

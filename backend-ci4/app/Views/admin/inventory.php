@@ -25,6 +25,7 @@ $products ??= [];
 
 <link href="/assets/css/inventory-table.css" rel="stylesheet">
 <script src="/assets/js/inventory-table.js" defer></script>
+<script src="/assets/js/clamp-tip.js" defer></script>
 <style>
 
 .page-wrap, .order-modal { font-family: 'Poppins', sans-serif; }
@@ -176,7 +177,19 @@ $products ??= [];
 }
 .im-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
 .im-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.im-field label { font-size: 13px; font-weight: 500; color: #2C3A1E; }
+.im-field label,
+.im-field .im-label { font-size: 13px; font-weight: 500; color: #2C3A1E; }
+.im-field[hidden] { display: none; }
+.im-size-slot { min-width: 0; }
+/* Size for a category without sizes: looks like a disabled field, isn't an input. */
+.im-static {
+    display: flex; align-items: center;
+    height: 44px; padding: 0 14px;
+    border: 1px solid #E8E5DC; border-radius: var(--radius-control);
+    background: #F5F3EE; color: #8A8D7E; font-size: 15px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    cursor: not-allowed; user-select: none;
+}
 .im-field input,
 .im-field select {
     width: 100%;
@@ -202,6 +215,20 @@ $products ??= [];
     box-shadow: 0 0 0 3px rgba(113, 170, 96, .25);
 }
 .im-help { font-size: 12px; color: #5C6152; line-height: 1.45; }
+/* Item name counter ("34 / 60"); red only if an older, longer name is over the limit. */
+/* "Item name ......... 25 / 60": the counter shares the label's line, so the rows below never move. */
+.im-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+/* "Reorder At (i)": label and icon on one line, 6px apart, as tall as a plain label. */
+.im-label-line { display: flex; align-items: center; gap: 6px; white-space: nowrap; height: 19.5px; }
+.im-label-line .info-tip { margin-left: 0; vertical-align: 0; }
+/* Edit item moving to Patches / Metal: the size that saving will remove. */
+.im-size-warn { display: block; min-height: 17px; margin-top: 6px; font-size: 12px; line-height: 17px; color: #8A5A00; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.im-static[hidden] { display: none; }
+/* Reorder At calculated by the DSS: read-only value + "Auto" tag. */
+.im-static.im-auto { justify-content: space-between; gap: 8px; border-style: dashed; border-color: #CFCABD; color: #2C3A1E; cursor: default; }
+.im-auto-tag { padding: 2px 8px; border-radius: var(--radius-pill); background: #E6E9DD; color: #4A5A35; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+.im-count { font-size: 12px; line-height: 1; color: #5C6152; font-variant-numeric: tabular-nums; }
+.im-count.is-over { color: #B42318; }
 .im-prefix { position: relative; }
 .im-prefix span {
     position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
@@ -526,32 +553,35 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                     <h3 class="im-section-title"><i class="bi bi-box" aria-hidden="true"></i> Item details</h3>
                     <div class="im-grid">
                         <div class="im-field">
-                            <label for="item_name">Item name</label>
-                            <input id="item_name" name="item_name" required maxlength="100">
-                        </div>
-                        <div class="im-field" id="sizeLetterField">
-                            <label for="sizeLetter">Size</label>
-                            <select id="sizeLetter" name="size">
-                                <option value="">No size</option>
-                                <option value="XS">XS</option>
-                                <option value="S">S</option>
-                                <option value="M">M</option>
-                                <option value="L">L</option>
-                                <option value="XL">XL</option>
-                                <option value="XXL">XXL</option>
-                            </select>
-                        </div>
-                        <div class="im-field" id="sizeNumericField" style="display:none;">
-                            <label for="sizeNumeric">Size (US)</label>
-                            <input id="sizeNumeric" name="size" type="number" step="0.5" min="0" placeholder="e.g. 9">
+                            <div class="im-label-row">
+                                <label for="item_name">Item name</label>
+                                <small class="im-count" id="nameCount">0 / 60</small>
+                            </div>
+                            <input id="item_name" name="item_name" required maxlength="60" aria-describedby="nameCount">
                         </div>
                         <div class="im-field">
-                            <label for="category">Type</label>
+                            <label for="category">Category</label>
                             <select id="category" name="category" required>
                                 <?php foreach ($categories as $itemCategory): ?>
                                     <option value="<?= esc($itemCategory) ?>"><?= esc($itemCategory) ?></option>
                                 <?php endforeach; ?>
                             </select>
+                        </div>
+                        <?php // One grid cell for every kind of size field, so switching category never moves a field. ?>
+                        <div class="im-size-slot">
+                            <div class="im-field" id="sizeTextField">
+                                <label for="sizeText" id="sizeTextLabel">Size</label>
+                                <input id="sizeText" name="size" type="text" maxlength="10" placeholder="e.g. M" autocomplete="off" list="sizeSuggestions">
+                                <datalist id="sizeSuggestions"></datalist>
+                            </div>
+                            <div class="im-field" id="sizeNoneField" hidden>
+                                <span class="im-label" id="sizeNoneLabel">Size</span>
+                                <div class="im-static" aria-disabled="true" aria-labelledby="sizeNoneLabel">No size for this category</div>
+                                <?php // Saving with Patches / Metal sends an empty size, so the server's keep-the-size safety net doesn't apply. ?>
+                                <input type="hidden" name="size" id="sizeClear" value="" disabled>
+                            </div>
+                            <?php // Edit item moving to Patches / Metal. Its line is always reserved, so nothing moves when it appears. ?>
+                            <small class="im-size-warn" id="sizeRemoveWarn" role="status"></small>
                         </div>
                         <div class="im-field">
                             <label for="supplier_id">Supplier</label>
@@ -577,9 +607,15 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                             <small class="im-help" id="stockHelp">Current units in the store.</small>
                         </div>
                         <div class="im-field">
-                            <label for="manual_rop_warning"><?= esc(\App\Libraries\Glossary::label('reorder_at')) ?></label><?= \App\Libraries\Glossary::tip('reorder_at') ?>
-                            <input id="manual_rop_warning" name="manual_rop_warning" type="number" min="0" step="1" value="0">
-                            <small class="im-help">You'll get an alert when stock reaches this number. <?= esc(\App\Models\ProductModel::LOW_STOCK_HELP) ?></small>
+                            <div class="im-label-line">
+                                <label for="manual_rop_warning" id="ropLabel"><?= esc(\App\Libraries\Glossary::label('reorder_at')) ?></label><?= \App\Libraries\Glossary::tip('reorder_at', "Reorder Point (ROP): when on hand reaches this number, it's time to order. Calculated from sales history. Low Stock shows when stock is within 50% above it (at least 2 units).") ?>
+                            </div>
+                            <?php // No calculated ROP yet: an editable starting value. Calculated by the DSS: read-only, not sent. ?>
+                            <input id="manual_rop_warning" name="manual_rop_warning" type="number" min="0" step="1" value="0" aria-describedby="ropHelp">
+                            <div class="im-static im-auto" id="ropAuto" aria-labelledby="ropLabel" aria-describedby="ropHelp" hidden>
+                                <span id="ropAutoValue">—</span> <span class="im-auto-tag">Auto</span>
+                            </div>
+                            <small class="im-help" id="ropHelp">Starting value. The system replaces it once the item has sales.</small>
                         </div>
                     </div>
                     <fieldset class="im-reason" id="stockReason" hidden>
@@ -768,39 +804,64 @@ const itemModal = document.getElementById('itemModal');
 const itemForm = document.getElementById('itemForm');
 const storeUrl = "<?= site_url('admin/inventory/store') ?>";
 
-// Clothes are sized XS-XXL, except "Goa Pants" specifically which uses US
-// numeric sizing like Shoes — everything else (Equipment/Patches/Metal/
-// Accessories) isn't a sized item at all. Only one of the two size inputs
-// is ever enabled at a time since both share name="size" — the disabled
-// one is excluded from the submitted form data entirely.
-function sizeModeFor(category, itemName) {
-    const name = (itemName || '').toLowerCase();
-    if (category === 'Shoes') return 'numeric';
-    if (category === 'Clothes' && name.includes('goa') && name.includes('pant')) return 'numeric';
-    if (category === 'Clothes') return 'letter';
-    return 'none';
-}
+// One Size field (text + suggestions of every size already used in the
+// category) for Clothes, Shoes, Equipment and Accessories; Patches and Metal
+// show the disabled "No size for this category" box in the same place, so
+// the layout never moves. A disabled field isn't submitted, and the server
+// then keeps the item's current size.
+const SIZE_SUGGESTIONS = <?= json_encode($sizeSuggestions ?? new stdClass()) ?>;
+const SIZE_FIELD_BY_CATEGORY = {
+    Clothes:     { label: 'Size',            placeholder: 'e.g. M' },
+    Shoes:       { label: 'Size (US)',       placeholder: 'e.g. 9' },
+    Equipment:   { label: 'Size (optional)', placeholder: 'e.g. 32' },
+    Accessories: { label: 'Size (optional)', placeholder: 'e.g. 32' },
+};
 
 function updateSizeFieldVisibility() {
-    const mode = sizeModeFor(document.getElementById('category').value, document.getElementById('item_name').value);
-    const letterField = document.getElementById('sizeLetterField');
-    const numericField = document.getElementById('sizeNumericField');
-    const letterInput = document.getElementById('sizeLetter');
-    const numericInput = document.getElementById('sizeNumeric');
-
-    letterField.style.display = mode === 'letter' ? '' : 'none';
-    letterInput.disabled = mode !== 'letter';
-
-    numericField.style.display = mode === 'numeric' ? '' : 'none';
-    numericInput.disabled = mode !== 'numeric';
+    const category = document.getElementById('category').value;
+    const field = SIZE_FIELD_BY_CATEGORY[category];
+    document.getElementById('sizeTextField').hidden = !field;
+    document.getElementById('sizeText').disabled = !field;
+    document.getElementById('sizeNoneField').hidden = !!field;
+    // Patches / Metal: the size is cleared on save. The typed size stays in the
+    // (hidden) Size field, so switching back to a sized category restores it.
+    document.getElementById('sizeClear').disabled = !!field;
+    const warn = document.getElementById('sizeRemoveWarn');
+    const current = document.getElementById('sizeText').value.trim().toUpperCase();
+    warn.textContent = field || originalStock === null || current === '' ? '' : `Saving removes size ${current}.`;
+    if (!field) return;
+    document.getElementById('sizeTextLabel').textContent = field.label;
+    document.getElementById('sizeText').placeholder = field.placeholder;
+    const list = document.getElementById('sizeSuggestions');
+    list.replaceChildren(...(SIZE_SUGGESTIONS[category] || []).map(s => new Option(s)));
 }
 
 document.getElementById('category').addEventListener('change', updateSizeFieldVisibility);
-document.getElementById('item_name').addEventListener('input', updateSizeFieldVisibility);
+
+// Size: uppercase as you type, trimmed when you leave the field (max 10 via maxlength).
+const sizeText = document.getElementById('sizeText');
+sizeText.addEventListener('input', () => {
+    const pos = sizeText.selectionStart;
+    sizeText.value = sizeText.value.toUpperCase();
+    sizeText.setSelectionRange(pos, pos);
+});
+sizeText.addEventListener('blur', () => { sizeText.value = sizeText.value.trim(); });
 
 // ----- Add / Edit item modal --------------------------------------------
 const stockInput = document.getElementById('current_stock');
 const ropInput = document.getElementById('manual_rop_warning');
+
+// Reorder At: editable starting value until the DSS calculates a ROP from
+// sales; then read-only with "Auto" (and not sent: the server ignores it anyway).
+function setRopMode(value, calculatedAt) {
+    ropInput.value = value;
+    ropInput.hidden = ropInput.disabled = !!calculatedAt;
+    document.getElementById('ropAuto').hidden = !calculatedAt;
+    document.getElementById('ropAutoValue').textContent = calculatedAt ? value : '—';
+    document.getElementById('ropHelp').textContent = calculatedAt
+        ? `Updated automatically from sales. Last calculated ${calculatedAt}.`
+        : 'Starting value. The system replaces it once the item has sales.';
+}
 const costInput = document.getElementById('unit_cost');
 const priceInput = document.getElementById('selling_price');
 const submitItemBtn = document.getElementById('submitItemBtn');
@@ -811,12 +872,10 @@ let modalOpener = null;
 
 const peso = n => '₱' + Number(n).toLocaleString('en-PH', { maximumFractionDigits: 2 });
 
-// The values that count as "the form": the active size input only (the
-// other one is disabled and isn't submitted).
+// The values that count as "the form" (Size only while its field is enabled).
 function formValues() {
-    const size = document.getElementById('sizeLetter').disabled
-        ? (document.getElementById('sizeNumeric').disabled ? '' : document.getElementById('sizeNumeric').value)
-        : document.getElementById('sizeLetter').value;
+    const sizeInput = document.getElementById('sizeText');
+    const size = sizeInput.disabled ? '' : sizeInput.value.trim().toUpperCase();
     return {
         item_name: document.getElementById('item_name').value.trim(),
         size: size,
@@ -830,6 +889,14 @@ function formValues() {
 }
 
 function refreshItemModal() {
+    // Item name counter (maxlength 60; the server checks the same limit).
+    const nameInput = document.getElementById('item_name');
+    const nameLen = [...nameInput.value].length;
+    const nameCount = document.getElementById('nameCount');
+    nameCount.textContent = `${nameLen} / 60`;
+    nameCount.classList.toggle('is-over', nameLen > 60);
+    nameInput.setCustomValidity(nameLen > 60 ? 'Item name can be up to 60 characters.' : '');
+
     const stock = Number(stockInput.value || 0);
     const rop = Number(ropInput.value || 0);
 
@@ -899,6 +966,7 @@ document.getElementById('openAddModal').addEventListener('click', event => {
     document.getElementById('modalSubtitle').textContent = 'Fill in the details for the new item.';
     submitItemBtn.textContent = 'Add item';
     document.getElementById('deleteZone').hidden = true;
+    setRopMode(0, null); // a new item has no calculated ROP yet
     updateSizeFieldVisibility();
     openItemModal(event.currentTarget);
 });
@@ -917,18 +985,15 @@ document.addEventListener('click', event => {
     document.getElementById('item_name').value = item.item_name || '';
     document.getElementById('category').value = item.category || '';
     updateSizeFieldVisibility();
-    const sizeMode = sizeModeFor(item.category || '', item.item_name || '');
-    if (sizeMode === 'numeric') {
-        document.getElementById('sizeNumeric').value = item.size || '';
-    } else if (sizeMode === 'letter') {
-        document.getElementById('sizeLetter').value = item.size || '';
-    }
+    // The item's current size, whether or not it's among the suggestions.
+    document.getElementById('sizeText').value = item.size || '';
     document.getElementById('supplier_id').value = item.supplier_id || '';
     costInput.value = item.unit_cost || 0;
     priceInput.value = item.selling_price || 0;
     stockInput.value = item.current_stock || 0;
-    ropInput.value = item.manual_rop_warning || 0;
+    setRopMode(item.manual_rop_warning || 0, item.rop_calculated_at || null);
     originalStock = Number(item.current_stock || 0);
+    updateSizeFieldVisibility(); // again, now that the size and Edit mode are set (size warning)
 
     itemForm.action = "<?= site_url('admin/inventory/update') ?>/" + item.item_id;
 

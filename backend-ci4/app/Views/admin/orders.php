@@ -68,7 +68,7 @@ $restockDates = $restockDates ?? [];
 .ord-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); padding: 20px; margin-bottom: 16px; }
 .ord-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .ord-card-top .meta { color: #555; font-size: 13px; }
-.ord-card-top .title { font-weight: 800; font-size: 16px; margin: 2px 0; }
+.ord-card-top .title { font-weight: 600; font-size: 16px; margin: 2px 0; }
 .ord-card-top .sub { color: #777; font-size: 13px; }
 .priority-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 700; color: #4a4a4a; }
 

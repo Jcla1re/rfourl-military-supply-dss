@@ -6,6 +6,9 @@
  * body, so a scrolling table or a sticky header can't clip it.
  */
 (function () {
+    // Also the staff Inventory "✓ Admin notified" button (who notified, and when) and
+    // item names cut off after two lines (clamp-tip.js: Inventory table, POS cards).
+    const TIP = '.info-tip, .notify-done, .name-clamped';
     let bubble = null;
     let owner = null;
 
@@ -41,14 +44,14 @@
         bubble.style.left = Math.round(left) + 'px';
     };
 
-    document.addEventListener('mouseover', e => { const btn = e.target.closest('.info-tip'); if (btn) show(btn); });
+    document.addEventListener('mouseover', e => { const btn = e.target.closest(TIP); if (btn) show(btn); });
     document.addEventListener('mouseout', e => {
-        const btn = e.target.closest('.info-tip');
+        const btn = e.target.closest(TIP);
         if (btn && !btn.contains(e.relatedTarget) && document.activeElement !== btn) hide();
     });
-    document.addEventListener('focusin', e => { const btn = e.target.closest('.info-tip'); if (btn) show(btn); });
-    document.addEventListener('focusout', e => { if (e.target.closest('.info-tip')) hide(); });
-    document.addEventListener('click', e => { if (e.target.closest('.info-tip')) e.preventDefault(); });
+    document.addEventListener('focusin', e => { const btn = e.target.closest(TIP); if (btn) show(btn); });
+    document.addEventListener('focusout', e => { if (e.target.closest(TIP)) hide(); });
+    document.addEventListener('click', e => { if (e.target.closest(TIP)) e.preventDefault(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && bubble) { e.stopPropagation(); hide(); } }, true);
     window.addEventListener('scroll', hide, true);
     window.addEventListener('resize', hide);

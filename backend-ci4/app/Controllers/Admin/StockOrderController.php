@@ -8,6 +8,7 @@ use App\Libraries\Toast;
 use App\Models\NotificationModel;
 use App\Models\ProductModel;
 use App\Models\ReorderAlertModel;
+use App\Models\ReorderNoticeModel;
 use App\Models\SoItemModel;
 use App\Models\StockOrderModel;
 use App\Models\SupplierModel;
@@ -255,6 +256,8 @@ class StockOrderController extends BaseController
             ->whereIn('status', ReorderAlertModel::PENDING_STATUSES)
             ->set(['status' => 'Ordered', 'so_id' => $soId])
             ->update();
+        // Staff "Admin notified" on those items is answered by this order.
+        (new ReorderNoticeModel())->clear(array_column($lines, 'item_id'), 'ordered');
 
         $alert   = null;
         $product = null;

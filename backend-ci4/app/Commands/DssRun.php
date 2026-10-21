@@ -253,6 +253,8 @@ class DssRun extends BaseCommand
         foreach ($ropUpdates as $itemId => $rop) {
             $db->table('products')->where('item_id', $itemId)->update(['manual_rop_warning' => $rop]);
         }
+        // A new reorder point can take an item out of Reorder Now: close its staff "Admin notified".
+        (new \App\Models\ReorderNoticeModel())->clearResolved(array_map('strval', array_keys($ropUpdates)));
 
         // Only rewrite the cluster cache when we actually got a fresh
         // response — if we're running on the cache fallback, truncating
