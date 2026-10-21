@@ -51,8 +51,14 @@ class EmailNotifier
      */
     public function toUserHtml(?array $user, string $subject, string $htmlMessage, string $plainTextFallback): void
     {
+        $this->sendHtml($user, $subject, $htmlMessage, $plainTextFallback);
+    }
+
+    /** Same as toUserHtml(), but returns whether the email was sent (false: no address or a send error). */
+    public function sendHtml(?array $user, string $subject, string $htmlMessage, string $plainTextFallback): bool
+    {
         if (empty($user['email'])) {
-            return;
+            return false;
         }
 
         try {
@@ -62,9 +68,12 @@ class EmailNotifier
             $email->setMailType('html');
             $email->setMessage($htmlMessage);
             $email->setAltMessage($plainTextFallback);
-            $email->send();
+
+            return (bool) $email->send();
         } catch (\Throwable $e) {
             log_message('error', 'Email notification failed: ' . $e->getMessage());
+
+            return false;
         }
     }
 

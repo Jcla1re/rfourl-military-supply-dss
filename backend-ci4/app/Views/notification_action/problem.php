@@ -6,6 +6,9 @@ $message = $message ?? 'This link is invalid or has expired.';
 <html>
 <head>
     <title>Link Unavailable - RfourL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="/assets/css/auth-theme.css" rel="stylesheet">
 </head>
 <body class="auth-body">

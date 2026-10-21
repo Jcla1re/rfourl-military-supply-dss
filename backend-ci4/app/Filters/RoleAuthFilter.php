@@ -62,6 +62,12 @@ class RoleAuthFilter implements FilterInterface
                     : 'This account has been deactivated.');
         }
 
+        // On a temporary password, the only page a staff member can open is "set your own password".
+        if ($requiredRole === 'Staff' && ! empty($user['must_change_password'])
+            && $request->getUri()->getSegment(2) !== 'set-password') {
+            return redirect()->to('/staff/set-password');
+        }
+
         return null;
     }
 

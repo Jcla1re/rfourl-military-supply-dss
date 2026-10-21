@@ -4,7 +4,7 @@
 <?= $this->section('header_actions') ?>
 <form method="post" action="<?= site_url('admin/notifications/mark-all-read') ?>">
     <?= csrf_field() ?>
-    <button type="submit" class="btn btn-outline-light">Mark all as read</button>
+    <button type="submit" class="btn btn-topbar">Mark all as read</button>
 </form>
 <?= $this->endSection() ?>
 
@@ -112,7 +112,7 @@ $unreadCount = $unreadCount ?? 0;
     </div>
 
     <?php if (empty($groups)): ?>
-        <div class="empty-state">No notifications yet. You'll see reorder alerts, order status changes, and supplier updates here.</div>
+        <div class="empty-state"><i class="bi bi-bell" aria-hidden="true"></i> No notifications yet.</div>
     <?php else: ?>
         <?php foreach ($groups as $label => $items): ?>
             <div class="notif-date-label"><?= esc($label) ?></div>
@@ -141,7 +141,7 @@ $unreadCount = $unreadCount ?? 0;
                             <span class="body">
                                 <span class="title" style="display:block;"><?= esc($n['title']) ?><?php if (!$isRead): ?><span class="new-pill">NEW</span><?php endif; ?></span>
                                 <?php if (!empty($n['message'])): ?><span class="msg" style="display:block;"><?= esc($n['message']) ?></span><?php endif; ?>
-                                <span class="type-pill"><?= esc($n['type']) ?></span>
+                                <span class="type-pill"><?= esc(['Reorder Point Notice' => 'Reorder At Notice'][$n['type']] ?? $n['type']) ?></span>
                             </span>
                             <span class="go"><i class="bi bi-arrow-right-circle"></i></span>
                         </button>
@@ -153,7 +153,7 @@ $unreadCount = $unreadCount ?? 0;
                         <div class="flex-grow-1">
                             <div class="title"><?= esc($n['title']) ?><?php if (!$isRead): ?><span class="new-pill">NEW</span><?php endif; ?></div>
                             <?php if (!empty($n['message'])): ?><div class="msg"><?= esc($n['message']) ?></div><?php endif; ?>
-                            <span class="type-pill"><?= esc($n['type']) ?></span>
+                            <span class="type-pill"><?= esc(['Reorder Point Notice' => 'Reorder At Notice'][$n['type']] ?? $n['type']) ?></span>
                             <div class="notif-actions">
                                 <?php if (empty($n['status']) && !empty($n['action_user_id'])): ?>
                                     <form method="post" action="<?= site_url('admin/notifications/lock/' . $n['notification_id']) ?>"
@@ -183,18 +183,28 @@ $unreadCount = $unreadCount ?? 0;
                         <div class="flex-grow-1">
                             <div class="title"><?= esc($n['title']) ?><?php if (!$isRead): ?><span class="new-pill">NEW</span><?php endif; ?></div>
                             <?php if (!empty($n['message'])): ?><div class="msg"><?= esc($n['message']) ?></div><?php endif; ?>
-                            <span class="type-pill"><?= esc($n['type']) ?></span>
+                            <span class="type-pill"><?= esc(['Reorder Point Notice' => 'Reorder At Notice'][$n['type']] ?? $n['type']) ?></span>
                             <?php if (empty($n['status'])): ?>
                                 <div class="notif-actions">
-                                    <form method="post" action="<?= site_url('admin/notifications/approve/' . $n['notification_id']) ?>">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="approve">Approve</button>
-                                    </form>
+                                    <button type="button" class="approve" data-approve-open="<?= (int) $n['notification_id'] ?>">Approve reset</button>
                                     <form method="post" action="<?= site_url('admin/notifications/decline/' . $n['notification_id']) ?>">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="decline">Decline</button>
                                     </form>
                                 </div>
+                                <form method="post" action="<?= site_url('admin/notifications/approve/' . $n['notification_id']) ?>"
+                                      class="approve-confirm" id="approveConfirm<?= (int) $n['notification_id'] ?>" hidden>
+                                    <?= csrf_field() ?>
+                                    <p class="msg mb-2">Check with them, by call or chat, that they really sent this request. Approving emails them a temporary password. You won't see it.</p>
+                                    <label class="d-flex gap-2 align-items-start mb-2">
+                                        <input type="checkbox" name="confirmed" value="1" class="approve-tick" style="margin-top:4px;">
+                                        <span>I confirmed with them</span>
+                                    </label>
+                                    <div class="notif-actions">
+                                        <button type="submit" class="approve" disabled>Approve reset</button>
+                                        <button type="button" class="approve-cancel">Cancel</button>
+                                    </div>
+                                </form>
                             <?php else: ?>
                                 <div class="msg" style="margin-top:8px;"><em>Resolved: <?= esc(ucfirst($n['status'])) ?></em></div>
                             <?php endif; ?>
@@ -208,7 +218,7 @@ $unreadCount = $unreadCount ?? 0;
                                 <div class="icn"><i class="bi <?= $icon ?>"></i></div>
                                 <div class="flex-grow-1">
                                     <div class="title"><?= esc($n['title']) ?><?php if (!$isRead): ?><span class="new-pill">NEW</span><?php endif; ?></div>
-                                    <span class="type-pill"><?= esc($n['type']) ?></span>
+                                    <span class="type-pill"><?= esc(['Reorder Point Notice' => 'Reorder At Notice'][$n['type']] ?? $n['type']) ?></span>
                                 </div>
                                 <span class="chevron"><i class="bi bi-chevron-down"></i></span>
                             </div>
@@ -231,4 +241,15 @@ $unreadCount = $unreadCount ?? 0;
     <?php endif; ?>
 </div>
 
+<script>
+// "Approve reset": the first click opens the confirmation; the button inside stays off until "I confirmed with them" is ticked.
+document.querySelectorAll('[data-approve-open]').forEach(function (open) {
+    var form = document.getElementById('approveConfirm' + open.dataset.approveOpen);
+    var tick = form.querySelector('.approve-tick');
+    var go = form.querySelector('button[type=submit]');
+    open.addEventListener('click', function () { form.hidden = false; open.hidden = true; tick.focus(); });
+    tick.addEventListener('change', function () { go.disabled = !tick.checked; });
+    form.querySelector('.approve-cancel').addEventListener('click', function () { form.hidden = true; open.hidden = false; tick.checked = false; go.disabled = true; });
+});
+</script>
 <?= $this->endSection() ?>

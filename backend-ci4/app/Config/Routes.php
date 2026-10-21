@@ -55,6 +55,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->post('orders/store', 'StockOrderController::store');
     $routes->post('orders/update-status/(:segment)', 'StockOrderController::updateStatus/$1');
     $routes->post('orders/flag-delayed/(:segment)', 'StockOrderController::flagDelayed/$1');
+    $routes->post('orders/cancel/(:segment)', 'StockOrderController::cancel/$1');
 
     $routes->get('reorder-alerts', 'ReorderAlertController::index');
     $routes->get('procurement-report', 'ReorderAlertController::report');
@@ -85,6 +86,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->post('settings/owner-password', 'SettingsController::changeOwnerPassword');
     $routes->post('settings/staff-accounts', 'SettingsController::addStaffAccount');
     $routes->post('settings/staff-accounts/password/(:segment)', 'SettingsController::resetStaffPassword/$1');
+    $routes->post('settings/staff-accounts/resend/(:segment)', 'SettingsController::resendStaffInvite/$1');
     $routes->post('settings/staff-accounts/toggle/(:segment)', 'SettingsController::deactivateStaff/$1');
     $routes->post('settings/staff-accounts/delete/(:segment)', 'SettingsController::deleteStaff/$1');
 
@@ -95,6 +97,8 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->post('notifications/approve/(:segment)', 'NotificationController::approve/$1');
     $routes->post('notifications/decline/(:segment)', 'NotificationController::decline/$1');
     $routes->post('notifications/lock/(:segment)', 'NotificationController::lock/$1');
+
+    $routes->get('help', 'HelpController::index');
 });
 
 $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'roleauth:Staff'], static function ($routes) {
@@ -124,6 +128,12 @@ $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'ro
 
     $routes->get('account', 'AccountController::index');
     $routes->post('account/password', 'AccountController::changePassword');
+
+    // Only page open to a staff member who signed in with a temporary password.
+    $routes->get('set-password', 'SetPasswordController::index');
+    $routes->post('set-password', 'SetPasswordController::save');
+
+    $routes->get('help', 'HelpController::index');
 });
 
 $routes->group('supplier', ['namespace' => 'App\Controllers\Supplier', 'filter' => 'roleauth:Supplier'], static function ($routes) {
@@ -142,6 +152,8 @@ $routes->group('supplier', ['namespace' => 'App\Controllers\Supplier', 'filter' 
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');
     $routes->post('notifications/mark-all-read', 'NotificationController::markAllRead');
     $routes->post('notifications/open/(:segment)', 'NotificationController::open/$1');
+
+    $routes->get('help', 'HelpController::index');
 
     $routes->get('profile', 'ProfileController::index');
     $routes->post('profile/update', 'ProfileController::update');

@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Libraries\StaffPasswordAlert;
+use App\Libraries\StaffPasswordReset;
 use App\Models\NotificationModel;
 
 /**
@@ -78,10 +79,23 @@ class NotificationActionController extends BaseController
         $model = new NotificationModel();
 
         if ($action === 'approve') {
-            $model->approveAccessRequest((int) $notificationId);
-        } else {
-            $model->declineAccessRequest((int) $notificationId);
+            // The owner must say they checked with the staff member first.
+            if (! $this->request->getPost('confirmed')) {
+                return view('notification_action/confirm', [
+                    'notification' => $notification,
+                    'action'       => $action,
+                    'error'        => 'Tick "I confirmed with them" first.',
+                ]);
+            }
+
+            $result = (new StaffPasswordReset())->approveRequest($notification, 'owner (email link)');
+
+            return $result['ok']
+                ? view('notification_action/done', ['action' => 'approve', 'staffName' => $result['staff']['full_name']])
+                : view('notification_action/problem', ['message' => $result['message']]);
         }
+
+        $model->declineAccessRequest((int) $notificationId);
 
         return view('notification_action/done', ['action' => $action]);
     }

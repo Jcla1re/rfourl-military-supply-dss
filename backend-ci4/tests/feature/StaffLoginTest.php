@@ -8,8 +8,8 @@ use CodeIgniter\Test\FeatureTestTrait;
 
 /**
  * Staff sign in with their password alone; each staff account has its own
- * unique password, which is what identifies them. Also covers the unique
- * password rule when the owner adds a staff account or resets a password.
+ * unique password, which is what identifies them. (Temporary passwords for new
+ * and reset accounts are covered in StaffPasswordFlowTest.)
  * Runs against the in-memory 'tests' database group, never the live one.
  *
  * @internal
@@ -23,8 +23,7 @@ final class StaffLoginTest extends CIUnitTestCase
     protected $refresh = false;
 
     private const GENERIC = 'Incorrect password. Please try again';
-    private const SHARED  = 'This password is shared by more than one staff account. Ask the owner to reset it.';
-    private const IN_USE  = "This password can't be used. Please choose a different one.";
+    private const SHARED  = "This password can't be used. Ask the owner to reset it.";
 
     private int $adminId;
 
@@ -171,49 +170,5 @@ final class StaffLoginTest extends CIUnitTestCase
         $this->assertFalse($users->staffPasswordInUse('OwnerPass123'), 'only Staff accounts count');
         $this->assertFalse($users->staffPasswordInUse('BrandNewPass9'));
         $this->assertFalse($users->staffPasswordInUse('Cashier1Pass1', $this->userId('cashier1')), 'an account may keep its own password');
-    }
-
-    public function testAddStaffRejectsAPasswordAnotherStaffMemberUses(): void
-    {
-        $result = $this->asOwner()->post('admin/settings/staff-accounts', [
-            'full_name' => 'New Cashier', 'username' => 'cashier9', 'password' => 'Cashier1Pass1', 'confirm_password' => 'Cashier1Pass1',
-        ]);
-
-        $result->assertSessionHas('error', self::IN_USE);
-        $this->dontSeeInDatabase('users', ['username' => 'cashier9']);
-    }
-
-    public function testAddStaffAcceptsAUniquePassword(): void
-    {
-        $result = $this->asOwner()->post('admin/settings/staff-accounts', [
-            'full_name' => 'New Cashier', 'username' => 'cashier9', 'password' => 'BrandNewPass9', 'confirm_password' => 'BrandNewPass9',
-        ]);
-
-        $result->assertSessionHas('success', 'Staff account created.');
-        $this->seeInDatabase('users', ['username' => 'cashier9']);
-    }
-
-    public function testResetRejectsAPasswordAnotherStaffMemberUses(): void
-    {
-        $id     = $this->userId('cashier1');
-        $before = $this->db->table('users')->where('user_id', $id)->get()->getRow()->password_hash;
-
-        $result = $this->asOwner()->post("admin/settings/staff-accounts/password/{$id}", [
-            'new_password' => 'Cashier2Pass2', 'confirm_password' => 'Cashier2Pass2',
-        ]);
-
-        $result->assertSessionHas('error', self::IN_USE);
-        $this->assertSame($before, $this->db->table('users')->where('user_id', $id)->get()->getRow()->password_hash);
-    }
-
-    public function testResetAcceptsAUniquePasswordAndThatPasswordThenSignsIn(): void
-    {
-        $id = $this->userId('cashier1');
-
-        $this->asOwner()->post("admin/settings/staff-accounts/password/{$id}", [
-            'new_password' => 'BrandNewPass9', 'confirm_password' => 'BrandNewPass9',
-        ])->assertSessionHas('success', 'Password updated for Cashier1.');
-
-        $this->post('login/staff', ['password' => 'BrandNewPass9'])->assertSessionHas('username', 'cashier1');
     }
 }

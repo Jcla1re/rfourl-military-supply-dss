@@ -5,7 +5,9 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Libraries\DssRunner;
 use App\Libraries\SalesArchive;
+use App\Libraries\AttemptStore;
 use App\Libraries\PasswordPolicy;
+use App\Libraries\StaffPasswordReset;
 use App\Libraries\Toast;
 use App\Models\SecurityLogModel;
 use App\Models\DssParameterModel;
@@ -45,6 +47,7 @@ class SettingsController extends BaseController
             'notifPrefs'    => $this->notificationPreferenceModel->current(),
             'admin'         => $this->userModel->find(session()->get('user_id')),
             'staffAccounts' => $this->userModel->activeStaff()->findAll(),
+            'tempOnce'      => session()->getFlashdata('temp_password_once'),
             'success'       => session()->getFlashdata('success'),
             'error'         => session()->getFlashdata('error'),
         ];
@@ -159,7 +162,7 @@ class SettingsController extends BaseController
             $this->dssParameterModel->insert($payload);
         }
 
-        return redirect()->to('/admin/settings?tab=dss')->with('success', 'Probabilistic model parameters updated.');
+        return redirect()->to('/admin/settings?tab=dss')->with('success', 'Order settings saved.');
     }
 
     public function updateAccount()
@@ -207,35 +210,49 @@ class SettingsController extends BaseController
     }
 
     /**
-     * The Owner sets a new password for one staff member (no current password
-     * needed: this is the "forgot it" path). Removed accounts are refused.
+     * The Owner resets a staff member's password. The owner proves who they are with their own
+     * password and says they checked with the staff member. The staff member gets a temporary
+     * password by email (2 hours) and must set their own. If the account has no email, the
+     * temporary password is shown to the owner once, to pass on privately.
      */
     public function resetStaffPassword($userId)
     {
-        $back = '/admin/settings?tab=accounts';
-        $user = $this->userModel->activeStaff()->find((int) $userId);
+        $back  = '/admin/settings?tab=accounts';
+        $staff = $this->userModel->activeStaff()->find((int) $userId);
+        $owner = $this->userModel->find((int) session()->get('user_id'));
 
-        if (! $user) {
+        if (! $staff) {
             return redirect()->to($back)->with('error', 'Staff account not found.');
         }
-
-        $newPass = $this->request->getPost('new_password');
-
-        if ($error = PasswordPolicy::check($newPass)) {
-            return redirect()->to($back)->with('error', $error);
+        if (AttemptStore::hit('owner_reset_' . (int) session()->get('user_id'), 600) > 5) {
+            return redirect()->to($back)->with('error', 'Too many attempts. Please wait a few minutes and try again.');
         }
-        if ($newPass !== $this->request->getPost('confirm_password')) {
-            return redirect()->to($back)->with('error', 'Passwords do not match.');
+        if (! $owner || ! password_verify((string) $this->request->getPost('owner_password'), $owner['password_hash'])) {
+            SecurityLogModel::log('password_reset_failed', null, 'wrong owner password for staff: ' . $staff['username']);
+
+            return redirect()->to($back)->with('error', 'Your password is incorrect.');
         }
-        // Staff sign in by password alone, so it must be unique (never say whose it is).
-        if ($this->userModel->staffPasswordInUse((string) $newPass, (int) $user['user_id'])) {
-            return redirect()->to($back)->with('error', "This password can't be used. Please choose a different one.");
+        if (! $this->request->getPost('confirmed')) {
+            return redirect()->to($back)->with('error', 'Tick "I confirmed with them" first.');
         }
 
-        $this->userModel->update((int) $user['user_id'], ['password_hash' => password_hash($newPass, PASSWORD_DEFAULT)]);
-        SecurityLogModel::log('password_reset', null, 'staff: ' . $user['username'] . ' reset by owner');
+        $reset = new StaffPasswordReset();
 
-        return redirect()->to($back)->with('success', "Password updated for {$user['full_name']}.");
+        if (! empty($staff['email'])) {
+            if ($reset->issueAndEmail($staff, StaffPasswordReset::KIND_RESET) === null) {
+                return redirect()->to($back)->with('error', "We couldn't send the email, so nothing was changed. Please try again.");
+            }
+            $toast = Toast::success('Temporary password sent', 'Emailed to ' . StaffPasswordReset::maskEmail($staff['email']) . '. They set their own when they sign in.');
+        } else {
+            $password = $reset->issue($staff, StaffPasswordReset::KIND_RESET);
+            session()->setFlashdata('temp_password_once', ['name' => $staff['full_name'], 'password' => $password, 'hours' => 2]);
+            $toast = Toast::info('Temporary password ready', 'No email on file, so it is shown below once.');
+        }
+
+        AttemptStore::forget('owner_reset_' . (int) session()->get('user_id'));
+        SecurityLogModel::log('password_reset', null, 'staff: ' . $staff['username'] . ' reset by owner (temporary password)');
+
+        return redirect()->to($back)->with('toast', $toast);
     }
 
     private function changePasswordFor(int $userId, string $label)
@@ -256,42 +273,73 @@ class SettingsController extends BaseController
         return redirect()->to('/admin/settings?tab=profile')->with('success', ucfirst($label) . ' password updated.');
     }
 
+    /**
+     * New staff account: name, username and email. The system creates the account, then
+     * emails a temporary password (48 hours). If the email can't be sent the account is not created.
+     */
     public function addStaffAccount()
     {
-        $rules = [
-            'full_name' => 'required',
-            'username'  => 'required|is_unique[users.username]',
-            'contact_email' => 'permit_empty|valid_email|is_unique[users.email]',
-            'password'  => 'required',
-        ];
+        $back = '/admin/settings?tab=accounts';
 
-        if (! $this->validate($rules)) {
-            return redirect()->to('/admin/settings?tab=accounts')->with('error', implode(' ', $this->validator->getErrors()));
+        if (! $this->validate([
+            'full_name'     => 'required',
+            'username'      => 'required|is_unique[users.username]',
+            'contact_email' => 'required|valid_email|is_unique[users.email]',
+        ])) {
+            return redirect()->to($back)->with('error', implode(' ', $this->validator->getErrors()));
         }
 
-        if ($error = PasswordPolicy::check($this->request->getPost('password'))) {
-            return redirect()->to('/admin/settings?tab=accounts')->with('error', $error);
+        $email = trim((string) $this->request->getPost('contact_email'));
+        $reset = new StaffPasswordReset();
+        $db    = db_connect();
+
+        $db->transStart();
+        try {
+            // The account needs a hash to exist; issue() replaces it with the real temporary password.
+            $id = $this->userModel->insert([
+                'username'      => trim((string) $this->request->getPost('username')),
+                'full_name'     => trim((string) $this->request->getPost('full_name')),
+                'email'         => $email,
+                'password_hash' => password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT),
+                'role'          => 'Staff',
+                'is_active'     => 1,
+            ]);
+            $staff    = $this->userModel->find($id);
+            $password = $reset->issue($staff, StaffPasswordReset::KIND_INVITE);
+            $sent     = $reset->emailPassword($staff, $password, StaffPasswordReset::KIND_INVITE);
+        } catch (\Throwable $e) {
+            log_message('error', 'Staff account creation failed: ' . $e->getMessage());
+            $sent = false;
         }
 
-        $confirm = $this->request->getPost('confirm_password');
-        if ($this->request->getPost('password') !== $confirm) {
-            return redirect()->to('/admin/settings?tab=accounts')->with('error', 'Passwords do not match.');
+        if (! $sent) {
+            $db->transRollback();
+
+            return redirect()->to($back)->with('error', "We couldn't send the email, so the account was not created. Check the email address and try again.");
         }
-        if ($this->userModel->staffPasswordInUse((string) $this->request->getPost('password'))) {
-            return redirect()->to('/admin/settings?tab=accounts')->with('error', "This password can't be used. Please choose a different one.");
+        $db->transComplete();
+
+        SecurityLogModel::log('account_created', null, 'staff: ' . $staff['username'] . ' (temporary password emailed)');
+
+        return redirect()->to($back)->with('toast', Toast::success('Account created', 'A temporary password was emailed to ' . StaffPasswordReset::maskEmail($email) . '.'));
+    }
+
+    /** "Invite expired" -> "Resend": a new temporary password (48 hours) goes to the staff member's email. */
+    public function resendStaffInvite($userId)
+    {
+        $back  = '/admin/settings?tab=accounts';
+        $staff = $this->userModel->activeStaff()->find((int) $userId);
+
+        if (! $staff || ! StaffPasswordReset::isPending($staff) || ($staff['temp_password_kind'] ?? '') !== StaffPasswordReset::KIND_INVITE || empty($staff['email'])) {
+            return redirect()->to($back)->with('error', "This invite can't be resent.");
+        }
+        if ((new StaffPasswordReset())->issueAndEmail($staff, StaffPasswordReset::KIND_INVITE) === null) {
+            return redirect()->to($back)->with('error', "We couldn't send the email. Please try again.");
         }
 
-        $this->userModel->insert([
-            'username'      => $this->request->getPost('username'),
-            'full_name'     => $this->request->getPost('full_name'),
-            'email'         => $this->request->getPost('contact_email') ?: null,
-            'password_hash' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
-            'role'          => 'Staff',
-            'is_active'     => 1,
-        ]);
-        SecurityLogModel::log('account_created', null, 'staff: ' . $this->request->getPost('username'));
+        SecurityLogModel::log('invite_resent', null, 'staff: ' . $staff['username']);
 
-        return redirect()->to('/admin/settings?tab=accounts')->with('success', 'Staff account created.');
+        return redirect()->to($back)->with('toast', Toast::success('Invite resent', 'A new temporary password was emailed to ' . StaffPasswordReset::maskEmail($staff['email']) . '.'));
     }
 
     public function deactivateStaff($userId)

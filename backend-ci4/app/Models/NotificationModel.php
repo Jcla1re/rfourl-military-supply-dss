@@ -119,7 +119,7 @@ class NotificationModel extends Model
             'Staff',
             'Access Request',
             'Your password reset request was approved',
-            'The admin will give you your new password directly.',
+            'Check your email for a temporary password.',
             null,
             'staff_activity'
         );

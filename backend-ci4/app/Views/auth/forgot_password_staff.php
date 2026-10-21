@@ -27,9 +27,9 @@ $errorMsg = session()->getFlashdata('error') ?? $error;
 <body class="auth-body">
     <div class="auth-card">
         <h2>Can't access your account?</h2>
-        <p class="auth-hint">Staff password are managed by the owner. Submitting this request will notify the admin immediately.</p>
+        <p class="auth-hint">The owner resets staff passwords. Send a request.</p>
 
-        <div class="notify-box">No self-service reset - The owner will send you the password</div>
+        <div class="notify-box">After the owner approves, you'll get a temporary password by email. It works for 2 hours.</div>
 
         <?php if ($errorMsg): ?>
             <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
@@ -43,11 +43,12 @@ $errorMsg = session()->getFlashdata('error') ?? $error;
             <label>Reason</label>
             <input type="text" name="reason" placeholder="e.g. forgot password">
 
-            <button type="submit" class="btn-login">Notify Admin</button>
+            <button type="submit" class="btn-login">Send</button>
         </form>
 
         <?php if (!empty($sent)): ?>
-            <div class="notify-sent-pill"><i>&check;</i> Notify admin sent</div>
+            <div class="notify-sent-pill"><i>&check;</i> Request sent to the owner</div>
+            <p class="auth-hint" style="margin-top:0.75rem;">Once the owner approves, check your email for a temporary password. It works for 2 hours.</p>
         <?php endif; ?>
 
         <div class="auth-back"><a href="<?= site_url('login/staff') ?>">&larr; Back to login</a></div>

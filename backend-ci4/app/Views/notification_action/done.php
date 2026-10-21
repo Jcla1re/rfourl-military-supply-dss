@@ -8,6 +8,9 @@ $isLock    = $action === 'lock';
 <html>
 <head>
     <title><?= $isLock ? 'Account Locked' : 'Request ' . ($isApprove ? 'Approved' : 'Declined') ?> - RfourL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="/assets/css/auth-theme.css" rel="stylesheet">
 </head>
 <body class="auth-body">
@@ -16,9 +19,9 @@ $isLock    = $action === 'lock';
         <?php if ($isLock): ?>
             <p class="auth-hint"><?= esc($staffName ?? 'The staff member') ?>'s account is locked. Reset their password from Manage Accounts to unlock it.</p>
         <?php elseif ($isApprove): ?>
-            <p class="auth-hint">The staff member has been notified. Log in to the admin portal &rarr; Settings &rarr; Security to set their new password.</p>
+            <p class="auth-hint">Approved. A temporary password was emailed to <?= esc($staffName ?? 'the staff member') ?>. You won't see it. They will set their own, and you'll get an email when they do.</p>
         <?php else: ?>
-            <p class="auth-hint">The staff member has been notified that their request was declined.</p>
+            <p class="auth-hint">Declined. The staff member has been told.</p>
         <?php endif; ?>
         <div class="auth-back"><a href="<?= site_url('login/admin') ?>">Go to admin login</a></div>
     </div>

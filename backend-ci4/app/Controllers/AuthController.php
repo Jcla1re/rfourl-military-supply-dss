@@ -37,7 +37,7 @@ class AuthController extends BaseController
     {
         $locked = $this->lockout->secondsRemaining('admin');
         if ($locked > 0) {
-            return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.")->with('attempted_role', 'admin');
+            return redirect()->back()->with('error', "Too many tries. Wait {$locked} seconds.")->with('attempted_role', 'admin');
         }
 
         $username = $this->request->getPost('username');
@@ -77,7 +77,7 @@ class AuthController extends BaseController
     {
         $locked = $this->lockout->secondsRemaining('staff');
         if ($locked > 0) {
-            return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.")->with('attempted_role', 'staff');
+            return redirect()->back()->with('error', "Too many tries. Wait {$locked} seconds.")->with('attempted_role', 'staff');
         }
 
         $password = $this->request->getPost('password');
@@ -97,7 +97,7 @@ class AuthController extends BaseController
             SecurityLogModel::log('login_blocked_shared_password', ['role' => 'Staff', 'username' => null], count($matches) . ' active staff accounts share this password');
 
             return redirect()->back()
-                ->with('error', 'This password is shared by more than one staff account. Ask the owner to reset it.')
+                ->with('error', "This password can't be used. Ask the owner to reset it.")
                 ->with('attempted_role', 'staff');
         }
 
@@ -107,8 +107,23 @@ class AuthController extends BaseController
 
         $user = $matches[0];
 
+        // A temporary password stops working after its time is up (2 hours for a reset, 48 for a new account).
+        if (\App\Libraries\StaffPasswordReset::isExpired($user)) {
+            SecurityLogModel::log('login_blocked_temp_expired', $user);
+
+            return redirect()->back()
+                ->with('error', 'This temporary password has expired. Ask the owner for a new one.')
+                ->with('attempted_role', 'staff');
+        }
+
         $this->lockout->reset('staff');
         $this->logUserIn($user);
+
+        // Temporary password: they must pick their own before anything else.
+        if (\App\Libraries\StaffPasswordReset::isPending($user)) {
+            return redirect()->to('/staff/set-password');
+        }
+
         return redirect()->to('/staff/dashboard');
     }
 
@@ -122,7 +137,7 @@ class AuthController extends BaseController
     {
         $locked = $this->lockout->secondsRemaining('supplier');
         if ($locked > 0) {
-            return redirect()->back()->with('error', "Too many failed attempts. Please wait {$locked} seconds and try again.")->with('attempted_role', 'supplier');
+            return redirect()->back()->with('error', "Too many tries. Wait {$locked} seconds.")->with('attempted_role', 'supplier');
         }
 
         $username = $this->request->getPost('username');
@@ -172,7 +187,7 @@ class AuthController extends BaseController
 
         if ($seconds > 0) {
             return redirect()->to("/login/{$role}/forgot")
-                ->with('error', "Too many failed attempts. Please reset your password, or wait {$seconds} seconds and try again.");
+                ->with('error', "Too many tries. Wait {$seconds} seconds or reset your password.");
         }
 
         $message = 'Incorrect password. Please try again';
@@ -353,7 +368,7 @@ class AuthController extends BaseController
         $user = $this->userModel->find(session()->get('pwd_reset_user_id'));
 
         if (! $this->withinLimit('otp_resend', (string) $user['user_id'], 3, 600)) {
-            return redirect()->to("/login/{$role}/otp")->with('error', 'Too many requests. Please wait a few minutes before asking for another code.');
+            return redirect()->to("/login/{$role}/otp")->with('error', 'Too many requests. Try again in a few minutes.');
         }
 
         $otp = (string) random_int(100000, 999999);
@@ -447,7 +462,16 @@ class AuthController extends BaseController
         // a one-time "magic link" rather than tied to who's logged in.
         $actionToken = bin2hex(random_bytes(24));
 
-        $notificationId = (new NotificationModel())->push(
+        // Match the typed name (or username) to ONE active staff account. The answer is never
+        // shown to the person asking, so this can't be used to find out who has an account.
+        $needle  = mb_strtolower($staffName);
+        $matches = $this->userModel->activeStaff()->where('is_active', 1)
+            ->groupStart()->where('LOWER(full_name)', $needle)->orWhere('LOWER(username)', $needle)->groupEnd()
+            ->findAll();
+        $matched = count($matches) === 1 ? $matches[0] : null;
+
+        $notifications  = new NotificationModel();
+        $notificationId = $notifications->push(
             'Admin',
             'Access Request',
             "Password reset requested by {$staffName}",
@@ -457,6 +481,16 @@ class AuthController extends BaseController
             null,
             $actionToken
         );
+        if ($matched) {
+            try {
+                $notifications->update($notificationId, ['action_user_id' => (int) $matched['user_id']]);
+            } catch (\Throwable $e) {
+                log_message('error', 'Reset request not linked to an account (run php spark migrate): ' . $e->getMessage());
+            }
+        }
+        $matchLine = $matched
+            ? "Matches staff account: {$matched['full_name']} (@{$matched['username']})."
+            : "No single staff account matches this name. Use Reset Password in Settings > Manage Accounts instead.";
 
         $approveUrl = site_url("notification-action/{$notificationId}/{$actionToken}/approve");
         $declineUrl = site_url("notification-action/{$notificationId}/{$actionToken}/decline");
@@ -470,19 +504,23 @@ class AuthController extends BaseController
         $staffNameHtml = esc($staffName, 'html');
         $reasonHtml    = esc($reasonText, 'html');
 
-        $htmlMessage = "<p>{$staffNameHtml} can't log in and is requesting a password reset.</p>"
+        $matchHtml   = esc($matchLine, 'html');
+        $htmlMessage = "<div style=\"font-family:'Poppins',Arial,sans-serif;\"><p>{$staffNameHtml} can't log in and is requesting a password reset.</p>"
             . "<p><strong>Reason given:</strong> {$reasonHtml}</p>"
+            . "<p>{$matchHtml}</p>"
+            . '<p>Check with them, by call or chat, that they really sent this request. Approving emails them a temporary password.</p>'
             . '<p style="margin:24px 0;">'
-            . "<a href=\"{$approveUrl}\" style=\"background:#2f6431;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin-right:12px;display:inline-block;\">Approve</a>"
+            . "<a href=\"{$approveUrl}\" style=\"background:#2f6431;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin-right:12px;display:inline-block;\">Approve reset</a>"
             . "<a href=\"{$declineUrl}\" style=\"background:#7a2020;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;\">Decline</a>"
             . '</p>'
-            . '<p style="color:#888;font-size:12px;">Or log in to the admin portal and check Notifications.</p>';
+            . '<p style="color:#888;font-size:12px;">Or sign in and open Notifications.</p></div>';
 
         $plainText = "{$staffName} can't log in and is requesting a password reset.\n\n"
-            . "Reason given: {$reasonText}\n\n"
-            . "Approve: {$approveUrl}\n"
+            . "Reason given: {$reasonText}\n\n{$matchLine}\n\n"
+            . "Check with them, by call or chat, that they really sent this request. Approving emails them a temporary password.\n\n"
+            . "Approve reset: {$approveUrl}\n"
             . "Decline: {$declineUrl}\n\n"
-            . "Or log in to the admin portal and check Notifications to approve or decline this request.";
+            . "Or sign in and open Notifications to approve or decline this request.";
 
         (new EmailNotifier())->toRoleHtml(
             'Admin',

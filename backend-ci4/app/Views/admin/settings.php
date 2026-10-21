@@ -171,7 +171,7 @@ $tabs = [
         <?php if (!empty($error)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
 
         <?php if ($tab === 'profile'): ?>
-            <?php $roleLabel = 'Owner / Administrator'; // badge and Account Details show the same words ?>
+            <?php $roleLabel = 'Owner'; // badge and Account Details show the same words ?>
             <h4>My Profile</h4>
             <div class="set-hint">Manage your personal information.</div>
 
@@ -240,7 +240,15 @@ $tabs = [
 
         <?php elseif ($tab === 'accounts'): ?>
             <h4>Manage Accounts</h4>
-            <div class="set-hint">Manage staff access and account passwords. Only the owner can add, edit, or deactivate accounts.</div>
+            <div class="set-hint">Add, remove or reset staff accounts.</div>
+
+            <?php if (! empty($tempOnce)): ?>
+                <div class="alert alert-warning" role="alert">
+                    <strong>Temporary password for <?= esc($tempOnce['name']) ?></strong> (no email on file). It is shown once. Give it to them privately.
+                    <div class="my-2" style="font-size:1.4rem;font-weight:700;letter-spacing:2px;"><?= esc($tempOnce['password']) ?></div>
+                    It works for <?= (int) $tempOnce['hours'] ?> hours. They will be asked to set their own password when they sign in.
+                </div>
+            <?php endif; ?>
 
             <div class="set-card">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -267,7 +275,23 @@ $tabs = [
                             <div class="acct-email">@<?= esc($s['username']) ?><?= ! empty($s['email']) ? ' &middot; ' . esc($s['email']) : '' ?></div>
                         </div>
                         <span class="acct-role-pill">Staff</span>
+                        <?php
+                        $pending   = \App\Libraries\StaffPasswordReset::isPending($s);
+                        $expired   = \App\Libraries\StaffPasswordReset::isExpired($s);
+                        $isInvite  = ($s['temp_password_kind'] ?? '') === 'invite';
+                        ?>
                         <span class="status-pill acct <?= $s['is_active'] ? 'green' : 'gray' ?>"><?= $s['is_active'] ? 'Active' : 'Inactive' ?></span>
+                        <?php if ($pending): ?>
+                            <span class="status-pill acct <?= $expired ? 'amber' : 'blue' ?>"><?= $isInvite
+                                ? ($expired ? 'Invite expired' : 'Waiting for first sign-in')
+                                : ($expired ? 'Temporary password expired' : 'Waiting for new password') ?></span>
+                            <?php if ($expired && $isInvite && ! empty($s['email'])): ?>
+                                <form method="post" action="<?= site_url('admin/settings/staff-accounts/resend/' . $s['user_id']) ?>">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="btn btn-sm btn-outline-dark">Resend</button>
+                                </form>
+                            <?php endif; ?>
+                        <?php endif; ?>
                         <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#resetStaffPwModal"
                                 data-action="<?= site_url('admin/settings/staff-accounts/password/' . $s['user_id']) ?>"
                                 data-name="<?= esc($s['full_name'], 'attr') ?>">Reset Password</button>
@@ -299,12 +323,13 @@ $tabs = [
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                <div class="set-field mb-3"><label>New Password</label><input name="new_password" type="password" placeholder="8+ characters, letter and number" required autocomplete="new-password"></div>
-                                <div class="set-field"><label>Confirm Password</label><input name="confirm_password" type="password" placeholder="Re-enter password" required autocomplete="new-password"></div>
+                                <p class="text-muted small">A temporary password is emailed to the staff member. You won't see it. They set their own when they sign in.</p>
+                                <div class="set-field mb-3"><label>Your password</label><input name="owner_password" type="password" required autocomplete="current-password"></div>
+                                <label class="d-flex gap-2 align-items-start"><input type="checkbox" name="confirmed" value="1" id="resetConfirmed" style="margin-top:4px;" required> <span>I confirmed with them</span></label>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-success">Update password</button>
+                                <button type="submit" class="btn btn-success">Reset</button>
                             </div>
                         </form>
                     </div>
@@ -316,6 +341,7 @@ $tabs = [
                     document.getElementById('resetStaffPwForm').action = btn.dataset.action;
                     document.getElementById('resetStaffPwName').textContent = btn.dataset.name;
                     this.querySelectorAll('input[type=password]').forEach(function (i) { i.value = ''; });
+                    document.getElementById('resetConfirmed').checked = false;
                 });
             </script>
 
@@ -331,9 +357,8 @@ $tabs = [
                             <div class="modal-body">
                                 <div class="set-field mb-3"><label>Full Name</label><input name="full_name" required></div>
                                 <div class="set-field mb-3"><label>Username</label><input name="username" required></div>
-                                <div class="set-field mb-3"><label>Contact email</label><input name="contact_email" type="email" placeholder="Personal email"></div>
-                                <div class="set-field mb-3"><label>Password</label><input name="password" type="password" placeholder="8+ characters, letter and number" required></div>
-                                <div class="set-field"><label>Confirm Password</label><input name="confirm_password" type="password" placeholder="Re-enter password" required></div>
+                                <div class="set-field mb-2"><label>Email</label><input name="contact_email" type="email" placeholder="Where the temporary password is sent" required></div>
+                                <p class="text-muted small mb-0">A temporary password is emailed to them. It works for 48 hours.</p>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -345,29 +370,33 @@ $tabs = [
             </div>
 
             <div class="set-card">
-                <h5 class="fw-bold mb-2">Staff Passwords</h5>
-                <p class="text-muted small mb-0">Each staff member signs in with their own unique password. The system recognizes who is signing in by their password. Use <strong>Reset Password</strong> on their row if they forget it.</p>
+                <h5 class="fw-bold mb-2">Staff Passwords <?= help_tip('Staff passwords', [
+                    'Staff sign in with the password alone, so no two staff can have the same one.',
+                    'If someone forgets theirs, click Reset Password on their row. A temporary password is emailed to them. You won\'t see it.',
+                    'If an account has no email, the temporary password is shown to you once.',
+                ]) ?></h5>
+                <p class="text-muted small mb-0">Each staff member has their own password.</p>
             </div>
 
         <?php elseif ($tab === 'notif'): ?>
             <h4>Notification Preferences</h4>
-            <div class="set-hint">Choose how and when the system alerts you about inventory events.</div>
+            <div class="set-hint">Choose which alerts you get.</div>
 
             <div class="set-card">
                 <?php
                 $notifPrefs = $notifPrefs ?? [];
                 $prefs = [
                     ['rop_alerts', 'Reorder At Alerts', 'Notify when an item reaches its Reorder At number'],
-                    ['low_stock_warnings', 'Low Stock Warnings (Approaching Reorder At)', 'Early warning before stock reaches the Reorder At number. ' . \App\Models\ProductModel::LOW_STOCK_HELP],
+                    ['low_stock_warnings', 'Low Stock Warnings', 'Warns you before an item hits Reorder At.', \App\Models\ProductModel::LOW_STOCK_HELP],
                     ['daily_sales_summary', 'Daily Sales Summary', "Receive a summary of the day's transactions every night at 9 PM"],
-                    ['procurement_reminders', 'Procurement Schedule Reminders', 'Alert 2 days before a scheduled restock date'],
+                    ['procurement_reminders', 'Order Schedule Reminders', 'Alert 2 days before a scheduled restock date'],
                     ['weekly_trend_report', 'Weekly Trend Report', 'Auto-generate and display a demand summary every Monday'],
                 ];
                 ?>
-                <?php foreach ($prefs as [$key, $label, $desc]): ?>
+                <?php foreach ($prefs as $pref): [$key, $label, $desc] = $pref; $tip = $pref[3] ?? null; ?>
                     <?php $isOn = !empty($notifPrefs[$key]); ?>
                     <div class="notif-pref-row">
-                        <div><strong><?= esc($label) ?></strong><span class="desc"><?= esc($desc) ?></span></div>
+                        <div><strong><?= esc($label) ?><?php if (! empty($tip)): ?> <?= help_tip($label, $tip) ?><?php endif; ?></strong><span class="desc"><?= esc($desc) ?></span></div>
                         <form method="post" action="<?= site_url('admin/settings/notification-preference') ?>">
                             <?= csrf_field() ?>
                             <input type="hidden" name="pref_key" value="<?= esc($key) ?>">
@@ -382,12 +411,16 @@ $tabs = [
             </div>
 
         <?php elseif ($tab === 'dss'): ?>
-            <h4>DSS Parameter</h4>
-            <div class="set-hint">Configure the inputs for Order Qty (EOQ) and Reorder At (ROP). Changes take effect on the next calculation.</div>
+            <h4>DSS Parameter <?= \App\Libraries\Glossary::tip('dss') ?></h4>
+            <div class="set-hint">Settings used to work out what and when to order.</div>
 
             <div class="dss-warning">
                 <i class="bi bi-exclamation-triangle fs-4"></i>
-                <div>Changing these values will affect all procurement recommendations system-wide. Only the owner can modify DSS parameters. The system does not use AI &mdash; all calculations are based on historical transaction data and the formulas below.</div>
+                <div>Changes apply to the next calculation. <?= help_tip('Before you change these', [
+                    'Only the owner can change these settings.',
+                    'They change every ordering suggestion in the app.',
+                    'Nothing here uses AI. Results come from your past sales and the formulas shown.',
+                ]) ?></div>
             </div>
 
             <?php // Recalculate ROP / EOQ / safety stock / classes now (same engine as `php spark dss:run`), in the background. ?>
@@ -409,7 +442,7 @@ $tabs = [
                     ? 'Recalculating in the background. You can leave this page; you&rsquo;ll get a notice when it&rsquo;s done.'
                     : 'A recalculation is already running. You&rsquo;ll get a notice when it&rsquo;s done.' ?>
             </p>
-            <p class="dss-run-help">Runs automatically every 7 days. Recalculate now after changing DSS settings or supplier lead times.</p>
+            <p class="dss-run-help">Runs every 7 days. Run it now after changing settings. <?= help_tip('When to recalculate', 'Also run it after you change a supplier\'s delivery time.') ?></p>
             <script>
             (function () {
                 const form = document.getElementById('dssRunForm');
@@ -441,42 +474,56 @@ $tabs = [
                 <?= csrf_field() ?>
                 <div class="dss-cards">
                     <div class="set-card">
-                        <h5 class="fw-bold mb-3">Order Qty (EOQ) Parameters</h5>
+                        <h5 class="fw-bold mb-3">Order Qty settings <?= \App\Libraries\Glossary::tip('order_qty') ?></h5>
                         <div class="set-field mb-3">
-                            <label>Ordering Cost per Order (S) - ₱</label>
+                            <label>Cost per Order (₱) <?= help_tip('Cost per Order', 'Fixed cost each time you place an order, such as transport and paperwork. Also called ordering cost (S).') ?></label>
                             <input name="ordering_cost" type="number" step="0.01" min="0" value="<?= esc($dss['ordering_cost'] ?? 0) ?>" required>
-                            <small class="text-muted">Fixed cost incurred each time an order is placed (transport, admin)</small>
+                            <small class="text-muted">Cost each time you place an order.</small>
                         </div>
                         <div class="set-field mb-3">
-                            <label>Holding Cost per Unit/Year (H) - ₱</label>
+                            <label>Storage Cost per Item per Year (₱) <?= help_tip('Storage Cost', 'Cost to keep one item for a year, such as space and insurance. Also called holding cost (H).') ?></label>
                             <input name="holding_cost_per_unit" type="number" step="0.01" min="0" value="<?= esc($dss['holding_cost_per_unit'] ?? 0) ?>" required>
-                            <small class="text-muted">Cost to store one item for one year (space, insurance)</small>
+                            <small class="text-muted">Cost to keep one item for a year.</small>
                         </div>
                         <div class="set-field mb-3">
-                            <label>Minimum Order Quantity</label>
+                            <label>Minimum Order Qty</label>
                             <input name="minimum_order_qty" type="number" min="1" value="<?= esc($dss['minimum_order_qty'] ?? 5) ?>" required>
-                            <small class="text-muted">Order Qty floor. An item with no recorded demand (e.g. out of stock all period, or newly added) gets an Order Qty of 0 from the formula alone — this ensures a reorder is still recommended.</small>
+                            <small class="text-muted">Smallest order the system will suggest. <?= help_tip('Minimum Order Qty', 'An item with no recent sales would get an Order Qty of 0. This makes sure a reorder is still suggested.') ?></small>
                         </div>
-                        <div class="dss-formula">Order Qty (EOQ) = √( 2 × D<sub>annual</sub> × S / H ) &middot; D<sub>annual</sub> = d × 365</div>
+                        <p class="small text-muted mb-0">How is this worked out? <?= help_tip('How Order Qty is worked out', [
+                            'Order Qty = √(2 × D × S ÷ H)',
+                            'D = yearly sales (daily sales × 365)',
+                            'S = cost per order',
+                            'H = storage cost per item per year',
+                        ]) ?></p>
                     </div>
                     <div class="set-card">
-                        <h5 class="fw-bold mb-3">Reorder At (ROP) Parameters</h5>
+                        <h5 class="fw-bold mb-3">Reorder At settings <?= \App\Libraries\Glossary::tip('reorder_at') ?></h5>
                         <div class="set-field mb-3">
-                            <label>Default Service Level Target (%)</label>
+                            <label>Default Availability Target (%) <?= \App\Libraries\Glossary::tip('availability') ?></label>
                             <input name="service_level_target" type="number" step="0.01" min="0" max="100" value="<?= esc($dss['service_level_target'] ?? 95) ?>" required>
-                            <small class="text-muted">Probability of not stocking out (Z = <?= esc($dss['z_score'] ?? 1.645) ?> at <?= esc($dss['service_level_target'] ?? 95) ?>%). Used only as a fallback — each item normally gets its own service level (95% / 90% / 85%) from its K-Means Class A/B/C.</small>
+                            <small class="text-muted">Used when an item has no A/B/C group yet. <?= help_tip('Availability target', [
+                                'How often you want the item in stock.',
+                                'Each item normally gets 95%, 90% or 85% from its A/B/C group.',
+                                'This number is only used when an item has no group yet.',
+                            ]) ?></small>
                         </div>
                         <div class="set-field mb-3">
-                            <label>Default Z-Score</label>
+                            <label>Safety Factor (Z-score) <?= help_tip('Safety Factor (Z-score)', 'A number that sets how much Safety Stock to keep. A higher number keeps more.') ?></label>
                             <input name="z_score" type="number" step="0.001" value="<?= esc($dss['z_score'] ?? 1.645) ?>" required>
-                            <small class="text-muted">Applied when an item has no K-Means classification yet (e.g. clustering service unreachable and no cached assignment).</small>
+                            <small class="text-muted">Used when an item has no A/B/C group yet. <?= help_tip('When is it used?', 'When grouping has not run yet, or cannot be reached.') ?></small>
                         </div>
                         <div class="set-field mb-3">
-                            <label>Demand Lookback Period</label>
+                            <label>Sales History Used (days) <?= help_tip('Sales History Used', 'How many days of past sales are used to work out daily demand. Also called demand lookback.') ?></label>
                             <input name="demand_lookback_days" type="number" min="1" value="<?= esc($dss['demand_lookback_days'] ?? 90) ?>" required>
-                            <small class="text-muted">How many days of past sales are used to compute avg demand.</small>
+                            <small class="text-muted">Days of past sales to look at.</small>
                         </div>
-                        <div class="dss-formula">Reorder At (ROP) = d × L + Safety stock &middot; SS = Z × &sigma;d × √L</div>
+                        <p class="small text-muted mb-0">How is this worked out? <?= help_tip('How Reorder At is worked out', [
+                            'Reorder At = d × L + Safety Stock',
+                            'Safety Stock = Z × σd × √L',
+                            'd = daily sales, L = delivery time in days',
+                            'σd = how much daily sales go up and down, Z = safety factor',
+                        ]) ?></p>
                     </div>
                 </div>
                 <div class="text-end mt-3"><button type="submit" class="btn btn-success">Save Parameters</button></div>
@@ -485,14 +532,14 @@ $tabs = [
         <?php elseif ($tab === 'records'): ?>
             <div class="rec-tab">
             <h4 class="rec-page-title">Data &amp; Records</h4>
-            <p class="rec-page-sub">Keep sales history tidy. Old records can be saved as PDF before they are removed.</p>
+            <p class="rec-page-sub">Old sales records can be saved, then removed.</p>
 
             <div class="rec-card">
                 <form method="post" action="<?= site_url('admin/settings/retention') ?>" class="rec-row" id="retentionForm">
                     <?= csrf_field() ?>
                     <div class="rec-text">
-                        <h5 class="rec-title"><label for="retentionYears" class="m-0">Retention period</label></h5>
-                        <p class="rec-desc" id="retentionHelp">Sales records older than this can be saved as PDF and removed.<br>Check BIR record-keeping requirements before lowering this.</p>
+                        <h5 class="rec-title"><label for="retentionYears" class="m-0">Keep sales records for</label></h5>
+                        <p class="rec-desc" id="retentionHelp">Older records can be saved, then removed. <?= help_tip('Before you shorten this', 'Check BIR record-keeping rules before keeping records for fewer years.') ?></p>
                     </div>
                     <div class="rec-controls">
                         <select id="retentionYears" name="retention_years" class="rec-select" aria-describedby="retentionHelp" data-saved="<?= $retentionYears ?>">
@@ -530,7 +577,7 @@ $tabs = [
                         <span class="rec-box-ic" aria-hidden="true"><i class="bi bi-database"></i></span>
                         <div class="rec-box-text">
                             <p class="rec-box-title"><?= number_format($oldRecords) ?> sales records are older than <?= $retentionYears ?> years</p>
-                            <p class="rec-box-sub">Sales from <?= esc(date('Y', strtotime($oldRange['first']))) ?> to <?= esc(date('M j, Y', strtotime($oldRange['last']))) ?>. Review them to save a copy or remove them.</p>
+                            <p class="rec-box-sub">Old records from <?= esc(date('Y', strtotime($oldRange['first']))) ?> to <?= esc(date('M j, Y', strtotime($oldRange['last']))) ?>.</p>
                         </div>
                         <a href="<?= site_url('admin/archive') ?>" class="rec-btn">Review records</a>
                     </div>

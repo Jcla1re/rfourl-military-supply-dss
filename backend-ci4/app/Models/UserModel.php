@@ -25,6 +25,9 @@ class UserModel extends Model
         'last_login',
         'reset_otp_hash',
         'reset_otp_expires',
+        'must_change_password',
+        'temp_password_kind',
+        'temp_password_expires_at',
         'deleted_at',
     ];
 

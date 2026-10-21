@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\StaffPasswordAlert;
+use App\Libraries\StaffPasswordReset;
 use App\Libraries\Toast;
 use App\Models\NotificationModel;
 
@@ -43,7 +44,7 @@ class NotificationController extends BaseController
             : $all;
 
         $data = [
-            'title'       => 'Notification',
+            'title'       => 'Notifications',
             'active'      => 'notifications',
             'groups'      => NotificationModel::groupByRecency($notifications),
             'filter'      => $filter,
@@ -84,22 +85,31 @@ class NotificationController extends BaseController
     }
 
     /**
-     * Approving a staff password-reset request doesn't set a password here
-     * — it hands off to the "Reset Password" button on that staff member's row under
-     * Settings > Manage Accounts so the admin picks the new password themselves.
+     * Approving a staff password-reset request emails the matched staff member a
+     * temporary password (the owner never sees it). The owner must tick that they
+     * checked with the staff member first.
      */
     public function approve(int $notificationId)
     {
         $notification = $this->notificationModel->find($notificationId);
 
-        if (! $notification) {
+        if (! $notification || ! empty($notification['status'])) {
             return redirect()->to('/admin/notifications');
         }
+        if (! $this->request->getPost('confirmed')) {
+            return redirect()->to('/admin/notifications')->with('toast', Toast::error('Not approved', 'Tick "I confirmed with them" first.'));
+        }
 
-        $this->notificationModel->approveAccessRequest($notificationId);
+        $result = (new StaffPasswordReset())->approveRequest($notification, (string) session()->get('username'));
 
-        return redirect()->to('/admin/settings?tab=accounts')
-            ->with('success', 'Request approved. Use Reset Password on their row below.');
+        if (! $result['ok']) {
+            return redirect()->to('/admin/notifications')->with('toast', Toast::error("Couldn't approve", $result['message']));
+        }
+
+        return redirect()->to('/admin/notifications')->with('toast', Toast::success(
+            'Reset approved',
+            'A temporary password was emailed to ' . StaffPasswordReset::maskEmail((string) $result['staff']['email']) . '.'
+        ));
     }
 
     public function decline(int $notificationId)
