@@ -228,7 +228,18 @@ $products ??= [];
 .im-static.im-auto { justify-content: space-between; gap: 8px; border-style: dashed; border-color: #CFCABD; color: #2C3A1E; cursor: default; }
 .im-auto-tag { padding: 2px 8px; border-radius: var(--radius-pill); background: #E6E9DD; color: #4A5A35; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
 .im-count { font-size: 12px; line-height: 1; color: #5C6152; font-variant-numeric: tabular-nums; }
-.im-count.is-over { color: #B42318; }
+.im-count.is-near { color: #8A6A00; }
+.im-count.is-over { color: #A1261B; }
+/* Item name over 60 characters (soft limit): red border, and the message on a line that is
+   always reserved under the field, so the Size | Supplier row never moves when it appears. */
+.im-field input.is-invalid,
+.im-field input.is-invalid:focus { border-color: #A1261B; }
+.im-field input.is-invalid:focus { box-shadow: 0 0 0 3px rgba(161, 38, 27, .18); }
+.im-field-error {
+    display: block; min-height: 15px; margin-top: -3px;
+    font-size: 12px; line-height: 15px; color: #A1261B;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .im-prefix { position: relative; }
 .im-prefix span {
     position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
@@ -557,7 +568,9 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                                 <label for="item_name">Item name</label>
                                 <small class="im-count" id="nameCount">0 / 60</small>
                             </div>
-                            <input id="item_name" name="item_name" required maxlength="60" aria-describedby="nameCount">
+                            <input id="item_name" name="item_name" required aria-describedby="nameCount nameError">
+                            <?php // Soft limit: typing past 60 is allowed, but the field turns red and Save is disabled. ?>
+                            <small class="im-field-error" id="nameError" role="alert"></small>
                         </div>
                         <div class="im-field">
                             <label for="category">Category</label>
@@ -893,9 +906,15 @@ function refreshItemModal() {
     const nameInput = document.getElementById('item_name');
     const nameLen = [...nameInput.value].length;
     const nameCount = document.getElementById('nameCount');
+    const nameOver = nameLen > 60;
     nameCount.textContent = `${nameLen} / 60`;
-    nameCount.classList.toggle('is-over', nameLen > 60);
-    nameInput.setCustomValidity(nameLen > 60 ? 'Item name can be up to 60 characters.' : '');
+    nameCount.classList.toggle('is-near', nameLen >= 50 && !nameOver);
+    nameCount.classList.toggle('is-over', nameOver);
+    nameInput.classList.toggle('is-invalid', nameOver);
+    nameInput.setAttribute('aria-invalid', nameOver ? 'true' : 'false');
+    const nameError = document.getElementById('nameError');
+    const nameMsg = nameOver ? 'Item name can be up to 60 characters.' : '';
+    if (nameError.textContent !== nameMsg) nameError.textContent = nameMsg;
 
     const stock = Number(stockInput.value || 0);
     const rop = Number(ropInput.value || 0);
@@ -936,7 +955,7 @@ function refreshItemModal() {
     // Save stays disabled until a field actually changes.
     const now = formValues();
     const changed = Object.keys(now).filter(k => now[k] !== modalSnapshot[k]).length;
-    submitItemBtn.disabled = changed === 0;
+    submitItemBtn.disabled = changed === 0 || nameOver; // over 60: can't save until it's shortened
     document.getElementById('changeSummary').textContent =
         changed === 0 ? 'No changes yet.' : `${changed} ${changed === 1 ? 'change' : 'changes'}`;
 }

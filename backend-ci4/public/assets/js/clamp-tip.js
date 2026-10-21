@@ -2,7 +2,7 @@
  *
  * Item names that CSS cuts off after two lines ("…"): Inventory table (admin
  * and staff) and the POS product cards. A cut-off name gets the full name as a
- * tooltip (info-tip.js: hover and keyboard focus) and as its accessible name.
+ * tooltip (help-tip.js: hover, keyboard focus, click to pin) and as its accessible name.
  * Re-checked when the window resizes and when the list changes (live search,
  * POS category tabs / search).
  */

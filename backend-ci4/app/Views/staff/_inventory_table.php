@@ -16,11 +16,11 @@
             <thead>
                 <tr>
                     <th>Item ID</th><th>Item Name</th><th class="col-center">Size</th><th>Category</th><th class="col-num">On Hand</th><th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
-                    <th class="col-stock col-term">Stock Level <?= help_tip('Stock Level', 'How full the stock is, compared with Reorder At plus Order Qty.') ?></th><th>Status <?= help_tip('Status', [
-                        'In Stock: enough on hand.',
-                        'Low Stock: close to Reorder At.',
-                        'Reorder Now: at or below Reorder At. Time to order.',
-                        'Out of Stock: none on hand and no recent sales.',
+                    <th class="col-stock col-term">Stock Level</th><th>Status <?= help_tip('Status', [
+                        ['name' => 'In Stock', 'text' => 'Enough stock', 'dot' => 'green'],
+                        ['name' => 'Low Stock', 'text' => 'Getting close to Reorder At', 'dot' => 'amber'],
+                        ['name' => 'Reorder Now', 'text' => 'At or below Reorder At, time to order', 'dot' => 'red'],
+                        ['name' => 'Out of Stock', 'text' => 'None left', 'dot' => 'gray'],
                     ]) ?></th><th class="col-term">Last Updated</th><th class="col-actions">Actions</th>
                 </tr>
             </thead>

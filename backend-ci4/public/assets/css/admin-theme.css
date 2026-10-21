@@ -1151,8 +1151,8 @@ body {
 .confirm-title { font-weight: 700; margin-bottom: 8px; color: var(--text-dark); }
 .confirm-message { color: #6c757d; margin-bottom: 0; overflow-wrap: anywhere; }
 
-/* Help (i) button: opens a click/tap pop-up (App\Libraries\Glossary::tip(), help_tip(),
-   assets/js/help-tip.js), e.g. "Reorder At (i)" / "Order Qty (i)" in table headers. */
+/* Help (i) button (App\Libraries\Glossary::tip(), help_tip()): its tooltip opens on hover and
+   keyboard focus, a click pins it (assets/js/help-tip.js). E.g. "Reorder At (i)" in table headers. */
 .info-tip {
     display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px; margin-left: 4px; padding: 0; vertical-align: -3px;
@@ -1166,13 +1166,6 @@ body {
 /* "Reorder At (i)" / "Order Qty (i)" headers may break onto two lines in narrow columns. */
 .term-tail { white-space: nowrap; }
 .inv-table th.col-term { white-space: normal; line-height: 1.3; }
-.info-tip-bubble {
-    position: fixed; z-index: 3000; max-width: 260px; padding: 8px 11px; border-radius: 8px;
-    background: #1F2617; color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.18);
-    font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 400; line-height: 1.45;
-    text-transform: none; letter-spacing: normal; text-align: left; white-space: pre-line; pointer-events: none;
-}
-
 /* The pop-up: white card, theme font, short paragraphs or a few bullets. */
 .help-popover {
     --bs-popover-max-width: 320px;
@@ -1196,6 +1189,16 @@ body {
 .help-popover .help-list { margin: 0; padding-left: 18px; }
 .help-popover .help-list li { margin-bottom: 4px; }
 .help-popover .help-list li:last-child { margin-bottom: 0; }
+/* Status lines (help_tip() status items): the real status badge in a 104px column, then the text.
+   Wider card so every line fits on one line. */
+.help-popover-status { --bs-popover-max-width: 420px; }
+.help-popover .help-list:has(.help-status) { padding-left: 0; list-style: none; }
+.help-popover .help-list li.help-status { display: grid; grid-template-columns: 104px auto; column-gap: 10px; align-items: center; margin-bottom: 8px; }
+.help-popover .help-list li.help-status:last-child { margin-bottom: 0; }
+.help-popover .help-status .status-pill { width: 104px; padding: 4px 9px; font-size: 11.5px; line-height: 1.3; white-space: nowrap; }
+.help-popover .help-status-text { font-size: 13.5px; font-weight: 400; color: #3A4030; white-space: nowrap; }
+/* Title only (a cut-off item name): the title is the whole card. */
+.help-popover-title-only .popover-header { padding-bottom: 12px; border-radius: 12px; }
 
 /* Table header seams: at fractional pixel positions (e.g. 125% display scaling) two
    neighbouring header cells' backgrounds don't quite meet and the card shows through as a
