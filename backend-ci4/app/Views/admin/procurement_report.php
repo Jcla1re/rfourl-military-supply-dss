@@ -83,7 +83,7 @@
                                         <small class="text-muted d-block">Z=<?= esc($r['z_score']) ?></small>
                                     <?php endif; ?>
                                 <?php else: ?>
-                                    &mdash;
+                                    <span title="<?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?>">&mdash;</span>
                                 <?php endif; ?>
                             </td>
                             <td><?= esc($r['stock']) ?></td>

@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Models\ClusterSegmentModel;
 use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
 use App\Models\SalesItemModel;
@@ -71,23 +72,24 @@ class TrendAnalysisController extends BaseController
             }
         }
 
-        // ABC Classification panel: classic Pareto analysis (% contribution
-        // to total sales value) for the selected year, ranked highest-revenue
-        // first, split into A (top 80%), B (next 15%), C (remaining 5%).
-        $revenueRows = $this->salesItemModel->revenueByItem($year);
+        // ABC classification card. The CLASS is the K-Means class saved by dss:run (see
+        // ClusterSegmentModel::classByItem): nothing here works out a class of its own. The
+        // list is every item sold in the selected year, ranked by sales value (best seller = 1)
+        // with each item's share of that year's sales.
+        $classByItem  = (new ClusterSegmentModel())->classByItem();
+        $revenueRows  = $this->salesItemModel->revenueByItem($year);
         $totalRevenue = array_sum(array_column($revenueRows, 'revenue'));
 
-        $abcClassTotals = ['A' => 0.0, 'B' => 0.0, 'C' => 0.0];
+        $abcClassTotals = ['A' => 0.0, 'B' => 0.0, 'C' => 0.0]; // sales share per class (PDF only)
         $abcItems = [];
-        $cumulative = 0.0;
         foreach ($revenueRows as $i => $row) {
             $revenue = (float) $row['revenue'];
-            $pct = $totalRevenue > 0 ? ($revenue / $totalRevenue) * 100 : 0;
-            $cumulative += $revenue;
-            $cumPct = $totalRevenue > 0 ? $cumulative / $totalRevenue : 1;
-            $class = $cumPct <= 0.80 ? 'A' : ($cumPct <= 0.95 ? 'B' : 'C');
+            $pct     = $totalRevenue > 0 ? ($revenue / $totalRevenue) * 100 : 0;
+            $class   = $classByItem[$row['item_id']] ?? null;
 
-            $abcClassTotals[$class] += $pct;
+            if ($class !== null) {
+                $abcClassTotals[$class] += $pct;
+            }
             $name = $row['item_name'] ?? $row['item_id'];
             $size = trim((string) ($row['size'] ?? ''));
             $abcItems[] = [
@@ -99,6 +101,7 @@ class TrendAnalysisController extends BaseController
                 'code' => ($row['product_code'] ?? '') !== '' ? $row['product_code'] : $row['item_id'],
                 'pct' => $pct,
                 'class' => $class,
+                'service_level' => $class !== null ? ClusterSegmentModel::SERVICE_LEVELS[$class] : null,
             ];
         }
 
@@ -112,17 +115,21 @@ class TrendAnalysisController extends BaseController
         // The PDF export keeps its short top-N list; the on-screen card lists every item ($abcItems).
         $abcTopItems = array_slice($abcItems, 0, $topN);
 
-        // Per-class lists for the A / B / C tabs. Every item is listed; each keeps its
-        // overall rank (the first B item shows its position among all items, not 1).
+        // Per-class lists for the A / B / C tabs. Each keeps its overall sales rank. Items the
+        // engine has not classified yet appear under All only, with a "run the DSS engine" note.
         $abcClassCounts = ['A' => 0, 'B' => 0, 'C' => 0];
-        $abcByClass = ['A' => [], 'B' => [], 'C' => []];
+        $abcByClass     = ['A' => [], 'B' => [], 'C' => []];
+        $abcUnclassified = 0;
         foreach ($abcItems as $item) {
+            if ($item['class'] === null) {
+                $abcUnclassified++;
+                continue;
+            }
             $abcClassCounts[$item['class']]++;
             $abcByClass[$item['class']][] = $item;
         }
 
-        // Demand Variability: show each item's ABC class, highest daily demand first.
-        $classByItem = array_column($abcItems, 'class', 'item_id');
+        // Demand Variability: show each item's K-Means class, highest daily demand first.
         foreach ($variability as &$v) {
             $v['class'] = $classByItem[$v['item_id']] ?? null;
         }
@@ -145,6 +152,7 @@ class TrendAnalysisController extends BaseController
                 'avg_daily_demand' => (float) $c['avg_daily_demand'],
                 'safety_stock' => (float) $c['safety_stock'],
                 'class' => $it['class'],
+                'service_level' => $it['service_level'],
             ];
         }
         usort($variabilityAll, fn($a, $b) => [$b['avg_daily_demand'], $b['safety_stock'], strtolower($a['label'])]
@@ -216,6 +224,7 @@ class TrendAnalysisController extends BaseController
             'abcItems' => $abcItems,
             'abcByClass' => $abcByClass,
             'abcClassCounts' => $abcClassCounts,
+            'abcUnclassified' => $abcUnclassified,
             'totalStock' => array_sum(array_column(array_filter($products, fn($p) => (int) $p['is_active'] === 1), 'current_stock')),
             'salesToday' => $this->salesTransactionModel->totalForToday(),
         ];

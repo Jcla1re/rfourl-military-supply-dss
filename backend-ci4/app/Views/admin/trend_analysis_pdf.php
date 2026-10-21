@@ -35,7 +35,7 @@ $classes = ['A', 'B', 'C'];
     <tr><th>Total</th><th class="num"><?= (int) array_sum($annualData) ?></th><th class="num"><?= (int) array_sum($annualDataPrev) ?></th></tr>
 </table>
 
-<h2>ABC classification by sales value (<?= esc($selectedYear) ?>)</h2>
+<h2>ABC classification (K-Means), sales share (<?= esc($selectedYear) ?>)</h2>
 <table>
     <tr><th>Class</th><th class="num">Items</th><th class="num">Share of sales</th></tr>
     <?php foreach ($classes as $cls): ?>
@@ -47,7 +47,7 @@ $classes = ['A', 'B', 'C'];
 <table>
     <tr><th>Item</th><th>Class</th><th class="num">Share</th></tr>
     <?php foreach ($abcTopItems as $it): ?>
-        <tr><td><?= esc($it['item_name']) ?></td><td><?= esc($it['class']) ?></td><td class="num"><?= number_format($it['pct'], 1) ?>%</td></tr>
+        <tr><td><?= esc($it['item_name']) ?></td><td><?= esc($it['class'] ?? '—') ?></td><td class="num"><?= number_format($it['pct'], 1) ?>%</td></tr>
     <?php endforeach; ?>
 </table>
 

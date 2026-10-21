@@ -89,13 +89,14 @@ class ReorderAlertController extends BaseController
             $computations[$c['item_id']] = $c;
         }
 
+        $classByItem = $this->clusterSegmentModel->classByItem(); // the K-Means class, same as everywhere
         $rows = [];
         foreach ($products as $p) {
             $status = $this->productModel->getStatus($p);
             $rows[] = [
                 'item_id'      => $p['item_id'],
                 'item_name'    => $p['item_name'],
-                'abc_category' => $p['abc_category'] ?? '—',
+                'abc_category' => $classByItem[$p['item_id']] ?? '—', // K-Means class (cluster_segments)
                 'stock'        => $p['current_stock'],
                 'rop'          => $p['manual_rop_warning'],
                 'status'       => $status['label'],

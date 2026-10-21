@@ -38,12 +38,8 @@ class Glossary
             'tip'   => 'How many days a supplier usually takes to deliver after you place an order.',
         ],
         'abc' => [
-            'label' => 'A, B and C groups',
-            'tip'   => [
-                'A: best sellers, about 80% of sales. Never run out.',
-                'B: steady sellers, the next 15%.',
-                'C: slow sellers, the last 5%. Order less.',
-            ],
+            'label' => 'ABC classification',
+            'tip'   => 'The system groups items using K-Means clustering. Class A items get the most safety stock so they rarely run out.',
         ],
     ];
 

@@ -318,6 +318,25 @@ foreach ($products as $p) {
         background: #C5DDBB;
     }
 
+    .cls-n-fill {
+        background: #D9D6CC;
+    }
+
+    .abc-bar-note {
+        margin: -8px 0 10px;
+        font-size: 12px;
+        color: #6B7062;
+    }
+
+    .abc-badge.cls-n {
+        background: #ECEAE2;
+        color: #6B7062;
+    }
+
+    .abc-none {
+        color: #8A8F80;
+    }
+
     .abc-meanings {
         list-style: none;
         margin: 0 0 16px;
@@ -630,9 +649,9 @@ foreach ($products as $p) {
     }
 
     .var-scroll .var-table .vrank { width: 36px; padding-right: 12px; }
-    .var-scroll .var-table th.num:nth-of-type(3) { width: 142px; }
-    .var-scroll .var-table th.num:nth-of-type(4) { width: 104px; }
-    .var-scroll .var-table th.cls { width: 60px; }
+    .var-scroll .var-table th.num:nth-of-type(3) { width: 116px; }
+    .var-scroll .var-table th.num:nth-of-type(4) { width: 118px; }
+    .var-scroll .var-table th.cls { width: 84px; }
 
     .var-table .vname {
         overflow: hidden;
@@ -817,15 +836,18 @@ foreach ($products as $p) {
             <div class="chart-card">
                 <div class="card-head">
                     <div>
-                        <h6>ABC classification <?= \App\Libraries\Glossary::tip('abc') ?></h6>
-                        <p class="card-sub">Share of total sales value in <?= esc($yearLabel) ?></p>
+                        <h6>ABC classification (K-Means) <?= \App\Libraries\Glossary::tip('abc') ?></h6>
+                        <p class="card-sub">Grouped by cost, demand, demand variability and lead time.</p>
                     </div>
                 </div>
                 <?php if (empty($abcItems)): ?>
                     <div class="text-muted small"><i class="bi bi-graph-up" aria-hidden="true"></i> No sales in <?= esc($yearLabel) ?> yet.</div>
                 <?php else: ?>
                     <?php
-                    $ac = $abcClassTotals ?? ['A' => 0, 'B' => 0, 'C' => 0];
+                    $abcUnclassified = $abcUnclassified ?? 0;
+                    $classedTotal = array_sum($abcClassCounts ?? []);
+                    $itemTotal = max(1, $classedTotal + $abcUnclassified);
+                    $svc = \App\Models\ClusterSegmentModel::SERVICE_LEVELS;
                     $abcByClass = $abcByClass ?? ['A' => [], 'B' => [], 'C' => []];
                     $abcClassCounts = $abcClassCounts ?? ['A' => 0, 'B' => 0, 'C' => 0];
                     $renderAbcRows = function (array $items) {
@@ -840,8 +862,9 @@ foreach ($products as $p) {
                                 <span class="abc-name" title="<?= esc($item['label']) ?>"><?= esc($item['label']) ?><?php if (!empty($item['show_code'])): ?><span class="abc-code"><?= esc($item['code']) ?></span><?php endif; ?></span>
                                 <span class="abc-right">
                                     <span class="abc-share"><?= esc($shareText) ?></span>
-                                    <span class="abc-cls"><span class="abc-badge cls-<?= strtolower($item['class']) ?>"
-                                            aria-label="Class <?= esc($item['class']) ?>"><?= esc($item['class']) ?></span></span>
+                                    <span class="abc-cls"><?php if ($item['class']): ?><span class="abc-badge cls-<?= strtolower($item['class']) ?>"
+                                            title="Class <?= esc($item['class']) ?>, <?= (int) $item['service_level'] ?>% service level"
+                                            aria-label="Class <?= esc($item['class']) ?>, <?= (int) $item['service_level'] ?>% service level"><?= esc($item['class']) ?></span><?php else: ?><span class="abc-none" title="<?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?>" aria-label="<?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?>">&mdash;</span><?php endif; ?></span>
                                 </span>
                             </div>
                             <?php
@@ -849,18 +872,22 @@ foreach ($products as $p) {
                     };
                     ?>
                     <div class="abc-stack" role="img"
-                        aria-label="Class A <?= round($ac['A']) ?>%, B <?= round($ac['B']) ?>%, C <?= round($ac['C']) ?>% of sales value">
-                        <span class="cls-a-fill" style="width: <?= round($ac['A']) ?>%"></span>
-                        <span class="cls-b-fill" style="width: <?= round($ac['B']) ?>%"></span>
-                        <span class="cls-c-fill" style="width: <?= round($ac['C']) ?>%"></span>
+                        aria-label="Items per class: A <?= (int) $abcClassCounts['A'] ?>, B <?= (int) $abcClassCounts['B'] ?>, C <?= (int) $abcClassCounts['C'] ?><?= $abcUnclassified ? ', not classified ' . (int) $abcUnclassified : '' ?>">
+                        <span class="cls-a-fill" style="width: <?= round($abcClassCounts['A'] / $itemTotal * 100, 2) ?>%"></span>
+                        <span class="cls-b-fill" style="width: <?= round($abcClassCounts['B'] / $itemTotal * 100, 2) ?>%"></span>
+                        <span class="cls-c-fill" style="width: <?= round($abcClassCounts['C'] / $itemTotal * 100, 2) ?>%"></span>
+                        <?php if ($abcUnclassified): ?><span class="cls-n-fill" style="width: <?= round($abcUnclassified / $itemTotal * 100, 2) ?>%"></span><?php endif; ?>
                     </div>
+                    <p class="abc-bar-note">Number of items in each class</p>
                     <ul class="abc-meanings">
-                        <li><span class="abc-badge cls-a">A</span><strong><?= round($ac['A']) ?>%</strong> Best sellers.
-                            Never run out.</li>
-                        <li><span class="abc-badge cls-b">B</span><strong><?= round($ac['B']) ?>%</strong> Steady
-                            sellers.</li>
-                        <li><span class="abc-badge cls-c">C</span><strong><?= round($ac['C']) ?>%</strong> Slow sellers.
-                            Order less.</li>
+                        <?php foreach (['A', 'B', 'C'] as $k): ?>
+                            <li><span class="abc-badge cls-<?= strtolower($k) ?>"><?= $k ?></span><strong><?= number_format((int) $abcClassCounts[$k]) ?> items</strong>
+                                <?= esc(\App\Models\ClusterSegmentModel::PRIORITY[$k]) ?>, <?= (int) $svc[$k] ?>% service level</li>
+                        <?php endforeach; ?>
+                        <?php if ($abcUnclassified): ?>
+                            <li><span class="abc-badge cls-n">&mdash;</span><strong><?= number_format((int) $abcUnclassified) ?> items</strong>
+                                Not classified yet. <?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?></li>
+                        <?php endif; ?>
                     </ul>
 
                     <div class="abc-tabs" role="group" aria-label="Filter by class">
@@ -876,7 +903,7 @@ foreach ($products as $p) {
                     <div class="abc-head" aria-hidden="true">
                         <span class="abc-rank">#</span>
                         <span class="abc-name">Item</span>
-                        <span class="abc-right"><span class="abc-share">Share</span><span
+                        <span class="abc-right"><span class="abc-share">Sales share</span><span
                                 class="abc-cls">Class</span></span>
                     </div>
                     <div class="abc-scroll" id="abcScroll">
@@ -919,7 +946,10 @@ foreach ($products as $p) {
                                 <th>Item</th>
                                 <th class="num">Daily sales</th>
                                 <th class="num"><?= \App\Libraries\Glossary::labelWithTip('safety_stock') ?></th>
-                                <th class="cls">Class</th>
+                                <th class="cls">Class <?= help_tip('Class and service level', [
+                                    'The K-Means class decides the service level: A 95%, B 90%, C 85%.',
+                                    'That class sets the Z-score used for this item\'s Safety Stock.',
+                                ]) ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -933,8 +963,9 @@ foreach ($products as $p) {
                                     <td class="cls">
                                         <?php if (!empty($v['class'])): ?>
                                             <span class="abc-badge cls-<?= strtolower($v['class']) ?>"
-                                                aria-label="Class <?= esc($v['class']) ?>"><?= esc($v['class']) ?></span>
-                                        <?php else: ?>—<?php endif; ?>
+                                                title="Class <?= esc($v['class']) ?>, <?= (int) $v['service_level'] ?>% service level (used for this item's Safety Stock)"
+                                                aria-label="Class <?= esc($v['class']) ?>, <?= (int) $v['service_level'] ?>% service level"><?= esc($v['class']) ?></span>
+                                        <?php else: ?><span class="abc-none" title="<?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?>" aria-label="<?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?>">&mdash;</span><?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
