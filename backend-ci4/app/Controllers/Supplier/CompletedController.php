@@ -47,13 +47,26 @@ class CompletedController extends BaseController
 
         usort($orders, fn ($a, $b) => strcmp($b['actual_delivery_date'], $a['actual_delivery_date']));
 
+        // Cancelled orders (by RfourL, or declined by this supplier) are listed apart from deliveries,
+        // so they never count in the delivery stats.
+        $cancelled = $this->stockOrderModel->forSupplier($supplierId, ['Cancelled']);
+        $cancelled = array_values(array_filter($cancelled, fn ($o) => ! $cutoff || substr($o['cancelled_at'] ?? $o['order_date'], 0, 10) >= $cutoff));
+        foreach ($cancelled as &$c) {
+            $lines            = $this->soItemModel->forOrder($c['so_id']);
+            $c['lines']       = $lines;
+            $c['total_units'] = array_sum(array_column($lines, 'order_quantity'));
+            $c['note']        = StockOrderModel::supplierCancelNote($c);
+        }
+        unset($c);
+
         $onTimeCount = count(array_filter($orders, fn ($o) => $o['on_time']));
 
         $data = [
             'title'         => 'Completed',
-            'subtitle'      => 'All fulfilled deliveries this month',
+            'subtitle'      => 'Delivered this month',
             'active'        => 'completed',
             'orders'        => $orders,
+            'cancelledOrders' => $cancelled,
             'range'         => $range,
             'completedCount'=> count($orders),
             'itemsDelivered'=> array_sum(array_column($orders, 'total_units')),

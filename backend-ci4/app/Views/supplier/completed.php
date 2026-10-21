@@ -47,11 +47,30 @@
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="5" class="text-center py-4">No completed deliveries in this range.</td></tr>
+                    <tr><td colspan="5" class="text-center py-4">No deliveries in this period.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
+
+    <?php if (! empty($cancelledOrders)): ?>
+        <h5 class="fw-bold mt-4 mb-2">Cancelled orders</h5>
+        <div class="page-panel">
+            <table class="data-table">
+                <thead><tr><th>Order ID</th><th>Items</th><th>Units</th><th>Cancelled</th></tr></thead>
+                <tbody>
+                    <?php foreach ($cancelledOrders as $o): ?>
+                        <tr>
+                            <td><strong>#<?= esc($o['so_id']) ?></strong></td>
+                            <td><?= esc(implode(', ', array_map(fn ($l) => $l['item_name'] ?? $l['item_id'], $o['lines']))) ?></td>
+                            <td><?= esc($o['total_units']) ?></td>
+                            <td><span class="status-pill red">Cancelled</span> <span class="text-muted small"><?= esc($o['note'] ?? '') ?></span></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endif; ?>
 </div>
 
 <?= $this->endSection() ?>

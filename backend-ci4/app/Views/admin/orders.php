@@ -96,6 +96,10 @@ $restockDates = $restockDates ?? [];
 .ord-actions { display: flex; gap: 10px; }
 .ord-actions form { flex: 1; }
 .ord-actions button { width: 100%; padding: 12px; border-radius: var(--radius-control); border: 1px solid #333; background: #fff; font-weight: 700; cursor: pointer; }
+.ord-actions button.cancel-order { width: auto; padding: 12px 18px; border-color: var(--accent-maroon); color: var(--accent-maroon); }
+.ord-actions button.cancel-order:hover { background: var(--red-bg); }
+.ord-note { margin: 10px 0 0; font-size: 13px; color: #777; }
+.hist-note { display: block; font-size: 12px; color: #777; margin-top: 4px; }
 
 .cal-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); padding: 18px; position: sticky; top: calc(var(--sticky-top, 0px) + 16px); }
 .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
@@ -136,7 +140,7 @@ $restockDates = $restockDates ?? [];
                 <div class="ord-col-label">Order Status</div>
 
                 <?php if (empty($orders)): ?>
-                    <div class="empty-state">No active orders. Create one from Reorder Alerts or the button above.</div>
+                    <div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i> No orders yet. <button type="button" class="btn btn-success btn-sm ms-2" onclick="document.getElementById('openAddModal').click()">Add New Order</button></div>
                 <?php else: ?>
                     <?php foreach ($orders as $o): ?>
                         <?php
@@ -190,7 +194,18 @@ $restockDates = $restockDates ?? [];
                                     <?= csrf_field() ?>
                                     <button type="submit"><?= $isOverdue ? 'Delayed' : 'Follow up' ?></button>
                                 </form>
+                                <?php if (\App\Models\StockOrderModel::canCancel($o)): ?>
+                                    <button type="button" class="cancel-order" data-cancel-order
+                                            data-action="<?= site_url('admin/orders/cancel/' . $o['so_id']) ?>"
+                                            data-so="<?= esc($o['so_id'], 'attr') ?>"
+                                            data-supplier="<?= esc($o['company_name'] ?? '', 'attr') ?>"
+                                            data-items="<?= count($o['lines'] ?? []) ?>"
+                                            data-status="<?= esc($o['status'], 'attr') ?>">Cancel</button>
+                                <?php endif; ?>
                             </div>
+                            <?php if ($o['status'] === 'Shipped'): ?>
+                                <p class="ord-note">Already shipped. Contact the supplier to refuse or return it on delivery.</p>
+                            <?php endif; ?>
                         </div>
 
                         <?php if ($o['status'] === 'Shipped'): ?>
@@ -200,7 +215,7 @@ $restockDates = $restockDates ?? [];
                                     <h3 class="mb-0">Confirm Delivery &mdash; #<?= esc($o['so_id']) ?></h3>
                                     <button type="button" class="btn-close" onclick="this.closest('.inv-modal').classList.remove('show')"></button>
                                 </div>
-                                <p class="subtitle">Check each item against what physically arrived — this should match what the supplier declared when they shipped it.</p>
+                                <p class="subtitle">Tick each item that arrived. It should match what the supplier shipped.</p>
                                 <form method="post" action="<?= site_url('admin/orders/update-status/' . $o['so_id']) ?>">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="status" value="Delivered">
@@ -247,7 +262,7 @@ $restockDates = $restockDates ?? [];
             </div>
 
             <div>
-                <div class="ord-col-label">Procurement Calendar</div>
+                <div class="ord-col-label">Order Calendar</div>
                 <div class="cal-card">
                     <?php
                     $monthTs = mktime(0, 0, 0, $calMonth, 1, $calYear);
@@ -304,7 +319,13 @@ $restockDates = $restockDates ?? [];
                                 <td><?= esc($o['company_name'] ?? '—') ?></td>
                                 <td><?= esc(date('M j, Y', strtotime($o['order_date']))) ?></td>
                                 <td><?= !empty($o['actual_delivery_date']) ? esc(date('M j, Y', strtotime($o['actual_delivery_date']))) : '—' ?></td>
-                                <td><span class="status-pill <?= $o['status'] === 'Delivered' ? 'green' : 'red' ?>"><?= esc($o['status']) ?></span></td>
+                                <td>
+                                    <span class="status-pill <?= $o['status'] === 'Delivered' ? 'green' : 'red' ?>"><?= esc($o['status']) ?></span>
+                                    <?php if ($note = \App\Models\StockOrderModel::cancelNote($o)): ?>
+                                        <span class="hist-note"><?= esc($note) ?></span>
+                                        <a class="hist-note" href="<?= site_url('admin/orders?reorder=' . $o['so_id']) ?>">Reorder</a>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -331,7 +352,7 @@ $restockDates = $restockDates ?? [];
                     <select name="supplier_id" required>
                         <option value="">Select supplier…</option>
                         <?php foreach ($suppliers as $s): ?>
-                            <option value="<?= esc($s['supplier_id']) ?>"><?= esc($s['company_name']) ?> (<?= esc($s['lead_time_days']) ?>d lead time)</option>
+                            <option value="<?= esc($s['supplier_id']) ?>"><?= esc($s['company_name']) ?> (<?= esc($s['lead_time_days']) ?>d delivery)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -536,7 +557,28 @@ document.getElementById('openAddModal').addEventListener('click', () => {
     itemModal.classList.add('show');
 });
 document.getElementById('closeItemModal').addEventListener('click', () => itemModal.classList.remove('show'));
+
+// "Reorder" from a cancelled order: same supplier, items and quantities. Nothing is created until the owner submits.
+const reorderPrefill = <?= json_encode($reorderPrefill ?? null) ?>;
+if (reorderPrefill) {
+    lineItemsBody.innerHTML = '';
+    document.querySelector('#itemModal select[name="supplier_id"]').value = reorderPrefill.supplier_id;
+    document.querySelector('#itemModal select[name="priority"]').value = reorderPrefill.priority;
+    reorderPrefill.lines.forEach(l => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="padding:8px;"><input type="hidden" name="item_id[]" value="${escapeHtml(l.item_id)}">${escapeHtml(l.label)}</td>
+            <td><input type="number" name="quantity[]" min="1" value="${l.qty}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius: var(--radius-control);"></td>
+            <td><input type="number" name="unit_price[]" min="0" step="0.01" value="${l.price}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius: var(--radius-control);"></td>
+            <td><button type="button" class="btn-close remove-line"></button></td>`;
+        lineItemsBody.appendChild(row);
+        row.querySelector('.remove-line').addEventListener('click', () => row.remove());
+    });
+    itemModal.classList.add('show');
+}
 document.getElementById('cancelItemModal').addEventListener('click', () => itemModal.classList.remove('show'));
 </script>
+
+<?= view('admin/_cancel_order_modal') ?>
 
 <?= $this->endSection() ?>

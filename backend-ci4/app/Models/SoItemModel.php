@@ -31,7 +31,7 @@ class SoItemModel extends Model
 
     public function forOrder(string $soId): array
     {
-        return $this->select('so_item.*, products.item_name, products.category')
+        return $this->select('so_item.*, products.item_name, products.category, products.size')
             ->join('products', 'products.item_id = so_item.item_id', 'left')
             ->where('so_id', $soId)
             ->findAll();

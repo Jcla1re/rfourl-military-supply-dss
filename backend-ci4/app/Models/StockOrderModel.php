@@ -23,6 +23,9 @@ class StockOrderModel extends Model
         'actual_delivery_date',
         'tracking_no',
         'decline_reason',
+        'cancel_reason',
+        'cancelled_by',
+        'cancelled_at',
     ];
 
     protected $useTimestamps = false;
@@ -35,6 +38,54 @@ class StockOrderModel extends Model
     public const STATUSES = ['Order Confirmed', 'Preparing', 'Shipped', 'Delivered', 'Cancelled'];
     public const PRIORITIES = ['Urgent', 'Order', 'Planned'];
 
+    /** Only these can be cancelled by the owner. Shipped goods are already on the way. */
+    public const CANCELLABLE = ['Order Confirmed', 'Preparing'];
+
+    public const CANCEL_REASONS = ['Ordered by mistake', 'Wrong item or quantity', 'No longer needed', 'Found another supplier', 'Other'];
+
+    public static function canCancel(array $order): bool
+    {
+        return in_array($order['status'] ?? '', self::CANCELLABLE, true);
+    }
+
+    /**
+     * The one-line history note for a cancelled order, e.g.
+     * "Cancelled by Richelle · Oct 21, 2026 · Ordered by mistake" or
+     * "Declined by supplier · Oct 21, 2026 · Out of stock". Null if the order is not cancelled.
+     */
+    public static function cancelNote(array $order): ?string
+    {
+        if (($order['status'] ?? '') !== 'Cancelled') {
+            return null;
+        }
+
+        $reason = $order['cancel_reason'] ?? $order['decline_reason'] ?? null;
+
+        if (! empty($order['cancelled_by'])) {
+            $who = 'Cancelled by ' . ($order['cancelled_by_name'] ?? 'the owner');
+        } elseif (! empty($order['decline_reason']) || ! empty($order['cancelled_at'])) {
+            $who = 'Declined by supplier';
+        } else {
+            $who = 'Cancelled';
+        }
+        $when = ! empty($order['cancelled_at']) ? date('M j, Y', strtotime($order['cancelled_at'])) : null;
+
+        return implode(' · ', array_filter([$who, $when, $reason]));
+    }
+
+    /** The same note as the supplier sees it. */
+    public static function supplierCancelNote(array $order): ?string
+    {
+        if (($order['status'] ?? '') !== 'Cancelled') {
+            return null;
+        }
+
+        $reason = $order['cancel_reason'] ?? $order['decline_reason'] ?? null;
+        $who    = ! empty($order['cancelled_by']) ? 'Cancelled by RfourL' : 'Declined by you';
+
+        return implode(' · ', array_filter([$who, $reason]));
+    }
+
     public function generateNextId(): string
     {
         $count = $this->countAll();
@@ -46,8 +97,9 @@ class StockOrderModel extends Model
      */
     public function listWithSupplier(?string $status = null): array
     {
-        $builder = $this->select('stock_order.*, suppliers.company_name')
+        $builder = $this->select('stock_order.*, suppliers.company_name, cb.full_name AS cancelled_by_name')
             ->join('suppliers', 'suppliers.supplier_id = stock_order.supplier_id', 'left')
+            ->join('users cb', 'cb.user_id = stock_order.cancelled_by', 'left')
             ->orderBy('stock_order.order_date', 'DESC');
 
         if ($status) {
@@ -59,8 +111,9 @@ class StockOrderModel extends Model
 
     public function findWithDetails(string $soId): ?array
     {
-        $order = $this->select('stock_order.*, suppliers.company_name, suppliers.contact_person, suppliers.contact_email, suppliers.contact_number')
+        $order = $this->select('stock_order.*, suppliers.company_name, suppliers.contact_person, suppliers.contact_email, suppliers.contact_number, cb.full_name AS cancelled_by_name')
             ->join('suppliers', 'suppliers.supplier_id = stock_order.supplier_id', 'left')
+            ->join('users cb', 'cb.user_id = stock_order.cancelled_by', 'left')
             ->where('stock_order.so_id', $soId)
             ->first();
 

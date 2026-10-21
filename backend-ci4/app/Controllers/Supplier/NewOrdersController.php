@@ -47,7 +47,7 @@ class NewOrdersController extends BaseController
 
         $data = [
             'title'    => 'New Orders',
-            'subtitle' => count($orders) . ' order' . (count($orders) === 1 ? '' : 's') . ' awaiting your response',
+            'subtitle' => count($orders) . ' order' . (count($orders) === 1 ? '' : 's') . ' waiting for you',
             'active'   => 'new_orders',
             'orders'   => $orders,
             'filter'   => $filter,
@@ -89,7 +89,7 @@ class NewOrdersController extends BaseController
         }
         $reason = mb_substr($reason, 0, 255);
 
-        $this->stockOrderModel->markCancelled($soId, ['decline_reason' => $reason]); // alerts back to Active
+        $this->stockOrderModel->markCancelled($soId, ['decline_reason' => $reason, 'cancelled_at' => date('Y-m-d H:i:s')]); // alerts back to Active
 
         $declineMsg = session()->get('full_name') . " declined order {$soId}. Reason: {$reason}. Please reassign or follow up.";
         $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} declined by supplier", $declineMsg, null, 'order_status', "/admin/orders/{$soId}");

@@ -2,7 +2,7 @@
 <?= $this->extend('layouts/admin_layout') ?>
 
 <?= $this->section('header_actions') ?>
-<a href="<?= site_url('admin/orders') ?>" class="btn btn-outline-light">
+<a href="<?= site_url('admin/orders') ?>" class="btn btn-topbar">
     <i class="bi bi-arrow-left"></i> Back to Orders
 </a>
 <?= $this->endSection() ?>
@@ -32,10 +32,27 @@ $pillClass = match ($order['status'] ?? '') {
 
 <div class="page-wrap">
     <div class="page-panel mb-3">
-        <div class="d-flex justify-content-between align-items-start mb-4">
+        <div class="d-flex justify-content-between align-items-start mb-4 gap-3 flex-wrap">
             <div>
                 <h2 class="mb-1"><?= esc($order['so_id'] ?? '') ?></h2>
                 <span class="status-pill <?= $pillClass ?>"><?= esc($order['status'] ?? '') ?></span>
+                <?php if ($note = \App\Models\StockOrderModel::cancelNote($order)): ?>
+                    <div class="small text-muted mt-2"><?= esc($note) ?></div>
+                <?php endif; ?>
+            </div>
+            <div class="text-end">
+                <?php if (\App\Models\StockOrderModel::canCancel($order)): ?>
+                    <button type="button" class="btn btn-outline-danger" data-cancel-order
+                            data-action="<?= site_url('admin/orders/cancel/' . $order['so_id']) ?>"
+                            data-so="<?= esc($order['so_id'], 'attr') ?>"
+                            data-supplier="<?= esc($order['company_name'] ?? '', 'attr') ?>"
+                            data-items="<?= count($items) ?>"
+                            data-status="<?= esc($order['status'], 'attr') ?>">Cancel order</button>
+                <?php elseif (($order['status'] ?? '') === 'Shipped'): ?>
+                    <div class="small text-muted" style="max-width:260px;">Already shipped. Contact the supplier to refuse or return it on delivery.</div>
+                <?php elseif (($order['status'] ?? '') === 'Cancelled'): ?>
+                    <a class="btn btn-success" href="<?= site_url('admin/orders?reorder=' . $order['so_id']) ?>"><i class="bi bi-arrow-repeat"></i> Reorder</a>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -124,7 +141,7 @@ $pillClass = match ($order['status'] ?? '') {
     <?php if (($order['status'] ?? '') === 'Shipped'): ?>
         <div class="page-panel mt-3">
             <h5 class="mb-1">Confirm Delivery</h5>
-            <p class="subtitle">Check each item against what physically arrived — this should match what the supplier declared when they shipped it.</p>
+            <p class="subtitle">Tick each item that arrived. It should match what the supplier shipped.</p>
             <form method="post" action="<?= site_url('admin/orders/update-status/' . $order['so_id']) ?>">
                 <?= csrf_field() ?>
                 <input type="hidden" name="status" value="Delivered">
@@ -155,5 +172,7 @@ $pillClass = match ($order['status'] ?? '') {
         </div>
     <?php endif; ?>
 </div>
+
+<?= view('admin/_cancel_order_modal') ?>
 
 <?= $this->endSection() ?>

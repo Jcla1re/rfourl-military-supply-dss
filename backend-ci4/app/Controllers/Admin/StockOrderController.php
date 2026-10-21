@@ -5,6 +5,7 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Libraries\EmailNotifier;
 use App\Libraries\Toast;
+use App\Models\SecurityLogModel;
 use App\Models\NotificationModel;
 use App\Models\ProductModel;
 use App\Models\ReorderAlertModel;
@@ -112,7 +113,29 @@ class StockOrderController extends BaseController
             }
         }
 
+        // "Reorder" on a cancelled order opens the new-order form pre-filled with the same
+        // supplier, items and quantities. Nothing is created until the owner submits it.
+        $reorderPrefill = null;
+        $reorderFrom    = trim((string) ($this->request->getGet('reorder') ?? ''));
+        if ($reorderFrom !== '') {
+            $source = $this->stockOrderModel->find($reorderFrom);
+            if ($source && $source['status'] === 'Cancelled') {
+                $reorderPrefill = [
+                    'supplier_id' => $source['supplier_id'],
+                    'priority'    => $source['priority'],
+                    'from'        => $source['so_id'],
+                    'lines'       => array_map(fn ($l) => [
+                        'item_id' => $l['item_id'],
+                        'label'   => ($l['item_name'] ?? $l['item_id']) . (! empty($l['size']) ? ' — ' . $l['size'] : ''),
+                        'qty'     => (int) $l['order_quantity'],
+                        'price'   => (float) $l['unit_price'],
+                    ], $this->soItemModel->forOrder($source['so_id'])),
+                ];
+            }
+        }
+
         $data = [
+            'reorderPrefill' => $reorderPrefill,
             'title'          => 'Orders',
             'active'         => 'orders',
             'tab'            => $tab,
@@ -165,7 +188,74 @@ class StockOrderController extends BaseController
             "The expected delivery date for order {$soId} has passed. Please log in to the supplier portal and provide a status update."
         );
 
-        return redirect()->to('/admin/orders')->with('success', "Order {$soId} flagged as delayed. Supplier has been notified to follow up.");
+        return redirect()->to('/admin/orders')->with('success', "Order {$soId} marked delayed. Supplier notified.");
+    }
+
+    /**
+     * The owner cancels an order. Only while the supplier has not shipped it
+     * (Order Confirmed or Preparing). The reorder alerts linked to it go back to
+     * Active (StockOrderModel::markCancelled). Stock on hand is never touched.
+     */
+    public function cancel($soId)
+    {
+        $order = $this->stockOrderModel->find($soId);
+
+        if (! $order) {
+            return redirect()->to('/admin/orders')->with('toast', Toast::error("Couldn't cancel", 'Order not found.'));
+        }
+        if (! StockOrderModel::canCancel($order)) {
+            $why = $order['status'] === 'Shipped'
+                ? 'It is already shipped. Contact the supplier to refuse or return it on delivery.'
+                : "It is already {$order['status']}.";
+
+            return redirect()->to('/admin/orders')->with('toast', Toast::error("Order {$soId} can't be cancelled", $why));
+        }
+
+        $choice = (string) $this->request->getPost('reason');
+        if (! in_array($choice, StockOrderModel::CANCEL_REASONS, true)) {
+            return redirect()->to('/admin/orders')->with('toast', Toast::error("Couldn't cancel", 'Please choose a reason.'));
+        }
+
+        $reason = $choice;
+        if ($choice === 'Other') {
+            $note = trim((string) $this->request->getPost('note'));
+            if (mb_strlen($note) < 5 || mb_strlen($note) > 200) {
+                return redirect()->to('/admin/orders')->with('toast', Toast::error("Couldn't cancel", 'Please add a note of 5 to 200 characters.'));
+            }
+            $reason = 'Other: ' . $note;
+        }
+
+        $wasPreparing = $order['status'] === 'Preparing';
+
+        $this->stockOrderModel->markCancelled($soId, [
+            'cancel_reason' => $reason,
+            'cancelled_by'  => (int) session()->get('user_id'),
+            'cancelled_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        $message = "Order {$soId} was cancelled by RfourL. Reason: {$reason}. Please don't prepare or ship it."
+            . ($wasPreparing ? " We're sorry for any work already started." : '');
+        $supplierUser = $this->supplierUser($order['supplier_id']);
+
+        $this->notificationModel->push(
+            'Supplier',
+            'Order Status',
+            "Order {$soId} was cancelled",
+            $message,
+            $supplierUser['user_id'] ?? null,
+            'order_status',
+            '/supplier/completed?range=all'
+        );
+        $this->emailNotifier->toUser($supplierUser, "Order {$soId} was cancelled", $message);
+
+        SecurityLogModel::log('order_cancelled', null, "{$soId}: {$reason}");
+
+        return redirect()->to('/admin/orders')->with('toast', Toast::success(
+            "Order {$soId} cancelled",
+            'Its reorder alerts are active again.',
+            null,
+            ['action' => ['label' => 'Reorder', 'url' => site_url('admin/orders?reorder=' . $soId)]]
+        ));
     }
 
     public function show($soId)
@@ -320,10 +410,17 @@ class StockOrderController extends BaseController
             return redirect()->to('/admin/orders')->with('error', 'Invalid status.');
         }
 
+        // Cancelling has its own rules and a reason (see cancel()), so it can't be done from here.
+        if ($newStatus === 'Cancelled') {
+            return redirect()->to('/admin/orders')->with('error', 'Use Cancel order to cancel an order.');
+        }
+        // A cancelled order stays cancelled; a new order is a new order.
+        if ($order['status'] === 'Cancelled') {
+            return redirect()->to('/admin/orders')->with('error', "Order {$soId} was cancelled and can't be changed.");
+        }
+
         if ($newStatus === 'Delivered' && $order['status'] !== 'Delivered') {
             $this->stockOrderModel->markDelivered($soId, session()->get('user_id'));
-        } elseif ($newStatus === 'Cancelled' && $order['status'] !== 'Cancelled') {
-            $this->stockOrderModel->markCancelled($soId); // alerts back to Active
         } else {
             $this->stockOrderModel->update($soId, ['status' => $newStatus]);
         }
@@ -338,7 +435,7 @@ class StockOrderController extends BaseController
                 "The admin manually set order {$soId} to {$newStatus}.",
                 $statusSupplierUser['user_id'] ?? null,
                 'order_status',
-                $newStatus === 'Cancelled' ? '/supplier/new-orders' : '/supplier/deliveries'
+                '/supplier/deliveries'
             );
 
             $this->emailNotifier->toUser(
