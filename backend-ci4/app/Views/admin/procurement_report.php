@@ -21,6 +21,10 @@
     display: inline-flex; width: 26px; height: 26px; align-items: center; justify-content: center;
     border-radius: 50%; font-weight: 700; background: var(--red-bg); color: var(--red-text); font-size: 13px;
 }
+/* Same ABC colours as Trend Analysis: A darkest, B mid, C lightest. */
+.abc-badge.cls-a { background: #2C3A1E; color: #fff; }
+.abc-badge.cls-b { background: #71AA60; color: #fff; }
+.abc-badge.cls-c { background: #E4EFDF; color: #2F4A22; }
 .pr-order-btn {
     border: 1px solid #333; background: #fff; border-radius: var(--radius-control); padding: 8px 14px; font-weight: 700; cursor: pointer;
 }
@@ -30,17 +34,18 @@
 
 <div class="page-wrap">
     <div class="pr-params">
-        <h3>DSS parameter</h3>
+        <h3>DSS settings <?= \App\Libraries\Glossary::tip('dss') ?></h3>
         <div class="pr-param-row">
-            <div><span>Ordering cost (S)</span><strong>₱<?= esc($dss['ordering_cost'] ?? 0) ?></strong></div>
-            <div><span>Holding cost (H)</span><strong>₱<?= esc($dss['holding_cost_per_unit'] ?? 0) ?>/unit/y</strong></div>
-            <div><span>Default service level target</span><strong><?= esc($dss['service_level_target'] ?? 0) ?>% (Z = <?= esc($dss['z_score'] ?? 0) ?>)</strong></div>
-            <div><span>Demand Lookback</span><strong><?= esc($dss['demand_lookback_days'] ?? 0) ?> days</strong></div>
+            <div><span>Cost per order</span><strong>₱<?= esc($dss['ordering_cost'] ?? 0) ?></strong></div>
+            <div><span>Storage cost per item per year</span><strong>₱<?= esc($dss['holding_cost_per_unit'] ?? 0) ?></strong></div>
+            <div><span>Default availability target</span><strong><?= esc($dss['service_level_target'] ?? 0) ?>% (Z = <?= esc($dss['z_score'] ?? 0) ?>)</strong></div>
+            <div><span>Sales history used</span><strong><?= esc($dss['demand_lookback_days'] ?? 0) ?> days</strong></div>
         </div>
-        <div class="pr-formula">
-            Order Qty (EOQ) = √( 2 × D<sub>annual</sub> × S / H ) &middot; D<sub>annual</sub> = d × 365<br>
-            Reorder At (ROP) = d × L + Safety stock &middot; SS = Z × &sigma;d × √L
-        </div>
+        <p class="mb-0 small text-muted">How are these used? <?= help_tip('How the numbers are worked out', [
+            'Order Qty = √(2 × D × S ÷ H). D = yearly sales, S = cost per order, H = storage cost per item per year.',
+            'Reorder At = d × L + Safety Stock. d = daily sales, L = delivery time in days.',
+            'Safety Stock = Z × σd × √L. Z is the safety factor, σd is how much daily sales go up and down.',
+        ]) ?></p>
     </div>
 
     <div class="page-panel">
@@ -48,11 +53,11 @@
             <thead>
                 <tr>
                     <th>Item Name</th>
-                    <th>ABC</th>
+                    <th>ABC <?= \App\Libraries\Glossary::tip('abc') ?></th>
                     <th>Stock</th>
                     <th><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
                     <th>Status</th>
-                    <th>Safety Stock</th>
+                    <th><?= \App\Libraries\Glossary::labelWithTip('safety_stock') ?></th>
                     <th><?= \App\Libraries\Glossary::labelWithTip('order_qty') ?></th>
                     <th>Action</th>
                 </tr>
@@ -64,16 +69,16 @@
                         $pillClass = \App\Models\ProductModel::statusColor($r['status']);
                         $statusLabel = match ($r['status']) {
                             'Reorder Now'  => 'Reorder Now',
-                            'Low Stock'    => 'Approaching',
+                            'Low Stock'    => 'Low Stock',
                             'Out of Stock' => 'Out of Stock',
-                            default        => 'Sufficient',
+                            default        => 'In Stock',
                         };
                         ?>
                         <tr>
                             <td><?= esc($r['item_name']) ?></td>
                             <td>
                                 <?php if ($r['abc_category'] !== '—'): ?>
-                                    <span class="abc-badge"><?= esc($r['abc_category']) ?></span>
+                                    <span class="abc-badge cls-<?= esc(strtolower($r['abc_category']), 'attr') ?>"><?= esc($r['abc_category']) ?></span>
                                     <?php if ($r['z_score'] !== null): ?>
                                         <small class="text-muted d-block">Z=<?= esc($r['z_score']) ?></small>
                                     <?php endif; ?>
@@ -104,7 +109,7 @@
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="8" style="text-align:center; color:#666; padding: 24px;">No procurement data available yet.</td></tr>
+                    <tr><td colspan="8" style="text-align:center; color:#666; padding: 24px;">No data yet. <a href="<?= site_url('admin/settings?tab=dss') ?>">Run the calculation</a> in Settings.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>

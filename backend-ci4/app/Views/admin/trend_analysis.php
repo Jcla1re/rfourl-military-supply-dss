@@ -30,7 +30,8 @@
  * @var int      $maxUnits
  * @var array[]  $variability
  * @var array{A: float, B: float, C: float} $abcClassTotals
- * @var array[]  $abcTopItems
+ * @var array[]  $abcTopItems  (top N, PDF only)
+ * @var array[]  $abcItems     every item, ranked by sales value
  * @var array{A: array[], B: array[], C: array[]} $abcByClass
  * @var array{A: int, B: int, C: int} $abcClassCounts
  */
@@ -70,7 +71,7 @@ foreach ($products as $p) {
             <option value="<?= esc($itemLabel($p)) ?>" data-id="<?= esc($p['item_id']) ?>"></option>
         <?php endforeach; ?>
     </datalist>
-    <a class="btn btn-outline-secondary" style="white-space:nowrap;"
+    <a class="btn btn-topbar"
         href="<?= site_url('admin/trend-analysis/pdf') . '?year=' . esc((string) ($selectedYear ?? date('Y'))) . '&item=' . esc((string) ($selectedItem ?? '')) ?>"><i
             class="bi bi-file-earmark-pdf"></i> Export PDF</a>
 </form>
@@ -402,15 +403,89 @@ foreach ($products as $p) {
         outline-offset: 2px;
     }
 
+    /* Rows have one fixed height so the list can be exactly 10 rows tall. */
+    .abc-list {
+        --abc-row-h: 40px;
+    }
+
     .abc-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 8px 0;
+        height: var(--abc-row-h);
+        box-sizing: border-box;
+        padding: 0;
         border-bottom: 1px solid #F0EEE8;
         font-size: 14px;
         color: #2C3A1E;
+    }
+
+    .abc-rank {
+        width: 28px;
+        flex-shrink: 0;
+        text-align: right;
+        color: #8A8F80;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .abc-name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .abc-code {
+        margin-left: 6px;
+        font-size: 11px;
+        color: #8A8F80;
+    }
+
+    /* Only the rows scroll: exactly 10 visible, the rest inside the card. Lists with 10 or
+       fewer rows are shorter than the limit, so they have no scrollbar or empty space. */
+    .abc-scroll {
+        position: relative;
+    }
+
+    .abc-list {
+        max-height: calc(10 * var(--abc-row-h));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: #D2CEC2 transparent;
+    }
+
+    .abc-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .abc-list::-webkit-scrollbar-thumb {
+        background: #D2CEC2;
+        border-radius: 3px;
+    }
+
+    .abc-list::-webkit-scrollbar-thumb:hover {
+        background: #B9B5A8;
+    }
+
+    /* Soft fade at the bottom edge while more rows are below. */
+    .abc-scroll::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 18px;
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    .abc-scroll.can-scroll::after {
+        opacity: 1;
     }
 
     .abc-row:last-child {
@@ -479,6 +554,115 @@ foreach ($products as $p) {
         border-bottom: 1px solid #F0EEE8;
         font-size: 14px;
         color: #2C3A1E;
+    }
+
+    /* The list scrolls inside the card: exactly 10 rows below the header, which stays put.
+       Rows and header have fixed heights so the limit is exact; 10 rows or fewer have no scrollbar. */
+    .var-wrap {
+        position: relative;
+        --var-row-h: 40px;
+        --var-head-h: 34px;
+    }
+
+    .var-scroll {
+        max-height: calc(var(--var-head-h) + 10 * var(--var-row-h));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: #D2CEC2 transparent;
+    }
+
+    .var-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .var-scroll::-webkit-scrollbar-thumb {
+        background: #D2CEC2;
+        border-radius: 3px;
+    }
+
+    .var-scroll::-webkit-scrollbar-thumb:hover {
+        background: #B9B5A8;
+    }
+
+    /* Separate borders so the sticky header has no hairline seams. */
+    .var-scroll .var-table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .var-scroll .var-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fff;
+    }
+
+    .var-scroll .var-table th {
+        height: var(--var-head-h);
+        padding: 0;
+        vertical-align: middle;
+        background: #fff;
+    }
+
+    .var-scroll .var-table td {
+        height: var(--var-row-h);
+        padding: 0;
+        vertical-align: middle;
+    }
+
+    .var-table .vrank {
+        width: 28px;
+        text-align: right;
+        padding-right: 12px;
+        color: #8A8F80;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .var-table th.vrank {
+        color: #5C6152;
+    }
+
+    /* Fixed column widths so the name column gets the leftover space and ellipsizes. */
+    .var-scroll .var-table {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    .var-scroll .var-table .vrank { width: 36px; padding-right: 12px; }
+    .var-scroll .var-table th.num:nth-of-type(3) { width: 142px; }
+    .var-scroll .var-table th.num:nth-of-type(4) { width: 104px; }
+    .var-scroll .var-table th.cls { width: 60px; }
+
+    .var-table .vname {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .var-wrap::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 18px;
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    .var-wrap.can-scroll::after {
+        opacity: 1;
+    }
+
+    /* ABC classification and Demand variability sit side by side at the same height. */
+    @media (min-width: 992px) {
+        .ta-pair>div>.chart-card {
+            height: 100%;
+            margin-bottom: 0;
+        }
     }
 
     .var-table .num {
@@ -628,17 +812,17 @@ foreach ($products as $p) {
         </div>
     </div>
 
-    <div class="row g-3 mt-1">
+    <div class="row g-3 mt-1 ta-pair">
         <div class="col-lg-6">
             <div class="chart-card">
                 <div class="card-head">
                     <div>
-                        <h6>ABC classification</h6>
+                        <h6>ABC classification <?= \App\Libraries\Glossary::tip('abc') ?></h6>
                         <p class="card-sub">Share of total sales value in <?= esc($yearLabel) ?></p>
                     </div>
                 </div>
-                <?php if (empty($abcTopItems)): ?>
-                    <div class="text-muted small">No sales recorded for <?= esc($yearLabel) ?> yet.</div>
+                <?php if (empty($abcItems)): ?>
+                    <div class="text-muted small"><i class="bi bi-graph-up" aria-hidden="true"></i> No sales in <?= esc($yearLabel) ?> yet.</div>
                 <?php else: ?>
                     <?php
                     $ac = $abcClassTotals ?? ['A' => 0, 'B' => 0, 'C' => 0];
@@ -647,10 +831,15 @@ foreach ($products as $p) {
                     $renderAbcRows = function (array $items) {
                         foreach ($items as $item) {
                             ?>
+                            <?php
+                            $share = round($item['pct'], 1);
+                            $shareText = $share < 0.1 ? '<0.1%' : ($share < 10 ? number_format($share, 1) : (string) round($item['pct'])) . '%';
+                            ?>
                             <div class="abc-row">
-                                <span><?= esc($item['item_name']) ?></span>
+                                <span class="abc-rank"><?= (int) $item['rank'] ?></span>
+                                <span class="abc-name" title="<?= esc($item['label']) ?>"><?= esc($item['label']) ?><?php if (!empty($item['show_code'])): ?><span class="abc-code"><?= esc($item['code']) ?></span><?php endif; ?></span>
                                 <span class="abc-right">
-                                    <span class="abc-share"><?= round($item['pct']) ?>%</span>
+                                    <span class="abc-share"><?= esc($shareText) ?></span>
                                     <span class="abc-cls"><span class="abc-badge cls-<?= strtolower($item['class']) ?>"
                                             aria-label="Class <?= esc($item['class']) ?>"><?= esc($item['class']) ?></span></span>
                                 </span>
@@ -674,7 +863,7 @@ foreach ($products as $p) {
                             Order less.</li>
                     </ul>
 
-                    <div class="abc-tabs sticky-subtabs" style="--sticky-sub-bg:#fff;" role="group" aria-label="Filter by class">
+                    <div class="abc-tabs" role="group" aria-label="Filter by class">
                         <button type="button" class="abc-tab active" data-tab="all" aria-pressed="true">All</button>
                         <button type="button" class="abc-tab" data-tab="A" aria-pressed="false">A
                             (<?= (int) $abcClassCounts['A'] ?>)</button>
@@ -685,12 +874,14 @@ foreach ($products as $p) {
                     </div>
 
                     <div class="abc-head" aria-hidden="true">
-                        <span>Item</span>
+                        <span class="abc-rank">#</span>
+                        <span class="abc-name">Item</span>
                         <span class="abc-right"><span class="abc-share">Share</span><span
                                 class="abc-cls">Class</span></span>
                     </div>
+                    <div class="abc-scroll" id="abcScroll">
                     <div class="abc-list" data-tab-panel="all">
-                        <?php $renderAbcRows($abcTopItems); ?>
+                        <?php $renderAbcRows($abcItems); ?>
                     </div>
                     <?php foreach (['A', 'B', 'C'] as $cls): ?>
                         <div class="abc-list" data-tab-panel="<?= $cls ?>" style="display:none;">
@@ -701,6 +892,7 @@ foreach ($products as $p) {
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -708,31 +900,36 @@ foreach ($products as $p) {
             <div class="chart-card">
                 <div class="card-head">
                     <div>
-                        <h6>Demand variability</h6>
-                        <p class="card-sub">Highest-demand items in <?= esc($yearLabel) ?>, used to compute safety
-                            stock.</p>
+                        <h6>Daily demand <?= help_tip('Daily demand', [
+                                'Items ranked by how many sell each day.',
+                                'Safety Stock is extra stock kept for busy days. It comes from how much daily sales go up and down.',
+                            ]) ?></h6>
+                        <p class="card-sub">Items ranked by daily sales.</p>
                     </div>
                 </div>
-                <?php if (empty($variability)): ?>
-                    <div class="text-muted small">No PDSS computations yet for this period's best sellers. This
-                        populates once Order Qty and Reorder At have been calculated for an item.</div>
+                <?php if (empty($variabilityAll)): ?>
+                    <div class="text-muted small"><i class="bi bi-calculator" aria-hidden="true"></i> No order calculations yet. <a href="<?= site_url('admin/settings?tab=dss') ?>">Run the calculation</a></div>
                 <?php else: ?>
+                    <div class="var-wrap" id="varWrap">
+                    <div class="var-scroll" id="varScroll">
                     <table class="var-table">
                         <thead>
                             <tr>
+                                <th class="vrank">#</th>
                                 <th>Item</th>
-                                <th class="num">Avg. daily demand</th>
-                                <th class="num">Safety stock</th>
+                                <th class="num">Daily sales</th>
+                                <th class="num"><?= \App\Libraries\Glossary::labelWithTip('safety_stock') ?></th>
                                 <th class="cls">Class</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($variability as $v): ?>
+                            <?php foreach ($variabilityAll as $v): ?>
                                 <?php $ss = (int) round((float) $v['safety_stock']); ?>
                                 <tr>
-                                    <td><?= esc($v['item_name']) ?></td>
+                                    <td class="vrank"><?= (int) $v['rank'] ?></td>
+                                    <td class="vname" title="<?= esc($v['label']) ?>"><?= esc($v['label']) ?><?php if (!empty($v['show_code'])): ?><span class="abc-code"><?= esc($v['code']) ?></span><?php endif; ?></td>
                                     <td class="num"><?= number_format((float) $v['avg_daily_demand'], 2) ?> / day</td>
-                                    <td class="num"><?= number_format($ss) ?>         <?= $ss === 1 ? 'unit' : 'units' ?></td>
+                                    <td class="num"><?= number_format($ss) ?> <?= $ss === 1 ? 'unit' : 'units' ?></td>
                                     <td class="cls">
                                         <?php if (!empty($v['class'])): ?>
                                             <span class="abc-badge cls-<?= strtolower($v['class']) ?>"
@@ -743,8 +940,8 @@ foreach ($products as $p) {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                    <p class="var-note"><i class="bi bi-info-circle" aria-hidden="true"></i> Safety stock is extra stock
-                        kept to cover days when demand is higher than average.</p>
+                    </div>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -949,9 +1146,37 @@ foreach ($products as $p) {
             document.querySelectorAll('.abc-tab').forEach(b => { b.classList.toggle('active', b === btn); b.setAttribute('aria-pressed', String(b === btn)); });
             document.querySelectorAll('.abc-list').forEach(panel => {
                 panel.style.display = panel.dataset.tabPanel === btn.dataset.tab ? '' : 'none';
+                panel.scrollTop = 0;
             });
+            updateAbcScroll();
         });
     });
+
+    // ---- ABC list: bottom fade while more rows are below, header kept in line with the rows ----
+    const abcScroll = document.getElementById('abcScroll');
+    const abcHead = document.querySelector('.abc-head');
+    function updateAbcScroll() {
+        if (!abcScroll) return;
+        const panel = Array.from(abcScroll.querySelectorAll('.abc-list')).find(p => p.style.display !== 'none');
+        if (!panel) return;
+        abcScroll.classList.toggle('can-scroll', panel.scrollHeight - panel.scrollTop - panel.clientHeight > 1);
+        // A scrollbar narrows the rows; give the header the same right padding so the columns stay aligned.
+        if (abcHead) abcHead.style.paddingRight = (panel.offsetWidth - panel.clientWidth) + 'px';
+    }
+    document.querySelectorAll('.abc-list').forEach(panel => panel.addEventListener('scroll', updateAbcScroll, { passive: true }));
+    window.addEventListener('resize', updateAbcScroll);
+    updateAbcScroll();
+
+    // ---- Demand variability list: bottom fade while more rows are below ----
+    const varWrap = document.getElementById('varWrap');
+    const varScroll = document.getElementById('varScroll');
+    function updateVarScroll() {
+        if (!varWrap || !varScroll) return;
+        varWrap.classList.toggle('can-scroll', varScroll.scrollHeight - varScroll.scrollTop - varScroll.clientHeight > 1);
+    }
+    varScroll?.addEventListener('scroll', updateVarScroll, { passive: true });
+    window.addEventListener('resize', updateVarScroll);
+    updateVarScroll();
 </script>
 
 <?= $this->endSection() ?>

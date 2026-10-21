@@ -80,7 +80,7 @@ class TrendAnalysisController extends BaseController
         $abcClassTotals = ['A' => 0.0, 'B' => 0.0, 'C' => 0.0];
         $abcItems = [];
         $cumulative = 0.0;
-        foreach ($revenueRows as $row) {
+        foreach ($revenueRows as $i => $row) {
             $revenue = (float) $row['revenue'];
             $pct = $totalRevenue > 0 ? ($revenue / $totalRevenue) * 100 : 0;
             $cumulative += $revenue;
@@ -88,28 +88,37 @@ class TrendAnalysisController extends BaseController
             $class = $cumPct <= 0.80 ? 'A' : ($cumPct <= 0.95 ? 'B' : 'C');
 
             $abcClassTotals[$class] += $pct;
+            $name = $row['item_name'] ?? $row['item_id'];
+            $size = trim((string) ($row['size'] ?? ''));
             $abcItems[] = [
+                'rank' => $i + 1,
                 'item_id' => $row['item_id'],
-                'item_name' => $row['item_name'] ?? $row['item_id'],
+                'item_name' => $name,
+                // Size variants are separate products, so show the size to tell them apart.
+                'label' => $size !== '' ? "{$name} ({$size})" : $name,
+                'code' => ($row['product_code'] ?? '') !== '' ? $row['product_code'] : $row['item_id'],
                 'pct' => $pct,
                 'class' => $class,
             ];
         }
+
+        // Two rows can still read the same (no size on the product): those get their item code shown.
+        $labelCounts = array_count_values(array_column($abcItems, 'label'));
+        foreach ($abcItems as &$abcItem) {
+            $abcItem['show_code'] = $labelCounts[$abcItem['label']] > 1;
+        }
+        unset($abcItem);
+
+        // The PDF export keeps its short top-N list; the on-screen card lists every item ($abcItems).
         $abcTopItems = array_slice($abcItems, 0, $topN);
 
-        // Per-class breakdown so the "A / B / C" filter tabs can show every
-        // item in that class (not just whichever land in the mixed top-N
-        // list above — Class A items dominate that list by definition,
-        // since they're the highest individual % contributors).
+        // Per-class lists for the A / B / C tabs. Every item is listed; each keeps its
+        // overall rank (the first B item shows its position among all items, not 1).
         $abcClassCounts = ['A' => 0, 'B' => 0, 'C' => 0];
         $abcByClass = ['A' => [], 'B' => [], 'C' => []];
         foreach ($abcItems as $item) {
             $abcClassCounts[$item['class']]++;
             $abcByClass[$item['class']][] = $item;
-        }
-        $maxPerClass = 15;
-        foreach ($abcByClass as $cls => $list) {
-            $abcByClass[$cls] = array_slice($list, 0, $maxPerClass);
         }
 
         // Demand Variability: show each item's ABC class, highest daily demand first.
@@ -119,6 +128,31 @@ class TrendAnalysisController extends BaseController
         }
         unset($v);
         usort($variability, fn($a, $b) => (float) $b['avg_daily_demand'] <=> (float) $a['avg_daily_demand']);
+
+        // On-screen Demand variability card: EVERY item sold in the selected year that has a PDSS
+        // computation (the PDF keeps the shorter $variability list above). Highest daily demand
+        // first; ties go to the larger safety stock, then the name.
+        $variabilityAll = [];
+        foreach ($abcItems as $it) {
+            $c = $computations[$it['item_id']] ?? null;
+            if ($c === null) {
+                continue;
+            }
+            $variabilityAll[] = [
+                'label' => $it['label'],
+                'code' => $it['code'],
+                'show_code' => $it['show_code'],
+                'avg_daily_demand' => (float) $c['avg_daily_demand'],
+                'safety_stock' => (float) $c['safety_stock'],
+                'class' => $it['class'],
+            ];
+        }
+        usort($variabilityAll, fn($a, $b) => [$b['avg_daily_demand'], $b['safety_stock'], strtolower($a['label'])]
+            <=> [$a['avg_daily_demand'], $a['safety_stock'], strtolower($b['label'])]);
+        foreach ($variabilityAll as $i => &$v) {
+            $v['rank'] = $i + 1;
+        }
+        unset($v);
 
         // ---- Trend cards + chart presentation (derived from the data above) ----
         $thisYear = (int) date('Y');
@@ -176,8 +210,10 @@ class TrendAnalysisController extends BaseController
             'topSellers' => $topSellers,
             'maxUnits' => $maxUnits ?: 1,
             'variability' => $variability,
+            'variabilityAll' => $variabilityAll,
             'abcClassTotals' => $abcClassTotals,
             'abcTopItems' => $abcTopItems,
+            'abcItems' => $abcItems,
             'abcByClass' => $abcByClass,
             'abcClassCounts' => $abcClassCounts,
             'totalStock' => array_sum(array_column(array_filter($products, fn($p) => (int) $p['is_active'] === 1), 'current_stock')),

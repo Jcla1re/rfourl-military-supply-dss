@@ -4,7 +4,7 @@
 <?= $this->section('header_actions') ?>
 <form method="post" action="<?= site_url('staff/notifications/mark-all-read') ?>">
     <?= csrf_field() ?>
-    <button type="submit" class="btn btn-outline-light btn-sm">Mark all as read</button>
+    <button type="submit" class="btn btn-topbar">Mark all as read</button>
 </form>
 <?= $this->endSection() ?>
 
@@ -61,7 +61,7 @@ $unreadCount = $unreadCount ?? 0;
     </div>
 
     <?php if (empty($groups)): ?>
-        <div class="empty-state">No notifications yet.</div>
+        <div class="empty-state"><i class="bi bi-bell" aria-hidden="true"></i> No notifications yet.</div>
     <?php else: ?>
         <?php foreach ($groups as $label => $items): ?>
             <div class="notif-date-label"><?= esc($label) ?></div>

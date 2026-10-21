@@ -51,7 +51,7 @@ class SalesItemModel extends Model
      */
     public function revenueByItem(?int $year = null): array
     {
-        $builder = $this->select('sales_item.item_id, products.item_name, SUM(sales_item.quantity_sold * sales_item.selling_price) as revenue')
+        $builder = $this->select('sales_item.item_id, products.item_name, products.size, products.product_code, SUM(sales_item.quantity_sold * sales_item.selling_price) as revenue')
             ->join('products', 'products.item_id = sales_item.item_id', 'left');
 
         if ($year !== null) {
