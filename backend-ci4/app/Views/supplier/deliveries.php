@@ -39,7 +39,7 @@
     <?php if (!empty($error)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
 
     <?php if (empty($orders)): ?>
-        <div class="empty-state">No active shipments right now.</div>
+        <div class="empty-state"><i class="bi bi-truck" aria-hidden="true"></i> No shipments to send.</div>
     <?php else: ?>
         <?php foreach ($orders as $o): ?>
             <?php
@@ -119,7 +119,7 @@
                                 <tr><td colspan="3">Order Total</td><td class="num">₱<?= number_format(array_sum(array_map(fn ($l) => ($l['shipped_quantity'] ?? $l['order_quantity']) * $l['unit_price'], $o['lines'])), 2) ?></td></tr>
                             </tfoot>
                         </table>
-                        <div class="dv-awaiting-note">Shipped — awaiting confirmation of receipt from the shop. No further action needed on your end.</div>
+                        <div class="dv-awaiting-note">Shipped. Waiting for the shop to confirm.</div>
                     <?php endif; ?>
                 </div>
             </div>

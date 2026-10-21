@@ -86,14 +86,14 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
             <div class="title">
                 <?php $needs = (int) ($reorderSummary['needs'] ?? 0); $onOrder = (int) ($reorderSummary['on_order'] ?? 0); ?>
                 <?= $needs ?> item<?= $needs === 1 ? '' : 's' ?> need<?= $needs === 1 ? 's' : '' ?> reordering &middot; <?= $onOrder ?> on order.
-                <?= esc(($alertItem['item_name'] ?? 'An item') . (! empty($alertItem['size']) ? ' (Size ' . $alertItem['size'] . ')' : '')) ?> has reached its Reorder Point.
+                <?= esc(($alertItem['item_name'] ?? 'An item') . (! empty($alertItem['size']) ? ' (Size ' . $alertItem['size'] . ')' : '')) ?> is at its Reorder At number.
             </div>
         </div>
         <form method="post" action="<?= site_url('staff/dashboard/notify') ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="item_id" value="<?= esc($alertItem['item_id'] ?? '') ?>">
             <input type="hidden" name="item_name" value="<?= esc($alertItem['item_name'] ?? '') ?>">
-            <button type="submit" class="btn btn-success">Notify Admin</button>
+            <button type="submit" class="btn btn-success">Notify Owner</button>
         </form>
     </div>
     <?php endif; ?>
@@ -137,7 +137,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
             <div class="panel-box">
                 <h6>Items Sold Today</h6>
                 <?php if (empty($itemsSoldToday)): ?>
-                    <div class="panel-empty"><i class="bi bi-receipt"></i>No sales recorded yet today.</div>
+                    <div class="panel-empty"><i class="bi bi-receipt"></i>No sales today yet. <a href="<?= site_url('staff/sales') ?>">Open POS</a></div>
                 <?php else: ?>
                     <?php foreach ($itemsSoldToday as $row): ?>
                         <div class="sold-row"><span><?= esc($row['item_name'] ?? $row['item_id']) ?> x<?= esc($row['qty']) ?></span><strong>₱<?= number_format($row['line_total'], 0) ?></strong></div>
@@ -150,7 +150,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
             <div class="panel-box">
                 <h6>Recent Transactions</h6>
                 <?php if (empty($recentTransactions)): ?>
-                    <div class="panel-empty"><i class="bi bi-clock-history"></i>No transactions recorded yet.</div>
+                    <div class="panel-empty"><i class="bi bi-clock-history"></i>No sales yet.</div>
                 <?php else: ?>
                     <?php foreach ($recentTransactions as $t): ?>
                         <div class="recent-row">
@@ -171,7 +171,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
             <div class="panel-box">
                 <h6>Low Stock Items</h6>
                 <?php if (empty($lowStockItems)): ?>
-                    <div class="text-muted small">All items are healthily stocked.</div>
+                    <div class="text-muted small">All items are well stocked.</div>
                 <?php else: ?>
                     <?php foreach ($lowStockItems as $li): ?>
                         <div class="lowstock-row">

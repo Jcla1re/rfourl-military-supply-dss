@@ -83,14 +83,14 @@
     <?php if (! $summary): ?>
         <div class="ar-card">
             <h5 class="ar-title">Nothing to review</h5>
-            <p class="ar-desc">No sales records are older than <?= $years ?> years. Records stay in Sales History and Trend Analysis until they pass that age.</p>
+            <p class="ar-desc">Nothing to remove yet. <?= help_tip('Old sales records', 'No sales records are older than ' . $years . ' years. They stay in Sales History and Trend Analysis until they pass that age.') ?></p>
         </div>
     <?php else: ?>
         <div class="ar-card">
             <h5 class="ar-title">Sales records older than <?= $years ?> years</h5>
             <p class="ar-desc">
                 These sales are dated before <strong><?= esc(date('F j, Y', strtotime($summary['cutoff']))) ?></strong>.
-                Until you remove them, they stay in Sales History and Trend Analysis.
+                <?= help_tip('Until you remove them', 'They stay in Sales History and Trend Analysis.') ?>
             </p>
             <div class="ar-stats">
                 <div><span>Receipts</span><strong><?= number_format($summary['receipts']) ?></strong></div>
@@ -111,7 +111,7 @@
             <span class="ar-badge is-1<?= $savedCopy ? ' is-done' : '' ?>" id="arStep1Badge" aria-hidden="true"><?= $savedCopy ? '&#10003;' : '1' ?></span>
             <div class="ar-step-body">
                 <h5 class="ar-title">Save a copy first <small>(recommended)</small></h5>
-                <p class="ar-desc">The PDF has the yearly trend, the best sellers of each year, and every receipt.</p>
+                <p class="ar-desc">Save a PDF copy first. <?= help_tip('What is in the PDF', 'The yearly trend, the best sellers of each year, and every receipt.') ?></p>
                 <div class="ar-actions">
                     <a class="ar-btn ar-btn-primary" id="arPdfBtn" href="<?= site_url('admin/archive/pdf') ?>"><i class="bi bi-download" aria-hidden="true"></i> <span class="ar-pdf-label">Save as PDF</span></a>
                     <a class="ar-btn ar-btn-outline" href="<?= site_url('admin/archive/print') ?>" target="_blank"><i class="bi bi-printer" aria-hidden="true"></i> Print</a>
@@ -124,7 +124,7 @@
             <span class="ar-badge is-2" aria-hidden="true">2</span>
             <div class="ar-step-body">
                 <h5 class="ar-title">Remove them from the system</h5>
-                <p class="ar-desc">This permanently deletes the <?= number_format($summary['receipts']) ?> receipts above. Trend Analysis and Top Sellers will no longer include them. This can't be undone.</p>
+                <p class="ar-desc">Delete <?= number_format($summary['receipts']) ?> old receipts? This can't be undone. <?= help_tip('After you remove them', 'Trend Analysis and Top Sellers will no longer include these receipts.') ?></p>
                 <p class="ar-unsaved" id="arUnsaved"<?= $savedCopy ? ' hidden' : '' ?>><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> You haven't saved a copy yet.</p>
                 <form method="post" action="<?= site_url('admin/archive/purge') ?>" id="arPurgeForm" autocomplete="off"
                       data-confirm="This permanently deletes <?= number_format($summary['receipts']) ?> sales records. It can't be undone."
@@ -135,7 +135,7 @@
                         <label for="arPassword">Enter your password to confirm</label>
                         <input type="password" id="arPassword" name="current_password" value="" placeholder="Password" autocomplete="new-password" aria-describedby="arPasswordHelp" required>
                         <button type="submit" class="ar-btn ar-btn-danger" id="arRemoveBtn" disabled>Remove <?= number_format($summary['receipts']) ?> records</button>
-                        <small id="arPasswordHelp">The button turns on after you enter your password.</small>
+                        <small id="arPasswordHelp">Enter your password to continue.</small>
                     </div>
                 </form>
             </div>

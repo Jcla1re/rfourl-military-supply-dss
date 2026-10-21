@@ -16,7 +16,7 @@ $errorMsg  = session()->getFlashdata('error');
 <body class="auth-body">
     <div class="auth-card">
         <h2>Forgot Password</h2>
-        <p class="auth-hint">Verification code has been sent to your email<?= !empty($email) ? ' (' . esc($email) . ')' : '' ?>. Please check it</p>
+        <p class="auth-hint">Code sent<?= !empty($email) ? ' to ' . esc($email) : '' ?>.</p>
 
         <?php if ($noticeMsg): ?>
             <div class="auth-notice"><?= esc((string) $noticeMsg) ?></div>

@@ -110,7 +110,7 @@ class ReorderAlertController extends BaseController
         $alerts = $this->reorderAlertModel->openAlerts();
 
         $data = [
-            'title'         => 'Procurement Report',
+            'title'         => 'Ordering Report',
             'active'        => 'reorder_alerts',
             'rows'          => $rows,
             'suppliers'     => $this->supplierModel->where('is_active', 1)->findAll(),

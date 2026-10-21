@@ -180,7 +180,7 @@ class SalesController extends BaseController
         if ($method === 'Split') {
             $gcashAmount = round((float) ($this->request->getPost('gcash_amount') ?: 0), 2);
             if ($gcashAmount <= 0 || $gcashAmount >= $total) {
-                return redirect()->to('/staff/sales')->with('error', 'GCash amount must be between ₱0 and the total for a split payment.');
+                return redirect()->to('/staff/sales')->with('error', "GCash amount can't be more than the total.");
             }
             if ($gcashRef === '') {
                 return redirect()->to('/staff/sales')->with('error', 'GCash reference number is required.');

@@ -3,7 +3,7 @@
 
 <?= $this->section('header_actions') ?>
 <span class="text-white-50 small me-2">Last updated: <?= esc($lastUpdated ?? 'just now') ?></span>
-<a href="<?= site_url('admin/procurement-report') ?>" class="btn btn-success">Procurement Report</a>
+<a href="<?= site_url('admin/procurement-report') ?>" class="btn btn-success">Ordering Report</a>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -60,18 +60,22 @@ $dss = $dss ?? [];
         <div class="ra-summary">
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-exclamation-triangle"></i></span>
-                <div><span>Zero Stock (Critical)</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
+                <div><span>Out of Stock</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-lightning-fill"></i></span>
-                <div><span>Still In Stock, At Reorder Point</span><strong><?= esc($lowStockCount ?? 0) ?></strong></div>
+                <div><span>Reorder Now (still in stock)</span><strong><?= esc($lowStockCount ?? 0) ?></strong></div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-check-lg"></i></span>
                 <div><span>Received This Week</span><strong><?= esc($receivedCount ?? 0) ?></strong></div>
             </div>
         </div>
-        <p class="text-muted small mb-3">Zero Stock + Still In Stock, At Reorder Point together equal Inventory's "Reorder Now" count. This page's "At Reorder Point" is unrelated to Inventory's separate "Low Stock" tier (<?= esc(\App\Models\ProductModel::LOW_STOCK_HELP) ?>) — those don't raise an alert yet. Items with no sales in the last 2 years and nothing on hand show as "Out of Stock" in Inventory and don't raise an alert either.</p>
+        <p class="text-muted small mb-3">What do these numbers mean? <?= help_tip('Reading these numbers', [
+            'Out of Stock plus Reorder Now (still in stock) add up to Reorder Now in Inventory.',
+            'Low Stock items are not alerts yet.',
+            'Items with no sales in 2 years are not counted.',
+        ]) ?></p>
 
         <?php if (!empty($alerts)): ?>
             <form method="post" action="<?= site_url('admin/reorder-alerts/resolve-all') ?>" data-confirm="Every pending alert will be dismissed without creating orders for them."
@@ -83,7 +87,7 @@ $dss = $dss ?? [];
         <?php endif; ?>
 
         <?php if (empty($alerts)): ?>
-            <div class="ra-empty">No reorder alerts right now. Alerts appear automatically once stock falls to or below an item's Reorder At number.</div>
+            <div class="ra-empty"><i class="bi bi-check-circle" aria-hidden="true"></i> All stocked up. Nothing to reorder. <a href="<?= site_url('admin/inventory') ?>">View Inventory</a></div>
         <?php else: ?>
             <?php foreach ($alerts as $alert): ?>
                 <?php
@@ -94,7 +98,7 @@ $dss = $dss ?? [];
                     <div class="ra-card-head <?= $isCritical ? 'critical' : 'warning' ?>">
                         <span class="icon"><i class="bi <?= $isCritical ? 'bi-exclamation-triangle' : 'bi-exclamation-circle' ?>"></i></span>
                         <div>
-                            <h4><?= $isCritical ? 'CRITICAL — Reorder Point Reached' : 'WARNING — Approaching Reorder' ?></h4>
+                            <h4><?= $isCritical ? 'Reorder Now — order now' : 'Low Stock — order soon' ?></h4>
                             <span class="sub"><?= esc($alert['item_name'] ?? 'Unknown item') ?><?= !empty($alert['size']) ? ' - Size ' . esc($alert['size']) : '' ?></span>
                         </div>
                         <button type="button"
@@ -137,18 +141,22 @@ $dss = $dss ?? [];
                             <small>units to order</small>
                         </div>
                         <div class="ra-stat-box">
-                            <span>Lead Time</span>
+                            <span>Delivery time</span>
                             <strong><?= esc($alert['lead_time_days'] ?? '—') ?></strong>
                             <small>days (<?= esc($alert['supplier_name'] ?? 'Unassigned') ?>)</small>
                         </div>
                     </div>
 
                     <div class="ra-basis">
-                        <strong class="title">Probabilistic Basis</strong>
+                        <strong class="title">How this was worked out <?= help_tip('How this was worked out', [
+                                'Daily sales: the average number sold each day.',
+                                'Availability target: how often you want it in stock.',
+                                'Safety Stock: extra units kept for busy days.',
+                            ]) ?></strong>
                         <div class="ra-basis-grid">
-                            <span>Avg Daily Demand:<b><?= esc($computation['avg_daily_demand'] ?? '—') ?></b></span>
-                            <span>Service Level:<b><?= esc($alert['service_level'] ?? $dss['service_level_target'] ?? '—') ?>%<?= $alert['abc_class'] ? ' (Class ' . esc($alert['abc_class']) . ')' : '' ?></b></span>
-                            <span>Safety Stock:<b><?= esc($computation['safety_stock'] ?? '—') ?></b></span>
+                            <span>Daily sales:<b><?= esc($computation['avg_daily_demand'] ?? '—') ?></b></span>
+                            <span>Availability target:<b><?= esc($alert['service_level'] ?? $dss['service_level_target'] ?? '—') ?>%<?= $alert['abc_class'] ? ' (' . esc($alert['abc_class']) . ' – ' . esc(['A' => 'Best seller', 'B' => 'Steady', 'C' => 'Slow'][$alert['abc_class']] ?? '') . ')' : '' ?></b></span>
+                            <span>Safety Stock <?= \App\Libraries\Glossary::tip('safety_stock') ?>:<b><?= esc($computation['safety_stock'] ?? '—') ?></b></span>
                         </div>
                     </div>
                 </div>

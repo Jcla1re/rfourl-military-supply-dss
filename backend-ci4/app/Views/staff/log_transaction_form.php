@@ -83,7 +83,7 @@ $g = $guide[$type] ?? ['icon' => 'bi-info-circle', 'about' => '', 'points' => []
 
             <div class="lt-grid">
             <div class="lt-field full">
-                <label>Item / SKU</label>
+                <label>Item</label>
                 <select name="item_id" id="itemSelect" required>
                     <option value="">Search product....</option>
                     <?php foreach ($products as $p): ?>
@@ -177,7 +177,7 @@ $g = $guide[$type] ?? ['icon' => 'bi-info-circle', 'about' => '', 'points' => []
 
         <div class="lt-recent-title">Recent <?= esc(strtolower($typeInfo['label'])) ?> logs</div>
         <?php if (empty($recent)): ?>
-            <div class="lt-recent-empty">Nothing logged yet.</div>
+            <div class="lt-recent-empty">No transactions yet.</div>
         <?php else: ?>
             <?php foreach ($recent as $r): ?>
                 <div class="lt-recent-row">

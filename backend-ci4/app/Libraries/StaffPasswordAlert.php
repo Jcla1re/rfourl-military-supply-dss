@@ -46,10 +46,10 @@ class StaffPasswordAlert
             }
 
             $button = $lockUrl === null ? '' : '<p style="margin:24px 0;"><a href="' . htmlspecialchars($lockUrl, ENT_QUOTES) . '" style="background:#7a2020;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;">Lock this account</a></p>';
-            $html   = '<p><strong>' . esc($title, 'html') . '</strong></p>'
+            $html   = '<div style="font-family:\'Poppins\',Arial,sans-serif;"><p><strong>' . esc($title, 'html') . '</strong></p>'
                 . '<p>' . esc($message, 'html') . '</p>'
                 . $button
-                . '<p style="color:#888;font-size:12px;">' . ($lockUrl === null ? 'Log in to the admin portal and open Manage Accounts to review this account.' : 'The link works for 24 hours and opens a confirmation page first. You can also lock the account from Notifications in the admin portal.') . '</p>';
+                . '<p style="color:#888;font-size:12px;">' . ($lockUrl === null ? 'Log in to the admin portal and open Manage Accounts to review this account.' : 'The link works for 24 hours and opens a confirmation page first. You can also lock the account from Notifications in the admin portal.') . '</p></div>';
             $plain = "{$title}\n\n{$message}\n\n" . ($lockUrl === null ? 'Review the account under Manage Accounts in the admin portal.' : "Lock this account (valid 24 hours): {$lockUrl}");
 
             (new EmailNotifier())->toRoleHtml('Admin', $title, $html, $plain);

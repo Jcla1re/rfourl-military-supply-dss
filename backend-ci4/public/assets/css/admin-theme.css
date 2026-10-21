@@ -606,6 +606,7 @@ body {
     color: #3B5434; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .app-toast-undo:hover { background: #F5F3EE; text-decoration: underline; }
+.app-toast-link { text-decoration: none; display: inline-flex; align-items: center; }
 .app-toast-close {
     display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
     width: 28px; height: 28px; border: 0; border-radius: var(--radius-icon);
@@ -1150,27 +1151,45 @@ body {
 .confirm-title { font-weight: 700; margin-bottom: 8px; color: var(--text-dark); }
 .confirm-message { color: #6c757d; margin-bottom: 0; overflow-wrap: anywhere; }
 
-/* Info icon with tooltip (App\Libraries\Glossary::tip(), assets/js/info-tip.js),
-   e.g. "Reorder At (i)" / "Order Qty (i)" in table headers. */
+/* Help (i) button: opens a click/tap pop-up (App\Libraries\Glossary::tip(), help_tip(),
+   assets/js/help-tip.js), e.g. "Reorder At (i)" / "Order Qty (i)" in table headers. */
 .info-tip {
     display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px; margin-left: 4px; padding: 0; vertical-align: -3px;
     border: 0; border-radius: 50%; background: none; color: #5C6152;
-    font-size: 14px; line-height: 1; cursor: help;
+    font-size: 14px; line-height: 1; cursor: pointer;
 }
 .info-tip i { font-size: 14px; line-height: 1; }
 .info-tip i::before { vertical-align: 0; }
-.info-tip:hover { color: #1F2617; }
+.info-tip:hover, .info-tip[aria-expanded="true"] { color: #1F2617; }
 .info-tip:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
 /* "Reorder At (i)" / "Order Qty (i)" headers may break onto two lines in narrow columns. */
 .term-tail { white-space: nowrap; }
 .inv-table th.col-term { white-space: normal; line-height: 1.3; }
-.info-tip-bubble {
-    position: fixed; z-index: 3000; max-width: 260px; padding: 8px 11px; border-radius: 8px;
-    background: #1F2617; color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.18);
-    font-family: 'Poppins', sans-serif; font-size: 12.5px; font-weight: 400; line-height: 1.45;
-    text-transform: none; letter-spacing: normal; text-align: left; white-space: normal; pointer-events: none;
+
+/* The pop-up: white card, theme font, short paragraphs or a few bullets. */
+.help-popover {
+    --bs-popover-max-width: 320px;
+    --bs-popover-border-color: #E8E5DC;
+    --bs-popover-border-radius: 12px;
+    --bs-popover-header-bg: #fff;
+    --bs-popover-header-color: #1F2617;
+    --bs-popover-body-color: #3A3F31;
+    --bs-popover-body-padding-x: 16px;
+    --bs-popover-body-padding-y: 12px;
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+    text-transform: none; letter-spacing: normal; text-align: left; font-weight: 400;
 }
+.help-popover .popover-header {
+    padding: 12px 16px 0; font-size: 14px; font-weight: 600; border-bottom: 0; border-radius: 12px 12px 0 0;
+}
+.help-popover .popover-body { font-size: 13px; line-height: 1.5; }
+.help-popover .popover-body p { margin: 0 0 8px; }
+.help-popover .popover-body p:last-child { margin-bottom: 0; }
+.help-popover .help-list { margin: 0; padding-left: 18px; }
+.help-popover .help-list li { margin-bottom: 4px; }
+.help-popover .help-list li:last-child { margin-bottom: 0; }
 
 /* Table header seams: at fractional pixel positions (e.g. 125% display scaling) two
    neighbouring header cells' backgrounds don't quite meet and the card shows through as a
@@ -1228,3 +1247,45 @@ body {
    sticky header shows thin light seams between cells at fractional pixel positions.
    Rows only have bottom borders, so nothing looks different. */
 .data-table { border-collapse: separate; border-spacing: 0; }
+
+/* ===== Buttons in the green page header (header_actions) =====
+   White button with the topbar green for text and icon, so it reads clearly on the green bar.
+   Same 38px height and corner radius as the neighbouring .form-select / .form-control. */
+.btn-topbar {
+    --bs-btn-color: var(--topbar-bg);
+    --bs-btn-bg: #fff;
+    --bs-btn-border-color: #fff;
+    --bs-btn-hover-color: var(--topbar-bg);
+    --bs-btn-hover-bg: #E4EFDF;
+    --bs-btn-hover-border-color: #E4EFDF;
+    --bs-btn-active-color: var(--topbar-bg);
+    --bs-btn-active-bg: #D2E6CB;
+    --bs-btn-active-border-color: #D2E6CB;
+    --bs-btn-disabled-color: var(--topbar-bg);
+    --bs-btn-disabled-bg: #fff;
+    --bs-btn-disabled-border-color: #fff;
+    --bs-btn-disabled-opacity: .6;
+    font-weight: 500;
+    white-space: nowrap;
+}
+/* The default focus ring (dark olive) disappears on the green bar; use a white one. */
+.btn-topbar:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+/* ===== Help page (task guides) ===== */
+.help-page { max-width: 760px; }
+.help-intro { color: #5C6152; margin: 0 0 16px; }
+.help-accordion { --bs-accordion-border-color: #E8E5DC; --bs-accordion-border-radius: var(--radius-card); --bs-accordion-inner-border-radius: var(--radius-card); --bs-accordion-btn-focus-box-shadow: 0 0 0 3px rgba(113, 170, 96, .3); --bs-accordion-active-bg: #fff; --bs-accordion-active-color: #1F2617; --bs-accordion-btn-color: #1F2617; }
+.help-accordion .accordion-item { margin-bottom: 10px; border-radius: var(--radius-card); overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.06); border: 1px solid #E8E5DC; }
+.help-accordion .accordion-button { font-weight: 600; font-size: 16px; padding: 16px 20px; box-shadow: none; }
+.help-accordion .accordion-button:not(.collapsed) { background: #fff; box-shadow: none; }
+.help-steps { margin: 0; padding-left: 22px; }
+.help-steps li { padding: 4px 0 4px 4px; line-height: 1.5; }
+.help-steps li::marker { font-weight: 700; color: #2F6431; }
+
+/* Help link pinned to the bottom of the menu, above the user footer. */
+.app-shell .sidebar > div:not(.user-footer) { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.sidebar .nav-link.nav-help { margin-top: auto; } /* beats .nav-link.active margin */

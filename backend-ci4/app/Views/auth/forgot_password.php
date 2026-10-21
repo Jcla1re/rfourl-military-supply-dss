@@ -15,7 +15,7 @@ $errorMsg  = session()->getFlashdata('error');
 <body class="auth-body">
     <div class="auth-card">
         <h2>Forgot Password</h2>
-        <p class="auth-hint">Enter the email linked to your <?= esc($roleLabel) ?> account and we'll send you a verification code.</p>
+        <p class="auth-hint">We'll email you a code.</p>
 
         <form action="<?= site_url('login/' . $role . '/forgot') ?>" method="post">
             <?= csrf_field() ?>

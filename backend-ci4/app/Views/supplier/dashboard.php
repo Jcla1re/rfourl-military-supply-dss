@@ -85,7 +85,7 @@
             <div class="sd-panel">
                 <h6><i class="bi bi-envelope"></i> Incoming Order Notification</h6>
                 <?php if (empty($pendingOrders)): ?>
-                    <div class="empty-state"><i class="bi bi-inbox"></i>No new orders right now.</div>
+                    <div class="empty-state"><i class="bi bi-inbox"></i>No new orders.</div>
                 <?php else: ?>
                     <?php foreach (array_slice($pendingOrders, 0, 3) as $o): ?>
                         <div class="sd-notif-card d-flex gap-3">
@@ -138,7 +138,7 @@
                 <div class="sd-minis">
                     <div class="sd-mini"><div class="v"><?= esc($deliveredTotal ?? 0) ?></div><div class="l">Orders delivered</div></div>
                     <div class="sd-mini"><div class="v"><?= esc($onTimeCount ?? 0) ?></div><div class="l">Delivered on time</div></div>
-                    <div class="sd-mini"><div class="v"><?= esc($leadTimeDays ?? '—') ?> days</div><div class="l">Standard lead time</div></div>
+                    <div class="sd-mini"><div class="v"><?= esc($leadTimeDays ?? '—') ?> days</div><div class="l">Usual delivery time</div></div>
                 </div>
             </div>
         </div>

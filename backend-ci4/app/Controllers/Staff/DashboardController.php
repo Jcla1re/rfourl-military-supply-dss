@@ -100,6 +100,6 @@ class DashboardController extends BaseController
             );
         }
 
-        return redirect()->to('/staff/dashboard')->with('success', 'Notify Sent! Reorder Point Notice');
+        return redirect()->to('/staff/dashboard')->with('success', 'Owner notified: reorder notice');
     }
 }

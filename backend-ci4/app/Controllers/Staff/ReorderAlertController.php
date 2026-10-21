@@ -87,6 +87,6 @@ class ReorderAlertController extends BaseController
             );
         }
 
-        return redirect()->to('/staff/reorder-alerts')->with('success', 'Notify Sent! Reorder Point Notice');
+        return redirect()->to('/staff/reorder-alerts')->with('success', 'Owner notified: reorder notice');
     }
 }

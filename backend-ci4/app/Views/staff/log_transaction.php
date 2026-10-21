@@ -47,7 +47,7 @@
 
     <div class="lt-label">RECENT LOGS</div>
     <?php if (empty($logs)): ?>
-        <div class="empty-state">No transactions logged yet.</div>
+        <div class="empty-state"><i class="bi bi-journal-text" aria-hidden="true"></i> No transactions yet. Pick a type above to log one.</div>
     <?php else: ?>
         <?php foreach ($logs as $log): ?>
             <?php $qty = abs((int) $log['quantity_changed']); ?>

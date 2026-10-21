@@ -59,9 +59,9 @@ $classes = ['A', 'B', 'C'];
     <?php endforeach; ?>
 </table>
 
-<h2>Demand variability</h2>
+<h2>Daily demand</h2>
 <table>
-    <tr><th>Item</th><th class="num">Avg daily demand</th><th class="num">Safety stock</th></tr>
+    <tr><th>Item</th><th class="num">Daily sales</th><th class="num">Safety stock</th></tr>
     <?php foreach ($variability as $v): ?>
         <tr><td><?= esc($v['item_name']) ?></td><td class="num"><?= number_format((float) $v['avg_daily_demand'], 2) ?></td><td class="num"><?= (int) $v['safety_stock'] ?></td></tr>
     <?php endforeach; ?>

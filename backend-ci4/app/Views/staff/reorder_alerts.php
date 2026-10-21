@@ -47,11 +47,11 @@
         <div class="ra-summary">
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-exclamation-triangle"></i></span>
-                <div><span>Zero Stock (Critical)</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
+                <div><span>Out of Stock</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-lightning-fill"></i></span>
-                <div><span>Still In Stock, At Reorder Point</span><strong><?= esc($lowStockCount ?? 0) ?></strong></div>
+                <div><span>Reorder Now (still in stock)</span><strong><?= esc($lowStockCount ?? 0) ?></strong></div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-check-lg"></i></span>
@@ -60,7 +60,7 @@
         </div>
 
         <?php if (empty($alerts)): ?>
-            <div class="ra-empty">No reorder alerts right now. Alerts appear automatically once stock falls to or below an item's Reorder At number.</div>
+            <div class="ra-empty"><i class="bi bi-check-circle" aria-hidden="true"></i> All stocked up. Nothing to reorder. <a href="<?= site_url('staff/inventory') ?>">View Inventory</a></div>
         <?php else: ?>
             <?php foreach ($alerts as $alert): ?>
                 <?php
@@ -71,12 +71,12 @@
                     <div class="ra-card-head <?= $isCritical ? 'critical' : 'warning' ?>">
                         <span class="icon"><i class="bi <?= $isCritical ? 'bi-exclamation-triangle' : 'bi-exclamation-circle' ?>"></i></span>
                         <div>
-                            <h4><?= $isCritical ? 'CRITICAL — Reorder Point Reached' : 'WARNING — Approaching Reorder' ?></h4>
+                            <h4><?= $isCritical ? 'Reorder Now — order now' : 'Low Stock — order soon' ?></h4>
                             <span class="sub"><?= esc($alert['item_name'] ?? 'Unknown item') ?><?= !empty($alert['size']) ? ' - Size ' . esc($alert['size']) : '' ?></span>
                         </div>
                         <form method="post" action="<?= site_url('staff/reorder-alerts/notify/' . $alert['alert_id']) ?>">
                             <?= csrf_field() ?>
-                            <button type="submit" class="notify-btn">Notify Admin</button>
+                            <button type="submit" class="notify-btn">Notify Owner</button>
                         </form>
                     </div>
 
@@ -92,18 +92,22 @@
                             <small>units to order</small>
                         </div>
                         <div class="ra-stat-box">
-                            <span>Lead Time</span>
+                            <span>Delivery time</span>
                             <strong><?= esc($alert['lead_time_days'] ?? '—') ?></strong>
                             <small>days (<?= esc($alert['supplier_name'] ?? 'Unassigned') ?>)</small>
                         </div>
                     </div>
 
                     <div class="ra-basis">
-                        <strong class="title">Probabilistic Basis</strong>
+                        <strong class="title">How this was worked out <?= help_tip('How this was worked out', [
+                                'Daily sales: the average number sold each day.',
+                                'Availability target: how often you want it in stock.',
+                                'Safety Stock: extra units kept for busy days.',
+                            ]) ?></strong>
                         <div class="ra-basis-grid">
-                            <span>Avg Daily Demand:<b><?= esc($computation['avg_daily_demand'] ?? '—') ?></b></span>
-                            <span>Service Level:<b><?= esc($alert['service_level'] ?? $dss['service_level_target'] ?? '—') ?>%<?= $alert['abc_class'] ? ' (Class ' . esc($alert['abc_class']) . ')' : '' ?></b></span>
-                            <span>Safety Stock:<b><?= esc($computation['safety_stock'] ?? '—') ?></b></span>
+                            <span>Daily sales:<b><?= esc($computation['avg_daily_demand'] ?? '—') ?></b></span>
+                            <span>Availability target:<b><?= esc($alert['service_level'] ?? $dss['service_level_target'] ?? '—') ?>%<?= $alert['abc_class'] ? ' (' . esc($alert['abc_class']) . ' – ' . esc(['A' => 'Best seller', 'B' => 'Steady', 'C' => 'Slow'][$alert['abc_class']] ?? '') . ')' : '' ?></b></span>
+                            <span>Safety Stock <?= \App\Libraries\Glossary::tip('safety_stock') ?>:<b><?= esc($computation['safety_stock'] ?? '—') ?></b></span>
                         </div>
                     </div>
                 </div>

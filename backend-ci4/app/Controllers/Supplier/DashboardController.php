@@ -59,7 +59,7 @@ class DashboardController extends BaseController
 
         $data = [
             'title'           => 'Dashboard',
-            'subtitle'        => 'You have ' . count($pending) . ' new order' . (count($pending) === 1 ? '' : 's') . ' from RfourL Military Supply',
+            'subtitle'        => count($pending) . ' new order' . (count($pending) === 1 ? '' : 's'),
             'active'          => 'dashboard',
             'alerts'          => array_slice($dueTodayOrSoon, 0, 3),
             'pendingOrders'   => $pending,

@@ -5,7 +5,7 @@ namespace App\Libraries;
 /**
  * The plain-language names the screens use for DSS terms, so every page says
  * the same thing: "Reorder At" instead of ROP and "Order Qty" instead of
- * EOQ, each with an info icon explaining the formal term.
+ * EOQ, each with an (i) button that opens a short explanation (help_tip()).
  *
  * Only visible text. Database columns, variables and functions keep their
  * ROP / EOQ names (manual_rop_warning, eoq_value, ...).
@@ -15,11 +15,35 @@ class Glossary
     public const TERMS = [
         'reorder_at' => [
             'label' => 'Reorder At',
-            'tip'   => "Reorder Point (ROP): when on hand reaches this number, it's time to order.",
+            'tip'   => "When stock falls to this number, it's time to order more.\n\nAlso called Reorder Point (ROP).",
         ],
         'order_qty' => [
             'label' => 'Order Qty',
-            'tip'   => 'Economic Order Quantity (EOQ): the best number of units to order at a time.',
+            'tip'   => "How many units to order each time.\n\nAlso called Economic Order Quantity (EOQ).",
+        ],
+        'safety_stock' => [
+            'label' => 'Safety Stock',
+            'tip'   => "Extra units kept on hand for busy days, so you don't run out when sales are higher than usual.",
+        ],
+        'dss' => [
+            'label' => 'DSS',
+            'tip'   => "DSS means Decision Support System. It is the part of the app that works out when to reorder and how much, using your past sales.\n\nIt only gives suggestions. You decide what to order.",
+        ],
+        'availability' => [
+            'label' => 'Availability target',
+            'tip'   => 'How often you want an item to be in stock. 95% means in stock about 19 days out of 20.',
+        ],
+        'delivery_time' => [
+            'label' => 'Delivery time',
+            'tip'   => 'How many days a supplier usually takes to deliver after you place an order.',
+        ],
+        'abc' => [
+            'label' => 'A, B and C groups',
+            'tip'   => [
+                'A: best sellers, about 80% of sales. Never run out.',
+                'B: steady sellers, the next 15%.',
+                'C: slow sellers, the last 5%. Order less.',
+            ],
         ],
     ];
 
@@ -29,19 +53,18 @@ class Glossary
     }
 
     /**
-     * The small info icon with the term's tooltip (assets/js/info-tip.js).
-     * A real button, so it can be reached and opened with the keyboard.
+     * The (i) button for a term. A real button, so it can be reached and
+     * opened with the keyboard as well as by click or tap.
      */
     public static function tip(string $term): string
     {
         $t = self::TERMS[$term];
 
-        return '<button type="button" class="info-tip" data-tip="' . esc($t['tip'], 'attr') . '" aria-label="' . esc('About ' . $t['label'], 'attr') . '">'
-            . '<i class="bi bi-info-circle" aria-hidden="true"></i></button>';
+        return help_tip($t['label'], $t['tip']);
     }
 
     /**
-     * Label followed by its info icon, e.g. for a table header. The last word
+     * Label followed by its (i) button, e.g. for a table header. The last word
      * and the icon never separate, so a narrow header breaks as
      * "Reorder / At (i)" rather than leaving the icon on a line of its own.
      */

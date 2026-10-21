@@ -9,7 +9,7 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('admin');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin Login - RfourL</title>
+    <title>Owner Login - RfourL</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +25,7 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('admin');
                 </div>
 
                 <div class="signing-in-label">SIGNING IN AS</div>
-                <h1 class="signing-in-role">Admin</h1>
+                <h1 class="signing-in-role">Owner</h1>
                 <p class="signing-in-desc">Manage inventory, reorders, reports, and settings.</p>
 
             </div>

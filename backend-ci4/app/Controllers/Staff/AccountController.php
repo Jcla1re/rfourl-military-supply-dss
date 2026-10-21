@@ -28,7 +28,7 @@ class AccountController extends BaseController
     {
         return view('staff/account', [
             'title'    => 'My Account',
-            'subtitle' => 'Your account details and password',
+            'subtitle' => 'Your account',
             'active'   => 'account',
             'account'  => $this->userModel->find((int) session()->get('user_id')),
             'error'    => session()->getFlashdata('error'),

@@ -31,8 +31,13 @@
                     <th class="col-num">On Hand</th>
                     <th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
                     <th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('order_qty') ?></th>
-                    <th class="col-stock col-term">Stock Level</th>
-                    <th>Status</th>
+                    <th class="col-stock col-term">Stock Level <?= help_tip('Stock Level', 'How full the stock is, compared with Reorder At plus Order Qty.') ?></th>
+                    <th>Status <?= help_tip('Status', [
+                        'In Stock: enough on hand.',
+                        'Low Stock: close to Reorder At.',
+                        'Reorder Now: at or below Reorder At. Time to order.',
+                        'Out of Stock: none on hand and no recent sales.',
+                    ]) ?></th>
                     <th class="col-term">Last Updated</th>
                     <th class="col-actions">Actions</th>
                 </tr>
@@ -97,7 +102,7 @@
                             <td class="inv-rop-cell col-num"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
                             <td class="inv-eoq-cell col-num"><?= $default['eoq_value'] !== null ? esc($default['eoq_value']) : '—' ?></td>
                             <td class="inv-bar-cell">
-                                <div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% of reorder point + order quantity"><span style="width: <?= $fill['pct'] ?>%"></span></div>
+                                <div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% full"><span style="width: <?= $fill['pct'] ?>%"></span></div>
                             </td>
                             <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"<?= $pillTitle !== '' ? ' title="' . esc($pillTitle, 'attr') . '"' : '' ?>><?= esc($itemStatus) ?></span><?php if (! empty($group['on_order'])): ?> <span class="ordered-tag" title="On order: <?= esc($group['open_so']) ?>">Ordered</span><?php endif; ?></td>
                             <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
@@ -144,7 +149,7 @@
                             <td colspan="11" class="archived-empty">
                                 <div class="archived-empty-icon" aria-hidden="true"><i class="bi bi-archive"></i></div>
                                 <div class="archived-empty-title">No archived items</div>
-                                <p class="archived-empty-text">Items you archive will appear here. You can restore them anytime.</p>
+                                <p class="archived-empty-text">Archived items show here.</p>
                             </td>
                         </tr>
                     <?php else: ?>

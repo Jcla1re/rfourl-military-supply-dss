@@ -153,7 +153,7 @@ class InventoryController extends BaseController
             );
         }
 
-        return redirect()->to($this->listUrl())->with('success', 'Notify Sent! Reorder Point Notice');
+        return redirect()->to($this->listUrl())->with('success', 'Owner notified: reorder notice');
     }
 
     /**

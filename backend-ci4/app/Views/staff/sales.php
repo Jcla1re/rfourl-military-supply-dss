@@ -211,7 +211,7 @@
                 <input type="search" class="pos-search" id="posSearch" placeholder="Search items...">
 
                 <?php if (empty($groups)): ?>
-                    <div class="empty-state">No items in inventory yet.</div>
+                    <div class="empty-state"><i class="bi bi-box-seam" aria-hidden="true"></i> No items to sell yet. Ask the owner.</div>
                 <?php else: ?>
                     <div class="pos-grid" id="posGrid">
                         <?php foreach ($groups as $g): ?>
@@ -263,7 +263,7 @@
                         <div class="row-line discount-row" id="discountRow" style="display:none;"><span>Discount</span><span id="cartDiscountOut">- ₱0</span></div>
                         <div class="row-line total"><span>TOTAL</span><span id="cartTotal">₱0</span></div>
                     </div>
-                    <div class="cart-note">Buy 10 or more of the same item for 5% off, or a matching set (e.g. Upper + Lower) for 2% off.</div>
+                    <div class="cart-note">10+ of one item: 5% off. Matching set: 2% off.</div>
 
                     <label class="fw-bold mt-2 mb-1 d-block">Payment Method</label>
                     <input type="hidden" name="payment_method" id="paymentMethod" value="Cash">

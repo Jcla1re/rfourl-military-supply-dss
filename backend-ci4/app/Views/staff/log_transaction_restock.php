@@ -54,7 +54,7 @@
     <div class="lt-layout">
     <div>
     <?php if (empty($orders)): ?>
-        <div class="empty-state"><i class="bi bi-inbox"></i>No shipped orders waiting for confirmation right now.</div>
+        <div class="empty-state"><i class="bi bi-inbox"></i>No deliveries to confirm.</div>
     <?php else: ?>
         <?php foreach ($orders as $o): ?>
             <div class="lt-form-card">

@@ -79,6 +79,13 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
                 </span>
                 <span class="nav-label">Notifications</span>
             </a>
+            <a href="<?= site_url('supplier/help') ?>" class="nav-link nav-help <?= ($active ?? '') === 'help' ? 'active' : '' ?>" data-tooltip="Help">
+                <span class="nav-icon">
+                    <i class="bi bi-question-circle icon-outline"></i>
+                    <i class="bi bi-question-circle-fill icon-fill"></i>
+                </span>
+                <span class="nav-label">Help</span>
+            </a>
         </div>
 
         <div class="user-footer">
@@ -137,6 +144,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
     <?= view('partials/_toast', ['toast' => session()->getFlashdata('toast')]) ?>
     <script src="/assets/js/toast-timer.js"></script>
     <script src="/assets/js/sticky-offset.js"></script>
+    <script src="/assets/js/help-tip.js"></script>
     <?= view('partials/_confirm_modal') ?>
     <script src="/assets/js/confirm-modal.js"></script>
 </body>

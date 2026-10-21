@@ -16,7 +16,12 @@
             <thead>
                 <tr>
                     <th>Item ID</th><th>Item Name</th><th class="col-center">Size</th><th>Type</th><th class="col-num">On Hand</th><th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
-                    <th class="col-stock col-term">Stock Level</th><th>Status</th><th class="col-term">Last Updated</th><th class="col-actions">Actions</th>
+                    <th class="col-stock col-term">Stock Level <?= help_tip('Stock Level', 'How full the stock is, compared with Reorder At plus Order Qty.') ?></th><th>Status <?= help_tip('Status', [
+                        'In Stock: enough on hand.',
+                        'Low Stock: close to Reorder At.',
+                        'Reorder Now: at or below Reorder At. Time to order.',
+                        'Out of Stock: none on hand and no recent sales.',
+                    ]) ?></th><th class="col-term">Last Updated</th><th class="col-actions">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -68,14 +73,14 @@
                             <td><?= esc($group['category'] ?? '') ?></td>
                             <td class="inv-stock-cell col-num"><?= esc($default['current_stock'] ?? 0) ?></td>
                             <td class="inv-rop-cell col-num"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
-                            <td class="inv-bar-cell"><div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% of reorder point + order quantity"><span style="width: <?= $fill['pct'] ?>%"></span></div></td>
+                            <td class="inv-bar-cell"><div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% full"><span style="width: <?= $fill['pct'] ?>%"></span></div></td>
                             <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"<?= $pillTitle !== '' ? ' title="' . esc($pillTitle, 'attr') . '"' : '' ?>><?= esc($itemStatus) ?></span><?php if (! empty($group['on_order'])): ?> <span class="ordered-tag" title="On order: <?= esc($group['open_so']) ?>">Ordered</span><?php endif; ?></td>
                             <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
                             <td class="inv-notify-cell col-actions">
                                 <form method="post" action="<?= site_url('staff/inventory/notify/' . $default['item_id']) ?>" class="notify-form" style="<?= $itemStatus === 'Reorder Now' && empty($group['on_order']) ? '' : 'display:none;' ?>">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="return_query" value="<?= esc($_SERVER['QUERY_STRING'] ?? '') ?>">
-                                    <button type="submit" class="notify-btn"<?= ! empty($default['size']) ? ' title="Notify about size ' . esc($default['size'], 'attr') . '"' : '' ?>>Notify Admin</button>
+                                    <button type="submit" class="notify-btn"<?= ! empty($default['size']) ? ' title="Notify about size ' . esc($default['size'], 'attr') . '"' : '' ?>>Notify Owner</button>
                                 </form>
                                 <span class="notify-none" style="<?= $itemStatus === 'Reorder Now' && empty($group['on_order']) ? 'display:none;' : '' ?>"><?= ! empty($group['on_order']) ? '<span class="on-order-note">On order</span>' : '<i class="bi bi-three-dots"></i>' ?></span>
                             </td>

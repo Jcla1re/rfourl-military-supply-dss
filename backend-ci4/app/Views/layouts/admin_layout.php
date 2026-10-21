@@ -96,7 +96,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
                 <span class="nav-label">POS &amp; Sales</span>
             </a>
 
-            <div class="nav-section-label">PROCUREMENT</div>
+            <div class="nav-section-label">ORDERING</div>
             <a href="<?= site_url('admin/orders') ?>" class="nav-link <?= ($active ?? '') === 'orders' ? 'active' : '' ?>" data-tooltip="Orders">
                 <span class="nav-icon">
                     <i class="bi bi-clipboard-data icon-outline"></i>
@@ -127,6 +127,13 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
                 </span>
                 <span class="nav-label">Notifications</span>
             </a>
+            <a href="<?= site_url('admin/help') ?>" class="nav-link nav-help <?= ($active ?? '') === 'help' ? 'active' : '' ?>" data-tooltip="Help">
+                <span class="nav-icon">
+                    <i class="bi bi-question-circle icon-outline"></i>
+                    <i class="bi bi-question-circle-fill icon-fill"></i>
+                </span>
+                <span class="nav-label">Help</span>
+            </a>
         </div>
 
         <div class="user-footer">
@@ -134,7 +141,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
                 <i class="bi bi-person-circle fs-4"></i>
                 <div class="user-text">
                     <div style="font-weight:600; color:#fff; font-size:0.9rem;"><?= esc(session()->get('full_name')) ?></div>
-                    <small><?= esc(session()->get('role')) ?></small>
+                    <small><?= esc(session()->get('role') === 'Admin' ? 'Owner' : session()->get('role')) ?></small>
                 </div>
             </a>
             <form method="post" action="<?= site_url('logout') ?>" class="m-0 d-inline"><?= csrf_field() ?><button type="submit" class="logout-link" title="Logout"><i class="bi bi-box-arrow-right"></i></button></form>
@@ -182,7 +189,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
     <?= view('partials/_toast', ['toast' => session()->getFlashdata('toast')]) ?>
     <script src="/assets/js/toast-timer.js"></script>
     <script src="/assets/js/sticky-offset.js"></script>
-    <script src="/assets/js/info-tip.js"></script>
+    <script src="/assets/js/help-tip.js"></script>
     <?= view('partials/_confirm_modal') ?>
     <script src="/assets/js/confirm-modal.js"></script>
 <?php // DSS recalculation in the background (weekly or "Recalculate now"): toast on whatever page the admin is on when it finishes. ?>

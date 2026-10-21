@@ -61,7 +61,7 @@ $archived  = $status === 'archived';
     <?php if (! $archived): ?>
     <div class="sup-stats">
         <div class="sup-stat"><span>Total Suppliers</span><strong><?= esc($totalSuppliers ?? 0) ?></strong></div>
-        <div class="sup-stat"><span>Avg. lead time</span><strong><?= esc($avgLeadTime ?? 0) ?> days</strong><small>Across all suppliers</small></div>
+        <div class="sup-stat"><span>Avg. delivery time</span><strong><?= esc($avgLeadTime ?? 0) ?> days</strong><small>Across all suppliers</small></div>
         <div class="sup-stat"><span>Active suppliers</span><strong><?= esc(count(array_filter($suppliers, fn($s) => $s['is_active']))) ?></strong></div>
         <div class="sup-stat"><span>Pending Orders</span><strong><?= esc($pendingOrders ?? 0) ?></strong><small>Across all suppliers</small></div>
     </div>
@@ -79,8 +79,7 @@ $archived  = $status === 'archived';
 
     <?php if ($archived): ?>
         <div class="sup-archive-note">
-            <i class="bi bi-info-circle"></i> Archived suppliers are hidden from orders and alerts, and their portal account cannot sign in.
-            Restore a supplier to unlock the account again.
+            <i class="bi bi-info-circle"></i> Archived suppliers are hidden and can't sign in. <?= help_tip('Archived suppliers', 'They are hidden from orders and alerts. Restore a supplier to unlock their account again.') ?>
         </div>
     <?php endif; ?>
 
@@ -101,7 +100,7 @@ $archived  = $status === 'archived';
                         <?php endif; ?>
                     </div>
                     <div class="sup-card-foot">
-                        <div><span><i class="bi bi-clock"></i> Lead Time</span><?= esc($s['lead_time_days']) ?> days</div>
+                        <div><span><i class="bi bi-clock"></i> Delivery time</span><?= esc($s['lead_time_days']) ?> days</div>
                         <div><span><i class="bi bi-telephone"></i> Contact</span><?= esc($s['contact_number'] ?? '—') ?></div>
                         <div><span><i class="bi bi-box-seam"></i> Products</span><?= esc($s['product_count']) ?></div>
                         <?php if ($archived): ?>
@@ -131,7 +130,7 @@ $archived  = $status === 'archived';
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <div class="empty-state"><?= $archived ? 'No archived suppliers.' : 'No suppliers yet. Add your first supplier to link it to inventory items and stock orders.' ?></div>
+            <div class="empty-state"><i class="bi bi-truck" aria-hidden="true"></i> <?= $archived ? 'No archived suppliers.' : 'No suppliers yet. <a href="' . site_url('admin/suppliers/create') . '" class="btn btn-success btn-sm ms-2">Add Supplier</a>' ?></div>
         <?php endif; ?>
     </div>
 </div>

@@ -146,7 +146,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
         <div class="sales-chart-wrap">
             <canvas id="weeklySalesChart" height="80"></canvas>
             <?php if (array_sum(array_map('floatval', $weekData ?? [])) == 0): ?>
-                <p class="sales-chart-empty">No sales recorded this week.</p>
+                <p class="sales-chart-empty">No sales this week.</p>
             <?php endif; ?>
         </div>
     </div>

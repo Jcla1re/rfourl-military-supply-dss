@@ -64,7 +64,7 @@ $lockedSeconds = [
                     <button type="button" class="role-card" data-role="admin">
                         <span class="role-icon"><i class="bi bi-shield-check"></i></span>
                         <span class="role-text">
-                            <strong>Admin</strong>
+                            <strong>Owner</strong>
                             <span>Manage inventory, reorders, reports, and settings.</span>
                         </span>
                         <i class="bi bi-chevron-right role-arrow"></i>

@@ -499,7 +499,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
 
         <?php if ($showArchived): ?>
             <div class="archived-banner" role="status">
-                <span><i class="bi bi-info-circle" aria-hidden="true"></i> Showing archived items. These are hidden from POS, reorder alerts, and stock counts.</span>
+                <span><i class="bi bi-info-circle" aria-hidden="true"></i> Archived items are hidden everywhere. You can restore them.</span>
                 <a class="archived-back" href="<?= site_url('admin/inventory') . ($keepPerPage ? '?' . http_build_query($keepPerPage) : '') ?>"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to inventory</a>
             </div>
         <?php endif; ?>
@@ -579,7 +579,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                         <div class="im-field">
                             <label for="manual_rop_warning"><?= esc(\App\Libraries\Glossary::label('reorder_at')) ?></label><?= \App\Libraries\Glossary::tip('reorder_at') ?>
                             <input id="manual_rop_warning" name="manual_rop_warning" type="number" min="0" step="1" value="0">
-                            <small class="im-help">You'll get an alert when stock reaches this number. <?= esc(\App\Models\ProductModel::LOW_STOCK_HELP) ?></small>
+                            <small class="im-help">Alert when stock reaches this number. <?= help_tip('Low Stock', \App\Models\ProductModel::LOW_STOCK_HELP) ?></small>
                         </div>
                     </div>
                     <fieldset class="im-reason" id="stockReason" hidden>
@@ -618,7 +618,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                     <div class="im-archive" id="deleteZone" hidden>
                         <div>
                             <strong>Archive this item</strong>
-                            <p>It will be hidden from active inventory. You can restore it anytime from Archived items.</p>
+                            <p>Hide this item? You can restore it later.</p>
                         </div>
                         <button type="button" class="im-btn-archive" id="archiveBtn">Archive</button>
                     </div>
@@ -640,7 +640,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
     <div class="inv-modal-card im-confirm" role="alertdialog" aria-modal="true" aria-labelledby="restoreConfirmTitle" aria-describedby="restoreConfirmText">
         <div class="im-confirm-icon is-success" aria-hidden="true"><i class="bi bi-arrow-counterclockwise"></i></div>
         <h2 id="restoreConfirmTitle">Restore item?</h2>
-        <p id="restoreConfirmText">It will appear in inventory, POS, and reorder alerts again.</p>
+        <p id="restoreConfirmText">It will show again in inventory, POS and alerts.</p>
         <form id="restoreForm" method="post" class="im-foot-actions">
             <?= csrf_field() ?>
             <input type="hidden" name="return_query" value="">
@@ -654,7 +654,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
     <div class="inv-modal-card im-confirm" role="alertdialog" aria-modal="true" aria-labelledby="archiveConfirmTitle" aria-describedby="archiveConfirmText">
         <div class="im-confirm-icon is-danger" aria-hidden="true"><i class="bi bi-archive"></i></div>
         <h2 id="archiveConfirmTitle">Archive item?</h2>
-        <p id="archiveConfirmText">It won't appear in inventory, POS, or reorder alerts. You can restore it from Archived items.</p>
+        <p id="archiveConfirmText">Hide this item? You can restore it later.</p>
         <div class="im-foot-actions">
             <button type="button" class="im-btn-secondary" id="archiveCancelBtn">Cancel</button>
             <button type="button" class="im-btn-danger" id="archiveConfirmBtn">Archive item</button>

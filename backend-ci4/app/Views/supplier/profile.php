@@ -87,7 +87,7 @@
 
                 <div class="pf-tiles">
                     <div class="pf-tile"><div class="v"><?= number_format($stats['items_month'] ?? 0) ?></div><div class="l">Items supplied (month)</div></div>
-                    <div class="pf-tile"><div class="v"><?= esc($supplier['lead_time_days'] ?? '—') ?> days</div><div class="l">Avg. lead time</div></div>
+                    <div class="pf-tile"><div class="v"><?= esc($supplier['lead_time_days'] ?? '—') ?> days</div><div class="l">Avg. delivery time</div></div>
                     <div class="pf-tile"><div class="v"><?= esc($stats['total_fulfilled'] ?? '0 / 0') ?></div><div class="l">Total orders fulfilled</div></div>
                     <div class="pf-tile"><div class="v"><?= number_format($stats['items_total'] ?? 0) ?></div><div class="l">Items supplied (all time)</div></div>
                 </div>
@@ -104,7 +104,7 @@
                     <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#editProfileModal">Edit</button>
                 </div>
                 <div class="pf-row"><span>Preferred Courier</span><strong><?= esc($supplier['preferred_courier'] ?? '') ?: '—' ?></strong></div>
-                <div class="pf-row"><span>Default Lead Time</span><strong><?= esc($supplier['lead_time_days'] ?? '—') ?> business days</strong></div>
+                <div class="pf-row"><span>Usual delivery time</span><strong><?= esc($supplier['lead_time_days'] ?? '—') ?> business days</strong></div>
                 <div class="pf-row"><span>Contact Person</span><strong><?= esc($supplier['contact_person'] ?? '') ?: '—' ?></strong></div>
                 <div class="pf-row"><span>Contact Number</span><strong><?= esc($supplier['contact_number'] ?? '') ?: '—' ?></strong></div>
             </div>
@@ -163,7 +163,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small">This is the name you type on the login page. Use 4&ndash;50 letters, numbers, dashes or underscores.</p>
+                    <p class="text-muted small">Your login name. <?= help_tip('Login name', 'Use 4 to 50 letters, numbers, dashes or underscores.') ?></p>
                     <div class="mb-3"><label class="fw-bold mb-1 d-block">New Username</label><input class="form-control" type="text" name="username" value="<?= esc($loginAccount['username'] ?? '') ?>" minlength="4" maxlength="50" pattern="[A-Za-z0-9_\-]+" required autocomplete="username"></div>
                     <div><label class="fw-bold mb-1 d-block">Current Password</label><input class="form-control" type="password" name="current_password" required autocomplete="current-password"></div>
                 </div>
@@ -186,7 +186,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small">This is the email that receives your password-reset verification code.</p>
+                    <p class="text-muted small">Used for password reset codes.</p>
                     <div class="mb-3"><label class="fw-bold mb-1 d-block">New Login Email</label><input class="form-control" type="email" name="login_email" required></div>
                     <div><label class="fw-bold mb-1 d-block">Current Password</label><input class="form-control" type="password" name="current_password" required autocomplete="current-password"></div>
                 </div>

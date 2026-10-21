@@ -61,7 +61,7 @@ $action = $isEdit ? site_url('admin/suppliers/update/' . $supplier['supplier_id'
                     <input name="category" value="<?= esc($supplier['category'] ?? '') ?>" placeholder="e.g. Fatigue Cloth, Footwear">
                 </div>
                 <div class="sf-field">
-                    <label>Lead time (days)</label>
+                    <label>Delivery time (days) <?= \App\Libraries\Glossary::tip('delivery_time') ?></label>
                     <input name="lead_time_days" type="number" min="0" value="<?= esc($supplier['lead_time_days'] ?? '') ?>" placeholder="e.g. 7" required>
                 </div>
             </div>
@@ -106,7 +106,7 @@ $action = $isEdit ? site_url('admin/suppliers/update/' . $supplier['supplier_id'
         <?php if (!$isEdit): ?>
         <div class="sf-section">
             <span class="sf-section-title">Portal Account creation</span>
-            <p class="text-muted small">Optional — create a login so this supplier can access the Supplier Portal to view orders and update delivery status.</p>
+            <p class="text-muted small">Optional: give this supplier a login to see their orders.</p>
             <div class="sf-grid mb-3">
                 <div class="sf-field">
                     <label>Login email</label>

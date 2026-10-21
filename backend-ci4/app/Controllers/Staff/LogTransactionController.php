@@ -154,7 +154,7 @@ class LogTransactionController extends BaseController
 
         if ($type === 'damaged' && (int) $this->request->getPost('qty_affected') > $currentStock) {
             return redirect()->to("/staff/log-transaction/{$type}")
-                ->with('error', "Only {$currentStock} unit(s) in stock - the damaged/lost quantity cannot be higher.");
+                ->with('error', "Only {$currentStock} in stock. Enter {$currentStock} or less.");
         }
 
         if ($type === 'return') {
@@ -162,7 +162,7 @@ class LogTransactionController extends BaseController
             $sale    = $saleRef !== '' ? db_connect()->table('sales_transaction')->where('receipt_no', $saleRef)->get()->getRowArray() : null;
             if (! $sale) {
                 return redirect()->to("/staff/log-transaction/{$type}")
-                    ->with('error', 'Original sale reference not found. Enter the receipt number of the original sale.');
+                    ->with('error', 'Receipt number not found. Check and try again.');
             }
         }
 
