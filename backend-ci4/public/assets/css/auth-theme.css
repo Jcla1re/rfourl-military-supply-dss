@@ -65,14 +65,29 @@ body.auth-body {
 .btn-login {
     width: 100%; background: var(--btn-bg); color: var(--btn-text); border: none;
     padding: 0.8rem; border-radius: var(--radius-control); font-weight: var(--btn-font-weight);
-    display: flex; align-items: center; justify-content: center; gap: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 0;
     cursor: pointer;
     /* Same effect as the app's primary buttons (admin-theme.css "Motion polish"). */
-    transition: transform 0.12s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    transition: transform 0.12s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, gap 0.2s ease;
+}
+.btn-login .btn-login-arrow {
+    display: inline-block;
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    transform: translateX(-4px);
+    transition: opacity 0.2s ease, width 0.2s ease, transform 0.2s ease, margin-left 0.2s ease;
 }
 .btn-login:hover:not(:disabled),
-.btn-login:focus-visible:not(:disabled) { background: var(--btn-bg-hover); }
+.btn-login:focus-visible:not(:disabled) { background: var(--btn-bg-hover); gap: 6px; }
 .btn-login:hover:not(:disabled) { transform: translateY(-1px); }
+.btn-login:hover:not(:disabled) .btn-login-arrow,
+.btn-login:focus-visible:not(:disabled) .btn-login-arrow {
+    opacity: 0.9;
+    width: 0.9em;
+    transform: translateX(0);
+    margin-left: 0;
+}
 .btn-login:active:not(:disabled) { background: var(--btn-bg-active); transform: translateY(0); }
 .btn-login:focus-visible { outline: 3px solid var(--btn-focus-ring); outline-offset: 2px; }
 .btn-login:disabled { background: var(--btn-disabled-bg); color: var(--btn-disabled-text); cursor: not-allowed; }

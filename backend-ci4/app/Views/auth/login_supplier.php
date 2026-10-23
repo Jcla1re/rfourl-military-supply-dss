@@ -62,7 +62,7 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('supplier
                         <a href="<?= site_url('login/supplier/forgot') ?>" class="forgot-link-inline">Forgot password?</a>
                     </div>
                     <button type="submit" class="btn-login" id="loginSubmitBtn"<?= $lockedSeconds > 0 ? ' disabled' : '' ?>>
-                        <span>Sign in</span> <i class="bi bi-arrow-right"></i>
+                        <span>Sign in</span> <i class="bi bi-arrow-right btn-login-arrow"></i>
                     </button>
                 </form>
                 <?php if ($errorMsg): ?>
