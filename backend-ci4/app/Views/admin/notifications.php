@@ -1,13 +1,6 @@
 
 <?= $this->extend('layouts/admin_layout') ?>
 
-<?= $this->section('header_actions') ?>
-<form method="post" action="<?= site_url('admin/notifications/mark-all-read') ?>">
-    <?= csrf_field() ?>
-    <button type="submit" class="btn btn-topbar">Mark all as read</button>
-</form>
-<?= $this->endSection() ?>
-
 <?= $this->section('content') ?>
 
 <?php
@@ -19,6 +12,9 @@ $unreadCount = $unreadCount ?? 0;
 
 <style>
 .notif-filters { display: flex; gap: 12px; margin-bottom: 22px; }
+.notif-toolbar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 18px; }
+.notif-toolbar form { margin: 0; }
+.notif-toolbar .btn { white-space: nowrap; }
 .notif-filters a {
     display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: var(--radius-pill);
     text-decoration: none; font-weight: 700; background: #fff; color: #1c1c1c; border: 1px solid #ddd;
@@ -106,6 +102,18 @@ $unreadCount = $unreadCount ?? 0;
 </style>
 
 <div class="page-wrap">
+    <div class="notif-toolbar">
+        <form method="post" action="<?= site_url('admin/notifications/mark-all-read') ?>">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-outline-success">Mark all as read</button>
+        </form>
+        <form method="post" action="<?= site_url('admin/notifications/clear-all') ?>"
+              data-confirm="This permanently deletes all your notifications. This cannot be undone."
+              data-confirm-title="Clear all notifications?" data-confirm-ok="Clear all" data-confirm-variant="danger">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-outline-danger">Clear all</button>
+        </form>
+    </div>
     <div class="notif-filters">
         <a href="?filter=all" class="<?= $filter === 'all' ? 'active' : '' ?>">All <span class="count"><?= esc((string) $allCount) ?></span></a>
         <a href="?filter=unread" class="<?= $filter === 'unread' ? 'active' : '' ?>">Unread <span class="count"><?= esc((string) $unreadCount) ?></span></a>

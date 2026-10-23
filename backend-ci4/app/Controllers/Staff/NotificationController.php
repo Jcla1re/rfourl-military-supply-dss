@@ -4,6 +4,7 @@
 namespace App\Controllers\Staff;
 
 use App\Controllers\BaseController;
+use App\Libraries\Toast;
 use App\Models\NotificationModel;
 
 class NotificationController extends BaseController
@@ -56,6 +57,12 @@ class NotificationController extends BaseController
     {
         $this->notificationModel->where('recipient_role', 'Staff')->set(['is_read' => 1])->update();
         return redirect()->to('/staff/notifications');
+    }
+
+    public function clearAll()
+    {
+        $this->notificationModel->clearForRecipient('Staff', session()->get('user_id'));
+        return redirect()->to('/staff/notifications')->with('toast', Toast::success('Notifications cleared', 'All notifications were removed.'));
     }
 
     /**

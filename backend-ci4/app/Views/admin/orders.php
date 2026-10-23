@@ -61,6 +61,7 @@ $restockDates = $restockDates ?? [];
 }
 
 .ord-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; align-items: start; }
+.ord-grid > :last-child { align-self: stretch; }
 @media (max-width: 1100px) { .ord-grid { grid-template-columns: 1fr; } }
 
 .ord-col-label { text-transform: uppercase; letter-spacing: .06em; color: #666; font-size: 13px; font-weight: 700; margin-bottom: 10px; }

@@ -66,7 +66,7 @@ $tabs = [
 /* Data & Records tab (exact design spec). Poppins like the rest of the app. */
 .rec-tab { font-family: 'Poppins', sans-serif; }
 .rec-tab h4, .rec-tab h5, .rec-tab label { font-family: inherit; }
-.set-body .rec-page-title { font-size: 30px; font-weight: 700; color: #1F2617; margin: 0; }
+.set-body .rec-page-title { font-size: 24px; font-weight: 800; color: #1F2617; margin: 0; }
 .rec-page-sub { font-size: 14px; color: #5C6152; margin: 4px 0 20px; }
 .rec-card { background: #FFFFFF; border: 1px solid #E8E5DC; border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; box-shadow: none; }
 .rec-title { font-size: 19px; font-weight: 600; color: #1F2617; margin: 0; line-height: 1.3; }

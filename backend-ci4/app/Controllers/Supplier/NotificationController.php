@@ -3,6 +3,7 @@
 namespace App\Controllers\Supplier;
 
 use App\Controllers\BaseController;
+use App\Libraries\Toast;
 use App\Models\NotificationModel;
 
 class NotificationController extends BaseController
@@ -61,6 +62,12 @@ class NotificationController extends BaseController
             ->update();
 
         return redirect()->to('/supplier/notifications');
+    }
+
+    public function clearAll()
+    {
+        $this->notificationModel->clearForRecipient('Supplier', session()->get('user_id'));
+        return redirect()->to('/supplier/notifications')->with('toast', Toast::success('Notifications cleared', 'All notifications were removed.'));
     }
 
     /**

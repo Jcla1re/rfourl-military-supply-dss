@@ -67,6 +67,12 @@ class NotificationController extends BaseController
         return redirect()->to('/admin/notifications');
     }
 
+    public function clearAll()
+    {
+        $this->notificationModel->clearForRecipient('Admin');
+        return redirect()->to('/admin/notifications')->with('toast', Toast::success('Notifications cleared', 'All notifications were removed.'));
+    }
+
     /**
      * Order-status cards navigate straight to the order they're about —
      * this marks the card done and forwards to it in one step.

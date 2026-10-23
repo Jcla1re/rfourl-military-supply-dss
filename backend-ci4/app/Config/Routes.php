@@ -93,6 +93,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->get('notifications', 'NotificationController::index');
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');
     $routes->post('notifications/mark-all-read', 'NotificationController::markAllRead');
+    $routes->post('notifications/clear-all', 'NotificationController::clearAll');
     $routes->post('notifications/open/(:segment)', 'NotificationController::open/$1');
     $routes->post('notifications/approve/(:segment)', 'NotificationController::approve/$1');
     $routes->post('notifications/decline/(:segment)', 'NotificationController::decline/$1');
@@ -124,6 +125,7 @@ $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'ro
     $routes->get('notifications', 'NotificationController::index');
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');
     $routes->post('notifications/mark-all-read', 'NotificationController::markAllRead');
+    $routes->post('notifications/clear-all', 'NotificationController::clearAll');
     $routes->post('notifications/open/(:segment)', 'NotificationController::open/$1');
 
     $routes->get('account', 'AccountController::index');
@@ -151,6 +153,7 @@ $routes->group('supplier', ['namespace' => 'App\Controllers\Supplier', 'filter' 
     $routes->get('notifications', 'NotificationController::index');
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');
     $routes->post('notifications/mark-all-read', 'NotificationController::markAllRead');
+    $routes->post('notifications/clear-all', 'NotificationController::clearAll');
     $routes->post('notifications/open/(:segment)', 'NotificationController::open/$1');
 
     $routes->get('help', 'HelpController::index');

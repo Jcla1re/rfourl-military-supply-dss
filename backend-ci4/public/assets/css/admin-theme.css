@@ -427,10 +427,6 @@ body {
     color: inherit;
 }
 
-.sidebar .user-footer-link.active {
-    background-color: rgba(255, 255, 255, 0.14);
-}
-
 .sidebar.collapsed .user-footer-link {
     margin: 0;
     padding: 0.35rem;
@@ -1295,6 +1291,5 @@ body {
 .help-steps li { padding: 4px 0 4px 4px; line-height: 1.5; }
 .help-steps li::marker { font-weight: 700; color: #2F6431; }
 
-/* Help link pinned to the bottom of the menu, above the user footer. */
+/* Keep the navigation column sized to fill the space above the user footer. */
 .app-shell .sidebar > div:not(.user-footer) { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
-.sidebar .nav-link.nav-help { margin-top: auto; } /* beats .nav-link.active margin */

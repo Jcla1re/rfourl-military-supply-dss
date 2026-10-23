@@ -70,6 +70,20 @@ class NotificationModel extends Model
         return $builder->countAllResults();
     }
 
+    public function clearForRecipient(string $role, ?int $recipientId = null): void
+    {
+        $builder = $this->where('recipient_role', $role);
+
+        if ($recipientId !== null) {
+            $builder->groupStart()
+                ->where('recipient_id', $recipientId)
+                ->orWhere('recipient_id', null)
+                ->groupEnd();
+        }
+
+        $builder->delete();
+    }
+
     /**
      * @return int|string|false The new notification's ID (needed by callers
      *                          that build an action link from $actionToken).
