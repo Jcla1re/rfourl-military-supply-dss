@@ -1,6 +1,6 @@
 <?php
 $role      = $role ?? 'admin';
-$roleLabel = $role === 'supplier' ? 'Supplier' : 'Admin';
+$roleLabel = $role === 'supplier' ? 'Supplier' : 'Owner';
 $errorMsg  = session()->getFlashdata('error');
 ?>
 <!DOCTYPE html>

@@ -382,9 +382,14 @@ class AuthController extends BaseController
         $delivered = $this->deliverOtpEmail($user, $otp);
         $redirect  = redirect()->to("/login/{$role}/otp");
 
-        return $delivered
-            ? $redirect->with('notice', 'A new code has been sent.')
-            : $redirect->with('error', 'We could not send the code. Please contact the administrator.');
+        if ($delivered) {
+            return $redirect->with('notice', 'A new code has been sent.');
+        }
+
+        // The owner has nobody above them to contact; a supplier contacts the shop.
+        return $redirect->with('error', $role === 'supplier'
+            ? "We couldn't send the code to your email right now. Try again in a few minutes. If it keeps happening, contact RfourL Military Supply."
+            : "We couldn't send the code to your email right now. Check your internet connection and try again in a few minutes.");
     }
 
     public function showResetPassword($role)

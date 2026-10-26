@@ -23,7 +23,7 @@ $isLock    = $action === 'lock';
         <?php else: ?>
             <p class="auth-hint">Declined. The staff member has been told.</p>
         <?php endif; ?>
-        <div class="auth-back"><a href="<?= site_url('login/admin') ?>">Go to admin login</a></div>
+        <div class="auth-back"><a href="<?= site_url('login/admin') ?>">Go to owner login</a></div>
     </div>
 </body>
 </html>

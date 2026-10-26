@@ -146,7 +146,7 @@ class NotificationModel extends Model
             'Staff',
             'Access Request',
             'Your password reset request was declined',
-            'Please contact the admin directly if you still need access.',
+            'Please contact the owner directly if you still need access.',
             null,
             'staff_activity'
         );

@@ -38,9 +38,9 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('admin');
         <div class="content-panel slid">
             <div class="panel-content login-form-view is-active">
                 <a href="<?= site_url('/') ?>" class="back-to-roles"><i class="bi bi-chevron-left"></i> Change role</a>
-                <div class="portal-badge"><i class="bi bi-shield-check"></i> ADMIN PORTAL</div>
+                <div class="portal-badge"><i class="bi bi-shield-check"></i> OWNER PORTAL</div>
                 <h2>Welcome back</h2>
-                <p class="form-subtitle">Sign in with your admin account.</p>
+                <p class="form-subtitle">Sign in with your owner account.</p>
                 <form action="/login/admin" method="post">
                     <?= csrf_field() ?>
                     <div class="field-group">

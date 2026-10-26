@@ -44,7 +44,7 @@ $lockedSeconds = [
                 </div>
 
                 <div class="signing-in-label">SIGNING IN AS</div>
-                <h1 class="signing-in-role" id="signingInRoleName">Admin</h1>
+                <h1 class="signing-in-role" id="signingInRoleName">Owner</h1>
                 <p class="signing-in-desc" id="signingInRoleDesc"></p>
 
             </div>
@@ -93,9 +93,9 @@ $lockedSeconds = [
             <!-- Admin login -->
             <div class="panel-content login-form-view" id="loginView-admin" data-role="admin">
                 <button type="button" class="back-to-roles"><i class="bi bi-chevron-left"></i> Change role</button>
-                <div class="portal-badge"><i class="bi bi-shield-check"></i> ADMIN PORTAL</div>
+                <div class="portal-badge"><i class="bi bi-shield-check"></i> OWNER PORTAL</div>
                 <h2>Welcome back</h2>
-                <p class="form-subtitle">Sign in with your admin account.</p>
+                <p class="form-subtitle">Sign in with your owner account.</p>
                 <form action="/login/admin" method="post">
                     <?= csrf_field() ?>
                     <div class="field-group">
@@ -198,7 +198,7 @@ $lockedSeconds = [
 
     <script>
         const ROLES = {
-            admin:    { label: 'Admin',    description: 'Manage inventory, reorders, reports, and settings.' },
+            admin:    { label: 'Owner',    description: 'Manage inventory, reorders, reports, and settings.' },
             staff:    { label: 'Staff',    description: 'Process sales and print receipts.' },
             supplier: { label: 'Supplier', description: 'View purchase orders and update deliveries.' },
         };

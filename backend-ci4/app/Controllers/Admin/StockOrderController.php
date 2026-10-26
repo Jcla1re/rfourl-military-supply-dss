@@ -435,7 +435,7 @@ class StockOrderController extends BaseController
                 'Supplier',
                 'Order Status',
                 "Order {$soId} updated to {$newStatus}",
-                "The admin manually set order {$soId} to {$newStatus}.",
+                "The owner manually set order {$soId} to {$newStatus}.",
                 $statusSupplierUser['user_id'] ?? null,
                 'order_status',
                 '/supplier/deliveries'
@@ -444,7 +444,7 @@ class StockOrderController extends BaseController
             $this->emailNotifier->toUser(
                 $statusSupplierUser,
                 "Order {$soId} updated to {$newStatus}",
-                "The admin manually set order {$soId} to {$newStatus}. Please log in to the supplier portal for details."
+                "The owner manually set order {$soId} to {$newStatus}. Please log in to the supplier portal for details."
             );
         }
 

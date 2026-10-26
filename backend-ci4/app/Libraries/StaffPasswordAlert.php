@@ -49,8 +49,8 @@ class StaffPasswordAlert
             $html   = '<div style="font-family:\'Poppins\',Arial,sans-serif;"><p><strong>' . esc($title, 'html') . '</strong></p>'
                 . '<p>' . esc($message, 'html') . '</p>'
                 . $button
-                . '<p style="color:#888;font-size:12px;">' . ($lockUrl === null ? 'Log in to the admin portal and open Manage Accounts to review this account.' : 'The link works for 24 hours and opens a confirmation page first. You can also lock the account from Notifications in the admin portal.') . '</p></div>';
-            $plain = "{$title}\n\n{$message}\n\n" . ($lockUrl === null ? 'Review the account under Manage Accounts in the admin portal.' : "Lock this account (valid 24 hours): {$lockUrl}");
+                . '<p style="color:#888;font-size:12px;">' . ($lockUrl === null ? 'Log in to the owner portal and open Manage Accounts to review this account.' : 'The link works for 24 hours and opens a confirmation page first. You can also lock the account from Notifications in the admin portal.') . '</p></div>';
+            $plain = "{$title}\n\n{$message}\n\n" . ($lockUrl === null ? 'Review the account under Manage Accounts in the owner portal.' : "Lock this account (valid 24 hours): {$lockUrl}");
 
             (new EmailNotifier())->toRoleHtml('Admin', $title, $html, $plain);
         } catch (\Throwable $e) {
