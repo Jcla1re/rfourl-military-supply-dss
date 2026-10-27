@@ -6,7 +6,29 @@
 // $this->request->isAJAX()), so there is exactly one place that knows
 // how to draw a row — no duplicated markup to keep in sync.
 ?>
-<div id="inventoryResults" class="inv-table-card">
+<?php
+$searchTerm   = (string) ($search ?? '');
+$archivedHits = (int) ($archivedMatchCount ?? 0);
+// Active list searched and found something: a slim summary bar on top of the table.
+$showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products);
+?>
+<div id="inventoryResults" class="inv-table-card<?= $showSearchBar ? ' has-search-bar' : '' ?>">
+    <?php if ($showSearchBar): ?>
+        <div class="inv-search-bar">
+            <div class="inv-search-bar-text">
+                <span class="inv-search-bar-icon" aria-hidden="true"><i class="bi bi-search"></i></span>
+                <span><strong><?= number_format((int) ($totalItems ?? 0)) ?></strong> <?= (int) ($totalItems ?? 0) === 1 ? 'item matches' : 'items match' ?> &ldquo;<?= esc($searchTerm) ?>&rdquo;</span>
+            </div>
+            <?php if ($archivedHits > 0): ?>
+                <a class="inv-archived-btn" href="<?= esc($archivedMatchesUrl, 'attr') ?>" aria-label="Also in Archived: <?= $archivedHits ?> <?= $archivedHits === 1 ? 'item' : 'items' ?>">
+                    <i class="bi bi-archive" aria-hidden="true"></i>
+                    <span>Also in Archived</span>
+                    <span class="inv-archived-count"><?= $archivedHits ?></span>
+                    <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                </a>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
     <div class="data-table-wrap">
         <table class="data-table inv-table">
             <colgroup>
@@ -101,16 +123,23 @@
                             </td>
                             <td><?= esc($group['category'] ?? '') ?></td>
                             <td class="inv-stock-cell col-num"><?= esc($default['current_stock'] ?? 0) ?></td>
-                            <td class="inv-rop-cell col-num"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
-                            <td class="inv-eoq-cell col-num"><?= $default['eoq_value'] !== null ? esc($default['eoq_value']) : '—' ?></td>
-                            <td class="inv-bar-cell">
-                                <div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% full"><span style="width: <?= $fill['pct'] ?>%"></span></div>
-                            </td>
+                            <?php if (! empty($showArchived)): ?>
+                                <?php // Archived: no reorder point, order quantity or stock bar to show (stored values unchanged). ?>
+                                <td class="inv-rop-cell col-num inv-na">&mdash;</td>
+                                <td class="inv-eoq-cell col-num inv-na">&mdash;</td>
+                                <td class="inv-bar-cell inv-na">&mdash;</td>
+                            <?php else: ?>
+                                <td class="inv-rop-cell col-num"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
+                                <td class="inv-eoq-cell col-num"><?= $default['eoq_value'] !== null ? esc($default['eoq_value']) : '—' ?></td>
+                                <td class="inv-bar-cell">
+                                    <div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% full"><span style="width: <?= $fill['pct'] ?>%"></span></div>
+                                </td>
+                            <?php endif; ?>
                             <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"<?= $pillTitle !== '' ? ' title="' . esc($pillTitle, 'attr') . '"' : '' ?>><?= esc($itemStatus) ?></span><?php if (! empty($group['on_order'])): ?> <span class="ordered-tag" title="On order: <?= esc($group['open_so']) ?>">Ordered</span><?php endif; ?></td>
                             <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
                             <td class="inv-actions-cell col-actions">
                                 <?php if (! empty($showArchived)): ?>
-                                <button type="button" class="btn-restore" data-item-id="<?= esc($default['item_id']) ?>" data-item-name="<?= esc($default['item_name'] ?? '') ?>">
+                                <button type="button" class="btn-restore" data-item-id="<?= esc($default['item_id']) ?>" data-item-name="<?= esc($default['item_name'] ?? '') ?>" data-stock="<?= (int) ($default['current_stock'] ?? 0) ?>" data-rop="<?= (int) ($default['manual_rop_warning'] ?? 0) ?>">
                                     <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Restore
                                 </button>
                                 <?php else: ?>
@@ -138,10 +167,34 @@
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <?php if (($search ?? '') !== ''): ?>
+                    <?php if ($searchTerm !== '' && empty($showArchived) && $archivedHits > 0): ?>
+                        <?php // No active match, but archived items match: point to the Archived tab (same search). ?>
+                        <tr>
+                            <td colspan="11" class="inv-empty-search inv-empty-owner">
+                                <div class="title">No active items match &ldquo;<?= esc($searchTerm) ?>&rdquo;</div>
+                                <p class="hint">It may be archived, or check the spelling.</p>
+                                <div class="inv-archived-box">
+                                    <span class="inv-archived-box-icon" aria-hidden="true"><i class="bi bi-archive"></i></span>
+                                    <div class="inv-archived-box-text">
+                                        <strong><?= $archivedHits ?> archived <?= $archivedHits === 1 ? 'item matches' : 'items match' ?></strong>
+                                        <span><?= esc($archivedFirst['item_id']) ?> &middot; <?= esc($archivedFirst['item_name']) ?><?= ! empty($archivedFirst['size']) ? ' (' . esc($archivedFirst['size']) . ')' : '' ?> &middot; archived <?= esc(date('M j, Y', strtotime($archivedFirst['updated_at']))) ?><?= $archivedHits > 1 ? ' and ' . ($archivedHits - 1) . ' more' : '' ?></span>
+                                    </div>
+                                    <a class="inv-archived-view" href="<?= esc($archivedMatchesUrl, 'attr') ?>">View in Archived <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php elseif ($searchTerm !== '' && empty($showArchived)): ?>
+                        <tr>
+                            <td colspan="11" class="inv-empty-search inv-empty-owner">
+                                <div class="title">No items match &ldquo;<?= esc($searchTerm) ?>&rdquo;</div>
+                                <p class="hint">Check the spelling or try a shorter word. Archived items were searched too.</p>
+                                <button type="button" class="btn-clear-search inv-clear-outline">Clear search</button>
+                            </td>
+                        </tr>
+                    <?php elseif ($searchTerm !== ''): ?>
                         <tr>
                             <td colspan="11" class="inv-empty-search">
-                                <div class="title">No items match &ldquo;<?= esc($search ?? '') ?>&rdquo;</div>
+                                <div class="title">No items match &ldquo;<?= esc($searchTerm) ?>&rdquo;</div>
                                 <p class="hint">Check the spelling or try a shorter word.</p>
                                 <button type="button" class="btn-clear-search">Clear search</button>
                             </td>

@@ -97,28 +97,46 @@ class InventoryController extends BaseController
         // one row per item, each size still its own real underlying product.
         // Filters narrow which *rows* are eligible before grouping, so an
         // item with only one matching size still shows (with just that size).
-        $filtered = $showArchived ? $archivedProducts : $allProducts;
-        if ($category && $category !== 'All') {
-            $filtered = array_values(array_filter($filtered, fn ($p) => $p['category'] === $category));
-        }
-        if ($search) {
-            $filtered = array_values(array_filter(
-                $filtered,
-                fn ($p) => ProductModel::matchesSearch($p, $search)
-            ));
-        }
-        if ($size) {
-            $filtered = array_values(array_filter($filtered, fn ($p) => ($p['size'] ?? '') === $size));
-        }
+        // Category / search / size narrow the rows before grouping; the status
+        // filter works on the item's worst status (same rule as the cards and
+        // the row badge), applied after grouping.
+        $filterRows = function (array $rows, bool $statusFilter) use ($category, $search, $size, $status): array {
+            if ($category && $category !== 'All') {
+                $rows = array_values(array_filter($rows, fn ($p) => $p['category'] === $category));
+            }
+            if ($search) {
+                $rows = array_values(array_filter($rows, fn ($p) => ProductModel::matchesSearch($p, $search)));
+            }
+            if ($size) {
+                $rows = array_values(array_filter($rows, fn ($p) => ($p['size'] ?? '') === $size));
+            }
+            usort($rows, fn ($a, $b) => [$a['item_name'], $a['size'] ?? ''] <=> [$b['item_name'], $b['size'] ?? '']);
+            $groups = $this->productModel->groupRows($rows);
+            if ($statusFilter && $status) {
+                $groups = array_values(array_filter($groups, fn ($g) => $g['status']['label'] === $status));
+            }
 
-        usort($filtered, fn ($a, $b) => [$a['item_name'], $a['size'] ?? ''] <=> [$b['item_name'], $b['size'] ?? '']);
+            return $groups;
+        };
 
-        $groups = $this->productModel->groupRows($filtered);
-        // Status filter works on the item's worst status (same rule as the
-        // cards and the row badge), applied after grouping.
-        if ($status && ! $showArchived) {
-            $groups = array_values(array_filter($groups, fn ($g) => $g['status']['label'] === $status));
+        $groups = $filterRows($showArchived ? $archivedProducts : $allProducts, ! $showArchived);
+
+        // Searching the active list also checks archived items (same rules and
+        // filters; status from their stock). They're only pointed to (empty
+        // state / "Also in Archived"), never added to the list, cards or counts.
+        $archivedMatches = [];
+        if ($search && ! $showArchived) {
+            $archivedWithStatus = array_map(fn ($p) => ['status' => $this->productModel->getStatus($p)] + $p, $archivedProducts);
+            $archivedMatches    = $filterRows($archivedWithStatus, true);
         }
+        $archivedFirst = $archivedMatches ? $archivedMatches[0]['variants'][(int) ($archivedMatches[0]['worst_index'] ?? 0)] : null;
+        // Opens the Archived tab with the same search (and category / size).
+        $archivedMatchesUrl = site_url('admin/inventory') . '?' . http_build_query(array_filter([
+            'status'   => 'archived',
+            'search'   => $search,
+            'category' => $category && $category !== 'All' ? $category : null,
+            'size'     => $size ?: null,
+        ]));
         $totalItems = count($groups);
         $totalPages = max(1, (int) ceil($totalItems / $perPage));
         $page       = min(max(1, $page), $totalPages);
@@ -154,6 +172,9 @@ class InventoryController extends BaseController
             'sizeSuggestions'     => $this->productModel->sizesByCategory($this->productModel->select('category, size')->where('size IS NOT NULL')->findAll()),
             'statuses'            => ProductModel::STATUSES,
             'showArchived'        => $showArchived,
+            'archivedMatchCount'  => count($archivedMatches),
+            'archivedFirst'       => $archivedFirst,
+            'archivedMatchesUrl'  => $archivedMatchesUrl,
             'archivedCount'       => $archivedCount,
             'success'             => session()->getFlashdata('success'),
             'error'               => session()->getFlashdata('error'),

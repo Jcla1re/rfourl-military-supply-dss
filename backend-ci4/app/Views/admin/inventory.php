@@ -75,6 +75,75 @@ $products ??= [];
     background: transparent;
     padding: 0;
 }
+/* Our own clear button instead of the browser's, which only shows on hover / focus. */
+.inv-search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+.inv-search-clear {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 26px; height: 26px; margin-right: -6px; padding: 0;
+    border: 0; border-radius: 50%; background: transparent; color: #5C6152; font-size: 13px; cursor: pointer;
+}
+.inv-search-clear[hidden] { display: none; }
+.inv-search-clear:hover { background: #F2F0EA; color: #1F2617; }
+.inv-search-clear:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 1px; }
+
+/* ===== Search results (owner): archived items are searched too ===== */
+/* Bar on top of the table while a search has active results. */
+.inv-search-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: 12px 16px; background: #F7F6F2; border-bottom: 1px solid #E8E5DC;
+    border-radius: var(--radius-control) var(--radius-control) 0 0;
+}
+.inv-search-bar-text { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 14px; color: #3A4030; }
+.inv-search-bar-text strong { font-weight: 600; color: #1F2617; }
+.inv-search-bar-text > span:last-child { overflow-wrap: anywhere; }
+.inv-search-bar-icon {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 30px; height: 30px; border-radius: 8px; background: #EAF1E3; color: #3B5434; font-size: 16px;
+}
+.inv-table-card.has-search-bar .inv-table thead th { border-radius: 0; }
+.inv-archived-btn {
+    display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+    height: 36px; padding: 0 14px; border: 1px solid #D6D2C6; border-radius: 9px; background: #fff;
+    color: #2C3A1E; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
+    transition: background-color .15s ease;
+}
+.inv-archived-btn:hover { background: #F2F0EA; color: #2C3A1E; }
+.inv-archived-btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.inv-archived-btn .bi-archive { font-size: 15px; color: #5C6152; }
+.inv-archived-btn .bi-arrow-right { font-size: 14px; }
+.inv-archived-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 20px; min-width: 20px; padding: 0 6px; border-radius: 999px;
+    background: #EFECE4; color: #3A4030; font-size: 11.5px; font-weight: 600;
+}
+/* Empty states (owner, active list). */
+.inv-empty-owner .title { font-size: 16px; font-weight: 600; color: #1F2617; }
+.inv-empty-owner .hint { margin: 4px 0 16px; font-size: 13.5px; color: #5C6152; }
+.inv-archived-box {
+    display: flex; align-items: center; gap: 14px;
+    max-width: 620px; margin: 0 auto; padding: 14px 16px;
+    background: #F5F8FD; border: 1px solid #D9E2F0; border-radius: 12px; text-align: left;
+}
+.inv-archived-box-icon {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 34px; height: 34px; border-radius: 9px; background: #E7EEF8; color: #2F4F86; font-size: 18px;
+}
+.inv-archived-box-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.inv-archived-box-text strong { font-size: 13.5px; font-weight: 600; color: #1F2617; }
+.inv-archived-box-text span { font-size: 13px; color: #5C6152; overflow-wrap: anywhere; }
+.inv-archived-view {
+    display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+    height: 36px; padding: 0 14px; border: 1px solid #C9D6EA; border-radius: 9px; background: #fff;
+    color: #2F4F86; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
+    transition: background-color .15s ease;
+}
+.inv-archived-view:hover { background: #EEF3FB; color: #2F4F86; }
+.inv-archived-view:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.btn-clear-search.inv-clear-outline {
+    height: 36px; padding: 0 14px; border: 1px solid #D6D2C6; border-radius: 9px; background: #fff;
+    color: #2C3A1E; font-size: 13px; font-weight: 600; transform: none;
+}
+.btn-clear-search.inv-clear-outline:hover { background: #F2F0EA; border-color: #D6D2C6; transform: none; }
 
 .inv-more-btn {
     display: inline-flex;
@@ -329,6 +398,8 @@ $products ??= [];
 .im-confirm-icon.is-success { background: #EAF3E6; color: #3B5434; }
 .im-confirm h2 { margin: 0 0 6px; font-size: 18px; font-weight: 600; color: #2C3A1E; word-break: break-word; }
 .im-confirm p { margin: 0 0 22px; font-size: 14px; color: #5C6152; line-height: 1.5; }
+/* Restore: the stock line reads as part of the same message (6px apart). */
+#restoreConfirmText:has(+ #restoreConfirmNote:not([hidden])) { margin-bottom: 6px; }
 .im-confirm .im-foot-actions { justify-content: flex-end; }
 
 @media (max-width: 600px) {
@@ -358,10 +429,15 @@ $products ??= [];
 .archived-banner span { display: inline-flex; align-items: center; gap: 8px; }
 .archived-back {
     display: inline-flex; align-items: center; gap: 6px;
-    color: #3B5434; font-weight: 600; text-decoration: none; white-space: nowrap;
+    height: 36px; padding: 0 14px; border: 1px solid #D6D2C6; border-radius: 9px; background: #fff;
+    color: #2C3A1E; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
+    transition: background-color .15s ease;
 }
-.archived-back:hover { color: #3B5434; text-decoration: underline; }
-.archived-back:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
+.archived-back .bi-arrow-left { font-size: 15px; }
+.archived-back:hover { background: #F2F0EA; color: #2C3A1E; }
+.archived-back:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+/* Archived rows: Reorder At, Order Qty and Stock Level don't apply. */
+.data-table tr.is-archived td.inv-na { color: #9A9C8F; }
 .archived-empty { padding: 40px 16px; text-align: center; }
 .archived-empty-icon {
     display: inline-flex; align-items: center; justify-content: center;
@@ -468,6 +544,8 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                     <i class="bi bi-search"></i>
                     <input id="searchInput" type="search" value="<?= esc($searchInput ?? $filterSearch) ?>" placeholder="Search by item name or ID…" maxlength="50"
                            aria-label="Search inventory by item name or ID"<?= $searchError ? ' aria-invalid="true" aria-describedby="searchError"' : '' ?>>
+                    <?php // Visible whenever the box has text, focused or not. ?>
+                    <button type="button" class="inv-search-clear" id="searchClear" aria-label="Clear search"<?= ($searchInput ?? $filterSearch ?? '') === '' ? ' hidden' : '' ?>><i class="bi bi-x-lg" aria-hidden="true"></i></button>
                 </div>
                 <p id="searchError" class="search-error" role="alert"<?= $searchError ? '' : ' hidden' ?>>
                     <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
@@ -686,10 +764,12 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
 </div>
 
 <div class="inv-modal" id="restoreConfirm">
-    <div class="inv-modal-card im-confirm" role="alertdialog" aria-modal="true" aria-labelledby="restoreConfirmTitle" aria-describedby="restoreConfirmText">
+    <div class="inv-modal-card im-confirm" role="alertdialog" aria-modal="true" aria-labelledby="restoreConfirmTitle" aria-describedby="restoreConfirmText restoreConfirmNote">
         <div class="im-confirm-icon is-success" aria-hidden="true"><i class="bi bi-arrow-counterclockwise"></i></div>
         <h2 id="restoreConfirmTitle">Restore item?</h2>
         <p id="restoreConfirmText">It will show again in inventory, POS and alerts.</p>
+        <?php // Nothing on hand: say which status it comes back with (same rule as ProductModel::getStatus). ?>
+        <p id="restoreConfirmNote" hidden></p>
         <form id="restoreForm" method="post" class="im-foot-actions">
             <?= csrf_field() ?>
             <input type="hidden" name="return_query" value="">
@@ -1046,6 +1126,13 @@ document.addEventListener('click', event => {
     if (!button) return;
     restoreOpener = button;
     document.getElementById('restoreConfirmTitle').textContent = `Restore ${button.dataset.itemName || 'this item'}?`;
+    const note = document.getElementById('restoreConfirmNote');
+    const emptyStock = Number(button.dataset.stock || 0) <= 0;
+    note.hidden = !emptyStock;
+    note.textContent = !emptyStock ? ''
+        : Number(button.dataset.rop || 0) > 0
+            ? 'It has 0 on hand, so it will show as Reorder Now in your Inventory.'
+            : 'It has 0 on hand, so it will show as Out of Stock.';
     document.getElementById('restoreForm').action =
         "<?= site_url('admin/inventory/restore') ?>/" + encodeURIComponent(button.dataset.itemId);
     syncReturnQuery();
@@ -1123,15 +1210,18 @@ function pillClassForStatus(label) {
 function applyVariantToRow(row, v) {
     row.querySelector('.inv-item-id').textContent = v.item_id;
     row.querySelector('.inv-stock-cell').textContent = v.current_stock;
-    row.querySelector('.inv-rop-cell').textContent = v.manual_rop_warning;
-    row.querySelector('.inv-eoq-cell').textContent = (v.eoq_value !== null && v.eoq_value !== undefined) ? v.eoq_value : '—';
     row.querySelector('.inv-updated-cell').textContent = v.updated_at_display || '—';
 
-    const fill = stockFill(v);
-    const bar = row.querySelector('.inv-bar-cell .stock-bar');
-    bar.className = 'stock-bar ' + fill.cls + (fill.empty ? ' is-empty' : '');
-    bar.title = fill.pct + '% of reorder point + order quantity';
-    bar.querySelector('span').style.width = fill.pct + '%';
+    // Archived rows keep "—" for Reorder At, Order Qty and Stock Level.
+    if (!row.classList.contains('is-archived')) {
+        row.querySelector('.inv-rop-cell').textContent = v.manual_rop_warning;
+        row.querySelector('.inv-eoq-cell').textContent = (v.eoq_value !== null && v.eoq_value !== undefined) ? v.eoq_value : '—';
+        const fill = stockFill(v);
+        const bar = row.querySelector('.inv-bar-cell .stock-bar');
+        bar.className = 'stock-bar ' + fill.cls + (fill.empty ? ' is-empty' : '');
+        bar.title = fill.pct + '% of reorder point + order quantity';
+        bar.querySelector('span').style.width = fill.pct + '%';
+    }
 
     // The status badge stays on the item's worst status (set by the server);
     // on hand, ROP and the stock bar follow the selected size.
@@ -1162,6 +1252,8 @@ function applyVariantToRow(row, v) {
     if (restoreBtn) {
         restoreBtn.dataset.itemId = v.item_id;
         restoreBtn.dataset.itemName = v.item_name;
+        restoreBtn.dataset.stock = v.current_stock;
+        restoreBtn.dataset.rop = v.manual_rop_warning;
     }
 }
 
@@ -1284,16 +1376,19 @@ function syncClearFilters() {
             });
     }
 
-    // "Clear search" button in the empty-results state (delegated, since
-    // the table is swapped in place).
+    // "Clear search" (empty-results state, delegated since the table is
+    // swapped in place) and the clear button in the search box.
+    const searchClear = document.getElementById('searchClear');
+    const syncSearchClear = () => { searchClear.hidden = searchInput.value === ''; };
     document.addEventListener('click', event => {
-        if (!event.target.closest('.btn-clear-search')) return;
+        if (!event.target.closest('.btn-clear-search, #searchClear')) return;
         searchInput.value = '';
         searchInput.dispatchEvent(new Event('input'));
         searchInput.focus();
     });
 
     searchInput.addEventListener('input', () => {
+        syncSearchClear();
         clearTimeout(debounceTimer);
         if (!SEARCH_PATTERN.test(searchInput.value.trim())) {
             // Invalid: show the message, don't search, leave table + URL alone.
