@@ -194,21 +194,17 @@ class InventoryController extends BaseController
 
     public function store()
     {
-        $rules = [
-            'item_name'     => ['rules' => 'required|max_length[60]', 'errors' => ['max_length' => 'Item name can be up to 60 characters.']],
-            'category'      => 'required',
-            'unit_cost'     => 'required|numeric|greater_than_equal_to[0]',
-            'selling_price' => 'required|numeric|greater_than_equal_to[0]',
-            'current_stock' => 'permit_empty|integer|greater_than_equal_to[0]',
-            'size'          => 'permit_empty|max_length[10]',
-        ];
+        return $this->answerModal($this->storeItem());
+    }
 
-        if (! $this->validate($rules)) {
+    private function storeItem()
+    {
+        if (! $this->validateItem()) {
             return redirect()->to($this->listUrl())->with('toast', Toast::error("Couldn't add item", implode(' ', $this->validator->getErrors())));
         }
 
         if ($this->isDuplicateItem((string) $this->request->getPost('item_name'), $this->postedSize(null), null)) {
-            return redirect()->to('/admin/inventory')->with('error', 'An item with this name and size already exists.');
+            return $this->duplicateName();
         }
 
         $newId = $this->productModel->generateNextId();
@@ -257,28 +253,87 @@ class InventoryController extends BaseController
         return $size === '' ? null : ($size === 'XXL' ? '2XL' : $size);
     }
 
-    /** True when another active item has the same name (case-insensitive) and size. */
+    /**
+     * Add / Edit item checks (same rules as the modal): a name of 2-60
+     * characters (counted after trimming), a category, and a unit cost and
+     * selling price above 0. Size, supplier, on hand and Reorder At stay optional.
+     */
+    private function validateItem(): bool
+    {
+        $data              = (array) $this->request->getPost();
+        $data['item_name'] = trim((string) ($data['item_name'] ?? ''));
+        $nameMsg           = 'Enter an item name (at least 2 characters).';
+
+        return $this->validateData($data, [
+            'item_name'     => ['rules' => 'required|min_length[2]|max_length[60]', 'errors' => ['required' => $nameMsg, 'min_length' => $nameMsg, 'max_length' => 'Item name can be up to 60 characters.']],
+            'category'      => ['rules' => 'required', 'errors' => ['required' => 'Choose a category.']],
+            'unit_cost'     => ['rules' => 'required|numeric|greater_than[0]', 'errors' => ['required' => 'Enter a unit cost.', 'numeric' => 'Enter a unit cost.', 'greater_than' => 'Enter a unit cost.']],
+            'selling_price' => ['rules' => 'required|numeric|greater_than[0]', 'errors' => ['required' => 'Enter a selling price.', 'numeric' => 'Enter a selling price.', 'greater_than' => 'Enter a selling price.']],
+            'current_stock' => 'permit_empty|integer|greater_than_equal_to[0]',
+            'size'          => 'permit_empty|max_length[10]',
+        ]);
+    }
+
+    /**
+     * True when another active item has the same name and size. Names are
+     * compared ignoring upper/lower case and extra spaces ("Patrol  shirt" =
+     * "patrol shirt"); the same name with a different size is allowed.
+     */
     private function isDuplicateItem(string $name, ?string $size, ?string $exceptItemId): bool
     {
-        $builder = $this->productModel
-            ->where('is_active', 1)
-            ->where('LOWER(item_name)', mb_strtolower(trim($name)));
+        $key = static fn (?string $v): string => mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', (string) $v)));
 
-        $size = trim((string) $size);
+        $builder = $this->productModel->select('item_id, item_name')->where('is_active', 1);
+        $size    = trim((string) $size);
         if ($size === '') {
             $builder->groupStart()->where('size', null)->orWhere('size', '')->groupEnd();
         } else {
             $builder->where('LOWER(size)', mb_strtolower($size));
         }
-
         if ($exceptItemId !== null) {
             $builder->where('item_id !=', $exceptItemId);
         }
 
-        return $builder->countAllResults() > 0;
+        $wanted = $key($name);
+        foreach ($builder->findAll() as $other) {
+            if ($key($other['item_name']) === $wanted) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Duplicate name + size: shown under Item name (modal stays open), or as before without JavaScript. */
+    private function duplicateName()
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setStatusCode(422)->setJSON(['errors' => ['item_name' => 'An item with this name and size already exists.']]);
+        }
+
+        return redirect()->to($this->listUrl())->with('error', 'An item with this name and size already exists.');
+    }
+
+    /**
+     * The Add / Edit item modal sends the form in the background. Anything that
+     * isn't a field error (saved, or another problem) becomes "go to this page";
+     * its toast is already stored for that page. A normal form post is unchanged.
+     */
+    private function answerModal($response)
+    {
+        if ($this->request->isAJAX() && $response instanceof \CodeIgniter\HTTP\RedirectResponse) {
+            return $this->response->setJSON(['redirect' => $response->getHeaderLine('Location')]);
+        }
+
+        return $response;
     }
 
     public function update($itemId)
+    {
+        return $this->answerModal($this->updateItem($itemId));
+    }
+
+    private function updateItem($itemId)
     {
         $product = $this->productModel->find($itemId);
 
@@ -286,21 +341,12 @@ class InventoryController extends BaseController
             return redirect()->to($this->listUrl())->with('toast', Toast::error("Couldn't save changes", 'This item no longer exists.'));
         }
 
-        $rules = [
-            'item_name'     => ['rules' => 'required|max_length[60]', 'errors' => ['max_length' => 'Item name can be up to 60 characters.']],
-            'category'      => 'required',
-            'unit_cost'     => 'required|numeric|greater_than_equal_to[0]',
-            'selling_price' => 'required|numeric|greater_than_equal_to[0]',
-            'current_stock' => 'permit_empty|integer|greater_than_equal_to[0]',
-            'size'          => 'permit_empty|max_length[10]',
-        ];
-
-        if (! $this->validate($rules)) {
+        if (! $this->validateItem()) {
             return redirect()->to($this->listUrl())->with('toast', Toast::error("Couldn't save changes", implode(' ', $this->validator->getErrors())));
         }
 
         if ($this->isDuplicateItem((string) $this->request->getPost('item_name'), $this->postedSize($product['size']), (string) $itemId)) {
-            return redirect()->to('/admin/inventory')->with('error', 'Another item with this name and size already exists.');
+            return $this->duplicateName();
         }
 
         $newStock = (int) ($this->request->getPost('current_stock') ?: 0);

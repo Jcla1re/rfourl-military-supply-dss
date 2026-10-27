@@ -340,6 +340,7 @@ $products ??= [];
     margin: 14px 0 0; font-size: 13px; color: #2C3A1E;
 }
 .im-margin.is-error { color: #B42318; }
+.im-margin.is-pending { color: #5C6152; } /* "Margin: —" until both prices are entered */
 
 .im-archive {
     display: flex; align-items: center; justify-content: space-between; gap: 16px;
@@ -364,6 +365,21 @@ $products ??= [];
     padding: 16px 28px; border-top: 1px solid #E8E5DC; background: #fff; flex-shrink: 0;
 }
 .im-changes { font-size: 13px; color: #5C6152; }
+.im-field label .im-optional { font-weight: 400; color: #5C6152; }
+.im-changes.is-error { color: #A1261B; } /* "Fix 1 error to add": same red as the field error */
+/* Add item / Save changes while disabled: one look in every state (it can't be clicked). */
+#submitItemBtn:disabled,
+#submitItemBtn:disabled:hover,
+#submitItemBtn:disabled:active,
+#submitItemBtn:disabled:focus,
+#submitItemBtn:disabled:focus-visible {
+    background-color: var(--btn-disabled-bg);
+    border-color: var(--btn-disabled-bg);
+    color: var(--btn-disabled-text);
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+}
 .im-foot-actions { display: flex; gap: 10px; }
 .im-btn-secondary,
 .im-btn-danger,
@@ -485,14 +501,22 @@ a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
 
 /* Summary cards are toggles; "Clear filters" sits after the filters. */
 a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColor, 0 3px 8px rgba(31, 38, 23, .08); }
+/* "Clear all [n]": outlined button as tall as the dropdowns beside it. */
 .clear-filters {
-    align-self: center; display: inline-flex; align-items: center; gap: 6px;
-    padding: 4px 2px; font-size: 14px; color: #3B5434; font-weight: 500;
+    align-self: stretch; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+    padding: 0 16px; border: 1px solid #D6D2C6; border-radius: 10px; background: #fff;
+    color: #1C1C1C; font-size: 16px; font-weight: 400; line-height: 1; /* same text as the dropdowns beside it */
     text-decoration: none; white-space: nowrap;
+    transition: background-color .15s ease, border-color .15s ease;
 }
 .clear-filters[hidden] { display: none; }
-.clear-filters:hover { text-decoration: underline; color: #2C3A1E; }
-.clear-filters:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
+.clear-filters:hover { background: #F2F0EA; border-color: #B9B4A6; color: #1C1C1C; text-decoration: none; }
+.clear-filters:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.clear-filters-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+    background: #EFECE4; color: #3A4030; font-size: 12px; font-weight: 600;
+}
 
 /* Size filter: disabled ("No sizes") for categories without sized items. */
 .size-filter-wrap { display: inline-flex; }
@@ -590,13 +614,18 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
             </select>
 
             <?php
-            // "Clear filters": only when any filter is on (status/card, category, size, search).
-            $hasFilters = ($status ?? '') !== '' || (($category ?? 'All') !== 'All' && ($category ?? '') !== '')
-                || ($size ?? '') !== '' || ($search ?? '') !== '' || ($searchInput ?? '') !== '';
-            $keepPer    = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' => $_GET['per_page']]) : '';
+            // "Clear all": only when any filter is on. Each filter counts once: the category tab
+            // and dropdown are one filter, a stat card and the Status dropdown are one, and
+            // Archived is a Status value too.
+            $activeFilters = (int) (($search ?? '') !== '' || ($searchInput ?? '') !== '')
+                + (int) (($category ?? 'All') !== 'All' && ($category ?? '') !== '')
+                + (int) (($size ?? '') !== '')
+                + (int) (($status ?? '') !== '');
+            $keepPer = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' => $_GET['per_page']]) : '';
             ?>
-            <a href="<?= site_url('admin/inventory') . $keepPer ?>" class="clear-filters" id="clearFilters"<?= $hasFilters ? '' : ' hidden' ?>>
-                <i class="bi bi-x-circle" aria-hidden="true"></i> Clear filters
+            <a href="<?= site_url('admin/inventory') . $keepPer ?>" class="clear-filters" id="clearFilters"
+               aria-label="Clear all filters (<?= $activeFilters ?> active)"<?= $activeFilters ? '' : ' hidden' ?>>
+                Clear all <span class="clear-filters-count" id="clearFiltersCount" aria-hidden="true"><?= $activeFilters ?></span>
             </a>
         </div>
 
@@ -729,15 +758,17 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                             <label for="unit_cost">Unit cost</label>
                             <div class="im-prefix">
                                 <span aria-hidden="true">₱</span>
-                                <input id="unit_cost" name="unit_cost" type="number" step="0.01" min="0" value="0" required>
+                                <input id="unit_cost" name="unit_cost" type="number" step="0.01" min="0" placeholder="0.00" required aria-describedby="costError">
                             </div>
+                            <small class="im-field-error" id="costError" role="alert"></small>
                         </div>
                         <div class="im-field">
                             <label for="selling_price">Selling price</label>
                             <div class="im-prefix">
                                 <span aria-hidden="true">₱</span>
-                                <input id="selling_price" name="selling_price" type="number" step="0.01" min="0" value="0" required>
+                                <input id="selling_price" name="selling_price" type="number" step="0.01" min="0" placeholder="0.00" required aria-describedby="priceError">
                             </div>
+                            <small class="im-field-error" id="priceError" role="alert"></small>
                         </div>
                     </div>
                     <p class="im-margin" id="marginLine" aria-live="polite"></p>
@@ -904,10 +935,10 @@ const storeUrl = "<?= site_url('admin/inventory/store') ?>";
 // then keeps the item's current size.
 const SIZE_SUGGESTIONS = <?= json_encode($sizeSuggestions ?? new stdClass()) ?>;
 const SIZE_FIELD_BY_CATEGORY = {
-    Clothes:     { label: 'Size',            placeholder: 'e.g. M' },
-    Shoes:       { label: 'Size (US)',       placeholder: 'e.g. 9' },
-    Equipment:   { label: 'Size (optional)', placeholder: 'e.g. 32' },
-    Accessories: { label: 'Size (optional)', placeholder: 'e.g. 32' },
+    Clothes:     { label: 'Size', hint: '(optional)',     placeholder: 'e.g. M' },
+    Shoes:       { label: 'Size', hint: '(US, optional)', placeholder: 'e.g. 9' },
+    Equipment:   { label: 'Size', hint: '(optional)',     placeholder: 'e.g. 32' },
+    Accessories: { label: 'Size', hint: '(optional)',     placeholder: 'e.g. 32' },
 };
 
 function updateSizeFieldVisibility() {
@@ -923,7 +954,16 @@ function updateSizeFieldVisibility() {
     const current = document.getElementById('sizeText').value.trim().toUpperCase();
     warn.textContent = field || originalStock === null || current === '' ? '' : `Saving removes size ${current}.`;
     if (!field) return;
-    document.getElementById('sizeTextLabel').textContent = field.label;
+    // Size is never required (server: permit_empty). "(optional)" / "(US, optional)"
+    // is helper text next to the label, not part of it.
+    const sizeLabel = document.getElementById('sizeTextLabel');
+    sizeLabel.textContent = field.label;
+    if (field.hint) {
+        const hint = document.createElement('span');
+        hint.className = 'im-optional';
+        hint.textContent = ' ' + field.hint;
+        sizeLabel.append(hint);
+    }
     document.getElementById('sizeText').placeholder = field.placeholder;
     const list = document.getElementById('sizeSuggestions');
     list.replaceChildren(...(SIZE_SUGGESTIONS[category] || []).map(s => new Option(s)));
@@ -990,11 +1030,39 @@ function refreshItemModal() {
     nameCount.textContent = `${nameLen} / 60`;
     nameCount.classList.toggle('is-near', nameLen >= 50 && !nameOver);
     nameCount.classList.toggle('is-over', nameOver);
-    nameInput.classList.toggle('is-invalid', nameOver);
-    nameInput.setAttribute('aria-invalid', nameOver ? 'true' : 'false');
-    const nameError = document.getElementById('nameError');
-    const nameMsg = nameOver ? 'Item name can be up to 60 characters.' : '';
-    if (nameError.textContent !== nameMsg) nameError.textContent = nameMsg;
+
+    // Required fields. Empty / too-short messages show only after the user has
+    // left the field (touchedFields) and go away as soon as the value is valid;
+    // "over 60 characters" shows right away. Nothing is red when the modal opens.
+    const trimmedName = [...nameInput.value.trim()].length;
+    const costVal = costInput.value.trim(), priceVal = priceInput.value.trim();
+    const checks = [
+        { input: nameInput, error: 'nameError', missing: trimmedName === 0,
+          msg: nameOver ? 'Item name can be up to 60 characters.' : trimmedName < 2 ? 'Enter an item name (at least 2 characters).'
+             : serverNameError && serverNameError.key === duplicateKey() ? serverNameError.msg : '' },
+        { input: costInput, error: 'costError', missing: costVal === '',
+          msg: costVal === '' || !(Number(costVal) > 0) ? 'Enter a unit cost.' : '' },
+        { input: priceInput, error: 'priceError', missing: priceVal === '',
+          msg: priceVal === '' || !(Number(priceVal) > 0) ? 'Enter a selling price.' : '' },
+        { input: document.getElementById('category'), error: null, missing: document.getElementById('category').value === '', msg: '' },
+    ];
+    for (const c of checks) {
+        if (!c.error) continue;
+        // Valid again: forget the blur, so a new problem waits for the next one.
+        if (c.msg === '') touchedFields.delete(c.input.id);
+        const show = c.msg !== '' && (touchedFields.has(c.input.id) || (c.input === nameInput && (nameOver || c.msg === serverNameError?.msg)));
+        c.shown = show;
+        c.input.classList.toggle('is-invalid', show);
+        c.input.setAttribute('aria-invalid', show ? 'true' : 'false');
+        const el = document.getElementById(c.error);
+        const text = show ? c.msg : '';
+        if (el.textContent !== text) el.textContent = text;
+    }
+    // Footer follows the fields: a problem counts as an error only while its red
+    // message shows; until then it's a required field not filled in yet.
+    const problemCount = checks.filter(c => c.missing || c.msg).length;
+    const errorCount = checks.filter(c => c.shown).length;
+    const missingCount = problemCount - errorCount;
 
     const stock = Number(stockInput.value || 0);
     const rop = Number(ropInput.value || 0);
@@ -1021,7 +1089,11 @@ function refreshItemModal() {
     const cost = Number(costInput.value || 0);
     const price = Number(priceInput.value || 0);
     const marginLine = document.getElementById('marginLine');
-    if (price < cost) {
+    if (costInput.value.trim() === '' || priceInput.value.trim() === '') {
+        // Both prices needed first: no margin and no "lower than unit cost" warning yet.
+        marginLine.className = 'im-margin is-pending';
+        marginLine.innerHTML = '<i class="bi bi-graph-up-arrow" aria-hidden="true"></i> Margin: —';
+    } else if (price < cost) {
         marginLine.className = 'im-margin is-error';
         marginLine.innerHTML = '<i class="bi bi-exclamation-circle" aria-hidden="true"></i> Selling price is lower than unit cost.';
     } else {
@@ -1035,16 +1107,114 @@ function refreshItemModal() {
     // Save stays disabled until a field actually changes.
     const now = formValues();
     const changed = Object.keys(now).filter(k => now[k] !== modalSnapshot[k]).length;
-    submitItemBtn.disabled = changed === 0 || nameOver; // over 60: can't save until it's shortened
-    document.getElementById('changeSummary').textContent =
-        changed === 0 ? 'No changes yet.' : `${changed} ${changed === 1 ? 'change' : 'changes'}`;
+    // Save only with a change, every required field filled in and no invalid value.
+    submitItemBtn.disabled = savingItem || changed === 0 || missingCount > 0 || errorCount > 0;
+    // Footer: invalid values (red) first, then empty required fields (gray), else the change count.
+    const summary = document.getElementById('changeSummary');
+    summary.classList.toggle('is-error', errorCount > 0);
+    summary.textContent = errorCount > 0
+        ? `Fix ${errorCount} ${errorCount === 1 ? 'error' : 'errors'} to ${originalStock === null ? 'add' : 'save'}`
+        : missingCount > 0
+            ? `Fill in ${missingCount} required ${missingCount === 1 ? 'field' : 'fields'}`
+            : changed === 0 ? 'No changes yet.' : `${changed} ${changed === 1 ? 'change' : 'changes'}`;
 }
 
+// A required field is "touched" when the user leaves it. Not when the modal
+// leaves it: the automatic focus on Item name only counts once the user has
+// typed there, and closing the modal (×, Cancel, Esc) never counts.
+// Everything resets each time the modal opens.
+const touchedFields = new Set();
+const editedFields = new Set();
+const REQUIRED_FIELDS = ['item_name', 'unit_cost', 'selling_price'];
+let autoFocusedField = null;
+itemForm.addEventListener('input', event => {
+    if (REQUIRED_FIELDS.includes(event.target.id)) editedFields.add(event.target.id);
+}, true);
+itemForm.addEventListener('focusout', event => {
+    const id = event.target.id;
+    if (!REQUIRED_FIELDS.includes(id) || !itemModal.classList.contains('show')) return;
+    if (event.relatedTarget && event.relatedTarget.closest('#closeItemModal, #cancelItemModal')) return;
+    if (id === autoFocusedField) {
+        autoFocusedField = null;
+        if (!editedFields.has(id)) return;
+    }
+    touchedFields.add(id);
+    refreshItemModal();
+});
 itemForm.addEventListener('input', refreshItemModal);
 itemForm.addEventListener('change', refreshItemModal);
 
+// Duplicate name + size (checked by the server when saving): the form is sent in
+// the background so the modal stays open with the user's input and the message
+// shows under Item name. It stays until the name or size changes. Anything else
+// goes on as a normal save (the server says which page to open, toast included).
+let serverNameError = null;
+const duplicateKey = () => {
+    const sizeInput = document.getElementById('sizeText');
+    return document.getElementById('item_name').value.trim().replace(/\s+/g, ' ').toLowerCase()
+        + '|' + (sizeInput.disabled ? '' : sizeInput.value.trim().toUpperCase());
+};
+// While a save is on its way, Save stays disabled and says "Adding…" / "Saving…",
+// so a double click can't send the same item twice.
+let savingItem = false;
+itemForm.addEventListener('submit', event => {
+    if (!window.fetch) return; // plain form post
+    event.preventDefault();
+    if (savingItem || submitItemBtn.disabled) return;
+    savingItem = true;
+    const idleLabel = submitItemBtn.textContent;
+    submitItemBtn.disabled = true;
+    submitItemBtn.textContent = originalStock === null ? 'Adding…' : 'Saving…';
+    const settle = () => {
+        savingItem = false;
+        submitItemBtn.textContent = idleLabel;
+        refreshItemModal();
+    };
+    const failed = () => {
+        showToast({ type: 'error', title: "Couldn't save", message: 'Something went wrong. Please try again.' });
+        settle();
+    };
+    fetch(itemForm.action, {
+        method: 'POST',
+        body: new FormData(itemForm),
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+        credentials: 'same-origin',
+        redirect: 'manual', // a redirect here means the sign-in page: the session has ended
+    })
+        .then(response => {
+            if (response.type === 'opaqueredirect') {
+                // Signed out (session timed out): say so, keep the modal and the input.
+                showToast({ type: 'error', title: 'Your session has expired. Please sign in again.' });
+                settle();
+                return;
+            }
+            return response.json().then(
+                data => ({ status: response.status, data }),
+                () => ({ status: response.status, data: null })
+            ).then(({ status, data }) => {
+                if (status === 422 && data && data.errors && data.errors.item_name) {
+                    settle();
+                    serverNameError = { msg: data.errors.item_name, key: duplicateKey() };
+                    refreshItemModal();
+                    document.getElementById('item_name').focus();
+                    return;
+                }
+                if (data && data.redirect) {
+                    window.location.href = data.redirect; // Save stays "Adding…" until the page changes
+                    return;
+                }
+                failed();
+            });
+        })
+        .catch(failed);
+});
+
 function openItemModal(opener) {
     modalOpener = opener || null;
+    touchedFields.clear();
+    editedFields.clear();
+    serverNameError = null;
+    autoFocusedField = 'item_name';
     modalSnapshot = formValues();
     refreshItemModal();
     itemModal.classList.add('show');
@@ -1312,15 +1482,18 @@ const SIZES_BY_CATEGORY = <?= json_encode($sizesByCategory ?? new stdClass()) ?>
     });
 });
 
-// "Clear filters" link: shown only while a filter is on. Live search
-// changes the URL without a reload, so re-check after each search.
+// "Clear all [n]": shown only while a filter is on, with how many (each counted
+// once: search, category, size, status / archived). Live search changes the URL
+// without a reload, so re-check after each search.
 function syncClearFilters() {
     const link = document.getElementById('clearFilters');
     if (!link) return;
     const q = new URL(window.location.href).searchParams;
-    const on = ['status', 'size', 'search'].some(k => (q.get(k) || '') !== '')
-        || ((q.get('category') || 'All') !== 'All');
-    link.hidden = !on;
+    const count = ['status', 'size', 'search'].filter(k => (q.get(k) || '') !== '').length
+        + ((q.get('category') || 'All') !== 'All' ? 1 : 0);
+    link.hidden = count === 0;
+    document.getElementById('clearFiltersCount').textContent = count;
+    link.setAttribute('aria-label', `Clear all filters (${count} active)`);
 }
 
 // Live search: fetches the real server-side search result in the
