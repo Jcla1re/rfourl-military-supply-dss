@@ -49,7 +49,7 @@
 a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-1px); cursor: pointer; }
 .dash-stat .icon { font-size: 28px; flex-shrink: 0; }
 .dash-stat .label { color: #444; font-size: 15px; }
-.dash-stat .value { font-size: 30px; font-weight: 800; line-height: 1.15; }
+.dash-stat .value { font-size: 30px; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; }
 .dash-stat .trend { margin-left: auto; text-align: right; font-size: 12px; color: #666; }
 .dash-stat .trend .pct { color: #2f6431; font-weight: 700; }
 .dash-stat .trend .pct.down { color: var(--accent-maroon); }
@@ -111,7 +111,8 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
                 <span class="icon"><i class="bi bi-box-seam"></i></span>
                 <div>
                     <div class="label">Total Stock on hand</div>
-                    <div class="value"><?= number_format($totalStock ?? 0) ?></div>
+                    <div class="value" data-count="<?= (int) round((float) ($totalStock ?? 0)) ?>" aria-hidden="true"><?= number_format($totalStock ?? 0) ?></div>
+                    <span class="visually-hidden"><?= number_format($totalStock ?? 0) ?></span>
                 </div>
                 <div class="trend">
                     <span class="pct">▲ <?= esc($stockTrendPct ?? '0%') ?></span><br>this week
@@ -123,7 +124,8 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
                 <span class="icon"><i class="bi bi-cash-coin"></i></span>
                 <div>
                     <div class="label">Sales Today</div>
-                    <div class="value">₱<?= number_format($salesToday ?? 0, 0) ?></div>
+                    <div class="value" data-count="<?= (int) round((float) ($salesToday ?? 0)) ?>" data-prefix="₱" aria-hidden="true">₱<?= number_format($salesToday ?? 0, 0) ?></div>
+                    <span class="visually-hidden">₱<?= number_format($salesToday ?? 0, 0) ?></span>
                 </div>
                 <div class="trend">
                     <span class="pct <?= $salesTrendUp ? '' : 'down' ?>"><?= $salesTrendUp ? '▲' : '▼' ?> <?= esc($salesTrendAbs) ?></span><br>vs yesterday
@@ -135,7 +137,8 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
                 <span class="icon"><i class="bi bi-calendar2-minus"></i></span>
                 <div>
                     <div class="label">Sales Yesterday</div>
-                    <div class="value">₱<?= number_format($salesYesterday ?? 0, 0) ?></div>
+                    <div class="value" data-count="<?= (int) round((float) ($salesYesterday ?? 0)) ?>" data-prefix="₱" aria-hidden="true">₱<?= number_format($salesYesterday ?? 0, 0) ?></div>
+                    <span class="visually-hidden">₱<?= number_format($salesYesterday ?? 0, 0) ?></span>
                 </div>
             </a>
         </div>
@@ -182,6 +185,7 @@ a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY
     </div>
 </div>
 
+<script src="/assets/js/count-up.js"></script>
 <script src="/assets/js/chart-reveal.js"></script>
 <script>
 // Opening animations play once, on page load only. Chart.js can redraw a
@@ -284,6 +288,8 @@ animateFirstLoadOnly(new Chart(document.getElementById('seasonChart'), {
     list.getBoundingClientRect(); // apply the 0-width start state first
     requestAnimationFrame(() => list.classList.remove('is-animating'));
 })();
+
+initCountUp('.dash-stat .value');
 </script>
 
 <?= $this->endSection() ?>
