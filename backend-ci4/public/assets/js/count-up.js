@@ -18,7 +18,7 @@ function initCountUp(selector) {
     const format = value => value.toLocaleString('en-PH', { maximumFractionDigits: 0 });
 
     function frame(now) {
-        const progress = Math.min(1, (now - startTime) / duration);
+        const progress = Math.min(1, Math.max(0, (now - startTime) / duration));
         const easedProgress = ease(progress);
 
         elements.forEach(({ element, target, prefix, originalText }) => {
