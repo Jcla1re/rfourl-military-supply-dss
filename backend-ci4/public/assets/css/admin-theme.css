@@ -94,6 +94,17 @@ html:root select:not(.inv-size-select):not(:disabled):focus:hover {
     border-color: #4A6741;
     box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
 }
+/* A field showing an error stays red while focused (red ring instead of green), however it got focus.
+   The search boxes show it on the box, like their green ring. */
+:root :is(input, select, textarea):is(.is-invalid, [aria-invalid="true"]):focus:not(#focus-boost):not(#focus-boost-2):not(:is(.inv-search, .ord-search) *) {
+    outline: none;
+    border-color: #A1261B;
+    box-shadow: 0 0 0 3px rgba(161, 38, 27, .15);
+}
+:is(.inv-search, .ord-search).is-invalid:has(input:focus) {
+    border-color: #A1261B;
+    box-shadow: 0 0 0 3px rgba(161, 38, 27, .15);
+}
 /* Size picker in table rows (its select is invisible): the picker shows the ring. */
 .size-picker:has(select:focus-visible) {
     outline: none;

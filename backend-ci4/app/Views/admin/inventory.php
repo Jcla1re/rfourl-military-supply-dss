@@ -277,11 +277,16 @@ $products ??= [];
     background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%235C6152' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 14px center;
     text-overflow: ellipsis;
 }
-.im-field input:focus,
 .im-field select:focus {
     outline: none;
     border-color: #71AA60;
     box-shadow: 0 0 0 3px rgba(113, 170, 96, .25);
+}
+/* Text inputs: the same green as keyboard focus, also for the automatic focus on Item name. */
+.im-field input:focus {
+    outline: none;
+    border-color: #4A6741;
+    box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
 }
 .im-help { font-size: 12px; color: #5C6152; line-height: 1.45; }
 /* Item name counter ("34 / 60"); red only if an older, longer name is over the limit. */
@@ -294,8 +299,9 @@ $products ??= [];
 .im-size-warn { display: block; min-height: 17px; margin-top: 6px; font-size: 12px; line-height: 17px; color: #8A5A00; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .im-static[hidden] { display: none; }
 /* Reorder At calculated by the DSS: read-only value + "Auto" tag. */
-.im-static.im-auto { justify-content: space-between; gap: 8px; border-style: dashed; border-color: #CFCABD; color: #2C3A1E; cursor: default; }
-.im-auto-tag { padding: 2px 8px; border-radius: var(--radius-pill); background: #E6E9DD; color: #4A5A35; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+.im-static.im-auto { justify-content: space-between; gap: 8px; border-style: dashed; border-color: #CFCABD; color: #1F2617; font-weight: 500; cursor: default; }
+.im-auto-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--radius-pill); background: #EAF1E3; color: #2F5A27; font-size: 12px; font-weight: 600; letter-spacing: .02em; }
+.im-auto-tag svg { flex: none; width: 12px; height: 12px; }
 .im-count { font-size: 12px; line-height: 1; color: #5C6152; font-variant-numeric: tabular-nums; }
 .im-count.is-near { color: #8A6A00; }
 .im-count.is-over { color: #A1261B; }
@@ -303,7 +309,7 @@ $products ??= [];
    always reserved under the field, so the Size | Supplier row never moves when it appears. */
 .im-field input.is-invalid,
 .im-field input.is-invalid:focus { border-color: #A1261B; }
-.im-field input.is-invalid:focus { box-shadow: 0 0 0 3px rgba(161, 38, 27, .18); }
+.im-field input.is-invalid:focus { box-shadow: 0 0 0 3px rgba(161, 38, 27, .15); }
 .im-field-error {
     display: block; min-height: 15px; margin-top: -3px;
     font-size: 12px; line-height: 15px; color: #A1261B;
@@ -733,7 +739,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                             <?php // No calculated ROP yet: an editable starting value. Calculated by the DSS: read-only, not sent. ?>
                             <input id="manual_rop_warning" name="manual_rop_warning" type="number" min="0" step="1" value="0" aria-describedby="ropHelp">
                             <div class="im-static im-auto" id="ropAuto" aria-labelledby="ropLabel" aria-describedby="ropHelp" hidden>
-                                <span id="ropAutoValue">—</span> <span class="im-auto-tag">Auto</span>
+                                <span id="ropAutoValue">—</span> <span class="im-auto-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>Auto</span>
                             </div>
                             <small class="im-help" id="ropHelp">Starting value. The system replaces it once the item has sales.</small>
                         </div>
@@ -992,7 +998,7 @@ function setRopMode(value, calculatedAt) {
     document.getElementById('ropAuto').hidden = !calculatedAt;
     document.getElementById('ropAutoValue').textContent = calculatedAt ? value : '—';
     document.getElementById('ropHelp').textContent = calculatedAt
-        ? `Updated automatically from sales. Last calculated ${calculatedAt}.`
+        ? `Calculated from sales every week. Last updated ${calculatedAt}.`
         : 'Starting value. The system replaces it once the item has sales.';
 }
 const costInput = document.getElementById('unit_cost');
