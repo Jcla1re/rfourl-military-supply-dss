@@ -45,6 +45,118 @@
     --radius-pill: 999px;
 }
 
+/* ===== Dropdowns (every <select> in the app: filters, rows per page, forms, modals) =====
+   One shared look; sizes, fonts and the arrow stay with each page. ":root" + "html" make
+   these rules win over older page-level select rules without !important. Disabled
+   dropdowns keep their gray look; the invisible size pickers in table rows are left out. */
+html:root select:not(.inv-size-select) {
+    border: 1px solid #D6D2C6;
+    border-radius: 10px;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+html:root select:not(.inv-size-select):not(:disabled) { background-color: #fff; }
+html:root select:not(.inv-size-select):not(:disabled):hover { border-color: #B9B4A6; }
+/* Focus wins over hover, so an open dropdown keeps its green border while the pointer is on it. */
+html:root select:not(.inv-size-select):focus,
+html:root select:not(.inv-size-select):focus-visible,
+html:root select:not(.inv-size-select):not(:disabled):focus:hover {
+    outline: none;
+    border-color: #4A6741;
+    box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
+}
+
+/* ===== Keyboard focus: one style everywhere (only :focus-visible, so not on mouse clicks) =====
+   No dark outline anywhere: a soft green ring instead (white gap + stronger ring on solid
+   green buttons, a light ring on the dark green sidebar and header). ":not(#focus-boost)"
+   only raises the priority (no element has that id), so these win over older page-level
+   focus outlines without !important. */
+:root :focus-visible:not(#focus-boost) {
+    outline: none;
+    border-color: #4A6741;
+    box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
+}
+/* Solid green buttons (+ Add Item, Order, Add item, Notify, the current page number). */
+:root :is(.btn-success, .btn-primary, .inv-action-btn, .notify-btn:not(.notify-done), .qa-btn.primary, .lt-submit, .admin-pagination a.active):focus-visible:not(#focus-boost) {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 5px rgba(74, 103, 65, .35);
+}
+/* Dark green areas: sidebar and page header (e.g. Trend Analysis year picker, header buttons).
+   Wins over the green-button style too (a green button in the header gets this ring). */
+:root :is(.sidebar, .topbar) :focus-visible:not(#focus-boost):not(#focus-boost-2) {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, .5);
+}
+/* An active stat card keeps its inner border next to the ring. */
+:root a.stat-pill.is-active:focus-visible:not(#focus-boost) {
+    box-shadow: inset 0 0 0 2px currentColor, 0 0 0 3px rgba(74, 103, 65, .18);
+}
+/* Search boxes whose input has no border of its own: the box shows the ring. */
+:root :is(.inv-search, .ord-search) input:focus-visible:not(#focus-boost) { box-shadow: none; }
+:is(.inv-search, .ord-search):has(input:focus-visible) {
+    border-color: #4A6741;
+    box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
+}
+/* Size picker in table rows (its select is invisible): the picker shows the ring. */
+.size-picker:has(select:focus-visible) {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
+}
+
+/* ===== Custom dropdown menu (assets/js/custom-select.js) =====
+   The real <select> stays in place (it's what's focused, submitted and validated);
+   its list is this menu instead of the browser's. One arrow for every dropdown,
+   pointing up while the menu is open. */
+select.cs-native {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%235C6152' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") !important;
+    background-repeat: no-repeat !important;
+    background-size: 12px 8px !important;
+    cursor: pointer;
+}
+select.cs-native.cs-open {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 7l5-5 5 5' stroke='%235C6152' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") !important;
+}
+select.cs-native:disabled { cursor: not-allowed; }
+/* Selects that used the browser's own arrow: room for ours. */
+select.cs-native.cs-plain {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    padding-right: 36px;
+    background-position: right 14px center;
+}
+/* Size picker in table rows: its own chevron turns while the menu is open. */
+.size-picker .bi-chevron-down { transition: transform .15s ease; }
+.size-picker.cs-open .bi-chevron-down { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .size-picker .bi-chevron-down { transition: none; } }
+
+.cs-menu {
+    position: fixed; z-index: 3100;
+    margin: 0; padding: 6px; list-style: none;
+    max-width: min(420px, calc(100vw - 16px)); overflow-y: auto; overscroll-behavior: contain;
+    background: #fff; border: 1px solid #E8E5DC; border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(31, 38, 23, .14);
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+}
+.cs-option {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    min-height: 40px; padding: 0 12px; border-radius: 8px;
+    font-size: 15px; line-height: 1.3; color: #1F2617; cursor: pointer; user-select: none;
+}
+.cs-option .cs-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cs-option.is-active { background: #F2F0EA; }
+.cs-option.is-selected { background: #EAF1E3; color: #2F5A27; font-weight: 500; }
+.cs-option .cs-check { flex-shrink: 0; font-size: 16px; color: #2F5A27; }
+.cs-option.is-disabled { color: #A3A596; cursor: not-allowed; }
+.cs-option.is-disabled.is-active { background: transparent; }
+.cs-group {
+    padding: 8px 12px 4px; font-size: 11.5px; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; color: #8A8D7E; cursor: default;
+}
+.cs-group:not(:first-child) { margin-top: 4px; border-top: 1px solid #F0EEE8; padding-top: 10px; }
+/* Inventory filters (Owner and Staff): a thin line after the first "All …" option
+   (4px space, 1px line, 4px space). The Size menu's first group heading then needs no line of its own. */
+:is(#cs-menu-categoryFilter, #cs-menu-sizeFilter, #cs-menu-statusFilter) > .cs-option:first-child { position: relative; margin-bottom: 9px; }
+:is(#cs-menu-categoryFilter, #cs-menu-sizeFilter, #cs-menu-statusFilter) > .cs-option:first-child::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -5px; height: 1px; background: #EFECE4; pointer-events: none;
+}
+#cs-menu-sizeFilter > .cs-option:first-child + .cs-group { margin-top: 0; border-top: 0; padding-top: 4px; }
+
 /* Bootstrap components follow the same radius scale. */
 .btn,
 .form-control,
@@ -930,7 +1042,6 @@ body {
 .size-picker-label { overflow: hidden; text-overflow: ellipsis; }
 .size-picker .bi { font-size: 10px; color: #5C6152; flex-shrink: 0; }
 .size-picker select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 14px; }
-.size-picker:focus-within { outline: 3px solid var(--focus-ring); outline-offset: 1px; }
 .ordered-tag {
     display: inline-block; margin-left: 4px; padding: 2px 8px; vertical-align: middle;
     border-radius: var(--radius-pill); background: #E8EEF6; color: #2B4C7E;

@@ -190,6 +190,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
     <script src="/assets/js/toast-timer.js"></script>
     <script src="/assets/js/sticky-offset.js"></script>
     <script src="/assets/js/help-tip.js"></script>
+    <script src="/assets/js/custom-select.js"></script>
     <?= view('partials/_confirm_modal') ?>
     <script src="/assets/js/confirm-modal.js"></script>
 <?php // DSS recalculation in the background (weekly or "Recalculate now"): toast on whatever page the admin is on when it finishes. ?>

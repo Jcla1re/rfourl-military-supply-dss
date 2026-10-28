@@ -110,7 +110,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
             </div>
 
             <select id="categoryFilter" class="<?= $filterCategory !== 'All' ? 'has-value' : '' ?>">
-                <option value="All">Category</option>
+                <option value="All">All categories</option>
                 <?php foreach ($categories as $itemCategory): ?>
                     <option value="<?= esc($itemCategory) ?>" <?= $filterCategory === $itemCategory ? 'selected' : '' ?>><?= esc($itemCategory) ?></option>
                 <?php endforeach; ?>
