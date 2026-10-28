@@ -1,0 +1,2670 @@
+Date,Year,Item_Name,Product_ID,Quantity,Unit,Sizes,Category,Unit_Price,Amount
+2021-01-27,2021,Combat Shoes,0001,2,Pair,10.0,Shoes,"1,700.00","3,400.00"
+2021-01-27,2021,Combat Shoes,0001,1,Pair,7 1/2,Shoes,"1,700.00","1,700.00"
+2021-01-27,2021,Gibson Lites,0002,1,Set,10.0,Shoes,"1,700.00","1,700.00"
+2021-01-27,2021,Tropical Blue,0520,2,Set,M,Clothes,"1,600.00","3,200.00"
+2021-01-27,2021,Tropical Blue,0520,1,Set,S,Clothes,"1,600.00","1,600.00"
+2021-01-27,2021,Tropical Blue,0520,1,Set,L,Clothes,"1,600.00","1,600.00"
+2021-01-30,2021,CS Volts,0004,1,Set,XL,Shoes,"3,700.00","3,700.00"
+2021-01-30,2021,PNCO Bullcap,0521,1,Piece,—,Accessories,500.00,500.00
+2021-02-10,2021,CS Volts,0004,1,Set,10.0,Shoes,"3,350.00","3,350.00"
+2021-02-10,2021,Patrol Shoes,0005,1,Pair,—,Shoes,"1,850.00","3,350.00"
+2021-02-12,2021,CS Volts,0004,1,Set,M,Shoes,"3,500.00","3,500.00"
+2021-02-17,2021,CS Volts,0004,1,Set,9.0,Shoes,"3,500.00","3,500.00"
+2021-02-17,2021,Patrol Shoes,0005,1,Pair,—,Shoes,"1,850.00","3,400.00"
+2021-02-17,2021,Army Bonet,0421,1,Piece,—,Accessories,250.00,250.00
+2021-02-17,2021,Dafflebag,0764,1,Piece,—,Accessories,"2,000.00","2,000.00"
+2021-02-17,2021,Black Socks,0808,1,Piece,—,Clothes,50.00,50.00
+2021-02-22,2021,CS Volts,0004,1,Set,S,Shoes,"3,400.00","3,400.00"
+2021-02-26,2021,Sling Bag,0526,1,Piece,—,Accessories,700.00,700.00
+2021-02-26,2021,Belt Bag,0528,1,Piece,—,Accessories,400.00,400.00
+2021-03-02,2021,Patches,0301,50,Piece,—,Patches,55.00,"2,750.00"
+2021-03-02,2021,Tropical Blue,0520,5,Set,S,Clothes,"1,600.00","8,000.00"
+2021-03-02,2021,Tropical Blue,0520,2,Set,M,Clothes,"1,600.00","3,200.00"
+2021-03-06,2021,Combat Boots,0009,1,Pair,9 1/2,Shoes,"1,700.00","1,700.00"
+2021-03-08,2021,GOA C,0568,1,Set,—,Clothes,850.00,850.00
+2021-03-08,2021,GOA B,0788,1,Set,—,Clothes,800.00,800.00
+2021-03-24,2021,Combat Boots,0009,2,Pair,8.9,Shoes,"1,600.00","3,200.00"
+2021-03-24,2021,Tropical Blue,0520,3,Set,S,Clothes,"1,600.00","4,800.00"
+2021-05-06,2021,Pixilized Uniform,0136,1,Set,—,Clothes,"3,000.00","3,000.00"
+2021-05-08,2021,CS Volts,0004,1,Set,—,Shoes,"3,500.00","3,500.00"
+2021-05-08,2021,Sling Bag,0526,1,Piece,—,Accessories,350.00,350.00
+2021-05-20,2021,GOA Lower,0107,1,Set,"Upper S, Lower 32",Clothes,"1,500.00","1,500.00"
+2021-05-22,2021,CS Volts,0004,1,Set,S,Shoes,"3,500.00","3,500.00"
+2021-06-03,2021,Patrol Shirt,0108,3,Piece,S,Clothes,450.00,"1,350.00"
+2021-06-03,2021,Tactical Short,0571,2,Piece,S,Clothes,550.00,"1,100.00"
+2021-06-05,2021,CS Volts,0004,5,Set,M,Shoes,"3,300.00","16,500.00"
+2021-06-08,2021,Pixilized Mask,0252,1,Piece,—,Equipment,80.00,80.00
+2021-06-10,2021,CS Volts,0004,1,Set,"Upper 1, Lower 1",Shoes,"3,800.00","3,800.00"
+2021-06-10,2021,Pixilized Mask,0252,2,Piece,—,Equipment,75.00,150.00
+2021-06-10,2021,DF Patrol Shirt,0574,1,Piece,M,Clothes,220.00,220.00
+2021-06-12,2021,PADPAO,0530,1,Piece,—,Patches,70.00,70.00
+2021-06-12,2021,Long Sleeve,0575,2,Piece,M,Clothes,380.00,760.00
+2021-06-15,2021,Tactical Set,0163,3,Set,"S (2), M (1)",Clothes,"1,500.00","4,500.00"
+2021-06-15,2021,Combat Lites,1096,3,Pair,—,Shoes,"1,650.00","4,950.00"
+2021-06-17,2021,Combat Lites,1096,1,Pair,9 1/2,Shoes,"1,600.00","1,600.00"
+2021-06-23,2021,GOA C,0568,1,Set,"Upper XS, Lower 31",Clothes,"1,550.00","1,550.00"
+2021-06-24,2021,Patches,0301,4,Piece,—,Patches,50.00,200.00
+2021-07-29,2021,NCR,0532,20,Piece,—,Patches,35.00,700.00
+2021-07-29,2021,MFB NCRPO,1070,10,Piece,—,Patches,35.00,350.00
+2021-08-26,2021,Sculing,0510,2,Set,—,Metal,70.00,140.00
+2021-09-22,2021,Lanyard,0401,1,Piece,—,Accessories,500.00,500.00
+2021-09-24,2021,Flashlight,0205,36,Piece,—,Equipment,350.00,"12,600.00"
+2021-09-24,2021,Patches,0301,36,Piece,—,Patches,300.00,"10,800.00"
+2021-09-24,2021,Visibility Vest,0875,36,Piece,—,Equipment,500.00,"18,000.00"
+2021-10-28,2021,PCT Buckle,0955,2,Piece,—,Metal,900.00,"1,800.00"
+2021-10-29,2021,Poncho,0592,1,Piece,—,Clothes,230.00,230.00
+2021-10-30,2021,Combat Boots,0009,1,Pair,8 1/2,Shoes,"1,500.00","1,500.00"
+2021-10-30,2021,Rubber Matt,0254,2,Piece,—,Equipment,500.00,"1,000.00"
+2021-10-30,2021,Poncho,0592,1,Piece,—,Clothes,230.00,230.00
+2021-10-30,2021,Poncho,0592,2,Piece,—,Clothes,230.00,"4,600.00"
+2021-10-30,2021,Round Neck,0594,6,Piece,—,Clothes,100.00,600.00
+2021-10-30,2021,Round Neck,0594,6,Piece,—,Clothes,100.00,600.00
+2021-11-29,2021,Santi Buckle,0584,3,Piece,—,Metal,600.00,"1,800.00"
+2021-12-09,2021,Combat Shoes,0001,1,Pair,—,Shoes,"1,700.00","1,700.00"
+2021-12-09,2021,Combat Boots (5.11),1108,1,Piece,—,Shoes,"1,600.00","1,600.00"
+2021-12-22,2021,PNCO Bullcap,0521,1,Piece,—,Accessories,300.00,300.00
+2021-12-22,2021,Garrison,0754,1,Piece,—,Accessories,100.00,100.00
+2021-12-22,2021,Olive Green (OG) Cotton,0838,1,Piece,M,Clothes,150.00,150.00
+2021-12-22,2021,Ripstop Volts,1102,1,Set,S,Shoes,"2,900.00","2,900.00"
+2021-12-29,2021,Medical Trauma Bag,0208,5,Piece,—,Equipment,"5,890.00","29,450.00"
+2021-12-29,2021,Pulse Oximeter,0229,10,Piece,—,Equipment,880.00,"8,800.00"
+2021-12-29,2021,Trauma Shears,0230,24,Piece,—,Equipment,870.00,"20,880.00"
+2021-12-29,2021,Safety Masks,0231,24,Piece,—,Equipment,"1,400.00","33,600.00"
+2021-12-29,2021,Action Camera,0232,10,Piece,—,Equipment,"4,800.00","48,000.00"
+2021-12-29,2021,Personal Protective Gears,0233,40,Piece,—,Equipment,"1,300.00","52,000.00"
+2021-12-29,2021,Personal Protective Gears,0233,40,Piece,—,Equipment,"1,100.00","44,000.00"
+2021-12-29,2021,Sweatshirt,0598,20,Piece,S,Clothes,"1,200.00","24,000.00"
+2021-12-29,2021,Sweatshirt,0598,20,Piece,L,Clothes,"1,200.00","24,000.00"
+2021-12-29,2021,SAR Uniform,0604,10,Piece,—,Clothes,"2,000.00","20,000.00"
+2021-12-29,2021,Rig Belt,0878,24,Piece,—,Equipment,700.00,"16,800.00"
+2021-12-29,2021,Tactical Boots,1110,40,Pair,—,Shoes,"4,600.00","184,000.00"
+2022-01-10,2022,Bullcap,0423,17,Piece,—,Accessories,200.00,"3,400.00"
+2022-01-10,2022,Forensic Group Patch,0533,183,Piece,—,Patches,60.00,"10,980.00"
+2022-01-10,2022,GOA C,0568,3,Piece,—,Clothes,830.00,"2,490.00"
+2022-01-10,2022,FSU Patches,1021,70,Piece,—,Patches,85.00,"5,950.00"
+2022-01-21,2022,KALASAG Pin,0509,200,Piece,—,Metal,35.00,"7,000.00"
+2022-02-07,2022,Athletic Uniform,0137,1,Set,—,Clothes,"1,600.00","1,600.00"
+2022-02-21,2022,Sculing Swat,0576,4,Set,—,Metal,70.00,280.00
+2022-02-21,2022,Engineering FSU,1020,6,Piece,—,Patches,35.00,210.00
+2022-03-04,2022,Sling Bag,0526,1,Piece,—,Accessories,350.00,350.00
+2022-04-02,2022,GOA C,0568,1,Set,—,Clothes,"1,300.00","1,300.00"
+2022-04-02,2022,Bush Coat,0605,1,Set,—,Clothes,"1,600.00","1,600.00"
+2022-04-04,2022,Rack Sack,0255,1,Piece,—,Equipment,"1,000.00","1,000.00"
+2022-04-04,2022,Ripstop Uniform,0606,1,Set,S,Clothes,"2,800.00","2,800.00"
+2022-04-09,2022,Combat Boots,0009,1,Pair,—,Shoes,"1,700.00","1,700.00"
+2022-04-09,2022,GOA Pants,0106,3,Piece,—,Clothes,900.00,"2,700.00"
+2022-04-09,2022,Flag Magnet,0512,5,Piece,—,Metal,120.00,600.00
+2022-04-21,2022,Flashlight,0205,1,Piece,—,Equipment,350.00,350.00
+2022-04-21,2022,Flight Pouch,0207,7,Piece,—,Equipment,180.00,"1,260.00"
+2022-04-21,2022,Body Bag,0225,5,Piece,—,Equipment,450.00,"2,250.00"
+2022-04-21,2022,QD Bag,0226,1,Piece,—,Equipment,850.00,850.00
+2022-04-21,2022,Hammock,0414,10,Piece,—,Accessories,380.00,"3,800.00"
+2022-04-27,2022,Combat Shoes,0001,25,Pair,—,Shoes,"1,600.00","40,000.00"
+2022-04-27,2022,Pants,0118,3,Piece,—,Clothes,900.00,"2,700.00"
+2022-04-27,2022,Polo Shirt Grey,0123,6,Piece,—,Clothes,450.00,"2,700.00"
+2022-04-27,2022,Vest,0209,50,Piece,—,Equipment,320.00,"16,000.00"
+2022-04-27,2022,Tropical Blue,0520,34,Set,—,Clothes,"1,500.00","51,000.00"
+2022-04-27,2022,Agency Patch,0681,50,Piece,—,Patches,20.00,"1,000.00"
+2022-04-27,2022,Polo Shirt Black,0844,6,Piece,—,Clothes,450.00,"2,700.00"
+2022-04-27,2022,Big Flashlight,0869,1,Piece,—,Equipment,"2,000.00","2,000.00"
+2022-04-27,2022,RDF Logo,1068,50,Piece,—,Patches,30.00,"1,500.00"
+2022-04-27,2022,Bota Black,1107,1,Pair,—,Shoes,400.00,400.00
+2022-05-01,2022,Baton,0204,3,Piece,—,Equipment,300.00,900.00
+2022-05-01,2022,Spray,0247,1,Piece,—,Equipment,200.00,200.00
+2022-05-01,2022,Pershing Cap,0424,1,Piece,56.0,Accessories,"4,800.00","4,800.00"
+2022-05-07,2022,CS Volts,0004,1,Pair,10.0,Shoes,"3,300.00","3,300.00"
+2022-05-07,2022,GOA Pants,0106,1,Piece,37.0,Clothes,700.00,700.00
+2022-05-09,2022,Pavehawk Pants,0618,1,Piece,S,Clothes,"1,000.00","1,000.00"
+2022-05-09,2022,Pavehawk Pants,0618,1,Piece,L,Clothes,"1,000.00","1,000.00"
+2022-05-09,2022,Pavehawk Pants,0618,1,Piece,L,Clothes,"1,000.00","1,000.00"
+2022-05-11,2022,A Pants,0111,1,Piece,L,Clothes,500.00,500.00
+2022-05-11,2022,Metal Detector,0211,3,Piece,—,Equipment,"1,800.00","5,400.00"
+2022-05-11,2022,Umbrella,0256,8,Piece,—,Equipment,400.00,"3,200.00"
+2022-05-11,2022,Handcuffs,0619,1,Piece,—,Equipment,650.00,650.00
+2022-05-11,2022,Shorts,0798,1,Piece,M,Clothes,500.00,500.00
+2022-05-12,2022,Athletic Shoes,1105,1,Pair,11.0,Shoes,"2,000.00","2,000.00"
+2022-05-17,2022,PNP Awards,0921,1,Piece,—,Metal,550.00,550.00
+2022-05-18,2022,GOA B Uniform (Retail),0104,1,Piece,Upper,Clothes,800.00,800.00
+2022-06-02,2022,Big Jordan,0011,1,Set,—,Shoes,"1,800.00","1,800.00"
+2022-06-02,2022,Nameplate (Metal),0621,1,Piece,—,Metal,200.00,200.00
+2022-06-03,2022,GOA B Uniform (Retail),0104,1,Piece,M,Clothes,"1,300.00","1,300.00"
+2022-06-03,2022,GOA B Uniform (Retail),0104,1,Piece,M,Clothes,800.00,800.00
+2022-06-03,2022,GOA B Uniform (Retail),0104,1,Piece,M,Clothes,800.00,800.00
+2022-06-03,2022,Gun Oil (Redisol),0222,1,Piece,—,Equipment,150.00,150.00
+2022-06-04,2022,CIDG Patches,0534,2,Piece,—,Patches,100.00,200.00
+2022-06-04,2022,Garterized Belt,0599,1,Piece,—,Accessories,300.00,300.00
+2022-06-04,2022,Fiber Rig,0622,1,Set,—,Equipment,"1,900.00","1,900.00"
+2022-06-04,2022,A Shirt,0628,3,Piece,—,Clothes,90.00,270.00
+2022-06-04,2022,Shoe Polish (Kiwi),0893,10,Piece,—,Equipment,130.00,"1,300.00"
+2022-06-04,2022,Metal Polish (Pledge),0895,5,Piece,—,Equipment,230.00,"1,150.00"
+2022-06-07,2022,Jacket,0851,6,Piece,—,Clothes,750.00,"4,500.00"
+2022-06-07,2022,PNP Awards Hinang,0922,1,Piece,—,Metal,550.00,550.00
+2022-06-08,2022,Gibson Lites,0002,1,Pair,11.0,Shoes,"1,900.00","1,900.00"
+2022-06-08,2022,GOA B Uniform (Retail),0104,1,Set,—,Clothes,"1,800.00","1,800.00"
+2022-06-08,2022,PNCO Bullcap,0521,1,Piece,—,Accessories,300.00,300.00
+2022-06-08,2022,Garrison Buckle,0585,1,Piece,—,Metal,200.00,200.00
+2022-06-08,2022,Grip,0630,1,Piece,—,Equipment,230.00,230.00
+2022-06-08,2022,Grip,0630,1,Piece,—,Equipment,230.00,230.00
+2022-06-08,2022,Bush Coat Upper,0842,1,Piece,—,Clothes,850.00,850.00
+2022-06-09,2022,A Shoes,0006,1,Pair,10.0,Shoes,"2,100.00","2,100.00"
+2022-06-09,2022,A Shirt,0628,1,Piece,M,Clothes,350.00,350.00
+2022-06-10,2022,Holster,0201,1,Piece,—,Equipment,600.00,600.00
+2022-06-10,2022,Sling Bag,0526,1,Piece,S,Accessories,300.00,300.00
+2022-06-10,2022,Sling Bag,0526,1,Piece,S,Accessories,300.00,300.00
+2022-06-10,2022,Grip,0630,2,Piece,—,Equipment,200.00,400.00
+2022-06-10,2022,Inside Holster,0631,1,Piece,—,Equipment,170.00,170.00
+2022-06-10,2022,Bikini Holster,0632,1,Piece,—,Equipment,170.00,170.00
+2022-06-11,2022,GOA Pants,0106,1,Piece,32.0,Clothes,700.00,700.00
+2022-06-11,2022,GOA C,0568,2,Piece,XS,Clothes,850.00,"1,700.00"
+2022-06-11,2022,DFP Black,0640,1,Piece,—,Clothes,200.00,200.00
+2022-06-11,2022,GOA B,0788,1,Piece,XL,Clothes,800.00,800.00
+2022-06-13,2022,A Kids,0140,1,Piece,—,Clothes,350.00,350.00
+2022-06-13,2022,Bullcap,0423,1,Piece,—,Accessories,300.00,300.00
+2022-06-13,2022,Rig Leather,0623,1,Set,38.0,Equipment,"1,500.00","1,500.00"
+2022-06-13,2022,Whistle,0642,1,Piece,—,Equipment,150.00,150.00
+2022-06-13,2022,Charcoal Socks,0809,1,Piece,—,Clothes,100.00,100.00
+2022-06-14,2022,Clarino Shoes,0007,1,Pair,6.0,Shoes,"1,800.00","1,800.00"
+2022-06-14,2022,PNP Sock,0146,1,Piece,—,Clothes,130.00,130.00
+2022-06-14,2022,Hammock,0414,1,Piece,—,Accessories,420.00,420.00
+2022-06-14,2022,Garterized Belt,0599,1,Piece,—,Accessories,300.00,300.00
+2022-06-14,2022,SG Badge,0645,2,Piece,—,Metal,100.00,200.00
+2022-06-14,2022,Long Sleeve White,0834,2,Piece,2XL,Clothes,380.00,760.00
+2022-06-14,2022,Handcuffs Case,0890,1,Piece,—,Equipment,350.00,350.00
+2022-06-15,2022,Tactical Sling,0527,1,Piece,—,Accessories,350.00,350.00
+2022-06-17,2022,No Shine Buckle,0586,1,Piece,—,Metal,400.00,400.00
+2022-06-17,2022,Handcuffs Case,0890,1,Piece,—,Equipment,250.00,250.00
+2022-06-23,2022,Clarino Shoes,0007,1,Piece,—,Shoes,"1,700.00","1,700.00"
+2022-06-23,2022,KALASAG Pin,0509,100,Piece,—,Metal,35.00,"3,500.00"
+2022-06-23,2022,PSPG Pin,0650,1,Piece,—,Metal,150.00,150.00
+2022-07-01,2022,Poncho Green,0593,4,Piece,—,Clothes,300.00,"1,200.00"
+2022-07-06,2022,Cycling Short,0664,4,Piece,—,Clothes,80.00,320.00
+2022-07-06,2022,Garrison,0754,1,Piece,—,Accessories,100.00,100.00
+2022-07-06,2022,Dry Bag OG (Black),0897,2,Piece,—,Equipment,150.00,300.00
+2022-07-06,2022,Dry Bag OG (Green),0898,2,Piece,—,Equipment,150.00,300.00
+2022-07-07,2022,A Shoes,0006,1,Pair,5.0,Shoes,"2,200.00","2,200.00"
+2022-07-07,2022,PNP Sock,0146,1,Piece,—,Clothes,150.00,150.00
+2022-07-08,2022,Fiber Holster 9MM,0267,1,Piece,—,Equipment,800.00,800.00
+2022-07-08,2022,GOA B,0788,1,Piece,M,Clothes,800.00,800.00
+2022-07-11,2022,Grip,0630,1,Piece,—,Equipment,230.00,230.00
+2022-08-14,2022,Botak Short,0665,5,Piece,—,Clothes,65.00,325.00
+2022-09-13,2022,SG Pants,0117,1,Piece,31.0,Clothes,280.00,280.00
+2022-09-13,2022,Long Sleeve,0575,1,Piece,—,Clothes,400.00,400.00
+2022-09-14,2022,PNP Awards,0921,1,Piece,—,Metal,250.00,250.00
+2022-09-15,2022,CS Volts,0004,1,Pair,9.0,Shoes,"3,300.00","3,300.00"
+2022-09-16,2022,Baton,0204,1,Piece,—,Equipment,350.00,350.00
+2022-09-16,2022,Cellphone pouch,0268,1,Piece,—,Equipment,300.00,300.00
+2022-09-16,2022,Bullcap,0423,1,Piece,—,Accessories,300.00,300.00
+2022-09-16,2022,Handcuffs Case,0890,1,Piece,—,Equipment,300.00,300.00
+2022-09-19,2022,Army Bonet,0421,1,Piece,—,Accessories,250.00,250.00
+2022-09-21,2022,PLT Buckle,0956,1,Piece,—,Metal,"1,500.00","1,500.00"
+2022-09-28,2022,PNP Sock,0146,3,Piece,—,Clothes,50.00,150.00
+2022-09-28,2022,PSPG PIXI Patches,0535,2,Piece,—,Patches,100.00,200.00
+2022-09-28,2022,V-Neck,0667,2,Piece,M,Clothes,130.00,260.00
+2022-09-28,2022,V-Neck,0667,2,Piece,S,Clothes,130.00,260.00
+2022-09-28,2022,V-Neck,0667,1,Piece,L,Clothes,130.00,130.00
+2022-09-28,2022,Change Unit (Metal),0927,4,Piece,—,Metal,70.00,280.00
+2022-09-28,2022,PNP Buckle,0957,5,Piece,—,Metal,192.00,960.00
+2022-10-03,2022,Magpouch,0202,1,Piece,—,Equipment,600.00,600.00
+2022-10-03,2022,Skeletal Buckle,0587,1,Piece,—,Metal,400.00,400.00
+2022-10-03,2022,Buckle Rig,0588,1,Piece,—,Metal,150.00,150.00
+2022-10-03,2022,Handcuffs Case,0890,1,Piece,—,Equipment,350.00,350.00
+2022-10-03,2022,Metal Polish (MC),0894,1,Piece,—,Equipment,150.00,150.00
+2022-10-04,2022,PNP Awards,0921,2,Piece,—,Metal,535.00,"1,070.00"
+2022-10-05,2022,A Shoes,0006,1,Pair,10.5,Shoes,"2,200.00","2,200.00"
+2022-10-08,2022,PNP Awards,0921,1,Piece,—,Metal,285.00,285.00
+2022-10-10,2022,PNCO Buckle,0589,1,Piece,—,Metal,"1,000.00","1,000.00"
+2022-10-10,2022,Garterized Belt,0599,1,Piece,—,Accessories,300.00,300.00
+2022-10-11,2022,NHQ,0536,10,Piece,—,Patches,35.00,350.00
+2022-10-11,2022,PNP-ITMS (Patch),1044,3,Piece,—,Patches,35.00,105.00
+2022-10-11,2022,RMFB 4B,1081,10,Piece,—,Patches,35.00,350.00
+2022-10-12,2022,Hammock,0414,2,Piece,—,Accessories,400.00,800.00
+2022-10-17,2022,GOA C,0568,1,Piece,2XL,Clothes,900.00,900.00
+2022-10-17,2022,Pavehawk Pants,0618,1,Piece,L,Clothes,"1,100.00","1,100.00"
+2022-10-17,2022,Pavehawk Pants,0618,1,Piece,XL,Clothes,"1,100.00","1,100.00"
+2022-10-17,2022,Inside Holster,0631,1,Piece,—,Equipment,200.00,200.00
+2022-10-18,2022,Sculing,0510,3,Set,—,Metal,70.00,210.00
+2022-10-19,2022,MIMOROPA Patches,0538,100,Piece,—,Patches,35.00,"3,500.00"
+2022-10-20,2022,GOA C,0568,1,Piece,XS,Clothes,850.00,850.00
+2022-10-20,2022,GOA B,0788,1,Piece,XS,Clothes,800.00,800.00
+2022-10-21,2022,CS Volts,0004,1,Pair,11.0,Shoes,"1,900.00","1,900.00"
+2022-10-24,2022,A Shoes,0006,1,Pair,11.0,Shoes,"2,100.00","2,100.00"
+2022-10-27,2022,Patches,0301,2,Piece,—,Patches,35.00,70.00
+2022-10-27,2022,Tubemask,0426,1,Piece,—,Accessories,250.00,250.00
+2022-10-27,2022,Rank,0504,1,Pair,—,Metal,50.00,50.00
+2022-10-27,2022,MKK Pin,0651,2,Piece,—,Metal,100.00,200.00
+2022-11-02,2022,A Shoes,0006,1,Pair,9.0,Shoes,"2,200.00","2,200.00"
+2022-11-02,2022,Name Cloth,0303,2,Piece,—,Patches,100.00,200.00
+2022-11-02,2022,Radio Case,0679,5,Piece,—,Equipment,130.00,650.00
+2022-11-02,2022,GOA B,0788,1,Piece,—,Clothes,"1,500.00","1,500.00"
+2022-11-02,2022,Change Rank (Metal),0925,1,Piece,—,Metal,140.00,140.00
+2022-11-04,2022,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2022-11-04,2022,PNCO Buckle,0589,1,Piece,—,Metal,"1,200.00","1,200.00"
+2022-11-04,2022,PNP Badge,0646,1,Piece,—,Metal,"1,000.00","1,000.00"
+2022-11-07,2022,Pavehawk Pants,0618,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2022-11-08,2022,PNP Shoes,1103,1,Pair,—,Shoes,"2,200.00","2,200.00"
+2022-11-10,2022,Pavehawk Pants,0618,4,Piece,—,Clothes,"1,000.00","4,000.00"
+2022-11-11,2022,Patrol Shoes,0005,1,Pair,9.0,Shoes,"1,800.00","1,800.00"
+2022-11-15,2022,A Shoes,0006,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2022-11-15,2022,MKK Pin,0651,2,Piece,—,Metal,100.00,200.00
+2022-11-15,2022,PCOL,0668,5,Piece,—,Metal,40.00,200.00
+2022-11-15,2022,RMFB 4B,1081,5,Piece,—,Patches,35.00,175.00
+2022-11-16,2022,Combat Shoes,0001,1,Pair,—,Shoes,"1,750.00","1,750.00"
+2022-11-16,2022,Tropical Blue,0520,1,Piece,XL,Clothes,"1,500.00","1,500.00"
+2022-11-17,2022,Combat Shoes,0001,1,Pair,6 1/2,Shoes,"1,700.00","1,700.00"
+2022-11-19,2022,1 Star Rank,0960,5,Piece,—,Metal,80.00,400.00
+2022-11-19,2022,RMFB 4B,1081,5,Piece,—,Patches,35.00,175.00
+2022-11-22,2022,Lock,0685,3,Piece,—,Equipment,66.00,198.00
+2022-11-24,2022,NCRPO RMFB,1034,5,Piece,—,Patches,35.00,175.00
+2022-11-26,2022,Tactical Pants,0687,1,Piece,—,Clothes,900.00,900.00
+2022-11-28,2022,Sculing,0510,6,Set,—,Metal,70.00,420.00
+2022-11-28,2022,SOCO Pin,0652,1,Piece,—,Metal,180.00,180.00
+2022-11-28,2022,RMFB 4A,1080,5,Piece,—,Patches,35.00,175.00
+2022-11-28,2022,RMFB 4A,1080,15,Piece,—,Patches,35.00,525.00
+2022-11-29,2022,Gibson Lites,0002,1,Pair,9.0,Shoes,"1,800.00","1,800.00"
+2022-11-29,2022,PSPG Patch,0539,3,Piece,—,Patches,50.00,150.00
+2022-11-30,2022,Gibson Lites,0002,1,Pair,7.0,Shoes,"1,800.00","1,800.00"
+2022-12-01,2022,Gibson Lites,0002,1,Pair,9.0,Shoes,"1,800.00","1,800.00"
+2022-12-01,2022,Small Flight Pouch,0608,1,Piece,—,Equipment,180.00,180.00
+2022-12-05,2022,SG Pershing Cap,0614,1,Piece,—,Accessories,200.00,200.00
+2022-12-05,2022,SS Badge,0647,1,Piece,—,Metal,100.00,100.00
+2022-12-05,2022,Tie Clip,0688,1,Set,—,Accessories,150.00,150.00
+2022-12-05,2022,Collar Pin,0689,1,Piece,—,Accessories,50.00,50.00
+2022-12-05,2022,Pistol Lanyard,0767,1,Piece,—,Accessories,150.00,150.00
+2022-12-09,2022,Pershing Cap Case,0269,1,Piece,—,Equipment,200.00,200.00
+2022-12-09,2022,Pershing Cap Case,0269,15,Piece,—,Equipment,200.00,"3,000.00"
+2022-12-09,2022,Pershing Cap,0424,1,Piece,—,Accessories,"4,600.00","4,600.00"
+2022-12-10,2022,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2022-12-10,2022,Sculing,0510,8,Set,—,Metal,70.00,560.00
+2022-12-10,2022,Pavehawk Pants,0618,3,Piece,—,Clothes,"1,000.00","3,000.00"
+2022-12-10,2022,Handcuffs Case,0890,1,Piece,—,Equipment,200.00,200.00
+2022-12-14,2022,Patrol Shirt,0108,5,Piece,—,Clothes,"1,300.00","6,500.00"
+2022-12-15,2022,SG Pants,0117,1,Piece,—,Clothes,250.00,250.00
+2022-12-15,2022,PNP Sock,0146,2,Piece,—,Clothes,120.00,240.00
+2022-12-15,2022,Magpouch,0202,4,Piece,—,Equipment,300.00,"1,200.00"
+2022-12-15,2022,Lanyard,0401,1,Piece,—,Accessories,250.00,250.00
+2022-12-15,2022,Hammock,0414,1,Piece,—,Accessories,400.00,400.00
+2022-12-15,2022,Lousy Hat,0690,1,Piece,—,Accessories,250.00,250.00
+2022-12-15,2022,Pistol Lanyard,0767,1,Piece,—,Accessories,280.00,280.00
+2022-12-15,2022,Socks,0817,2,Piece,—,Clothes,100.00,200.00
+2022-12-15,2022,Rig Set,0881,1,Set,—,Equipment,"1,720.00","1,720.00"
+2022-12-16,2022,A Pants,0111,1,Piece,M,Clothes,600.00,600.00
+2022-12-16,2022,A Shirt,0628,1,Piece,M,Clothes,380.00,380.00
+2022-12-16,2022,Rig Set,0881,1,Set,—,Equipment,"2,100.00","2,100.00"
+2022-12-19,2022,Hammock,0414,2,Piece,—,Accessories,600.00,"1,200.00"
+2022-12-19,2022,Vest Patch,0540,5,Piece,—,Patches,150.00,750.00
+2022-12-20,2022,Tactical Pants Grey,0857,1,Piece,L,Clothes,900.00,900.00
+2022-12-21,2022,GOA C,0568,1,Piece,XL,Clothes,850.00,850.00
+2022-12-27,2022,Patrol Shirt,0108,1,Piece,—,Clothes,"1,350.00","1,350.00"
+2023-01-02,2023,RMFB NCRPO,0531,10,Piece,—,Patches,35.00,350.00
+2023-01-02,2023,RMFB NCRPO,0531,10,Piece,—,Patches,35.00,350.00
+2023-01-02,2023,Regional Mobile Force Battalion 4B,0541,10,Piece,—,Patches,35.00,350.00
+2023-01-02,2023,Regional Mobile Force Battalion 4B,0541,10,Piece,—,Patches,35.00,350.00
+2023-01-02,2023,PCOL,0668,10,Piece,—,Metal,40.00,400.00
+2023-01-02,2023,PSSG,0669,5,Piece,—,Metal,40.00,200.00
+2023-01-02,2023,1 Star,0684,5,Piece,—,Metal,40.00,200.00
+2023-01-02,2023,PLT,0931,3,Piece,—,Metal,40.00,120.00
+2023-01-02,2023,Oriental Mindoro Patch,1035,40,Piece,—,Patches,35.00,"1,400.00"
+2023-01-03,2023,Dryfit,0142,1,Piece,—,Clothes,150.00,150.00
+2023-01-03,2023,Low Carry Holster,0633,1,Piece,—,Equipment,350.00,350.00
+2023-01-03,2023,TAGAPAGUGNAY Pin,0653,2,Piece,—,Metal,180.00,360.00
+2023-01-03,2023,Botak Short,0665,1,Piece,—,Clothes,60.00,60.00
+2023-01-03,2023,Backpack (7 Days),0744,1,Piece,—,Accessories,900.00,900.00
+2023-01-03,2023,Olive Green (OG) Cotton,0838,1,Piece,—,Clothes,230.00,230.00
+2023-01-04,2023,A Shoes,0006,1,Pair,11.0,Shoes,"1,900.00","1,900.00"
+2023-01-04,2023,Patrol Shirt,0108,1,Piece,—,Clothes,"1,700.00","1,700.00"
+2023-01-04,2023,Laptop Bag,0412,1,Piece,—,Accessories,"1,600.00","1,600.00"
+2023-01-04,2023,Bullcap,0423,1,Piece,—,Accessories,500.00,500.00
+2023-01-04,2023,No Shine Buckle,0586,1,Piece,—,Metal,400.00,400.00
+2023-01-04,2023,Pin Lock,0686,40,Piece,—,Equipment,5.00,200.00
+2023-01-04,2023,Shoulder Loop,0734,1,Piece,—,Accessories,300.00,300.00
+2023-01-04,2023,Nameplate Magnet,0977,2,Piece,—,Metal,275.00,550.00
+2023-01-06,2023,Long Sleeve,0575,1,Piece,—,Clothes,950.00,950.00
+2023-01-06,2023,PNCO Pershing Cap,0612,1,Piece,—,Accessories,700.00,700.00
+2023-01-06,2023,Dryfit Tshirt,0805,1,Piece,—,Clothes,250.00,250.00
+2023-01-07,2023,Low Carry Holster,0633,2,Piece,—,Equipment,350.00,700.00
+2023-01-07,2023,Cycling Short,0664,3,Piece,—,Clothes,80.00,240.00
+2023-01-09,2023,Athletic Shirt,0691,1,Piece,L,Clothes,400.00,400.00
+2023-01-09,2023,Black Gloves,0693,7,Piece,—,Accessories,50.00,350.00
+2023-01-09,2023,Change Rank (Metal),0925,1,Piece,—,Metal,140.00,140.00
+2023-01-11,2023,PCOL,0668,15,Piece,—,Metal,40.00,600.00
+2023-01-11,2023,PCOL,0668,20,Piece,—,Metal,40.00,800.00
+2023-01-11,2023,SG Longsleeve,0836,2,Piece,—,Clothes,250.00,500.00
+2023-01-11,2023,PRO3,0932,25,Piece,—,Metal,35.00,875.00
+2023-01-11,2023,PMAJ (Police Major),0993,5,Piece,—,Metal,40.00,200.00
+2023-01-11,2023,Bulacan PPO,1007,3,Piece,—,Patches,35.00,105.00
+2023-01-11,2023,Cavite PPO,1010,2,Piece,—,Patches,150.00,300.00
+2023-01-11,2023,PPO Bulacan,1045,3,Piece,—,Patches,35.00,105.00
+2023-01-11,2023,RMFB NCR,1072,5,Piece,—,Patches,35.00,175.00
+2023-01-11,2023,RMFB NCR,1072,20,Piece,—,Patches,35.00,700.00
+2023-01-13,2023,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2023-01-13,2023,A Shirt,0628,1,Piece,—,Clothes,350.00,350.00
+2023-01-14,2023,PNP Awards,0921,1,Piece,—,Metal,995.00,995.00
+2023-01-17,2023,Shoulder Board,0406,1,Piece,—,Accessories,"1,800.00","1,800.00"
+2023-01-17,2023,Rank,0504,1,Piece,—,Metal,40.00,40.00
+2023-01-17,2023,GOA C,0568,1,Piece,—,Clothes,850.00,850.00
+2023-01-18,2023,GOA C Upper,0569,1,Piece,—,Clothes,850.00,850.00
+2023-01-20,2023,Magpouch,0202,1,Piece,—,Equipment,500.00,500.00
+2023-01-20,2023,Grip,0630,1,Piece,—,Equipment,200.00,200.00
+2023-01-24,2023,Badge,0501,1,Piece,—,Metal,950.00,950.00
+2023-01-25,2023,PNCO Bullcap,0521,2,Piece,—,Accessories,300.00,600.00
+2023-01-25,2023,PNCO Bullcap,0521,1,Piece,—,Accessories,"1,000.00","1,000.00"
+2023-01-25,2023,ID Holder,0695,1,Piece,—,Accessories,50.00,50.00
+2023-01-26,2023,Sculing,0510,5,Piece,—,Metal,70.00,350.00
+2023-01-26,2023,NPD,0542,3,Piece,—,Patches,35.00,105.00
+2023-01-28,2023,GOA C,0568,1,Piece,2XL,Clothes,"1,700.00","1,700.00"
+2023-01-28,2023,MKK Pin,0651,1,Piece,—,Metal,50.00,50.00
+2023-01-28,2023,V-Neck,0667,3,Piece,M,Clothes,130.00,390.00
+2023-01-31,2023,Whistle,0642,1,Piece,—,Equipment,150.00,150.00
+2023-01-31,2023,MKK Pin,0651,1,Piece,—,Metal,100.00,100.00
+2023-02-01,2023,Garrison Garter,0443,1,Piece,—,Accessories,300.00,300.00
+2023-02-01,2023,Rank GOA,0671,1,Piece,—,Metal,70.00,70.00
+2023-02-01,2023,Loptop Case,0745,1,Piece,—,Accessories,"1,700.00","1,700.00"
+2023-02-06,2023,Gibson Lites,0002,1,Pair,31.0,Shoes,"2,000.00","2,000.00"
+2023-02-06,2023,SG Pants,0117,1,Piece,—,Clothes,280.00,280.00
+2023-02-06,2023,Double Clip,0427,1,Piece,—,Accessories,80.00,80.00
+2023-02-06,2023,Medkit,0603,1,Piece,—,Equipment,80.00,80.00
+2023-02-06,2023,Tie Clip,0688,1,Piece,—,Accessories,50.00,50.00
+2023-02-06,2023,ID Holder,0695,1,Piece,—,Accessories,100.00,100.00
+2023-02-06,2023,GOA B,0788,1,Piece,M,Clothes,800.00,800.00
+2023-02-06,2023,PNP Awards,0921,1,Piece,—,Metal,700.00,700.00
+2023-02-07,2023,Athletic T-Shirt,0858,1,Piece,—,Clothes,400.00,400.00
+2023-02-08,2023,Rank Metal Pin,0672,1,Piece,—,Metal,300.00,300.00
+2023-02-09,2023,Flight Pouch,0207,1,Piece,—,Equipment,300.00,300.00
+2023-02-09,2023,M16 Magpouch,0676,2,Piece,—,Equipment,350.00,700.00
+2023-02-09,2023,Warbelt,0743,1,Piece,—,Accessories,"1,000.00","1,000.00"
+2023-02-09,2023,Socks,0817,1,Piece,—,Clothes,150.00,150.00
+2023-02-09,2023,Awards,0911,1,Piece,—,Metal,700.00,700.00
+2023-02-09,2023,Athletic Shoes,1105,1,Pair,—,Shoes,"1,800.00","1,800.00"
+2023-02-10,2023,Resistance T-shirt,0124,2,Piece,L,Clothes,400.00,800.00
+2023-02-12,2023,Nameplate (Metal),0621,1,Piece,—,Metal,250.00,250.00
+2023-02-13,2023,Lock,0685,9,Piece,—,Equipment,60.00,540.00
+2023-02-13,2023,Lock,0685,7,Piece,—,Equipment,60.00,420.00
+2023-02-14,2023,No Shine Buckle,0586,1,Piece,—,Metal,400.00,400.00
+2023-02-14,2023,Office Buckle,0590,1,Piece,—,Metal,"1,000.00","1,000.00"
+2023-02-16,2023,CS Volts,0004,1,Pair,5.5,Shoes,"1,800.00","1,800.00"
+2023-02-16,2023,Patrol Shoes,0005,1,Pair,8.0,Shoes,"1,900.00","1,900.00"
+2023-02-16,2023,Flight Pouch,0207,1,Piece,S,Equipment,180.00,180.00
+2023-02-16,2023,Baton Case,0615,1,Piece,—,Equipment,230.00,230.00
+2023-02-16,2023,Glock Holster,0634,1,Piece,—,Equipment,600.00,600.00
+2023-02-16,2023,PNP Badge,0646,1,Piece,—,Metal,"1,050.00","1,050.00"
+2023-02-16,2023,Radio Case,0679,1,Piece,—,Equipment,230.00,230.00
+2023-02-16,2023,Flight Pouch Case,0872,1,Piece,—,Equipment,180.00,180.00
+2023-02-16,2023,PSSG Rank,0992,5,Piece,—,Metal,40.00,200.00
+2023-02-16,2023,Agusan Del Sur,1000,2,Piece,—,Patches,35.00,70.00
+2023-02-17,2023,PNCO Pershing Cap,0612,1,Piece,6.0,Accessories,500.00,500.00
+2023-02-18,2023,Department Buckle,0953,1,Piece,—,Metal,"1,700.00","1,700.00"
+2023-02-20,2023,PERC Pin,0944,1,Piece,—,Metal,180.00,180.00
+2023-02-20,2023,Ranger Pin,0950,1,Piece,—,Metal,180.00,180.00
+2023-02-22,2023,PNP Awards,0921,1,Piece,—,Metal,740.00,740.00
+2023-02-22,2023,PNP Awards,0921,1,Piece,—,Metal,780.00,780.00
+2023-02-22,2023,Pistol Marksman Pin,0949,1,Piece,—,Metal,180.00,180.00
+2023-02-22,2023,CIDG 6 RFU,1008,6,Piece,—,Patches,130.00,780.00
+2023-02-23,2023,Gibson Lites,0002,4,Pair,—,Shoes,"2,000.00","8,000.00"
+2023-02-23,2023,CS Volts,0004,1,Pair,9.5,Shoes,"1,800.00","1,800.00"
+2023-02-23,2023,Hardhat Blue,0270,33,Piece,—,Equipment,200.00,"6,600.00"
+2023-02-23,2023,Tropical Blue,0520,9,Set,—,Clothes,"1,500.00","13,500.00"
+2023-02-23,2023,Set Belt,0742,2,Set,"33, 34",Accessories,750.00,"1,500.00"
+2023-02-27,2023,PAGLILINGKOD Medal,0918,1,Piece,—,Metal,350.00,350.00
+2023-02-27,2023,Change Rank (Metal),0925,1,Piece,—,Metal,140.00,140.00
+2023-03-01,2023,Gibson Lites,0002,1,Pair,6.0,Shoes,"2,000.00","2,000.00"
+2023-03-01,2023,Tropical Black,0102,1,Piece,—,Clothes,"1,700.00","1,700.00"
+2023-03-01,2023,Sculing,0510,3,Piece,—,Metal,70.00,210.00
+2023-03-01,2023,NPD,0542,1,Piece,—,Patches,35.00,35.00
+2023-03-01,2023,TAGALIGTAN,0543,1,Piece,—,Patches,35.00,35.00
+2023-03-01,2023,EOD Sculing,0962,1,Piece,—,Metal,70.00,70.00
+2023-03-01,2023,Sculing Swat Scout,0964,2,Piece,—,Metal,35.00,70.00
+2023-03-01,2023,RMFB NCPO,1071,20,Piece,—,Patches,35.00,700.00
+2023-03-01,2023,MIMAROPA,1077,50,Piece,—,Patches,35.00,"1,750.00"
+2023-03-01,2023,RMFB 4A,1080,5,Piece,—,Patches,35.00,175.00
+2023-03-02,2023,Gibson Lites,0002,1,Pair,10.0,Shoes,"2,000.00","2,000.00"
+2023-03-02,2023,SG Pants,0117,1,Piece,—,Clothes,250.00,250.00
+2023-03-02,2023,Short Sleeve Blue,0165,1,Piece,—,Clothes,400.00,400.00
+2023-03-02,2023,Padel Holster,0635,1,Piece,—,Equipment,550.00,550.00
+2023-03-02,2023,Agency Patch,0681,1,Piece,—,Patches,80.00,80.00
+2023-03-02,2023,Necktie Clip,0775,1,Set,—,Accessories,150.00,150.00
+2023-03-04,2023,Sticker,0312,5,Piece,—,Patches,14.00,70.00
+2023-03-04,2023,GOA C,0568,1,Piece,M,Clothes,850.00,850.00
+2023-03-04,2023,Polo Shirt Blue,0845,6,Piece,"3-M, 3-L",Clothes,350.00,"2,100.00"
+2023-03-06,2023,IOBC Pin,0654,1,Piece,—,Metal,250.00,250.00
+2023-04-16,2023,Combat Shoes,0001,1,Pair,7.0,Shoes,"1,900.00","1,900.00"
+2023-04-17,2023,Rank GOA,0671,2,Piece,—,Metal,100.00,200.00
+2023-04-17,2023,Rank FSU,0935,2,Piece,—,Metal,100.00,200.00
+2023-04-17,2023,SCQB Sculing,0963,1,Set,—,Metal,70.00,70.00
+2023-04-17,2023,Swat Sculing,0966,1,Set,—,Metal,70.00,70.00
+2023-04-18,2023,MG PIXI Patches,1075,2,Piece,—,Patches,50.00,100.00
+2023-04-18,2023,GOA Patches,1083,2,Piece,—,Patches,50.00,100.00
+2023-04-19,2023,Fiber Holster,0636,1,Piece,—,Equipment,600.00,600.00
+2023-04-19,2023,Garrison,0754,1,Piece,—,Accessories,80.00,80.00
+2023-04-19,2023,Garrison,0754,1,Piece,—,Accessories,80.00,80.00
+2023-04-19,2023,Patrol CS Volts,1104,1,Pair,—,Shoes,"3,300.00","3,300.00"
+2023-04-19,2023,Patrol CS Volts,1104,1,Pair,—,Shoes,"3,300.00","3,300.00"
+2023-04-24,2023,Handcuffs Case,0890,1,Piece,—,Equipment,350.00,350.00
+2023-04-24,2023,Change Unit Patch (Patch),1016,1,Piece,—,Patches,70.00,70.00
+2023-04-25,2023,Gibson Lites,0002,1,Pair,—,Shoes,"2,100.00","2,100.00"
+2023-04-25,2023,Santi Badge,0648,1,Piece,—,Metal,"1,000.00","1,000.00"
+2023-04-26,2023,Inside Holster,0631,5,Piece,—,Equipment,200.00,"1,000.00"
+2023-04-26,2023,Garrison Only,0757,1,Piece,—,Accessories,100.00,100.00
+2023-04-26,2023,PALAWAN,1036,1,Piece,—,Patches,100.00,100.00
+2023-04-27,2023,Unit Patch,0545,2,Piece,—,Patches,100.00,200.00
+2023-04-27,2023,Garrison Buckle,0585,2,Piece,—,Metal,200.00,400.00
+2023-04-27,2023,V-Neck,0667,2,Piece,—,Clothes,150.00,300.00
+2023-04-27,2023,Handkerchief,0697,2,Piece,—,Accessories,50.00,100.00
+2023-04-27,2023,Athletic Shoes,1105,1,Pair,—,Shoes,"1,800.00","1,800.00"
+2023-04-29,2023,Athletic Uniform,0137,1,Set,—,Clothes,"1,700.00","1,700.00"
+2023-04-29,2023,Badge,0501,1,Piece,—,Metal,"1,000.00","1,000.00"
+2023-04-29,2023,Awards,0911,1,Piece,—,Metal,140.00,140.00
+2023-05-02,2023,Athletic Shoes,1105,1,Pair,11.5,Shoes,"1,900.00","1,900.00"
+2023-05-03,2023,Logo,0304,4,Piece,—,Patches,50.00,200.00
+2023-05-03,2023,NHO,0546,1,Piece,—,Patches,50.00,50.00
+2023-05-03,2023,PNCO Buckle,0589,1,Piece,—,Metal,950.00,950.00
+2023-05-03,2023,Long Sleeve White,0713,1,Piece,—,Clothes,400.00,400.00
+2023-05-03,2023,Long Sleeve White,0834,1,Piece,—,Clothes,280.00,280.00
+2023-05-03,2023,Oak Leaf Cluster Pin,0943,1,Piece,—,Metal,150.00,150.00
+2023-05-05,2023,A Pants,0111,1,Piece,M,Clothes,700.00,700.00
+2023-05-05,2023,IOBC Pin,0654,4,Piece,—,Metal,250.00,"1,000.00"
+2023-05-05,2023,ID Holder,0695,1,Piece,—,Accessories,80.00,80.00
+2023-05-06,2023,Nameplate (Metal),0621,2,Piece,—,Metal,250.00,500.00
+2023-05-06,2023,PNP Badge,0646,2,Piece,—,Metal,"1,000.00","2,000.00"
+2023-05-06,2023,OSEC Pin,0655,2,Piece,—,Metal,300.00,600.00
+2023-05-06,2023,Logistician Pin,0656,2,Piece,—,Metal,250.00,500.00
+2023-05-06,2023,GOA B Upper,0827,1,Piece,—,Clothes,800.00,800.00
+2023-05-06,2023,PNP Awards,0921,2,Piece,—,Metal,"2,070.00","4,140.00"
+2023-05-08,2023,Cloth,0249,2,Piece,—,Equipment,90.00,180.00
+2023-05-08,2023,Long Sleeve,0575,1,Piece,—,Clothes,200.00,200.00
+2023-05-09,2023,Beltbag Tag,0766,1,Piece,—,Accessories,"1,100.00","1,100.00"
+2023-05-10,2023,Pershing Cap Case,0269,1,Piece,—,Equipment,220.00,220.00
+2023-05-10,2023,OPC Pin,0513,1,Piece,—,Metal,750.00,750.00
+2023-05-10,2023,Pavehawk Pants,0618,2,Piece,—,Clothes,"1,000.00","2,000.00"
+2023-05-10,2023,Cycling Short,0664,2,Piece,—,Clothes,80.00,160.00
+2023-05-10,2023,Handkerchief,0697,1,Piece,—,Accessories,50.00,50.00
+2023-05-10,2023,Tickler (Notepad),0901,1,Piece,—,Equipment,50.00,50.00
+2023-05-11,2023,Army Pants,0115,1,Piece,—,Clothes,250.00,250.00
+2023-05-11,2023,Green Army Shirt,0166,2,Piece,—,Clothes,180.00,360.00
+2023-05-11,2023,Banana Type Short,0796,1,Piece,—,Clothes,350.00,350.00
+2023-05-11,2023,10BIC PIn,0937,1,Piece,—,Metal,250.00,250.00
+2023-05-12,2023,Embossed Bullcap,0522,3,Piece,—,Accessories,350.00,"1,050.00"
+2023-05-12,2023,PNP Badge,0646,1,Piece,—,Metal,"1,000.00","1,000.00"
+2023-05-12,2023,OSEC Pin,0655,2,Piece,—,Metal,300.00,600.00
+2023-05-12,2023,Logistician Pin,0656,2,Piece,—,Metal,250.00,500.00
+2023-05-12,2023,BRC Pin,0657,1,Piece,—,Metal,150.00,150.00
+2023-05-12,2023,Metalic Bullcap,0746,1,Piece,—,Accessories,400.00,400.00
+2023-05-12,2023,Awards,0911,2,Piece,—,Metal,"2,070.00","4,140.00"
+2023-05-12,2023,PNP Nameplate,0978,2,Piece,—,Metal,250.00,500.00
+2023-05-12,2023,OBC Pin (Officer Basic Course),0981,1,Piece,—,Metal,200.00,200.00
+2023-05-15,2023,Grip,0630,2,Piece,—,Equipment,180.00,360.00
+2023-05-15,2023,Inside Holster,0631,3,Piece,—,Equipment,180.00,540.00
+2023-05-15,2023,PSPG Pin,0650,3,Piece,—,Metal,120.00,360.00
+2023-05-15,2023,Magazine pouch,0866,4,Piece,—,Equipment,200.00,800.00
+2023-05-16,2023,GOA Pants,0106,1,Piece,36.0,Clothes,700.00,700.00
+2023-05-16,2023,Sticker,0312,2,Piece,—,Patches,50.00,100.00
+2023-05-16,2023,Handcuffs Case,0890,1,Piece,—,Equipment,330.00,330.00
+2023-05-17,2023,Reflector Vest,0579,15,Piece,—,Equipment,300.00,"4,500.00"
+2023-05-18,2023,Mess Kit Pouch,0272,1,Piece,—,Equipment,100.00,100.00
+2023-05-18,2023,Overseacap,0428,2,Piece,—,Accessories,800.00,"1,600.00"
+2023-05-18,2023,Repair Badge,0514,1,Piece,—,Metal,300.00,300.00
+2023-05-18,2023,GOA C,0568,1,Piece,—,Clothes,850.00,850.00
+2023-05-18,2023,V-Neck,0667,1,Piece,M,Clothes,150.00,150.00
+2023-05-18,2023,GOA B,0788,1,Piece,—,Clothes,800.00,800.00
+2023-05-18,2023,Olive Green (OG) Cotton,0838,2,Piece,—,Clothes,180.00,360.00
+2023-05-19,2023,Duffle Bag,0525,1,Piece,—,Accessories,"1,500.00","1,500.00"
+2023-05-19,2023,SG Belt,0600,1,Piece,—,Accessories,350.00,350.00
+2023-05-19,2023,GOA B,0788,1,Set,XL,Clothes,"1,500.00","1,500.00"
+2023-05-22,2023,Flashlight,0205,4,Piece,—,Equipment,280.00,"1,120.00"
+2023-05-22,2023,Inside Holster,0631,2,Piece,—,Equipment,180.00,360.00
+2023-05-22,2023,Single Magpouch,0677,1,Piece,—,Equipment,250.00,250.00
+2023-05-22,2023,Double Magpouch,0865,2,Piece,—,Equipment,250.00,500.00
+2023-05-23,2023,Gibson Lites,0002,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2023-05-23,2023,Fix Short,0167,1,Piece,M,Clothes,500.00,500.00
+2023-05-23,2023,Whistle,0642,2,Piece,—,Equipment,70.00,140.00
+2023-05-29,2023,Pavehawk Pants,0618,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2023-06-01,2023,Gibson Lites,0002,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2023-06-03,2023,A Shoes,0006,1,Pair,9.0,Shoes,"1,800.00","1,800.00"
+2023-06-03,2023,A Pants,0111,1,Piece,—,Clothes,700.00,700.00
+2023-06-03,2023,Clip Lock,0429,1,Piece,—,Accessories,10.00,10.00
+2023-06-05,2023,Gibson Lites,0002,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2023-06-05,2023,Garrison,0754,2,Piece,—,Accessories,110.00,220.00
+2023-06-05,2023,PNP Awards,0921,1,Piece,—,Metal,990.00,990.00
+2023-06-07,2023,Patrol Shoes,0005,1,Pair,—,Shoes,"1,850.00","1,850.00"
+2023-06-07,2023,Sticker,0312,2,Piece,—,Patches,60.00,120.00
+2023-06-07,2023,Sticker,0312,2,Piece,—,Patches,40.00,80.00
+2023-06-07,2023,Rank FMAJ (Fire Major),0994,6,Piece,—,Metal,40.00,240.00
+2023-06-07,2023,Rank FMAJ/PLTCA,1112,6,Piece,—,Patches,40.00,240.00
+2023-06-10,2023,Medalya,0916,2,Piece,—,Metal,280.00,560.00
+2023-06-13,2023,A Pants,0111,1,Piece,—,Clothes,500.00,500.00
+2023-06-13,2023,Garment Bag,0413,1,Piece,—,Accessories,300.00,300.00
+2023-06-13,2023,A Shirt,0628,1,Piece,2XL,Clothes,400.00,400.00
+2023-06-14,2023,Tactical Short Brown,0831,1,Piece,M,Clothes,600.00,600.00
+2023-06-16,2023,RMFB NCRPO,0531,20,Piece,—,Patches,35.00,700.00
+2023-06-16,2023,PNP Scout,0547,2,Piece,—,Patches,35.00,70.00
+2023-06-16,2023,QUEZON PRO,1056,2,Piece,—,Patches,35.00,70.00
+2023-06-16,2023,RMFB 4B,1081,5,Piece,—,Patches,35.00,175.00
+2023-06-19,2023,A Shoes,0006,1,Pair,9.0,Shoes,"1,800.00","1,800.00"
+2023-06-19,2023,Cap Device PNP Officer,0425,1,Piece,—,Accessories,450.00,450.00
+2023-06-20,2023,Bullcap,0423,1,Piece,—,Accessories,350.00,350.00
+2023-06-23,2023,Combat Shoes,0001,1,Pair,—,Shoes,"1,850.00","1,850.00"
+2023-06-23,2023,A Kids,0140,1,Piece,—,Clothes,400.00,400.00
+2023-06-23,2023,GOA C,0568,1,Piece,—,Clothes,800.00,800.00
+2023-06-23,2023,Handkerchief,0697,5,Piece,—,Accessories,40.00,200.00
+2023-06-23,2023,Charcoal Socks,0809,2,Piece,—,Clothes,130.00,260.00
+2023-06-26,2023,Gibson Lites,0002,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2023-06-26,2023,Shoe Lace,0430,1,Piece,—,Accessories,50.00,50.00
+2023-06-26,2023,Lousy Hat,0690,1,Piece,—,Accessories,300.00,300.00
+2023-06-27,2023,A Shirt,0628,1,Piece,—,Clothes,450.00,450.00
+2023-06-29,2023,Tropical Pants,0103,1,Piece,—,Clothes,800.00,800.00
+2023-06-29,2023,Pavehawk Pants,0618,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2023-06-29,2023,A Shirt,0628,1,Piece,—,Clothes,450.00,450.00
+2023-06-29,2023,Tactical Pants,0687,1,Piece,—,Clothes,900.00,900.00
+2023-07-04,2023,Logo & Namecloth,0682,100,Set,—,Patches,60.00,"6,000.00"
+2023-07-05,2023,Clarino Shoes,0007,1,Pair,10.0,Shoes,"2,000.00","2,000.00"
+2023-07-06,2023,Patrol Shirt,0108,1,Piece,—,Clothes,"1,300.00","1,300.00"
+2023-07-06,2023,Pavehawk Pants,0618,1,Piece,S,Clothes,900.00,900.00
+2023-07-06,2023,Logo & Namecloth,0682,100,Set,—,Patches,25.00,"2,500.00"
+2023-07-07,2023,PNCO Bullcap,0521,2,Piece,—,Accessories,300.00,600.00
+2023-07-08,2023,Patrol Shirt,0108,1,Piece,M,Clothes,"1,400.00","1,400.00"
+2023-07-12,2023,Vest,0209,1,Piece,—,Equipment,350.00,350.00
+2023-07-14,2023,Cycling Short,0664,3,Piece,—,Clothes,100.00,300.00
+2023-07-14,2023,Awards,0911,1,Piece,—,Metal,620.00,620.00
+2023-07-17,2023,SG Pants,0117,2,Piece,—,Clothes,250.00,500.00
+2023-07-17,2023,Long Sleeve,0575,2,Piece,—,Clothes,400.00,800.00
+2023-07-17,2023,Agency Patch,0681,2,Piece,—,Patches,80.00,160.00
+2023-07-17,2023,Agency Patch,0681,2,Piece,—,Patches,20.00,40.00
+2023-07-18,2023,Shoulder Board,0406,1,Piece,—,Accessories,"1,500.00","1,500.00"
+2023-07-18,2023,Handcuffs,0619,1,Piece,—,Equipment,700.00,700.00
+2023-07-18,2023,Nameplate (Metal),0621,1,Piece,—,Metal,300.00,300.00
+2023-07-18,2023,BRC Pin,0657,1,Piece,—,Metal,150.00,150.00
+2023-07-18,2023,Awards,0911,1,Piece,—,Metal,675.00,675.00
+2023-07-19,2023,Patrol Shirt,0108,2,Piece,—,Clothes,420.00,840.00
+2023-07-19,2023,Bullcap,0423,1,Piece,—,Accessories,350.00,350.00
+2023-07-19,2023,PNCO Bullcap,0521,1,Piece,—,Accessories,300.00,300.00
+2023-07-19,2023,PNP Scout,0547,1,Piece,—,Patches,200.00,200.00
+2023-07-19,2023,BRC Pin,0657,1,Piece,—,Metal,150.00,150.00
+2023-07-19,2023,Cycling Short,0664,2,Piece,—,Clothes,80.00,160.00
+2023-07-19,2023,TMRU Shirt,0700,1,Piece,—,Clothes,800.00,800.00
+2023-07-19,2023,Shoe Polish Brush,0701,1,Piece,—,Equipment,50.00,50.00
+2023-07-19,2023,Shorts,0798,2,Piece,—,Clothes,550.00,"1,100.00"
+2023-07-19,2023,Shoe Polish (Kiwi),0893,1,Piece,—,Equipment,220.00,220.00
+2023-07-20,2023,A Pants,0111,2,Piece,XS,Clothes,700.00,"1,400.00"
+2023-07-20,2023,Pin,0505,1,Piece,—,Metal,150.00,150.00
+2023-07-21,2023,A Shoes,0006,1,Pair,9.0,Shoes,"1,700.00","1,700.00"
+2023-07-21,2023,Black Gloves,0693,3,Piece,—,Accessories,50.00,150.00
+2023-07-21,2023,Badge (SANTI),0906,1,Piece,—,Metal,"1,100.00","1,100.00"
+2023-07-24,2023,BFB Belt,0735,3,Piece,—,Accessories,800.00,"2,400.00"
+2023-07-24,2023,Athletic Shoes,1105,1,Pair,8.0,Shoes,"1,700.00","1,700.00"
+2023-07-25,2023,Santi Buckle,0584,1,Piece,—,Metal,"1,200.00","1,200.00"
+2023-07-25,2023,GOA B Upper,0827,1,Piece,—,Clothes,800.00,800.00
+2023-07-25,2023,BNP Awards,0913,1,Piece,—,Metal,575.00,575.00
+2023-07-25,2023,TAGAPAGUGNAY,0985,1,Piece,—,Metal,200.00,200.00
+2023-07-26,2023,Tropical Pants,0103,1,Piece,—,Clothes,900.00,900.00
+2023-07-26,2023,Tactical Pants,0687,1,Piece,—,Clothes,900.00,900.00
+2023-07-27,2023,Office Buckle,0590,1,Piece,—,Metal,800.00,800.00
+2023-07-28,2023,NUP Pants,0702,1,Piece,—,Clothes,650.00,650.00
+2023-07-28,2023,Knife,0703,1,Piece,—,Equipment,400.00,400.00
+2023-07-28,2023,PNP Pershing Cap (Female),0773,1,Piece,5.0,Accessories,550.00,550.00
+2023-07-28,2023,PNP Pershing Cap (Female),0773,1,Piece,6.0,Accessories,550.00,550.00
+2023-07-28,2023,PNP Pershing Cap (Female),0773,1,Piece,7.0,Accessories,550.00,550.00
+2023-07-28,2023,PNP Pershing Cap (Female),0773,1,Piece,8.0,Accessories,550.00,550.00
+2023-07-29,2023,Lanyard,0401,1,Set,—,Accessories,116.03,116.03
+2023-07-29,2023,SG Belt,0600,1,Set,—,Accessories,800.00,800.00
+2023-07-29,2023,Whistle,0642,1,Set,—,Equipment,53.97,53.97
+2023-07-29,2023,SS Badge,0647,1,Piece,—,Metal,80.00,80.00
+2023-07-29,2023,Tie Clip,0688,1,Set,—,Accessories,36.36,36.36
+2023-07-29,2023,Collar Pin,0689,1,Piece,—,Accessories,40.00,40.00
+2023-07-29,2023,Necktie,0706,1,Set,—,Accessories,113.64,113.64
+2023-08-01,2023,CS Volts,0004,1,Pair,8.0,Shoes,"1,800.00","1,800.00"
+2023-08-01,2023,Bungee Cord,0238,1,Piece,—,Equipment,350.00,350.00
+2023-08-02,2023,Patrol Shoes,0005,1,Pair,8.0,Shoes,"1,800.00","1,800.00"
+2023-08-02,2023,A Short,0572,1,Piece,XL,Clothes,500.00,500.00
+2023-08-02,2023,Poncho Green,0593,1,Piece,—,Clothes,300.00,300.00
+2023-08-02,2023,A Shirt,0628,1,Piece,XL,Clothes,380.00,380.00
+2023-08-02,2023,Raincoat Blue,0707,1,Set,—,Clothes,500.00,500.00
+2023-08-03,2023,6-Pocket Short,0573,1,Piece,—,Clothes,500.00,500.00
+2023-08-03,2023,Pavehawk Pants,0618,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2023-08-03,2023,IOBC Pin,0654,2,Piece,—,Metal,250.00,500.00
+2023-08-03,2023,Olive Green (OG) Cotton,0838,2,Piece,—,Clothes,180.00,360.00
+2023-08-03,2023,PNP Awards,0921,1,Piece,—,Metal,500.00,500.00
+2023-08-04,2023,Gibson Lites,0002,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2023-08-04,2023,Patrol Shoes,0005,1,Pair,—,Shoes,"1,850.00","1,850.00"
+2023-08-04,2023,CS Volts Midcut,0008,1,Set,—,Shoes,"3,300.00","3,300.00"
+2023-08-04,2023,Knightstick,0274,1,Piece,—,Equipment,300.00,300.00
+2023-08-04,2023,Keychain,0418,2,Piece,—,Accessories,180.00,360.00
+2023-08-04,2023,Bullcap,0423,1,Piece,—,Accessories,380.00,380.00
+2023-08-04,2023,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2023-08-04,2023,Sculing,0510,1,Set,—,Metal,70.00,70.00
+2023-08-04,2023,PSPG Patch,0539,1,Piece,—,Patches,100.00,100.00
+2023-08-04,2023,PSPG Patch,0539,2,Piece,—,Patches,50.00,100.00
+2023-08-04,2023,Long Sleeve,0575,1,Piece,L,Clothes,700.00,700.00
+2023-08-04,2023,A Shirt,0628,1,Piece,L,Clothes,400.00,400.00
+2023-08-04,2023,Knife,0703,1,Piece,—,Equipment,500.00,500.00
+2023-08-04,2023,Handcuffs Case,0890,1,Piece,—,Equipment,300.00,300.00
+2023-08-04,2023,PNP Awards,0921,1,Piece,—,Metal,600.00,600.00
+2023-08-07,2023,Pershing Cap,0424,1,Piece,—,Accessories,650.00,650.00
+2023-08-07,2023,Logistician Pin,0656,55,Piece,—,Metal,150.00,"8,250.00"
+2023-08-08,2023,A Shoes,0006,1,Pair,—,Shoes,"1,700.00","1,700.00"
+2023-08-08,2023,Athletic Uniform,0137,1,Set,—,Clothes,"1,500.00","1,500.00"
+2023-08-08,2023,PNP Sock,0146,1,Piece,—,Clothes,120.00,120.00
+2023-08-08,2023,PSJLC Pin,0946,1,Piece,—,Metal,150.00,150.00
+2023-08-09,2023,SG Pants,0117,2,Piece,—,Clothes,250.00,500.00
+2023-08-09,2023,Lanyard,0401,1,Piece,—,Accessories,109.21,109.21
+2023-08-09,2023,Long Sleeve,0575,2,Piece,—,Clothes,400.00,800.00
+2023-08-09,2023,SG Belt,0600,1,Set,—,Accessories,750.00,750.00
+2023-08-09,2023,Whistle,0642,1,Piece,—,Equipment,50.79,50.79
+2023-08-09,2023,SS Badge,0647,1,Piece,—,Metal,80.00,80.00
+2023-08-09,2023,Collar Pin,0689,1,Piece,—,Accessories,50.00,50.00
+2023-08-09,2023,Lousy Hat,0690,1,Piece,—,Accessories,300.00,300.00
+2023-08-09,2023,Necktie,0706,1,Piece,—,Accessories,120.00,120.00
+2023-08-10,2023,Inside Holster,0631,1,Piece,—,Equipment,180.00,180.00
+2023-08-12,2023,Tactical Pants Brown,0856,1,Piece,L,Clothes,90.00,90.00
+2023-08-12,2023,PNP Awards,0921,2,Set,—,Metal,900.00,"1,800.00"
+2023-08-14,2023,Clarino Shoes,0007,1,Pair,—,Shoes,"1,900.00","1,900.00"
+2023-08-15,2023,Patrol Shoes,0005,1,Pair,9.0,Shoes,"1,800.00","1,800.00"
+2023-08-15,2023,PNP Sock,0146,1,Piece,—,Clothes,75.00,75.00
+2023-08-15,2023,A Short,0572,1,Piece,L,Clothes,500.00,500.00
+2023-08-15,2023,A Shirt,0628,1,Piece,L,Clothes,400.00,400.00
+2023-08-15,2023,PNP White Socks,0815,1,Piece,—,Clothes,150.00,150.00
+2023-08-15,2023,Tickler (Notepad),0901,1,Piece,—,Equipment,75.00,75.00
+2023-08-15,2023,PNP Awards,0921,1,Piece,—,Metal,"1,550.00","1,550.00"
+2023-08-15,2023,ACG,0997,2,Set,—,Patches,70.00,140.00
+2023-08-16,2023,Garrison Buckle,0585,1,Piece,—,Metal,200.00,200.00
+2023-08-17,2023,Gibson Lites,0002,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2023-08-17,2023,A Shirt PCO,0692,10,Piece,—,Clothes,350.00,"3,500.00"
+2023-08-17,2023,PNCO Shirt,0790,20,Piece,—,Clothes,320.00,"6,400.00"
+2023-08-18,2023,Pavehawk Pants,0618,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2023-08-21,2023,A Pants,0111,1,Piece,L,Clothes,600.00,600.00
+2023-08-21,2023,Garrison,0754,1,Piece,—,Accessories,100.00,100.00
+2023-08-23,2023,Patrol Shoes,0005,1,Pair,10.0,Shoes,"1,800.00","1,800.00"
+2023-08-23,2023,Magpouch,0202,1,Piece,—,Equipment,450.00,450.00
+2023-08-23,2023,Flight Pouch,0207,1,Piece,—,Equipment,200.00,200.00
+2023-08-23,2023,PNP Bullcap,0523,1,Piece,—,Accessories,300.00,300.00
+2023-08-25,2023,A Shirt,0158,1,Piece,—,Clothes,600.00,600.00
+2023-08-26,2023,Under Armor Shoes,0012,1,Pair,—,Shoes,"1,800.00","1,800.00"
+2023-08-26,2023,Pavehawk Pants,0618,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2023-08-30,2023,Gibson Lites,0002,1,Pair,7.0,Shoes,"2,000.00","2,000.00"
+2023-08-30,2023,M16 Magpouch,0676,5,Piece,—,Equipment,250.00,"1,250.00"
+2023-08-30,2023,Triple Tap Magpouch,0678,1,Piece,—,Equipment,200.00,200.00
+2023-08-30,2023,Grip (M16),0896,2,Piece,—,Equipment,250.00,500.00
+2023-08-31,2023,Pants,0118,6,Piece,M,Clothes,800.00,"4,800.00"
+2023-08-31,2023,Pants,0118,1,Piece,S,Clothes,800.00,800.00
+2023-08-31,2023,Pants,0118,2,Piece,L,Clothes,"1,000.00","2,000.00"
+2023-08-31,2023,Arnis,0234,9,Piece,—,Equipment,100.00,900.00
+2023-08-31,2023,Round Neck,0594,9,Piece,—,Clothes,120.00,"1,080.00"
+2023-09-01,2023,Belt,0407,1,Piece,32.0,Accessories,300.00,300.00
+2023-09-04,2023,GOA Pants,0106,2,Piece,—,Clothes,750.00,"1,500.00"
+2023-09-04,2023,Flight Pouch,0207,1,Piece,—,Equipment,150.00,150.00
+2023-09-04,2023,Sling Bag,0526,1,Piece,—,Accessories,"1,300.00","1,300.00"
+2023-09-04,2023,Bikini Holster,0632,1,Piece,—,Equipment,500.00,500.00
+2023-09-04,2023,Whistle,0642,1,Piece,—,Equipment,100.00,100.00
+2023-09-04,2023,V-Neck,0667,1,Piece,—,Clothes,130.00,130.00
+2023-09-04,2023,Tactical Knife,0704,1,Piece,—,Equipment,400.00,400.00
+2023-09-04,2023,Tactical Knife,0704,1,Piece,—,Equipment,400.00,400.00
+2023-09-04,2023,Garrison White,0758,1,Piece,—,Accessories,100.00,100.00
+2023-09-04,2023,White Socks,0824,4,Piece,—,Clothes,80.00,320.00
+2023-09-06,2023,A Shoes,0006,2,Pair,10.0,Shoes,"1,800.00","3,600.00"
+2023-09-11,2023,A Shoes,0006,1,Pair,8.0,Shoes,"2,000.00","2,000.00"
+2023-09-11,2023,Athletic Uniform,0137,1,Set,—,Clothes,"1,700.00","1,700.00"
+2023-09-11,2023,PNP Sock,0146,2,Piece,—,Clothes,150.00,300.00
+2023-09-11,2023,Gibson Dress Shoes,1098,1,Pair,—,Shoes,"1,950.00","1,950.00"
+2023-09-12,2023,SAF Pillow,0275,1,Piece,—,Equipment,800.00,800.00
+2023-09-12,2023,Garment Bag,0413,1,Piece,—,Accessories,700.00,700.00
+2023-09-12,2023,Pershing Cap,0424,1,Piece,—,Accessories,200.00,200.00
+2023-09-12,2023,Buckle SG,0952,1,Piece,—,Metal,300.00,300.00
+2023-09-12,2023,OBC Pin (Officer Basic Course),0981,1,Piece,—,Metal,350.00,350.00
+2023-09-16,2023,CAT Uniform,0133,1,Set,—,Clothes,"1,000.00","1,000.00"
+2023-09-18,2023,PNP Sock,0146,1,Piece,—,Clothes,150.00,150.00
+2023-09-18,2023,Charcoal Socks,0809,1,Piece,—,Clothes,150.00,150.00
+2023-09-20,2023,Patrol Shirt,0108,1,Piece,M,Clothes,"1,400.00","1,400.00"
+2023-09-20,2023,Pavehawk Pants Green,0847,2,Piece,L,Clothes,950.00,"1,900.00"
+2023-09-21,2023,Garrison Buckle,0585,1,Piece,—,Metal,150.00,150.00
+2023-09-22,2023,Patrol Shirt,0108,1,Piece,—,Clothes,"1,400.00","1,400.00"
+2023-09-22,2023,GOA B Uniform (Bulk Order),0709,3,Piece,XL,Clothes,750.00,"2,250.00"
+2023-09-22,2023,GOA B Uniform (Bulk Order),0709,5,Piece,L,Clothes,750.00,"3,750.00"
+2023-09-22,2023,GOA B Uniform (Bulk Order),0709,2,Piece,S,Clothes,750.00,"1,500.00"
+2023-09-22,2023,GOA B Uniform (Bulk Order),0709,1,Piece,L,Clothes,750.00,750.00
+2023-09-22,2023,GOA B Uniform (Bulk Order),0709,8,Piece,M,Clothes,750.00,"6,000.00"
+2023-09-22,2023,GOA B Uniform (Bulk Order),0709,3,Piece,2XL,Clothes,750.00,"2,250.00"
+2023-09-25,2023,SOCO Pin,0652,1,Piece,—,Metal,180.00,180.00
+2023-09-25,2023,Awards,0911,1,Piece,—,Metal,150.00,150.00
+2023-09-25,2023,Change Unit Patch (Metal),0928,1,Piece,—,Metal,70.00,70.00
+2023-09-25,2023,PCNO Buckle,0974,1,Piece,—,Metal,700.00,700.00
+2023-09-26,2023,Nameplate (Metal),0621,1,Piece,—,Metal,300.00,300.00
+2023-09-26,2023,GOA B,0788,1,Piece,L,Clothes,800.00,800.00
+2023-09-27,2023,Cargo Pants,0114,4,Piece,—,Clothes,800.00,"3,200.00"
+2023-09-27,2023,Pavehawk Pants,0618,4,Piece,—,Clothes,"1,000.00","4,000.00"
+2023-09-27,2023,Whistle,0642,1,Piece,—,Equipment,100.00,100.00
+2023-09-28,2023,Cloth,0249,50,Piece,—,Equipment,15.00,750.00
+2023-09-28,2023,Logo,0304,100,Piece,—,Patches,35.00,"3,500.00"
+2023-09-28,2023,Shoe Polish (Kiwi),0893,1,Piece,—,Equipment,250.00,250.00
+2023-09-28,2023,Metal Polish (MC),0894,1,Piece,—,Equipment,180.00,180.00
+2023-09-28,2023,Pin Flag,0948,1,Piece,—,Metal,80.00,80.00
+2023-09-28,2023,Buckle Garrison,0967,1,Set,—,Metal,200.00,200.00
+2023-09-29,2023,Vest,0209,1,Piece,—,Equipment,"1,000.00","1,000.00"
+2023-09-29,2023,Charcoal Socks,0809,1,Piece,—,Clothes,130.00,130.00
+2023-09-30,2023,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2023-10-02,2023,Gibson Lites,0002,1,Pair,5.5,Shoes,"2,100.00","2,100.00"
+2023-10-02,2023,Radio Holder,0206,1,Piece,—,Equipment,200.00,200.00
+2023-10-02,2023,Sticker,0312,1,Piece,—,Patches,60.00,60.00
+2023-10-04,2023,A Pants,0111,1,Piece,XS,Clothes,800.00,800.00
+2023-10-04,2023,Logo,0304,100,Piece,—,Patches,30.00,"3,000.00"
+2023-10-04,2023,Army Bonet,0421,1,Piece,—,Accessories,250.00,250.00
+2023-10-04,2023,GOA C,0568,1,Set,—,Clothes,"1,600.00","1,600.00"
+2023-10-04,2023,GOA B,0788,1,Set,—,Clothes,"1,500.00","1,500.00"
+2023-10-04,2023,Patches Cloth,1053,50,Piece,—,Patches,30.00,"1,500.00"
+2023-10-05,2023,Tactical Sling,0527,1,Piece,—,Accessories,400.00,400.00
+2023-10-05,2023,ID Holder,0695,2,Piece,—,Accessories,70.00,140.00
+2023-10-05,2023,Handkerchief,0697,2,Piece,—,Accessories,100.00,200.00
+2023-10-05,2023,GOA B,0788,1,Set,33.0,Clothes,"1,500.00","1,500.00"
+2023-10-05,2023,G-Pocket Short,0832,5,Piece,—,Clothes,350.00,"1,750.00"
+2023-10-05,2023,SAR Uniform Shirt,0841,7,Piece,—,Clothes,700.00,"4,900.00"
+2023-10-05,2023,Tickler (Notepad),0901,1,Piece,—,Equipment,50.00,50.00
+2023-10-05,2023,CS Volts HS,1099,1,Pair,—,Shoes,"1,900.00","1,900.00"
+2023-10-06,2023,Patrol Shoes,0005,1,Pair,—,Shoes,"1,800.00","1,800.00"
+2023-10-06,2023,GOA Pants,0106,1,Piece,44.0,Clothes,800.00,800.00
+2023-10-06,2023,A Kids,0140,1,Piece,2XL,Clothes,450.00,450.00
+2023-10-06,2023,Magpouch,0202,1,Piece,—,Equipment,600.00,600.00
+2023-10-06,2023,Vest,0209,1,Piece,—,Equipment,"2,700.00","2,700.00"
+2023-10-06,2023,Shoulder Board,0406,1,Piece,—,Accessories,350.00,350.00
+2023-10-06,2023,Keychain,0418,10,Piece,—,Accessories,150.00,"1,500.00"
+2023-10-06,2023,Bullcap,0423,1,Piece,—,Accessories,550.00,550.00
+2023-10-06,2023,Tactical Sling,0527,1,Piece,—,Accessories,300.00,300.00
+2023-10-06,2023,Garrison Buckle,0585,1,Piece,—,Metal,450.00,450.00
+2023-10-06,2023,No Shine Buckle,0586,1,Piece,—,Metal,450.00,450.00
+2023-10-06,2023,Rig Belt,0878,1,Set,—,Equipment,"2,100.00","2,100.00"
+2023-10-07,2023,Clarino Shoes,0007,1,Pair,9.0,Shoes,"2,000.00","2,000.00"
+2023-10-09,2023,Clarino Shoes,0007,1,Pair,—,Shoes,"1,900.00","1,900.00"
+2023-10-09,2023,Shoulder Board,0406,2,Piece,—,Accessories,800.00,"1,600.00"
+2023-10-09,2023,Garment Bag,0413,2,Piece,—,Accessories,300.00,600.00
+2023-10-09,2023,OSEC Pin,0655,1,Piece,—,Metal,500.00,500.00
+2023-10-10,2023,No Shine Buckle,0586,1,Piece,—,Metal,300.00,300.00
+2023-10-11,2023,Patrol Shirt,0108,1,Piece,—,Clothes,"1,400.00","1,400.00"
+2023-10-11,2023,Nameplate (Metal),0621,1,Piece,—,Metal,250.00,250.00
+2023-10-12,2023,Patrol Shirt,0108,1,Piece,M,Clothes,"1,000.00","1,000.00"
+2023-10-12,2023,A Pants,0111,1,Piece,L,Clothes,700.00,700.00
+2023-10-12,2023,Paddings,0276,1,Piece,—,Equipment,600.00,600.00
+2023-10-12,2023,Nameplate (Metal),0621,1,Piece,—,Metal,450.00,450.00
+2023-10-12,2023,Awards,0911,1,Piece,—,Metal,450.00,450.00
+2023-10-13,2023,GOA Pants,0106,1,Piece,M,Clothes,700.00,700.00
+2023-10-14,2023,Flight Pouch,0207,1,Set,—,Equipment,600.00,600.00
+2023-10-14,2023,Baton Case,0615,1,Set,—,Equipment,700.00,700.00
+2023-10-16,2023,Patrol Shirt,0108,2,Piece,L,Clothes,"1,400.00","2,800.00"
+2023-10-16,2023,Magpouch,0202,1,Piece,—,Equipment,550.00,550.00
+2023-10-16,2023,Handcuffs,0619,1,Piece,—,Equipment,650.00,650.00
+2023-10-16,2023,Single Clip,0711,4,Piece,—,Accessories,50.00,200.00
+2023-10-16,2023,Handcuffs Case,0890,1,Piece,—,Equipment,300.00,300.00
+2023-10-18,2023,Medkit,0603,1,Piece,—,Equipment,300.00,300.00
+2023-10-18,2023,A Shirt,0628,2,Piece,—,Clothes,500.00,"1,000.00"
+2023-10-20,2023,Patches,0301,1,Piece,—,Patches,"1,900.00","1,900.00"
+2023-10-23,2023,Gibson Lites,0002,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2023-10-23,2023,Magpouch,0202,1,Piece,—,Equipment,600.00,600.00
+2023-10-24,2023,Tubog Badge,0909,1,Piece,—,Metal,550.00,550.00
+2023-10-24,2023,PNP Awards,0921,1,Piece,—,Metal,"1,690.00","1,690.00"
+2023-10-25,2023,Lanyard,0401,1,Piece,—,Accessories,250.00,250.00
+2023-10-25,2023,Pavehawk Pants,0618,4,Piece,M,Clothes,850.00,"3,400.00"
+2023-10-25,2023,Pavehawk Pants,0618,1,Piece,S,Clothes,850.00,850.00
+2023-10-25,2023,Pavehawk Pants,0618,1,Piece,L,Clothes,850.00,850.00
+2023-10-26,2023,Combat Shoes,0001,1,Pair,—,Shoes,"1,850.00","1,850.00"
+2023-10-26,2023,Combat Shoes,0001,1,Pair,—,Shoes,"1,850.00","1,850.00"
+2023-10-26,2023,Patrol Shoes,0005,1,Pair,8.0,Shoes,"1,800.00","1,800.00"
+2023-10-26,2023,Jac Pants,0168,1,Piece,—,Clothes,850.00,850.00
+2023-10-26,2023,Logistician Pin,0656,1,Piece,—,Metal,150.00,150.00
+2023-10-31,2023,Athletic Shoes,1105,1,Pair,9.0,Shoes,"1,800.00","1,800.00"
+2023-11-01,2023,Sticker,0312,1,Piece,—,Patches,50.00,50.00
+2023-11-01,2023,GOA C,0568,1,Set,—,Clothes,850.00,850.00
+2023-11-01,2023,A Shirt,0628,1,Piece,—,Clothes,400.00,400.00
+2023-11-01,2023,PNP Raincoat,0708,1,Piece,—,Clothes,850.00,850.00
+2023-11-03,2023,Towel,0250,2,Piece,—,Equipment,50.00,100.00
+2023-11-04,2023,Grip,0630,1,Piece,—,Equipment,250.00,250.00
+2023-11-04,2023,Padel Holster,0635,1,Piece,—,Equipment,600.00,600.00
+2023-11-04,2023,Change Unit Patch (Metal),0928,3,Piece,—,Metal,70.00,210.00
+2023-11-06,2023,Magpouch,0202,1,Piece,—,Equipment,500.00,500.00
+2023-11-06,2023,GOA C,0568,1,Set,—,Clothes,"1,500.00","1,500.00"
+2023-11-06,2023,ID Holder,0695,1,Piece,—,Accessories,70.00,70.00
+2023-11-06,2023,Athletic Shoes,1105,1,Pair,8.0,Shoes,"1,800.00","1,800.00"
+2023-11-06,2023,Athletic Shoes,1105,1,Pair,10.0,Shoes,"2,000.00","2,000.00"
+2023-11-08,2023,A Kids,0140,1,Piece,—,Clothes,350.00,350.00
+2023-11-08,2023,Canik Holster,0637,1,Piece,—,Equipment,550.00,550.00
+2023-11-08,2023,Single Clip,0711,4,Piece,—,Accessories,40.00,160.00
+2023-11-08,2023,Shoe Polish (Kiwi),0893,1,Piece,—,Equipment,250.00,250.00
+2023-11-08,2023,Shoe Polish Brush (Bruno),0903,1,Piece,—,Equipment,50.00,50.00
+2023-11-11,2023,Pixilized Uniform ,0607,1,Set,—,Clothes,"2,100.00","2,100.00"
+2023-11-11,2023,PNP Awards,0921,1,Piece,—,Metal,800.00,800.00
+2023-11-14,2023,Water Canteen,0212,2,Piece,—,Equipment,400.00,800.00
+2023-11-14,2023,Pavehawk Pants,0618,41,Piece,—,Clothes,800.00,"32,800.00"
+2023-11-15,2023,Patrol Shoes,0005,1,Pair,—,Shoes,"1,900.00","1,900.00"
+2023-11-15,2023,Patrol Shirt,0108,1,Piece,—,Clothes,"1,400.00","1,400.00"
+2023-11-15,2023,Patrol Shirt,0108,1,Piece,—,Clothes,450.00,450.00
+2023-11-15,2023,Flashlight,0205,1,Piece,—,Equipment,300.00,300.00
+2023-11-15,2023,Bullcap,0423,1,Piece,—,Accessories,250.00,250.00
+2023-11-15,2023,Athletic Shoes,1105,1,Pair,7.5,Shoes,"1,750.00","1,750.00"
+2023-11-16,2023,Pixilized Uniform ,0607,1,Set,—,Clothes,"2,000.00","2,000.00"
+2023-11-20,2023,Combat Shoes,0001,1,Pair,9.5,Shoes,"1,800.00","1,800.00"
+2023-11-20,2023,Gibson Lites,0002,1,Pair,—,Shoes,"2,010.00","2,010.00"
+2023-11-20,2023,Water Canteen,0212,1,Piece,—,Equipment,300.00,300.00
+2023-11-20,2023,Belt,0407,1,Piece,—,Accessories,"2,100.00","2,100.00"
+2023-11-20,2023,Garrison Belt,0442,1,Piece,—,Accessories,100.00,100.00
+2023-11-20,2023,PNCO Bullcap,0521,1,Piece,—,Accessories,400.00,400.00
+2023-11-20,2023,Long Sleeve,0575,1,Piece,—,Clothes,800.00,800.00
+2023-11-20,2023,Garrison Buckle,0585,1,Piece,—,Metal,200.00,200.00
+2023-11-20,2023,Pixilized Uniform ,0607,1,Set,—,Clothes,"1,800.00","1,800.00"
+2023-11-20,2023,Dryfit Green,0641,6,Piece,—,Clothes,150.00,900.00
+2023-11-20,2023,Cycling Short,0664,3,Piece,—,Clothes,80.00,240.00
+2023-11-20,2023,Garrison,0754,1,Piece,—,Accessories,100.00,100.00
+2023-11-20,2023,PNP Combat Socks,0810,3,Piece,—,Clothes,70.00,210.00
+2023-11-20,2023,White Socks,0824,6,Piece,—,Clothes,70.00,420.00
+2023-11-20,2023,Skeletal,0970,1,Piece,—,Metal,150.00,150.00
+2023-11-21,2023,Rig Set,0881,1,Set,—,Equipment,"1,900.00","1,900.00"
+2023-11-22,2023,Combat Shoes,0001,1,Pair,—,Shoes,"1,700.00","1,700.00"
+2023-11-28,2023,Batangas Patch,1006,1,Piece,—,Patches,100.00,100.00
+2023-11-28,2023,Patch,1050,1,Piece,—,Patches,200.00,200.00
+2023-11-29,2023,Magpouch,0202,1,Piece,—,Equipment,550.00,550.00
+2023-11-29,2023,Baton,0204,12,Piece,—,Equipment,280.00,"3,360.00"
+2023-11-29,2023,Flight Pouch,0207,12,Piece,—,Equipment,150.00,"1,800.00"
+2023-11-29,2023,Garrison Belt,0442,1,Piece,—,Accessories,750.00,750.00
+2023-11-29,2023,No Shine Buckle,0586,1,Piece,—,Metal,280.00,280.00
+2023-11-29,2023,Medkit,0603,12,Piece,—,Equipment,80.00,960.00
+2023-11-29,2023,Handcuffs,0619,12,Piece,—,Equipment,600.00,"7,200.00"
+2023-11-29,2023,Whistle,0642,20,Piece,—,Equipment,70.00,"1,400.00"
+2023-11-29,2023,BRC Pin,0657,1,Piece,—,Metal,150.00,150.00
+2023-11-29,2023,Garrison,0754,1,Piece,—,Accessories,100.00,100.00
+2023-11-29,2023,Socks,0817,2,Piece,—,Clothes,100.00,200.00
+2023-11-29,2023,Athletic Shoes,1105,1,Pair,8.5,Shoes,"1,800.00","1,800.00"
+2023-11-30,2023,Awards,0911,1,Piece,—,Metal,"1,250.00","1,250.00"
+2023-12-04,2023,Holster,0201,1,Piece,—,Equipment,600.00,600.00
+2023-12-04,2023,Magpouch,0202,1,Piece,—,Equipment,600.00,600.00
+2023-12-04,2023,Single Clip,0711,4,Piece,—,Accessories,40.00,160.00
+2023-12-18,2023,PNP Pershing Cap (Female),0773,1,Piece,—,Accessories,750.00,750.00
+2023-12-18,2023,Patch Type,1052,2,Set,—,Patches,300.00,600.00
+2023-12-20,2023,Patrol Shirt,0108,1,Piece,—,Clothes,"1,400.00","1,400.00"
+2023-12-20,2023,Pavehawk Pants,0618,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2023-12-20,2023,Rig Set,0881,1,Set,—,Equipment,"2,000.00","2,000.00"
+2023-12-20,2023,OSCC Pin,0986,2,Piece,—,Metal,500.00,"1,000.00"
+2023-12-21,2023,Garrison Buckle,0585,1,Piece,—,Metal,180.00,180.00
+2023-12-21,2023,Backpack (7 Days),0744,2,Piece,—,Accessories,750.00,"1,500.00"
+2023-12-21,2023,Garrison,0754,1,Piece,—,Accessories,80.00,80.00
+2023-12-21,2023,PNP Awards,0921,1,Piece,—,Metal,985.00,985.00
+2023-12-21,2023,Name,1062,2,Piece,—,Patches,20.00,40.00
+2023-12-22,2023,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2023-12-22,2023,Rubbertack,0432,3,Piece,—,Accessories,100.00,300.00
+2023-12-22,2023,Badge,0501,1,Piece,—,Metal,"1,200.00","1,200.00"
+2023-12-22,2023,Nameplate (Metal),0621,1,Piece,—,Metal,250.00,250.00
+2023-12-22,2023,Shirt,0800,6,Piece,—,Clothes,150.00,900.00
+2023-12-22,2023,Awards,0911,1,Piece,—,Metal,650.00,650.00
+2023-12-22,2023,BRC Pin Kasanayan/Papuri,0939,1,Piece,—,Metal,150.00,150.00
+2024-01-03,2024,Baton,0204,4,Piece,—,Equipment,300.00,"1,200.00"
+2024-01-03,2024,Flight Pouch,0207,2,Piece,—,Equipment,180.00,360.00
+2024-01-03,2024,Carabiner,0436,2,Piece,—,Accessories,65.00,130.00
+2024-01-03,2024,Small Flight Pouch,0608,2,Piece,—,Equipment,150.00,300.00
+2024-01-03,2024,Whistle,0642,2,Piece,—,Equipment,65.00,130.00
+2024-01-03,2024,Single Clip,0711,2,Piece,—,Accessories,50.00,100.00
+2024-01-04,2024,GOA Pants,0106,1,Piece,—,Clothes,700.00,700.00
+2024-01-05,2024,Box,0277,1,Piece,—,Equipment,300.00,300.00
+2024-01-05,2024,Rig Girsan,0624,1,Set,—,Equipment,"2,000.00","2,000.00"
+2024-01-05,2024,Rig Girsan,0624,1,Set,—,Equipment,"1,500.00","1,500.00"
+2024-01-05,2024,Rig Girsan,0624,1,Set,—,Equipment,"1,500.00","1,500.00"
+2024-01-09,2024,Cloth,0249,100,Piece,—,Equipment,30.00,"3,000.00"
+2024-01-09,2024,Patch,1050,100,Piece,—,Patches,30.00,"3,000.00"
+2024-01-10,2024,Rank,0504,1,Piece,—,Metal,80.00,80.00
+2024-01-11,2024,Patrol Shoes,0005,1,Pair,9.0,Shoes,"2,000.00","2,000.00"
+2024-01-11,2024,Socks,0817,1,Piece,—,Clothes,100.00,100.00
+2024-01-12,2024,Carabiner,0436,2,Set,—,Accessories,75.00,150.00
+2024-01-12,2024,No Shine Buckle,0586,2,Piece,—,Metal,325.00,650.00
+2024-01-12,2024,Pavehawk Pants,0618,1,Piece,M,Clothes,"1,000.00","1,000.00"
+2024-01-12,2024,Whistle,0642,2,Set,—,Equipment,75.00,150.00
+2024-01-15,2024,Single Clip,0711,2,Piece,—,Accessories,50.00,100.00
+2024-01-15,2024,Handcuffs Case,0890,1,Piece,—,Equipment,300.00,300.00
+2024-01-17,2024,GOA Pants,0106,1,Piece,—,Clothes,700.00,700.00
+2024-01-17,2024,Flight Pouch,0207,1,Piece,—,Equipment,300.00,300.00
+2024-01-17,2024,Bullcap,0423,1,Piece,—,Accessories,250.00,250.00
+2024-01-17,2024,Baton Pouch,0616,1,Piece,—,Equipment,300.00,300.00
+2024-01-17,2024,Nameplate (Metal),0621,1,Piece,—,Metal,250.00,250.00
+2024-01-17,2024,PNP Badge,0646,1,Piece,—,Metal,"1,100.00","1,100.00"
+2024-01-17,2024,Lock,0685,4,Piece,—,Equipment,5.00,20.00
+2024-01-17,2024,Awards,0911,1,Piece,—,Metal,120.00,120.00
+2024-01-18,2024,Patrol Shoes,0005,1,Pair,—,Shoes,"1,900.00","1,900.00"
+2024-01-18,2024,Bullcap,0423,1,Piece,—,Accessories,330.00,330.00
+2024-01-18,2024,Carabiner,0436,1,Set,—,Accessories,75.00,75.00
+2024-01-18,2024,Handcuffs,0619,1,Piece,—,Equipment,600.00,600.00
+2024-01-18,2024,Rig Girsan,0624,1,Set,—,Equipment,"1,900.00","1,900.00"
+2024-01-18,2024,Whistle,0642,1,Set,—,Equipment,75.00,75.00
+2024-01-18,2024,Awards,0911,1,Piece,—,Metal,800.00,800.00
+2024-01-18,2024,PNP Awards,0921,1,Piece,—,Metal,500.00,500.00
+2024-01-18,2024,PNP Awards,0921,1,Piece,—,Metal,500.00,500.00
+2024-01-18,2024,Commando,1093,1,Piece,—,Patches,150.00,150.00
+2024-01-19,2024,Pair Rank,0933,2,Piece,—,Metal,80.00,160.00
+2024-01-19,2024,PNP Logo,1043,2,Piece,—,Patches,50.00,100.00
+2024-01-20,2024,Pavehawk Pants,0618,1,Piece,M,Clothes,"1,000.00","1,000.00"
+2024-01-22,2024,SG Pants,0117,1,Piece,—,Clothes,250.00,250.00
+2024-01-22,2024,Baton,0204,2,Piece,—,Equipment,300.00,600.00
+2024-01-22,2024,Baton,0204,1,Piece,—,Equipment,350.00,350.00
+2024-01-22,2024,Flight Pouch,0207,1,Piece,—,Equipment,250.00,250.00
+2024-01-22,2024,Lanyard,0401,1,Set,—,Accessories,54.60,54.60
+2024-01-22,2024,Pershing Cap,0424,1,Piece,—,Accessories,180.00,180.00
+2024-01-22,2024,Badge,0501,1,Piece,—,Metal,80.00,80.00
+2024-01-22,2024,Handcuffs,0619,1,Piece,—,Equipment,400.00,400.00
+2024-01-22,2024,Whistle,0642,1,Set,—,Equipment,25.40,25.40
+2024-01-22,2024,Tie Clip,0688,1,Piece,—,Accessories,80.00,80.00
+2024-01-22,2024,Collar Pin,0689,1,Piece,—,Accessories,180.00,180.00
+2024-01-22,2024,Necktie,0706,1,Piece,—,Accessories,80.00,80.00
+2024-01-22,2024,Rig SG,0880,1,Set,—,Equipment,750.00,750.00
+2024-01-22,2024,PNP Awards,0921,5,Set,—,Metal,"2,430.00","12,150.00"
+2024-01-23,2024,SG Pants,0117,1,Piece,—,Clothes,280.00,280.00
+2024-01-23,2024,Socks,0817,2,Piece,—,Clothes,100.00,200.00
+2024-01-24,2024,Baton,0204,10,Piece,—,Equipment,280.00,"2,800.00"
+2024-01-24,2024,Skeletal Buckle,0587,1,Set,—,Metal,200.00,200.00
+2024-01-24,2024,Handcuffs,0619,10,Piece,—,Equipment,600.00,"6,000.00"
+2024-01-24,2024,Long Sleeve White,0713,1,Piece,—,Clothes,400.00,400.00
+2024-01-24,2024,SG Cap Device,0780,1,Piece,—,Accessories,50.00,50.00
+2024-01-24,2024,Large Flashlight,0870,10,Piece,—,Equipment,300.00,"3,000.00"
+2024-01-24,2024,Awards,0911,1,Piece,—,Metal,"1,715.00","1,715.00"
+2024-01-25,2024,Garrison Belt,0442,2,Piece,—,Accessories,80.00,160.00
+2024-01-25,2024,Rig TISAS,0625,1,Set,—,Equipment,"2,000.00","2,000.00"
+2024-01-25,2024,Rig TISAS,0625,1,Set,—,Equipment,"2,000.00","2,000.00"
+2024-01-25,2024,Logistician Pin,0656,1,Piece,—,Metal,250.00,250.00
+2024-01-25,2024,Tabak Pin,0658,1,Piece,—,Metal,200.00,200.00
+2024-01-25,2024,A Shirt PCO,0692,2,Piece,—,Clothes,450.00,900.00
+2024-01-25,2024,Socks,0817,1,Piece,—,Clothes,150.00,150.00
+2024-01-25,2024,PCOL Buckle,0976,2,Piece,—,Metal,"2,500.00","5,000.00"
+2024-01-25,2024,Rank for Pixilized (Metal),0995,3,Piece,—,Metal,100.00,300.00
+2024-01-26,2024,Patrol Shoes,0005,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2024-01-26,2024,Baton,0204,1,Piece,—,Equipment,300.00,300.00
+2024-01-26,2024,Shoulder Board,0406,1,Piece,—,Accessories,400.00,400.00
+2024-01-26,2024,Clip,0431,4,Piece,—,Accessories,50.00,200.00
+2024-01-26,2024,Flight Pouch Holder,0873,1,Piece,—,Equipment,300.00,300.00
+2024-01-26,2024,Combat Boots,1095,1,Pair,12.0,Shoes,"2,100.00","2,100.00"
+2024-01-30,2024,PNP Awards,0921,1,Piece,—,Metal,440.00,440.00
+2024-01-31,2024,PNP Awards,0921,1,Piece,—,Metal,620.00,620.00
+2024-02-01,2024,SG Pants,0117,1,Piece,—,Clothes,270.00,270.00
+2024-02-01,2024,Collar Pin,0689,1,Piece,—,Accessories,50.00,50.00
+2024-02-01,2024,Long Sleeve White,0713,1,Piece,—,Clothes,400.00,400.00
+2024-02-01,2024,Beret,0714,1,Piece,—,Accessories,400.00,400.00
+2024-02-02,2024,Poncho,0592,1,Piece,—,Clothes,300.00,300.00
+2024-02-02,2024,Poncho,0592,1,Piece,—,Clothes,300.00,300.00
+2024-02-02,2024,Pavehawk Pants,0618,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2024-02-02,2024,GOA B,0788,1,Piece,—,Clothes,800.00,800.00
+2024-02-03,2024,Pixilized Uniform,0136,1,Set,XS,Clothes,"3,000.00","3,000.00"
+2024-02-05,2024,CS Volts,0004,1,Set,—,Shoes,"3,700.00","3,700.00"
+2024-02-05,2024,Change Unit (Patch),1013,2,Piece,—,Patches,180.00,360.00
+2024-02-06,2024,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2024-02-06,2024,Awards,0911,1,Piece,—,Metal,995.00,995.00
+2024-02-06,2024,PNP Shoes,1103,1,Pair,—,Shoes,"1,800.00","1,800.00"
+2024-02-07,2024,PNP Bullcap,0523,1,Piece,—,Accessories,280.00,280.00
+2024-02-08,2024,PNP Sock,0146,1,Piece,—,Clothes,150.00,150.00
+2024-02-08,2024,Clip ID,0402,1,Piece,—,Accessories,40.00,40.00
+2024-02-08,2024,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2024-02-08,2024,Buckle,0506,1,Piece,—,Metal,700.00,700.00
+2024-02-08,2024,PNCO Buckle,0589,1,Piece,—,Metal,700.00,700.00
+2024-02-08,2024,PNP Awards,0921,1,Piece,—,Metal,"1,060.00","1,060.00"
+2024-02-09,2024,Sticker,0312,1,Piece,—,Patches,200.00,200.00
+2024-02-09,2024,Sticker,0312,1,Piece,—,Patches,25.00,25.00
+2024-02-09,2024,Pin Lock,0686,6,Piece,—,Equipment,5.00,30.00
+2024-02-09,2024,Tactical Knife,0704,1,Piece,—,Equipment,500.00,500.00
+2024-02-09,2024,PNP Awards,0921,1,Piece,—,Metal,285.00,285.00
+2024-02-09,2024,PNP Awards,0921,1,Piece,—,Metal,"1,220.00","1,220.00"
+2024-02-10,2024,PNP Badge,0646,1,Piece,—,Metal,"1,200.00","1,200.00"
+2024-02-14,2024,PNP Logo,1043,3,Pair,—,Patches,100.00,300.00
+2024-02-15,2024,A Kids,0140,1,Set,—,Clothes,400.00,400.00
+2024-02-15,2024,Rank GOA,0671,1,Pair,—,Metal,100.00,100.00
+2024-02-15,2024,Awards,0911,1,Piece,—,Metal,"1,095.00","1,095.00"
+2024-02-16,2024,Bullcap,0423,1,Piece,—,Accessories,600.00,600.00
+2024-02-16,2024,Pershing Cap,0424,1,Piece,8.0,Accessories,700.00,700.00
+2024-02-16,2024,No Shine Buckle,0586,1,Piece,—,Metal,350.00,350.00
+2024-02-16,2024,Collar Pin,0689,2,Piece,—,Accessories,35.00,70.00
+2024-02-16,2024,PNP Pershing Cap (Female),0773,1,Piece,56.0,Accessories,"2,600.00","2,600.00"
+2024-02-16,2024,GOA B,0788,2,Piece,—,Clothes,850.00,"1,700.00"
+2024-02-16,2024,Gibson Dress Shoes,1098,1,Pair,10.5,Shoes,"2,000.00","2,000.00"
+2024-02-21,2024,Tactical Knife,0704,1,Piece,—,Equipment,450.00,450.00
+2024-02-22,2024,Silver Buckle,0591,2,Piece,—,Metal,100.00,200.00
+2024-02-22,2024,Silver Buckle,0591,3,Piece,—,Metal,100.00,300.00
+2024-02-22,2024,SG Pershing Cap,0614,1,Piece,—,Accessories,180.00,180.00
+2024-02-22,2024,Botak Short,0665,6,Piece,—,Clothes,70.00,420.00
+2024-02-22,2024,Long Sleeve White,0713,1,Piece,2XL,Clothes,450.00,450.00
+2024-02-22,2024,Gold Buckle Blue Nylon,0716,4,Set,—,Accessories,130.00,520.00
+2024-02-22,2024,Gold Buckle Black Nylon,0785,5,Set,—,Accessories,130.00,650.00
+2024-02-22,2024,Olive Green (OG) Cotton,0838,3,Piece,—,Clothes,120.00,360.00
+2024-02-22,2024,Gold Buckle Only,0954,4,Piece,—,Metal,100.00,400.00
+2024-02-24,2024,Flight Pouch,0207,1,Piece,—,Equipment,400.00,400.00
+2024-02-24,2024,Medkit,0603,1,Piece,—,Equipment,300.00,300.00
+2024-02-24,2024,Baton Holder,0617,1,Piece,—,Equipment,300.00,300.00
+2024-02-26,2024,Bikini Holster,0632,1,Piece,—,Equipment,400.00,400.00
+2024-02-26,2024,Bikini Holster,0632,1,Piece,—,Equipment,400.00,400.00
+2024-02-26,2024,Handkerchief,0697,1,Piece,—,Accessories,50.00,50.00
+2024-02-26,2024,Tickler (Notepad),0901,1,Piece,—,Equipment,50.00,50.00
+2024-02-26,2024,PSPO Pin,0983,1,Piece,—,Metal,100.00,100.00
+2024-02-27,2024,Gibson Dress Shoes,1098,1,Pair,10.5,Shoes,"1,900.00","1,900.00"
+2024-03-01,2024,A Pants,0111,1,Piece,—,Clothes,700.00,700.00
+2024-03-01,2024,Awards,0911,1,Piece,—,Metal,950.00,950.00
+2024-03-01,2024,Athletic Shoes,1105,1,Pair,8.0,Shoes,"2,000.00","2,000.00"
+2024-03-05,2024,Baton,0204,1,Piece,—,Equipment,300.00,300.00
+2024-03-05,2024,Miranda Doctrine,0434,2,Piece,—,Accessories,50.00,100.00
+2024-03-05,2024,Carabiner,0436,2,Set,—,Accessories,75.00,150.00
+2024-03-05,2024,Small Flight Pouch,0608,1,Piece,—,Equipment,150.00,150.00
+2024-03-05,2024,Whistle,0642,1,Piece,—,Equipment,100.00,100.00
+2024-03-05,2024,Whistle,0642,2,Set,—,Equipment,75.00,150.00
+2024-03-05,2024,Handkerchief,0697,2,Piece,—,Accessories,50.00,100.00
+2024-03-05,2024,Single Clip,0711,5,Piece,—,Accessories,50.00,250.00
+2024-03-07,2024,Riffle Bag,0717,1,Piece,—,Equipment,"1,500.00","1,500.00"
+2024-03-12,2024,Patches,0301,2,Piece,—,Patches,80.00,160.00
+2024-03-15,2024,Patrol Shirt,0108,1,Piece,—,Clothes,"1,800.00","1,800.00"
+2024-03-15,2024,GOA C,0568,1,Set,—,Clothes,"1,500.00","1,500.00"
+2024-03-15,2024,Collar Pin,0689,1,Piece,—,Accessories,50.00,50.00
+2024-03-15,2024,Garrison Only,0757,1,Piece,—,Accessories,100.00,100.00
+2024-03-15,2024,GOA B,0788,1,Set,—,Clothes,"1,500.00","1,500.00"
+2024-03-16,2024,Pavehawk Pants,0618,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2024-03-16,2024,Rig Belt,0878,1,Set,—,Equipment,"1,500.00","1,500.00"
+2024-03-16,2024,Athletic Shoes,1105,1,Pair,6.0,Shoes,"1,800.00","1,800.00"
+2024-03-18,2024,Tear Gas,0241,1,Piece,—,Equipment,200.00,200.00
+2024-03-18,2024,Bagong Pilipinas Pin,0659,4,Piece,—,Metal,180.00,720.00
+2024-03-19,2024,Badge Embroided,0649,2,Piece,—,Metal,100.00,200.00
+2024-03-19,2024,Bagong Pilipinas Pin,0659,6,Piece,—,Metal,150.00,900.00
+2024-03-19,2024,Badge (SANTI),0906,1,Piece,—,Metal,"1,100.00","1,100.00"
+2024-03-20,2024,Pavehawk Pants,0618,1,Piece,—,Clothes,850.00,850.00
+2024-03-21,2024,Gibson Lites,0002,1,Pair,—,Shoes,"2,200.00","2,200.00"
+2024-03-21,2024,Baton Holder,0617,1,Piece,—,Equipment,300.00,300.00
+2024-03-21,2024,Low Carry Holster,0633,1,Piece,—,Equipment,700.00,700.00
+2024-03-23,2024,PNP Awards,0921,1,Piece,—,Metal,"1,250.00","1,250.00"
+2024-03-25,2024,Change Rank (Metal),0925,2,Piece,—,Metal,140.00,280.00
+2024-03-26,2024,Pavehawk Pants,0618,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2024-04-01,2024,Athletic Shoes,1105,1,Pair,8.5,Shoes,"1,850.00","1,850.00"
+2024-04-02,2024,Gibson Lites,0002,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2024-04-03,2024,MEDALYA PAPURI,0620,1,Piece,—,Metal,300.00,300.00
+2024-04-11,2024,A Pants,0111,1,Piece,S,Clothes,650.00,650.00
+2024-04-12,2024,PNP Sock,0146,1,Piece,—,Clothes,150.00,150.00
+2024-04-12,2024,Radio Case,0679,5,Piece,—,Equipment,200.00,"1,000.00"
+2024-04-12,2024,A Shirt PCO,0692,1,Piece,M,Clothes,500.00,500.00
+2024-04-12,2024,PNP Awards,0921,1,Piece,—,Metal,750.00,750.00
+2024-04-12,2024,Bagong Pilipinas,1005,2,Piece,—,Patches,200.00,400.00
+2024-04-13,2024,A Shoes,0006,1,Pair,—,Shoes,"1,900.00","1,900.00"
+2024-04-13,2024,PNP Sock,0146,1,Piece,—,Clothes,150.00,150.00
+2024-04-13,2024,Bagong Pilipinas,1005,1,Piece,—,Patches,150.00,150.00
+2024-04-17,2024,Garrison Belt,0442,2,Piece,—,Accessories,100.00,200.00
+2024-04-17,2024,No Shine Buckle,0586,1,Piece,—,Metal,350.00,350.00
+2024-04-17,2024,BRC Pin,0657,1,Piece,—,Metal,150.00,150.00
+2024-04-17,2024,GOA B,0788,1,Piece,XS,Clothes,850.00,850.00
+2024-04-17,2024,Awards,0911,1,Piece,—,Metal,150.00,150.00
+2024-04-17,2024,Bagong Pilipinas,1005,1,Piece,—,Patches,180.00,180.00
+2024-04-18,2024,Badge,0501,1,Piece,—,Metal,"1,100.00","1,100.00"
+2024-04-18,2024,Nameplate (Metal),0621,1,Piece,—,Metal,200.00,200.00
+2024-04-18,2024,Awards,0911,1,Piece,—,Metal,"1,300.00","1,300.00"
+2024-04-19,2024,Gibson Lites,0002,1,Pair,8.0,Shoes,"2,000.00","2,000.00"
+2024-04-19,2024,Bullcap,0423,1,Piece,—,Accessories,380.00,380.00
+2024-04-19,2024,No Shine Buckle,0586,1,Piece,—,Metal,300.00,300.00
+2024-04-19,2024,Change Rank (Metal),0925,1,Piece,—,Metal,150.00,150.00
+2024-04-29,2024,Combat Shoes,0001,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2024-04-29,2024,Patrol Shoes,0005,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2024-04-29,2024,PNCO Bullcap,0521,1,Piece,—,Accessories,280.00,280.00
+2024-04-29,2024,Tactical Knife,0704,1,Piece,—,Equipment,400.00,400.00
+2024-04-29,2024,White Handkerchief,0778,1,Piece,—,Accessories,50.00,50.00
+2024-04-29,2024,PNP Combat Socks,0810,4,Piece,—,Clothes,130.00,520.00
+2024-04-29,2024,White PNP Socks,0823,2,Piece,—,Clothes,120.00,240.00
+2024-04-30,2024,A Pants,0111,1,Piece,L,Clothes,600.00,600.00
+2024-04-30,2024,Cordura Bag,0227,1,Piece,—,Equipment,800.00,800.00
+2024-04-30,2024,A Shirt,0628,1,Piece,L,Clothes,400.00,400.00
+2024-04-30,2024,Cycling Short,0664,4,Piece,—,Clothes,80.00,320.00
+2024-04-30,2024,Black PNP Long Socks,0806,2,Piece,—,Clothes,130.00,260.00
+2024-04-30,2024,Charcoal Socks,0809,2,Piece,—,Clothes,90.00,180.00
+2024-05-06,2024,PCAG Patch,1039,2,Piece,—,Patches,150.00,300.00
+2024-05-08,2024,Patrol Shirt,0108,1,Piece,M,Clothes,"1,500.00","1,500.00"
+2024-05-10,2024,Fiber Rig,0622,1,Set,—,Equipment,"1,800.00","1,800.00"
+2024-05-14,2024,Magpouch,0202,1,Piece,—,Equipment,600.00,600.00
+2024-05-14,2024,Miniature Awards,0917,4,Piece,—,Metal,350.00,"1,400.00"
+2024-05-15,2024,Gibson Lites,0002,1,Pair,8.0,Shoes,"2,000.00","2,000.00"
+2024-05-15,2024,PNP Sock,0146,2,Piece,—,Clothes,150.00,300.00
+2024-05-15,2024,Garrison Buckle,0585,1,Set,—,Metal,200.00,200.00
+2024-05-15,2024,SAR Uniform,0604,4,Piece,—,Clothes,800.00,"3,200.00"
+2024-05-15,2024,Big Flight Pouch,0609,1,Piece,—,Equipment,400.00,400.00
+2024-05-15,2024,Rig Leather,0623,1,Set,—,Equipment,"2,200.00","2,200.00"
+2024-05-15,2024,Cycling Short,0664,3,Piece,—,Clothes,80.00,240.00
+2024-05-15,2024,Cycling Short,0664,1,Piece,—,Clothes,80.00,80.00
+2024-05-15,2024,Garrison Only,0757,1,Piece,—,Accessories,100.00,100.00
+2024-05-15,2024,Change Rank (Metal),0925,1,Piece,—,Metal,150.00,150.00
+2024-05-15,2024,Change Unit (Metal),0927,1,Piece,—,Metal,70.00,70.00
+2024-05-16,2024,Name Cloth,0303,50,Piece,—,Patches,30.00,"1,500.00"
+2024-05-16,2024,Logo,0304,150,Piece,—,Patches,30.00,"4,500.00"
+2024-05-16,2024,Double Clip,0427,3,Piece,—,Accessories,100.00,300.00
+2024-05-17,2024,Flight Pouch,0207,1,Piece,—,Equipment,300.00,300.00
+2024-05-17,2024,Handcuffs,0619,1,Piece,—,Equipment,650.00,650.00
+2024-05-17,2024,Patrol Shirt Old,0792,2,Piece,—,Clothes,650.00,"1,300.00"
+2024-05-18,2024,Patrol Shirt Old,0792,1,Piece,L,Clothes,650.00,650.00
+2024-05-20,2024,Gibson Lites,0002,1,Pair,8.0,Shoes,"2,050.00","2,050.00"
+2024-05-20,2024,Patrol Shirt,0108,1,Piece,XL,Clothes,650.00,650.00
+2024-05-20,2024,Patrol Shirt,0108,1,Piece,XL,Clothes,650.00,650.00
+2024-05-20,2024,Patrol Shirt,0108,1,Piece,XL,Clothes,650.00,650.00
+2024-05-20,2024,Magpouch,0202,1,Piece,—,Equipment,600.00,600.00
+2024-05-20,2024,Medkit,0603,1,Piece,—,Equipment,300.00,300.00
+2024-05-20,2024,Tactical Knife,0704,1,Piece,—,Equipment,400.00,400.00
+2024-05-20,2024,Patrol Shirt Old,0792,1,Piece,XL,Clothes,650.00,650.00
+2024-05-20,2024,Handcuffs Pouch,0891,1,Piece,—,Equipment,300.00,300.00
+2024-05-22,2024,SAR Uniform,0604,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2024-05-22,2024,Patrol Shirt Old,0792,4,Piece,M,Clothes,650.00,"2,600.00"
+2024-05-22,2024,Handcuffs Case,0890,1,Piece,—,Equipment,300.00,300.00
+2024-05-23,2024,Patrol Shirt Old,0792,1,Piece,—,Clothes,100.00,100.00
+2024-05-23,2024,Change Rank (Metal),0925,1,Piece,—,Metal,50.00,50.00
+2024-05-25,2024,GOA Pants,0106,2,Piece,37.0,Clothes,700.00,"1,400.00"
+2024-05-27,2024,SG Pants,0117,1,Piece,—,Clothes,250.00,250.00
+2024-05-27,2024,Magpouch,0202,1,Piece,—,Equipment,550.00,550.00
+2024-05-27,2024,Baton,0204,1,Piece,—,Equipment,300.00,300.00
+2024-05-27,2024,Small Flight Pouch,0608,1,Piece,—,Equipment,200.00,200.00
+2024-05-27,2024,Handcuffs,0619,1,Piece,—,Equipment,700.00,700.00
+2024-05-27,2024,Long Sleeve White,0713,1,Piece,—,Clothes,400.00,400.00
+2024-05-30,2024,Bullcap,0423,1,Piece,—,Accessories,400.00,400.00
+2024-05-30,2024,PNCO Buckle,0589,1,Piece,—,Metal,600.00,600.00
+2024-05-30,2024,Dryfit Green,0641,2,Piece,M,Clothes,250.00,500.00
+2024-05-31,2024,Patrol Shirt,0108,1,Piece,XL,Clothes,600.00,600.00
+2024-06-03,2024,Shoulder Board,0406,1,Piece,—,Accessories,400.00,400.00
+2024-06-03,2024,GOA Patch,0544,2,Piece,—,Patches,80.00,160.00
+2024-06-03,2024,Woven Patch,0718,2,Piece,—,Patches,180.00,360.00
+2024-06-03,2024,Patrol Shirt Old,0792,1,Piece,S,Clothes,650.00,650.00
+2024-06-03,2024,Fiber Holster 9MM,0863,1,Piece,—,Equipment,600.00,600.00
+2024-06-03,2024,CIDG Pixelated Patch,1009,1,Piece,—,Patches,100.00,100.00
+2024-06-03,2024,Change Rank (Patch),1011,1,Piece,—,Patches,100.00,100.00
+2024-06-04,2024,Patrol Shoes,0005,1,Pair,7.0,Shoes,"1,800.00","1,800.00"
+2024-06-04,2024,Baton,0204,1,Piece,—,Equipment,300.00,300.00
+2024-06-04,2024,Bullcap,0423,1,Piece,—,Accessories,400.00,400.00
+2024-06-04,2024,Santi Buckle,0584,1,Piece,—,Metal,"1,300.00","1,300.00"
+2024-06-04,2024,Pavehawk Pants,0618,2,Piece,L,Clothes,900.00,"1,800.00"
+2024-06-04,2024,Patrol Shirt Old,0792,1,Piece,—,Clothes,600.00,600.00
+2024-06-04,2024,Badge Color,0907,1,Piece,—,Metal,100.00,100.00
+2024-06-05,2024,Garrison Buckle,0585,1,Set,—,Metal,230.00,230.00
+2024-06-06,2024,A Kids,0140,1,Piece,—,Clothes,380.00,380.00
+2024-06-06,2024,Rig Leather,0282,1,Set,32.0,Equipment,"2,000.00","2,000.00"
+2024-06-06,2024,Pershing Cap,0424,1,Piece,6.0,Accessories,700.00,700.00
+2024-06-07,2024,Radio Case,0679,1,Piece,—,Equipment,350.00,350.00
+2024-06-11,2024,Patrol Shoes,0005,1,Pair,10.0,Shoes,"1,900.00","1,900.00"
+2024-06-11,2024,Patrol Shoes,0005,1,Pair,11.0,Shoes,"2,100.00","2,100.00"
+2024-06-11,2024,Patrol Shirt Old,0792,1,Piece,—,Clothes,650.00,650.00
+2024-06-13,2024,Patrol Shoes,0005,1,Pair,9.0,Shoes,"1,900.00","1,900.00"
+2024-06-13,2024,Metal Detector,0211,2,Piece,—,Equipment,"1,900.00","3,800.00"
+2024-06-13,2024,Carabiner,0436,1,Set,—,Accessories,75.00,75.00
+2024-06-13,2024,Skeletal Buckle,0587,1,Piece,—,Metal,200.00,200.00
+2024-06-13,2024,Baton Pouch,0616,1,Set,—,Equipment,600.00,600.00
+2024-06-13,2024,Whistle,0642,1,Set,—,Equipment,75.00,75.00
+2024-06-14,2024,Backpack (7 Days),0744,1,Piece,—,Accessories,900.00,900.00
+2024-06-14,2024,Socks,0817,7,Piece,—,Clothes,80.00,560.00
+2024-06-14,2024,Olive Green (OG) Cotton,0838,1,Piece,—,Clothes,180.00,180.00
+2024-06-15,2024,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2024-06-15,2024,SAR Uniform,0604,1,Piece,—,Clothes,"1,200.00","1,200.00"
+2024-06-15,2024,Baton Pouch,0616,1,Set,—,Equipment,600.00,600.00
+2024-06-15,2024,Radio Pouch,0680,1,Piece,—,Equipment,300.00,300.00
+2024-06-15,2024,Fligh pouch,0871,1,Piece,—,Equipment,250.00,250.00
+2024-06-18,2024,Plain Jacket,0629,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2024-06-18,2024,Raincoat,0860,1,Piece,—,Clothes,600.00,600.00
+2024-06-19,2024,Patrol Shoes,0005,1,Pair,9.0,Shoes,"1,950.00","1,950.00"
+2024-06-19,2024,Carabiner,0436,2,Piece,—,Accessories,65.00,130.00
+2024-06-19,2024,Whistle,0642,2,Piece,—,Equipment,65.00,130.00
+2024-06-19,2024,Patrol socks,0816,1,Piece,—,Clothes,150.00,150.00
+2024-06-19,2024,PNP Nameplate,0978,1,Piece,—,Metal,250.00,250.00
+2024-06-20,2024,Gibson Lites,0002,1,Pair,10.0,Shoes,"2,000.00","2,000.00"
+2024-06-24,2024,Eye Protection,0218,1,Piece,—,Equipment,130.00,130.00
+2024-06-26,2024,Patrol Shirt,0108,1,Piece,—,Clothes,"1,500.00","1,500.00"
+2024-06-26,2024,Patrol Shirt,0108,2,Piece,—,Clothes,"1,500.00","3,000.00"
+2024-06-26,2024,Pavehawk Pants,0618,2,Piece,M,Clothes,"1,000.00","2,000.00"
+2024-06-26,2024,Padel Holster,0635,1,Piece,—,Equipment,600.00,600.00
+2024-06-26,2024,Criminology pin,0660,1,Piece,—,Metal,150.00,150.00
+2024-06-26,2024,Lock,0685,10,Piece,—,Equipment,10.00,100.00
+2024-06-26,2024,Red Belt,0740,1,Piece,—,Accessories,300.00,300.00
+2024-06-27,2024,Baton,0204,1,Piece,—,Equipment,300.00,300.00
+2024-06-27,2024,Sling Bag,0526,1,Piece,—,Accessories,700.00,700.00
+2024-06-27,2024,Handcuffs,0619,1,Piece,—,Equipment,650.00,650.00
+2024-06-28,2024,Change Unit GOA Patch,1015,4,Piece,—,Patches,80.00,320.00
+2024-06-28,2024,Change Unit Patrol Patch,1018,1,Piece,—,Patches,180.00,180.00
+2024-07-03,2024,Patrol Shoes,0005,1,Pair,8.0,Shoes,"1,800.00","1,800.00"
+2024-07-03,2024,Bullcap,0423,2,Piece,—,Accessories,300.00,600.00
+2024-07-03,2024,Bullcap,0423,10,Piece,—,Accessories,350.00,"3,500.00"
+2024-07-03,2024,SAR Uniform,0604,2,Piece,M,Clothes,800.00,"1,600.00"
+2024-07-03,2024,PNCO Pershing Cap,0612,2,Piece,—,Accessories,700.00,"1,400.00"
+2024-07-03,2024,Pavehawk Pants,0618,10,Piece,—,Clothes,"1,000.00","10,000.00"
+2024-07-04,2024,Combat Shoes,0001,1,Pair,8.0,Shoes,"2,000.00","2,000.00"
+2024-07-04,2024,Tactical Belt,0601,1,Piece,—,Accessories,300.00,300.00
+2024-07-04,2024,Handkerchief,0697,1,Piece,—,Accessories,50.00,50.00
+2024-07-04,2024,Cotton Pixilized Uniform,0843,1,Set,—,Clothes,"2,300.00","2,300.00"
+2024-07-04,2024,Tickler (Notepad),0901,1,Piece,—,Equipment,50.00,50.00
+2024-07-04,2024,Shoe Polish Brush (Bruno),0903,1,Piece,—,Equipment,150.00,150.00
+2024-07-04,2024,Patch Fix,1051,1,Piece,—,Patches,80.00,80.00
+2024-07-11,2024,Gibson Lites,0002,1,Pair,8.5,Shoes,"2,000.00","2,000.00"
+2024-07-11,2024,Pixilized Uniform Short,0797,1,Piece,—,Clothes,500.00,500.00
+2024-07-11,2024,Rig Belt Leather,0879,1,Set,—,Equipment,"2,000.00","2,000.00"
+2024-07-12,2024,A Pants,0111,1,Piece,M,Clothes,700.00,700.00
+2024-07-12,2024,A Shirt (Female),0849,1,Piece,S,Clothes,400.00,400.00
+2024-07-13,2024,GOA Pants,0106,2,Piece,30.0,Clothes,700.00,"1,400.00"
+2024-07-13,2024,A Pants,0111,1,Piece,M,Clothes,700.00,700.00
+2024-07-13,2024,PSPG PIXI Patches,0535,1,Piece,—,Patches,100.00,100.00
+2024-07-13,2024,GOA C Upper,0569,1,Piece,—,Clothes,850.00,850.00
+2024-07-13,2024,Tactical Belt,0601,1,Piece,—,Accessories,300.00,300.00
+2024-07-13,2024,Glock Holster,0634,1,Piece,—,Equipment,"1,500.00","1,500.00"
+2024-07-13,2024,Olive Green (OG) Cotton,0838,2,Piece,—,Clothes,200.00,400.00
+2024-07-13,2024,Flight Pouch Big,0886,3,Piece,—,Equipment,350.00,"1,050.00"
+2024-07-15,2024,Patrol Shirt,0108,1,Piece,—,Clothes,"1,400.00","1,400.00"
+2024-07-16,2024,Outside Holster,0638,1,Piece,—,Equipment,300.00,300.00
+2024-07-16,2024,GOA B,0788,1,Piece,—,Clothes,950.00,950.00
+2024-07-16,2024,Master RIder,1033,1,Piece,—,Patches,80.00,80.00
+2024-07-16,2024,PSPG,1078,2,Piece,—,Patches,15.00,30.00
+2024-07-16,2024,PSPG,1078,2,Piece,—,Patches,80.00,160.00
+2024-07-19,2024,Vest,0209,1,Piece,—,Equipment,250.00,250.00
+2024-07-23,2024,GOA C Upper,0569,1,Piece,—,Clothes,900.00,900.00
+2024-07-23,2024,Handkerchief,0697,10,Piece,—,Accessories,50.00,500.00
+2024-07-23,2024,GOA B Upper,0827,1,Piece,—,Clothes,800.00,800.00
+2024-07-23,2024,Metal Polish (MC),0894,2,Piece,—,Equipment,150.00,300.00
+2024-07-23,2024,Shoe Polish Brush (Bruno),0903,1,Piece,—,Equipment,50.00,50.00
+2024-07-26,2024,Magpouch,0202,5,Piece,—,Equipment,250.00,"1,250.00"
+2024-07-26,2024,Garterized Belt,0599,1,Piece,—,Accessories,280.00,280.00
+2024-07-26,2024,Medkit,0603,1,Piece,—,Equipment,400.00,400.00
+2024-07-26,2024,Outside Holster,0638,1,Piece,—,Equipment,350.00,350.00
+2024-07-26,2024,Tupple Magpouch,0868,1,Piece,—,Equipment,350.00,350.00
+2024-07-29,2024,LED Light,0581,1,Piece,—,Equipment,180.00,180.00
+2024-07-29,2024,Medkit,0603,1,Piece,—,Equipment,100.00,100.00
+2024-07-30,2024,Patrol Shoes,0005,1,Pair,8.0,Shoes,"1,800.00","1,800.00"
+2024-07-30,2024,Patrol Shoes,0005,3,Pair,10.0,Shoes,"1,900.00","5,700.00"
+2024-07-30,2024,LED Light,0581,1,Piece,—,Equipment,200.00,200.00
+2024-07-30,2024,A Shirt,0628,1,Piece,XL,Clothes,400.00,400.00
+2024-07-30,2024,Radio Case,0679,1,Piece,—,Equipment,300.00,300.00
+2024-08-03,2024,Name Cloth,0303,1,Piece,—,Patches,120.00,120.00
+2024-08-03,2024,Rank for Pixilized (Patch),0548,1,Piece,—,Patches,80.00,80.00
+2024-08-03,2024,Rank for Pixilized (Patch),0548,1,Piece,—,Patches,90.00,90.00
+2024-08-03,2024,PNP Combat Socks,0810,3,Piece,—,Clothes,80.00,240.00
+2024-08-06,2024,Baton,0204,1,Piece,—,Equipment,300.00,300.00
+2024-08-06,2024,Flight Pouch,0207,1,Piece,—,Equipment,200.00,200.00
+2024-08-06,2024,Rig Set,0881,1,Set,—,Equipment,"2,000.00","2,000.00"
+2024-08-06,2024,Bagong Pilipinas,1005,1,Piece,—,Patches,300.00,300.00
+2024-08-07,2024,Patrol Shoes,0005,1,Pair,9.0,Shoes,"1,900.00","1,900.00"
+2024-08-08,2024,Carabiner,0436,1,Set,—,Accessories,75.00,75.00
+2024-08-08,2024,No Shine Buckle,0586,1,Set,—,Metal,400.00,400.00
+2024-08-08,2024,Whistle,0642,1,Set,—,Equipment,75.00,75.00
+2024-08-08,2024,Handkerchief,0697,1,Piece,—,Accessories,50.00,50.00
+2024-08-08,2024,Tickler,0698,1,Piece,—,Equipment,50.00,50.00
+2024-08-08,2024,Single Clip,0711,5,Piece,—,Accessories,45.00,225.00
+2024-08-08,2024,Shoe Polish Brush (Bruno),0903,1,Piece,—,Equipment,150.00,150.00
+2024-08-08,2024,Change Rank (Metal),0925,1,Piece,—,Metal,150.00,150.00
+2024-08-08,2024,PNP BISOC,1042,1,Piece,—,Patches,150.00,150.00
+2024-08-08,2024,CIDG Patch,1074,2,Piece,—,Patches,250.00,500.00
+2024-08-10,2024,Combat Shoes,0001,1,Pair,7.0,Shoes,"1,800.00","1,800.00"
+2024-08-12,2024,Vest,0209,1,Piece,—,Equipment,300.00,300.00
+2024-08-12,2024,Long Sleeve Patch,1030,1,Piece,—,Patches,420.00,420.00
+2024-08-13,2024,Bullcap,0423,2,Piece,—,Accessories,400.00,800.00
+2024-08-16,2024,Flashlight,0205,1,Piece,—,Equipment,400.00,400.00
+2024-08-16,2024,Tear Gas,0241,1,Piece,—,Equipment,250.00,250.00
+2024-08-16,2024,Belt,0407,1,Set,—,Accessories,700.00,700.00
+2024-08-16,2024,Belt,0407,1,Piece,—,Accessories,300.00,300.00
+2024-08-16,2024,Handcuffs,0619,1,Piece,—,Equipment,650.00,650.00
+2024-08-16,2024,Tactical Pants,0687,1,Piece,—,Clothes,900.00,900.00
+2024-08-19,2024,Name Cloth,0303,100,Piece,—,Patches,30.00,"3,000.00"
+2024-08-19,2024,Patch,1050,50,Piece,—,Patches,30.00,"1,500.00"
+2024-08-28,2024,Double Clip,0427,2,Piece,—,Accessories,100.00,200.00
+2024-08-28,2024,Medkit,0603,5,Piece,—,Equipment,80.00,400.00
+2024-08-28,2024,Single Magpouch,0677,1,Piece,—,Equipment,180.00,180.00
+2024-08-28,2024,Collar Pin,0689,5,Piece,—,Accessories,70.00,350.00
+2024-08-28,2024,Single Clip,0711,2,Piece,—,Accessories,50.00,100.00
+2024-08-28,2024,Long Sleeve Blue,0720,1,Piece,—,Clothes,400.00,400.00
+2024-08-28,2024,Fiber Holster 9MM,0863,1,Piece,—,Equipment,600.00,600.00
+2024-08-29,2024,Patrol Shoes,0005,1,Pair,8.0,Shoes,"1,900.00","1,900.00"
+2024-08-29,2024,Bullcap,0423,1,Piece,—,Accessories,250.00,250.00
+2024-09-02,2024,Patrol Shirt,0108,1,Piece,—,Clothes,"1,900.00","1,900.00"
+2024-09-02,2024,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2024-09-02,2024,PCO Buckle,0975,1,Piece,—,Metal,"1,100.00","1,100.00"
+2024-09-03,2024,SG Pershing Cap,0614,1,Piece,—,Accessories,200.00,200.00
+2024-09-04,2024,Patch Woven,0719,2,Piece,—,Patches,150.00,300.00
+2024-09-04,2024,SOU Bullcap,0749,1,Piece,—,Accessories,400.00,400.00
+2024-09-05,2024,Medkit,0603,1,Piece,—,Equipment,80.00,80.00
+2024-09-05,2024,Long Sleeve White,0713,1,Piece,XL,Clothes,410.00,410.00
+2024-09-06,2024,Vest,0209,1,Piece,—,Equipment,500.00,500.00
+2024-09-06,2024,SAR Uniform,0604,1,Piece,L,Clothes,900.00,900.00
+2024-09-11,2024,Awards,0911,1,Piece,—,Metal,"1,350.00","1,350.00"
+2024-09-12,2024,PNP Awards,0921,1,Piece,—,Metal,"1,750.00","1,750.00"
+2024-09-14,2024,Nameplate (Metal),0621,1,Piece,—,Metal,250.00,250.00
+2024-09-14,2024,Low Carry Holster,0633,1,Piece,—,Equipment,300.00,300.00
+2024-09-14,2024,BRC Pin,0657,1,Piece,—,Metal,130.00,130.00
+2024-09-14,2024,Leather belt,0892,1,Set,—,Equipment,"2,000.00","2,000.00"
+2024-09-14,2024,Awards,0911,1,Piece,—,Metal,150.00,150.00
+2024-09-19,2024,Patrol Shirt,0108,1,Piece,—,Clothes,"1,400.00","1,400.00"
+2024-09-19,2024,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2024-09-19,2024,Pavehawk Pants,0618,1,Piece,M,Clothes,900.00,900.00
+2024-09-19,2024,Necktie,0706,1,Piece,—,Accessories,250.00,250.00
+2024-09-20,2024,Holster,0201,1,Piece,—,Equipment,600.00,600.00
+2024-09-20,2024,Baton,0204,1,Piece,—,Equipment,300.00,300.00
+2024-09-20,2024,Baton,0204,1,Piece,—,Equipment,300.00,300.00
+2024-09-20,2024,Flight Pouch,0207,1,Piece,—,Equipment,350.00,350.00
+2024-09-20,2024,Flight Pouch,0207,1,Piece,—,Equipment,200.00,200.00
+2024-09-20,2024,Flight Pouch,0207,1,Piece,—,Equipment,350.00,350.00
+2024-09-20,2024,Flight Pouch,0207,1,Piece,—,Equipment,250.00,250.00
+2024-09-20,2024,No Shine Buckle,0586,1,Piece,—,Metal,400.00,400.00
+2024-09-20,2024,Baton Pouch,0616,1,Piece,—,Equipment,300.00,300.00
+2024-09-20,2024,Padel Holster,0635,1,Piece,—,Equipment,600.00,600.00
+2024-09-20,2024,Radio Case,0679,1,Piece,—,Equipment,300.00,300.00
+2024-09-20,2024,Handkerchief,0697,1,Piece,—,Accessories,40.00,40.00
+2024-09-20,2024,Handcuffs Case,0890,1,Piece,—,Equipment,300.00,300.00
+2024-09-20,2024,Tickler (Notepad),0901,1,Piece,—,Equipment,80.00,80.00
+2024-09-20,2024,Awards,0911,1,Piece,—,Metal,70.00,70.00
+2024-09-20,2024,Jordan Shoes,1111,1,Pair,—,Shoes,150.00,150.00
+2024-09-21,2024,Magpouch,0202,1,Piece,—,Equipment,500.00,500.00
+2024-09-21,2024,Baton,0204,1,Piece,—,Equipment,300.00,300.00
+2024-09-21,2024,Flight Pouch,0207,1,Piece,—,Equipment,250.00,250.00
+2024-09-21,2024,Carabiner,0436,1,Piece,—,Accessories,75.00,75.00
+2024-09-21,2024,Baton Pouch,0616,1,Piece,—,Equipment,300.00,300.00
+2024-09-21,2024,Whistle,0642,1,Piece,—,Equipment,75.00,75.00
+2024-09-21,2024,Radio Case,0679,1,Piece,—,Equipment,300.00,300.00
+2024-09-21,2024,Cap Device,0699,1,Piece,—,Accessories,150.00,150.00
+2024-09-21,2024,Single Clip,0711,2,Piece,—,Accessories,80.00,160.00
+2024-09-23,2024,Clarino Shoes,0007,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2024-09-23,2024,Santi Buckle,0584,1,Piece,—,Metal,"1,200.00","1,200.00"
+2024-09-23,2024,HPG Pin,0661,1,Piece,—,Metal,250.00,250.00
+2024-09-24,2024,Vest,0209,1,Piece,—,Equipment,200.00,200.00
+2024-09-24,2024,Garrison Only,0757,1,Piece,—,Accessories,100.00,100.00
+2024-09-24,2024,Metal Polish (Pledge),0895,1,Piece,—,Equipment,350.00,350.00
+2024-09-25,2024,A Kids,0140,1,Piece,—,Clothes,400.00,400.00
+2024-09-25,2024,Flight Pouch,0207,2,Piece,—,Equipment,180.00,360.00
+2024-09-25,2024,Double Clip,0427,1,Piece,—,Accessories,80.00,80.00
+2024-09-25,2024,Carabiner,0436,3,Set,—,Accessories,225.00,675.00
+2024-09-25,2024,Whistle,0642,3,Set,—,Equipment,225.00,675.00
+2024-09-25,2024,Handkerchief,0697,1,Piece,—,Accessories,50.00,50.00
+2024-09-25,2024,Tickler (Notepad),0901,3,Piece,—,Equipment,50.00,150.00
+2024-09-26,2024,Clarino Shoes,0007,1,Pair,—,Shoes,"1,900.00","1,900.00"
+2024-09-26,2024,GOA Pants,0106,1,Piece,—,Clothes,550.00,550.00
+2024-09-26,2024,White Duck Uniform,0149,1,Set,—,Clothes,"1,300.00","1,300.00"
+2024-09-26,2024,GOA Upper,0566,2,Piece,—,Clothes,550.00,"1,100.00"
+2024-09-26,2024,V-Neck,0667,6,Piece,M,Clothes,150.00,900.00
+2024-09-26,2024,Necktie,0706,1,Piece,—,Accessories,200.00,200.00
+2024-09-26,2024,Shoulder Board White,0733,1,Set,—,Accessories,"1,700.00","1,700.00"
+2024-09-26,2024,Charcoal Socks,0809,10,Piece,—,Clothes,90.00,900.00
+2024-09-26,2024,TAGAPAGLIGTAS Patch,1082,2,Piece,—,Patches,40.00,80.00
+2024-10-01,2024,A Shirt,0628,1,Piece,XL,Clothes,400.00,400.00
+2024-10-02,2024,CS Volts,0004,1,Pair,—,Shoes,"2,800.00","2,800.00"
+2024-10-02,2024,Rig Set,0881,1,Piece,—,Equipment,600.00,600.00
+2024-10-02,2024,Handcuffs Case,0890,1,Piece,—,Equipment,300.00,300.00
+2024-10-03,2024,Cycling Short,0664,5,Piece,—,Clothes,80.00,400.00
+2024-10-03,2024,Cycling Short,0664,3,Piece,—,Clothes,80.00,240.00
+2024-10-03,2024,ID Lace,0696,1,Piece,—,Accessories,70.00,70.00
+2024-10-03,2024,White Socks,0824,2,Piece,—,Clothes,70.00,140.00
+2024-10-06,2024,Pershing Cap,0424,1,Piece,—,Accessories,550.00,550.00
+2024-10-09,2024,Cobra Belt,0602,1,Piece,—,Accessories,350.00,350.00
+2024-10-09,2024,Pavehawk Pants,0618,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2024-10-11,2024,PNP Sock,0146,1,Piece,—,Clothes,150.00,150.00
+2024-10-11,2024,Holster,0201,1,Piece,—,Equipment,600.00,600.00
+2024-10-14,2024,Skeletal Buckle,0587,1,Piece,—,Metal,200.00,200.00
+2024-10-14,2024,Whistle,0642,2,Piece,—,Equipment,120.00,240.00
+2024-10-14,2024,PNCO Cap Device,0779,1,Piece,—,Accessories,200.00,200.00
+2024-10-14,2024,Rain Boot,1109,10,Pair,—,Shoes,300.00,"3,000.00"
+2024-10-15,2024,Change Rank (Metal),0925,3,Piece,—,Metal,180.00,540.00
+2024-10-16,2024,Patrol Shoes,0005,1,Pair,9.0,Shoes,"1,900.00","1,900.00"
+2024-10-16,2024,Pen,0278,1,Piece,—,Equipment,30.00,30.00
+2024-10-16,2024,Handkerchief,0697,1,Piece,—,Accessories,50.00,50.00
+2024-10-16,2024,Shoulder Board Blue,0731,1,Piece,—,Accessories,"2,000.00","2,000.00"
+2024-10-16,2024,PNP Awards,0921,1,Piece,—,Metal,"1,585.00","1,585.00"
+2024-10-16,2024,Athletic Shoes,1105,1,Pair,9.0,Shoes,"1,900.00","1,900.00"
+2024-10-17,2024,Holster Leather,0864,2,Piece,—,Equipment,500.00,"1,000.00"
+2024-10-18,2024,PNP Awards,0921,1,Piece,—,Metal,"1,300.00","1,300.00"
+2024-10-22,2024,Unit Patch,0545,1,Piece,—,Patches,280.00,280.00
+2024-10-22,2024,Metal Polish (Pledge),0895,1,Piece,—,Equipment,400.00,400.00
+2024-10-23,2024,SAR Uniform,0604,1,Piece,—,Clothes,"1,100.00","1,100.00"
+2024-10-23,2024,SAR Uniform,0604,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2024-10-23,2024,SAR Uniform,0604,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2024-10-24,2024,A Kids,0140,2,Piece,XL,Clothes,400.00,800.00
+2024-10-24,2024,GOA Patch,0544,8,Piece,—,Patches,50.00,400.00
+2024-10-24,2024,Woven Patch,0718,4,Piece,—,Patches,200.00,800.00
+2024-10-25,2024,Poncho,0592,12,Piece,—,Clothes,300.00,"3,600.00"
+2024-10-25,2024,Pavehawk Pants,0618,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2024-10-25,2024,Rain Boot,1109,4,Pair,—,Shoes,300.00,"1,200.00"
+2024-10-25,2024,Rain Boot,1109,10,Pair,—,Shoes,300.00,"3,000.00"
+2024-10-26,2024,BFP Awards,0912,1,Piece,—,Metal,800.00,800.00
+2024-10-28,2024,Awards,0911,1,Piece,—,Metal,480.00,480.00
+2024-10-28,2024,Awards,0911,1,Piece,—,Metal,400.00,400.00
+2024-10-28,2024,Awards,0911,1,Piece,—,Metal,"1,400.00","1,400.00"
+2024-10-28,2024,Awards,0911,1,Piece,—,Metal,"1,300.00","1,300.00"
+2024-10-30,2024,SG Pants,0117,1,Piece,—,Clothes,280.00,280.00
+2024-10-30,2024,Vest,0209,1,Piece,L,Equipment,"1,200.00","1,200.00"
+2024-10-30,2024,Patches,0301,1,Piece,—,Patches,400.00,400.00
+2024-10-30,2024,NCR,0532,3,Piece,—,Patches,90.00,270.00
+2024-10-30,2024,QCPD,0549,1,Piece,—,Patches,350.00,350.00
+2024-10-30,2024,QCPD,0549,6,Piece,—,Patches,90.00,540.00
+2024-10-30,2024,GOA C,0568,2,Piece,XL,Clothes,900.00,"1,800.00"
+2024-10-30,2024,GOA C,0568,2,Piece,XL,Clothes,900.00,"1,800.00"
+2024-10-30,2024,A Shirt,0628,1,Piece,—,Clothes,200.00,200.00
+2024-10-30,2024,V-Neck,0667,3,Piece,M,Clothes,120.00,360.00
+2024-10-30,2024,V-Neck,0667,1,Piece,—,Clothes,150.00,150.00
+2024-10-30,2024,Tactical Pants,0687,3,Piece,S,Clothes,900.00,"2,700.00"
+2024-10-30,2024,Cap Device,0699,1,Piece,—,Accessories,250.00,250.00
+2024-10-30,2024,TMRU Shirt,0700,3,Piece,M,Clothes,800.00,"2,400.00"
+2024-10-30,2024,GOA B,0788,1,Piece,XL,Clothes,850.00,850.00
+2024-10-31,2024,GOA C,0568,1,Piece,—,Clothes,900.00,900.00
+2024-10-31,2024,A Shirt,0628,1,Piece,—,Clothes,400.00,400.00
+2024-10-31,2024,BRC Pin,0657,1,Piece,—,Metal,150.00,150.00
+2024-10-31,2024,PNP Awards,0921,1,Piece,—,Metal,495.00,495.00
+2024-11-01,2024,Vest,0209,1,Piece,—,Equipment,"1,200.00","1,200.00"
+2024-11-04,2024,Atheltic Short,0138,1,Piece,—,Clothes,280.00,280.00
+2024-11-04,2024,Pershing Cap,0424,1,Piece,—,Accessories,200.00,200.00
+2024-11-04,2024,Buckle,0506,1,Piece,—,Metal,150.00,150.00
+2024-11-04,2024,SS Badge,0647,1,Piece,—,Metal,100.00,100.00
+2024-11-04,2024,V-Neck,0667,1,Piece,S,Clothes,150.00,150.00
+2024-11-04,2024,Tie Clip,0688,1,Set,—,Accessories,33.94,33.94
+2024-11-04,2024,Collar Pin,0689,1,Piece,—,Accessories,60.00,60.00
+2024-11-04,2024,Necktie,0706,1,Set,—,Accessories,106.06,106.06
+2024-11-04,2024,Long Sleeve White,0713,1,Set,—,Clothes,400.00,400.00
+2024-11-04,2024,Security Guard Belt,0741,1,Set,—,Accessories,900.00,900.00
+2024-11-04,2024,Whistle Lanyard,0770,1,Set,—,Accessories,160.00,160.00
+2024-11-14,2024,CS Volts,0004,1,Set,—,Shoes,"1,820.00","1,820.00"
+2024-11-14,2024,GOA Pants,0106,1,Piece,—,Clothes,600.00,600.00
+2024-11-14,2024,Magpouch,0202,2,Piece,—,Equipment,230.00,460.00
+2024-11-14,2024,CIC Patch,0550,1,Piece,—,Patches,150.00,150.00
+2024-11-14,2024,Canik Holster,0637,2,Piece,—,Equipment,200.00,400.00
+2024-11-14,2024,BRC Patch,1004,1,Piece,—,Patches,120.00,120.00
+2024-11-14,2024,Scout,1060,1,Piece,—,Patches,150.00,150.00
+2024-11-14,2024,SF Patch,1085,1,Piece,—,Patches,100.00,100.00
+2024-11-15,2024,White Shirt,0157,4,Piece,XL,Clothes,100.00,400.00
+2024-11-15,2024,Medkit,0603,1,Piece,—,Equipment,80.00,80.00
+2024-11-15,2024,Black Gloves,0693,6,Piece,—,Accessories,50.00,300.00
+2024-11-15,2024,White Gloves,0694,26,Piece,—,Accessories,50.00,"1,300.00"
+2024-11-18,2024,GOA Pants,0106,1,Piece,32.0,Clothes,700.00,700.00
+2024-11-18,2024,Patrol Shirt,0108,1,Piece,—,Clothes,"1,400.00","1,400.00"
+2024-11-18,2024,PNP Sock,0146,1,Piece,—,Clothes,130.00,130.00
+2024-11-18,2024,PCO Male,0826,1,Uniform,—,Clothes,"1,100.00","1,100.00"
+2024-11-19,2024,Badge,0501,3,Piece,—,Metal,50.00,150.00
+2024-11-19,2024,Badge,0501,1,Piece,—,Metal,50.00,50.00
+2024-11-19,2024,Badge,0501,1,Piece,—,Metal,50.00,50.00
+2024-11-20,2024,Combat Shoes,0001,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2024-11-20,2024,CS Volts Midcut,0008,1,Pair,—,Shoes,"3,800.00","3,800.00"
+2024-11-20,2024,Baton,0204,1,Piece,—,Equipment,350.00,350.00
+2024-11-20,2024,Baton,0204,1,Piece,—,Equipment,350.00,350.00
+2024-11-20,2024,Flashlight,0205,1,Piece,—,Equipment,200.00,200.00
+2024-11-20,2024,Carabiner,0436,1,Piece,—,Accessories,65.00,65.00
+2024-11-20,2024,Whistle,0642,1,Piece,—,Equipment,65.00,65.00
+2024-11-21,2024,Patrol Shirt,0108,1,Piece,M,Clothes,"1,500.00","1,500.00"
+2024-11-21,2024,SG Pants,0117,1,Piece,—,Clothes,250.00,250.00
+2024-11-21,2024,Long Sleeve White,0713,2,Piece,—,Clothes,400.00,800.00
+2024-11-22,2024,Vest,0209,1,Piece,—,Equipment,"1,100.00","1,100.00"
+2024-11-22,2024,Foliage Green Camouflage,0279,1,Piece,—,Equipment,40.00,40.00
+2024-11-22,2024,Badge,0501,5,Piece,—,Metal,50.00,250.00
+2024-11-23,2024,Whistle,0642,1,Piece,—,Equipment,100.00,100.00
+2024-11-26,2024,Tactical Belt,0772,1,Piece,—,Accessories,350.00,350.00
+2024-11-27,2024,Tropical Black,0102,1,Set,—,Clothes,"1,700.00","1,700.00"
+2024-11-27,2024,GOA Pants,0106,1,Piece,—,Clothes,700.00,700.00
+2024-11-27,2024,GOA C,0568,1,Set,—,Clothes,"1,600.00","1,600.00"
+2024-11-28,2024,Patrol Shirt,0108,1,Piece,L,Clothes,"1,400.00","1,400.00"
+2024-11-28,2024,SXR Uniform,0169,3,Piece,L,Clothes,800.00,"2,400.00"
+2024-11-28,2024,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2024-11-28,2024,Garrison Buckle,0585,2,Set,—,Metal,180.00,360.00
+2024-11-28,2024,Garrison Buckle,0585,2,Set,—,Metal,180.00,360.00
+2024-11-28,2024,Ripstop Uniform,0606,1,Set,XS,Clothes,"2,300.00","2,300.00"
+2024-11-28,2024,Cycling Short,0664,7,Piece,—,Clothes,65.00,455.00
+2024-11-28,2024,Cycling Short,0664,7,Piece,S,Clothes,65.00,455.00
+2024-11-28,2024,Cycling Short,0664,10,Piece,—,Clothes,75.00,750.00
+2024-11-28,2024,Botak Short,0665,5,Piece,M,Clothes,65.00,325.00
+2024-11-28,2024,Botak Short,0665,5,Piece,—,Clothes,65.00,325.00
+2024-11-28,2024,Botak Short,0665,7,Piece,L,Clothes,65.00,455.00
+2024-11-28,2024,V-Neck,0667,7,Piece,S,Clothes,120.00,840.00
+2024-11-28,2024,V-Neck,0667,12,Piece,—,Clothes,120.00,"1,440.00"
+2024-11-28,2024,Handkerchief,0697,2,Piece,—,Accessories,30.00,60.00
+2024-11-28,2024,Handkerchief,0697,2,Piece,—,Accessories,30.00,60.00
+2024-11-28,2024,Handkerchief,0697,2,Piece,—,Accessories,30.00,60.00
+2024-11-28,2024,Bath Towel,0722,2,Piece,—,Accessories,170.00,340.00
+2024-11-28,2024,Bath Towel,0722,2,Piece,—,Accessories,170.00,340.00
+2024-11-28,2024,Bath Towel,0722,2,Piece,—,Accessories,170.00,340.00
+2024-11-28,2024,School Supplies,0723,1,Set,—,Equipment,350.00,350.00
+2024-11-28,2024,School Supplies,0723,1,Set,—,Equipment,350.00,350.00
+2024-11-28,2024,School Supplies,0723,1,Set,—,Equipment,350.00,350.00
+2024-11-28,2024,Burda,0724,50,Piece,—,Patches,15.00,750.00
+2024-11-28,2024,Buckle Belt,0739,2,Set,—,Accessories,180.00,360.00
+2024-11-28,2024,Backpack (7 Days),0744,1,Piece,—,Accessories,700.00,700.00
+2024-11-28,2024,Backpack (7 Days),0744,1,Piece,—,Accessories,700.00,700.00
+2024-11-28,2024,DF Pulis,0803,1,Piece,—,Clothes,250.00,250.00
+2024-11-28,2024,Black Socks,0808,5,Piece,—,Clothes,60.00,300.00
+2024-11-28,2024,PNP Combat Socks,0810,12,Piece,—,Clothes,80.00,960.00
+2024-11-28,2024,Long Black Socks,0813,7,Piece,—,Clothes,60.00,420.00
+2024-11-28,2024,Long White Socks,0814,7,Piece,—,Clothes,60.00,420.00
+2024-11-28,2024,Socks Small Black,0819,6,Piece,—,Clothes,80.00,480.00
+2024-11-28,2024,Socks Small White,0820,6,Piece,—,Clothes,75.00,450.00
+2024-11-28,2024,White Long Socks,0822,12,Piece,—,Clothes,80.00,960.00
+2024-11-28,2024,White Socks,0824,5,Piece,—,Clothes,60.00,300.00
+2024-11-28,2024,Olive Green (OG) Cotton,0838,7,Piece,M,Clothes,120.00,840.00
+2024-11-28,2024,Olive Green (OG) Cotton,0838,7,Piece,M,Clothes,120.00,840.00
+2024-11-28,2024,Non-camouflage (OG) Plain,0839,7,Piece,S,Clothes,120.00,840.00
+2024-11-28,2024,Non-camouflage (OG) Plain,0839,7,Piece,M,Clothes,120.00,840.00
+2024-11-28,2024,Field Service Uniform (FSU),0862,1,Piece,S,Clothes,"2,300.00","2,300.00"
+2024-11-28,2024,Field Service Uniform (FSU),0862,1,Piece,S,Clothes,"2,300.00","2,300.00"
+2024-11-28,2024,Field Service Uniform (FSU),0862,1,Piece,—,Clothes,"2,300.00","2,300.00"
+2024-11-28,2024,Metal Polish (MC),0894,1,Piece,—,Equipment,100.00,100.00
+2024-11-28,2024,Metal Polish (MC),0894,1,Piece,—,Equipment,100.00,100.00
+2024-11-29,2024,NCR Woven,0302,1,Piece,—,Patches,160.00,160.00
+2024-11-29,2024,Badge,0501,5,Piece,—,Metal,50.00,250.00
+2024-11-29,2024,Badge,0501,5,Piece,—,Metal,50.00,250.00
+2024-11-29,2024,Badge,0501,4,Piece,—,Metal,40.00,160.00
+2024-11-29,2024,KALASAG Pin,0509,4,Piece,—,Metal,40.00,160.00
+2024-11-29,2024,Nameplate (Metal),0621,1,Piece,—,Metal,40.00,40.00
+2024-11-29,2024,Cycling Short,0664,7,Piece,M,Clothes,65.00,455.00
+2024-11-29,2024,Cycling Short,0664,12,Piece,M,Clothes,65.00,780.00
+2024-11-29,2024,Botak Short,0665,5,Piece,XL,Clothes,65.00,325.00
+2024-11-29,2024,Botak Short,0665,7,Piece,—,Clothes,65.00,455.00
+2024-11-29,2024,V-Neck,0667,7,Piece,L,Clothes,120.00,840.00
+2024-11-29,2024,V-Neck,0667,12,Piece,M,Clothes,120.00,"1,440.00"
+2024-11-29,2024,Tactical Pants,0687,1,Piece,—,Clothes,900.00,900.00
+2024-11-29,2024,Bath Towel,0722,2,Piece,—,Accessories,300.00,300.00
+2024-11-29,2024,Bath Towel,0722,2,Piece,—,Accessories,170.00,340.00
+2024-11-29,2024,Bath Towel,0722,2,Piece,—,Accessories,170.00,340.00
+2024-11-29,2024,School Supplies,0723,1,Set,—,Equipment,350.00,350.00
+2024-11-29,2024,School Supplies,0723,1,Set,—,Equipment,350.00,350.00
+2024-11-29,2024,School Supplies,0723,1,Piece,—,Equipment,350.00,350.00
+2024-11-29,2024,Burda,0724,5,Piece,—,Patches,15.00,75.00
+2024-11-29,2024,Tactical Belt,0772,2,Piece,—,Accessories,350.00,700.00
+2024-11-29,2024,Black Socks,0808,5,Piece,—,Clothes,80.00,400.00
+2024-11-29,2024,Black Socks,0808,5,Piece,—,Clothes,80.00,400.00
+2024-11-29,2024,Socks,0817,1,Piece,—,Clothes,80.00,80.00
+2024-11-29,2024,White Socks,0824,5,Piece,—,Clothes,80.00,400.00
+2024-11-29,2024,White Socks,0824,5,Piece,—,Clothes,80.00,400.00
+2024-11-29,2024,White Socks,0824,4,Piece,—,Clothes,80.00,320.00
+2024-11-29,2024,Olive Green (OG) Cotton,0838,7,Piece,M,Clothes,120.00,840.00
+2024-11-29,2024,Olive Green (OG) Cotton,0838,12,Piece,M,Clothes,120.00,"1,440.00"
+2024-11-29,2024,Non-camouflage (OG) Plain,0839,14,Piece,M,Clothes,120.00,"1,680.00"
+2024-11-29,2024,Non-camouflage (OG) Plain,0839,14,Piece,L,Clothes,120.00,"1,680.00"
+2024-11-29,2024,Metal Polish (Pledge),0895,1,Piece,—,Equipment,350.00,350.00
+2024-11-29,2024,Metal Polish (Pledge),0895,1,Piece,—,Equipment,350.00,350.00
+2024-11-29,2024,Big Shoe Polish Brush (Bruno),0902,1,Set,—,Equipment,230.00,230.00
+2024-11-29,2024,Shoe Polish Brush (Bruno),0903,1,Set,—,Equipment,350.00,350.00
+2024-11-29,2024,Insignia,0940,1,Piece,—,Metal,40.00,40.00
+2024-11-30,2024,Combat Shoes,0001,1,Pair,—,Shoes,"1,800.00","1,800.00"
+2024-11-30,2024,Combat Boots,0009,1,Pair,—,Shoes,"1,800.00","1,800.00"
+2024-11-30,2024,Mess Kit,0213,1,Set,—,Equipment,"1,250.00","1,250.00"
+2024-11-30,2024,Mess Kit,0213,1,Set,—,Equipment,"1,250.00","1,250.00"
+2024-11-30,2024,Garrison Buckle,0585,2,Piece,—,Metal,180.00,360.00
+2024-11-30,2024,Skeletal Buckle,0587,2,Piece,—,Metal,180.00,360.00
+2024-11-30,2024,Cycling Short,0664,10,Piece,—,Clothes,65.00,650.00
+2024-11-30,2024,Cycling Short,0664,10,Piece,S,Clothes,65.00,650.00
+2024-11-30,2024,Botak Short,0665,12,Piece,S,Clothes,65.00,780.00
+2024-11-30,2024,Botak Short,0665,10,Piece,—,Clothes,65.00,650.00
+2024-11-30,2024,V-Neck,0667,12,Piece,S,Clothes,120.00,"1,440.00"
+2024-11-30,2024,Collar Pin,0689,1,Piece,—,Accessories,60.00,60.00
+2024-11-30,2024,Handkerchief,0697,2,Piece,—,Accessories,30.00,60.00
+2024-11-30,2024,School Supplies,0723,1,Piece,—,Equipment,350.00,350.00
+2024-11-30,2024,School Supplies,0723,1,Set,—,Equipment,250.00,250.00
+2024-11-30,2024,Pail Dipper Hanger,0725,1,Set,—,Equipment,350.00,350.00
+2024-11-30,2024,Pail Dipper Hanger,0725,1,Set,—,Equipment,350.00,350.00
+2024-11-30,2024,Backpack (7 Days),0744,1,Piece,—,Accessories,700.00,700.00
+2024-11-30,2024,Backpack (7 Days),0744,1,Piece,—,Accessories,700.00,700.00
+2024-11-30,2024,T-Shirt White,0801,1,Piece,—,Clothes,400.00,400.00
+2024-11-30,2024,Black Socks,0808,12,Piece,—,Clothes,80.00,960.00
+2024-11-30,2024,White Socks,0824,12,Piece,—,Clothes,80.00,960.00
+2024-11-30,2024,Olive Green (OG) Cotton,0838,12,Piece,—,Clothes,120.00,"1,440.00"
+2024-11-30,2024,Field Service Uniform (FSU),0862,1,Piece,XS,Clothes,"2,300.00","2,300.00"
+2024-11-30,2024,Field Service Uniform (FSU),0862,1,Piece,XS,Clothes,"2,300.00","2,300.00"
+2024-11-30,2024,Metal Polish (Pledge),0895,1,Piece,—,Equipment,100.00,100.00
+2024-11-30,2024,Metal Polish (Pledge),0895,1,Piece,—,Equipment,100.00,100.00
+2024-11-30,2024,Shoe Polish Brush (Bruno),0903,1,Piece,—,Equipment,200.00,200.00
+2024-11-30,2024,Shoe Polish Brush (Bruno),0903,1,Piece,—,Equipment,200.00,200.00
+2024-11-30,2024,School Supply,0904,1,Piece,—,Equipment,350.00,350.00
+2024-12-03,2024,Patrol Shirt,0108,3,Piece,—,Clothes,"1,400.00","4,200.00"
+2024-12-03,2024,PNP Sock,0146,2,Piece,—,Clothes,130.00,260.00
+2024-12-03,2024,Nameplate Clip,0435,1,Piece,—,Accessories,60.00,60.00
+2024-12-03,2024,Carabiner,0436,1,Piece,—,Accessories,50.00,50.00
+2024-12-03,2024,Badge,0501,1,Piece,—,Metal,100.00,100.00
+2024-12-03,2024,Whistle,0642,1,Piece,—,Equipment,60.00,60.00
+2024-12-03,2024,V-Neck,0667,3,Piece,L,Clothes,150.00,450.00
+2024-12-03,2024,Collar Pin,0689,1,Piece,—,Accessories,100.00,100.00
+2024-12-03,2024,Handkerchief,0697,2,Piece,—,Accessories,60.00,120.00
+2024-12-03,2024,Necktie,0706,1,Piece,—,Accessories,150.00,150.00
+2024-12-03,2024,Charcoal Socks,0809,2,Piece,—,Clothes,80.00,160.00
+2024-12-04,2024,Gibson Lites,0002,1,Pair,8.0,Shoes,"2,000.00","2,000.00"
+2024-12-04,2024,PNP Sock,0146,2,Piece,—,Clothes,130.00,260.00
+2024-12-04,2024,Rank,0504,1,Piece,—,Metal,100.00,100.00
+2024-12-04,2024,Cycling Short,0664,5,Piece,M,Clothes,70.00,350.00
+2024-12-04,2024,Botak Short,0665,10,Piece,XL,Clothes,70.00,700.00
+2024-12-04,2024,Botak Short,0665,10,Piece,XL,Clothes,70.00,700.00
+2024-12-04,2024,V-Neck,0667,3,Piece,—,Clothes,150.00,450.00
+2024-12-04,2024,White Handkerchief,0778,3,Piece,—,Accessories,40.00,120.00
+2024-12-04,2024,Socks,0817,2,Piece,—,Clothes,80.00,160.00
+2024-12-05,2024,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2024-12-05,2024,Pin,0505,5,Piece,—,Metal,150.00,750.00
+2024-12-05,2024,Medkit,0603,1,Piece,—,Equipment,300.00,300.00
+2024-12-05,2024,Handcuffs,0619,1,Piece,—,Equipment,700.00,700.00
+2024-12-05,2024,Handcuffs Case,0890,1,Piece,—,Equipment,300.00,300.00
+2024-12-05,2024,Patch,1050,1,Piece,—,Patches,350.00,350.00
+2024-12-05,2024,Security Patch,1086,1,Piece,—,Patches,300.00,300.00
+2024-12-09,2024,Badge,0501,1,Piece,—,Metal,"1,200.00","1,200.00"
+2024-12-09,2024,Badge,0501,5,Piece,—,Metal,50.00,250.00
+2024-12-09,2024,Badge,0501,2,Piece,—,Metal,50.00,100.00
+2024-12-09,2024,Badge,0501,3,Piece,—,Metal,50.00,150.00
+2024-12-09,2024,KALASAG Pin,0509,2,Piece,—,Metal,40.00,80.00
+2024-12-09,2024,Handcuffs,0619,1,Piece,—,Equipment,650.00,650.00
+2024-12-09,2024,Police Corporal Rank,0934,1,Piece,—,Metal,50.00,50.00
+2024-12-09,2024,Police Corporal Rank,0934,1,Piece,—,Metal,50.00,50.00
+2024-12-09,2024,OBC Pin (Badge),0980,1,Piece,—,Metal,250.00,250.00
+2024-12-09,2024,PRO,1047,2,Piece,—,Patches,40.00,80.00
+2024-12-09,2024,Property Code Patch,1055,2,Piece,—,Patches,25.00,50.00
+2024-12-09,2024,Police Staff Sergeant Rank Patch,1113,4,Piece,—,Patches,50.00,200.00
+2024-12-09,2024,Police Staff Sergeant Rank Patch,1113,4,Piece,—,Patches,50.00,200.00
+2024-12-09,2024,Police Staff Sergeant Rank Patch,1113,1,Piece,—,Patches,40.00,40.00
+2024-12-10,2024,Patrol Uniform,0570,1,Set,M,Clothes,"2,200.00","2,200.00"
+2024-12-11,2024,A Kids,0140,1,Piece,XL,Clothes,400.00,400.00
+2024-12-11,2024,Pavehawk Pants,0618,1,Piece,M,Clothes,900.00,900.00
+2024-12-11,2024,Botak Short,0665,7,Piece,—,Clothes,100.00,700.00
+2024-12-12,2024,Vest,0209,1,Piece,—,Equipment,"1,300.00","1,300.00"
+2024-12-12,2024,Nameplate (Metal),0621,1,Piece,—,Metal,300.00,300.00
+2024-12-13,2024,Clarino Shoes,0007,1,Pair,—,Shoes,"2,100.00","2,100.00"
+2024-12-13,2024,A Kids,0140,1,Piece,XL,Clothes,400.00,400.00
+2024-12-14,2024,CS Volts Midcut,0008,1,Pair,11.5,Shoes,"3,300.00","3,300.00"
+2024-12-14,2024,R-Neck T-shirt,0122,5,Piece,—,Clothes,120.00,600.00
+2024-12-14,2024,Duffle Bag,0525,1,Piece,—,Accessories,"1,500.00","1,500.00"
+2024-12-14,2024,Garrison Buckle,0585,2,Piece,—,Metal,180.00,360.00
+2024-12-14,2024,Cycling Short,0664,7,Piece,M,Clothes,65.00,455.00
+2024-12-14,2024,Botak Short,0665,7,Piece,XL,Clothes,65.00,455.00
+2024-12-14,2024,Necktie,0706,1,Piece,—,Accessories,250.00,250.00
+2024-12-14,2024,White Handkerchief,0778,3,Piece,—,Accessories,30.00,90.00
+2024-12-14,2024,Black Socks,0808,7,Piece,—,Clothes,80.00,560.00
+2024-12-14,2024,School Supply,0904,1,Set,—,Equipment,450.00,450.00
+2024-12-15,2024,Combat Shoes,0001,1,Pair,8.0,Shoes,"1,800.00","1,800.00"
+2024-12-15,2024,Combat Boots,0009,1,Pair,—,Shoes,"1,800.00","1,800.00"
+2024-12-15,2024,Flashlight,0205,1,Piece,—,Equipment,150.00,150.00
+2024-12-15,2024,Water Canteen,0212,1,Set,—,Equipment,300.00,300.00
+2024-12-15,2024,Mess Kit,0213,1,Set,—,Equipment,700.00,700.00
+2024-12-15,2024,Mess Kit,0213,1,Piece,—,Equipment,700.00,700.00
+2024-12-15,2024,Suspender,0240,1,Piece,—,Equipment,250.00,250.00
+2024-12-15,2024,Garrison Buckle,0585,2,Set,—,Metal,180.00,360.00
+2024-12-15,2024,Garrison Buckle,0585,2,Piece,—,Metal,180.00,360.00
+2024-12-15,2024,PNCO Buckle,0589,1,Piece,—,Metal,800.00,800.00
+2024-12-15,2024,Poncho,0592,1,Piece,—,Clothes,200.00,200.00
+2024-12-15,2024,Cycling Short,0664,10,Piece,L,Clothes,65.00,650.00
+2024-12-15,2024,Cycling Short,0664,5,Piece,M,Clothes,65.00,325.00
+2024-12-15,2024,Botak Short,0665,5,Piece,L,Clothes,65.00,325.00
+2024-12-15,2024,Handkerchief,0697,5,Piece,—,Accessories,30.00,150.00
+2024-12-15,2024,Handkerchief,0697,5,Piece,—,Accessories,30.00,150.00
+2024-12-15,2024,Bath Towel,0722,1,Piece,—,Accessories,170.00,170.00
+2024-12-15,2024,School Supplies,0723,1,Piece,—,Equipment,350.00,350.00
+2024-12-15,2024,Pail Dipper Hanger,0725,1,Set,—,Equipment,350.00,350.00
+2024-12-15,2024,Backpack (7 Days),0744,1,Piece,—,Accessories,"1,200.00","1,200.00"
+2024-12-15,2024,Sleeping Mat,0787,1,Piece,—,Accessories,200.00,200.00
+2024-12-15,2024,PNP Combat Socks,0810,10,Piece,—,Clothes,80.00,800.00
+2024-12-15,2024,Field Service Uniform (FSU),0862,1,Piece,S,Clothes,"2,300.00","2,300.00"
+2024-12-16,2024,Combat Shoes,0001,1,Pair,S,Shoes,"2,000.00","2,000.00"
+2024-12-16,2024,Non-Patrol Shoes,0013,1,Pair,—,Shoes,400.00,400.00
+2024-12-16,2024,GOA Pants,0106,1,Piece,34.0,Clothes,700.00,700.00
+2024-12-16,2024,Patrol Shirt,0108,1,Piece,S,Clothes,"1,400.00","1,400.00"
+2024-12-16,2024,Dryfit,0142,1,Piece,L,Clothes,250.00,250.00
+2024-12-16,2024,PNP Sock,0146,1,Piece,—,Clothes,150.00,150.00
+2024-12-16,2024,PNP Sock,0146,1,Piece,—,Clothes,150.00,150.00
+2024-12-16,2024,Vest,0209,1,Piece,S,Equipment,"1,200.00","1,200.00"
+2024-12-16,2024,Vest,0209,1,Piece,M,Equipment,"1,200.00","1,200.00"
+2024-12-16,2024,Skeletal Buckle,0587,1,Piece,—,Metal,250.00,250.00
+2024-12-16,2024,Grip,0630,1,Piece,—,Equipment,200.00,200.00
+2024-12-16,2024,Grip,0630,1,Piece,—,Equipment,200.00,200.00
+2024-12-16,2024,Reverse Silver (Reflective Tag),0965,1,Piece,—,Metal,300.00,300.00
+2024-12-17,2024,Gibson Lites,0002,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2024-12-17,2024,Cycling Short,0664,7,Piece,—,Clothes,65.00,455.00
+2024-12-17,2024,Botak Short,0665,4,Piece,—,Clothes,65.00,260.00
+2024-12-17,2024,V-Neck,0667,3,Piece,—,Clothes,120.00,360.00
+2024-12-17,2024,Charcoal Socks,0809,1,Piece,—,Clothes,150.00,150.00
+2024-12-17,2024,Olive Green (OG) Cotton,0838,7,Piece,—,Clothes,120.00,840.00
+2024-12-17,2024,Pavehawk Pants Grey,0848,1,Piece,S,Clothes,"1,000.00","1,000.00"
+2024-12-17,2024,Layers Pin,0941,2,Piece,—,Metal,500.00,"1,000.00"
+2024-12-18,2024,CS Volts Midcut,0008,1,Pair,9.5,Shoes,"3,300.00","3,300.00"
+2024-12-18,2024,Bath Towel,0722,1,Piece,—,Accessories,200.00,200.00
+2024-12-18,2024,Shoe Polish (Kiwi),0893,1,Piece,—,Equipment,150.00,150.00
+2024-12-19,2024,Gibson Lites,0002,1,Pair,8.0,Shoes,"2,000.00","2,000.00"
+2024-12-19,2024,Long Sleeve Black,0151,1,Piece,—,Clothes,250.00,250.00
+2024-12-19,2024,Non-camouflage (OG) Plain,0839,6,Piece,M,Clothes,150.00,900.00
+2024-12-20,2024,Cobra Belt,0602,1,Piece,—,Accessories,400.00,400.00
+2024-12-21,2024,School Supplies,0723,1,Set,—,Equipment,450.00,450.00
+2024-12-21,2024,Sleeping Matt,0726,1,Piece,—,Accessories,200.00,200.00
+2024-12-21,2024,Backpack (7 Days),0744,1,Piece,—,Accessories,700.00,700.00
+2024-12-21,2024,Socks,0817,10,Piece,—,Clothes,80.00,800.00
+2024-12-21,2024,Olive Green (OG) Cotton,0838,10,Piece,S,Clothes,120.00,"1,200.00"
+2024-12-21,2024,Shoe Polish (Kiwi),0893,1,Set,—,Equipment,"2,330.00","2,330.00"
+2024-12-21,2024,SAP Patch,1058,1,Piece,—,Patches,100.00,100.00
+2024-12-22,2024,Flashlight,0205,1,Piece,—,Equipment,200.00,200.00
+2024-12-22,2024,Water Canteen,0212,2,Piece,—,Equipment,150.00,300.00
+2024-12-22,2024,Mess Kit,0213,1,Set,—,Equipment,"1,250.00","1,250.00"
+2024-12-22,2024,Mess Kit,0213,1,Piece,—,Equipment,"1,250.00","1,250.00"
+2024-12-22,2024,Poncho,0592,1,Piece,—,Clothes,200.00,200.00
+2024-12-22,2024,Cycling Short,0664,10,Piece,—,Clothes,65.00,650.00
+2024-12-22,2024,Botak Short,0665,7,Piece,—,Clothes,65.00,455.00
+2024-12-22,2024,Handkerchief,0697,1,Piece,—,Accessories,60.00,60.00
+2024-12-22,2024,Handkerchief,0697,5,Piece,—,Accessories,30.00,150.00
+2024-12-22,2024,Bath Towel,0722,1,Piece,—,Accessories,200.00,200.00
+2024-12-22,2024,School Supplies,0723,1,Piece,—,Equipment,450.00,450.00
+2024-12-22,2024,Sleeping Matt,0726,1,Piece,—,Accessories,200.00,200.00
+2024-12-22,2024,Garrison,0754,2,Piece,—,Accessories,45.00,90.00
+2024-12-22,2024,Socks Black,0818,10,Piece,—,Clothes,80.00,800.00
+2024-12-22,2024,Socks White,0821,10,Piece,—,Clothes,80.00,800.00
+2024-12-22,2024,Olive Green (OG) Cotton,0838,10,Piece,—,Clothes,120.00,"1,200.00"
+2024-12-22,2024,Shoe Polish (Kiwi),0893,1,Set,—,Equipment,230.00,230.00
+2024-12-22,2024,Shoe Polish (Kiwi),0893,1,Piece,—,Equipment,200.00,200.00
+2024-12-22,2024,Metal Polish (MC),0894,1,Piece,—,Equipment,100.00,100.00
+2024-12-22,2024,Metal Polish (MC),0894,1,Piece,—,Equipment,100.00,100.00
+2024-12-27,2024,PNCO Buckle,0589,1,Piece,—,Metal,850.00,850.00
+2024-12-27,2024,Black Gloves,0693,4,Piece,—,Accessories,40.00,160.00
+2024-12-27,2024,White Gloves,0694,4,Piece,—,Accessories,40.00,160.00
+2024-12-27,2024,Vet Badge,0910,1,Piece,—,Metal,150.00,150.00
+2024-12-28,2024,Vest,0209,1,Piece,M,Equipment,"1,200.00","1,200.00"
+2024-12-28,2024,Change Rank (Metal),0925,2,Piece,—,Metal,330.00,660.00
+2025-01-02,2025,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2025-01-02,2025,Big Belt Fiber,0437,1,Set,—,Accessories,"2,500.00","2,500.00"
+2025-01-02,2025,Belt Bag,0528,1,Piece,—,Accessories,"1,000.00","1,000.00"
+2025-01-02,2025,Tactical Belt,0601,1,Piece,—,Accessories,300.00,300.00
+2025-01-07,2025,GOA Pants,0106,1,Piece,36.0,Clothes,700.00,700.00
+2025-01-08,2025,Gibson Lites,0002,1,Pair,8.0,Shoes,"2,000.00","2,000.00"
+2025-01-08,2025,Bullcap,0423,1,Piece,—,Accessories,700.00,700.00
+2025-01-08,2025,Cycle Number,0438,1,Piece,—,Accessories,350.00,350.00
+2025-01-08,2025,SAR Uniform,0604,1,Piece,XL,Clothes,850.00,850.00
+2025-01-08,2025,SAR Uniform,0604,1,Piece,M,Clothes,850.00,850.00
+2025-01-10,2025,ROTC Uniform,0132,1,Set,—,Clothes,"1,100.00","1,100.00"
+2025-01-10,2025,Cloth,0249,2,Piece,—,Equipment,120.00,240.00
+2025-01-10,2025,Pavehawk Pants Black,0846,2,Piece,S,Clothes,"1,000.00","2,000.00"
+2025-01-13,2025,SG Pants,0117,2,Piece,33.0,Clothes,250.00,500.00
+2025-01-13,2025,Badge,0501,20,Piece,—,Metal,50.00,"1,000.00"
+2025-01-13,2025,Collar Pin,0689,1,Piece,—,Accessories,60.00,60.00
+2025-01-13,2025,Magnet,0727,2,Piece,—,Equipment,225.00,450.00
+2025-01-13,2025,Awards,0911,1,Set,—,Metal,"1,330.00","1,330.00"
+2025-01-13,2025,NP Pin,0942,1,Piece,—,Metal,250.00,250.00
+2025-01-14,2025,Patrol Shirt,0108,1,Piece,—,Clothes,"1,400.00","1,400.00"
+2025-01-14,2025,NHO,0546,2,Piece,—,Patches,40.00,80.00
+2025-01-14,2025,QCPD,0549,3,Piece,—,Patches,40.00,120.00
+2025-01-14,2025,SPD,0554,1,Piece,—,Patches,40.00,40.00
+2025-01-14,2025,HSS,0555,3,Piece,—,Patches,40.00,120.00
+2025-01-14,2025,CSG,0556,1,Piece,—,Patches,40.00,40.00
+2025-01-14,2025,ES,0557,1,Piece,—,Patches,40.00,40.00
+2025-01-14,2025,Collar Pin,0689,2,Piece,—,Accessories,40.00,80.00
+2025-01-14,2025,BP,1003,1,Piece,—,Patches,150.00,150.00
+2025-01-14,2025,DMFG,1019,1,Piece,—,Patches,50.00,50.00
+2025-01-15,2025,Patrol Shirt,0108,1,Piece,—,Clothes,"1,300.00","1,300.00"
+2025-01-15,2025,A Kids,0140,1,Piece,L,Clothes,400.00,400.00
+2025-01-15,2025,Holster,0201,1,Piece,—,Equipment,800.00,800.00
+2025-01-15,2025,Double Clip,0427,3,Piece,—,Accessories,100.00,300.00
+2025-01-15,2025,Carabiner,0436,1,Piece,—,Accessories,75.00,75.00
+2025-01-15,2025,Double Cap,0439,2,Piece,—,Accessories,100.00,200.00
+2025-01-15,2025,Handcuffs,0619,1,Piece,—,Equipment,700.00,700.00
+2025-01-15,2025,Whistle,0642,1,Piece,—,Equipment,75.00,75.00
+2025-01-15,2025,Handkerchief,0697,1,Piece,—,Accessories,40.00,40.00
+2025-01-15,2025,Belt Rig,0736,1,Piece,—,Accessories,500.00,500.00
+2025-01-15,2025,Magazine pouch,0866,1,Piece,—,Equipment,800.00,800.00
+2025-01-15,2025,Tickler (Notepad),0901,1,Piece,—,Equipment,50.00,50.00
+2025-01-16,2025,Bullcap,0423,1,Piece,—,Accessories,750.00,750.00
+2025-01-16,2025,Pershing Cap,0424,1,Piece,—,Accessories,"4,000.00","4,000.00"
+2025-01-16,2025,Police Major Emboard type,0440,1,Piece,—,Accessories,700.00,700.00
+2025-01-16,2025,Bush Coat,0605,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2025-01-16,2025,Rank Metal Pin,0672,1,Piece,—,Metal,650.00,650.00
+2025-01-16,2025,Police Major Buckle,0958,1,Piece,—,Metal,"2,000.00","2,000.00"
+2025-01-17,2025,Combat Boots,0009,1,Pair,XL,Shoes,"1,000.00","1,000.00"
+2025-01-17,2025,A Kids,0140,2,Piece,—,Clothes,400.00,800.00
+2025-01-17,2025,Pavehawk Pants,0618,1,Piece,—,Clothes,850.00,850.00
+2025-01-17,2025,Rank for Pixilized Uniform (Patch),1084,1,Piece,—,Patches,80.00,80.00
+2025-01-18,2025,SG Pants,0117,1,Piece,38.0,Clothes,250.00,250.00
+2025-01-18,2025,Baton,0204,1,Piece,—,Equipment,300.00,300.00
+2025-01-20,2025,Hammock,0414,15,Piece,—,Accessories,350.00,"5,250.00"
+2025-01-20,2025,Hammock,0414,1,Piece,—,Accessories,350.00,350.00
+2025-01-20,2025,Chinglopez Bullcap,0524,1,Piece,—,Accessories,"1,200.00","1,200.00"
+2025-01-20,2025,Sling Bag,0526,1,Piece,—,Accessories,800.00,800.00
+2025-01-21,2025,Vest,0209,3,Piece,—,Equipment,300.00,900.00
+2025-01-22,2025,SG Pants,0117,6,Piece,35.0,Clothes,230.00,"1,380.00"
+2025-01-22,2025,Nylon Belt,0239,1,Piece,—,Equipment,100.00,100.00
+2025-01-22,2025,Name Cloth,0303,200,Piece,—,Patches,50.00,"10,000.00"
+2025-01-22,2025,Garterized Belt,0599,1,Piece,—,Accessories,300.00,300.00
+2025-01-22,2025,Olive Green (OG) Cotton,0838,7,Piece,L,Clothes,150.00,"1,050.00"
+2025-01-22,2025,Patch,1050,200,Piece,—,Patches,50.00,"10,000.00"
+2025-01-23,2025,Rubber Shoes Peak,0014,1,Pair,10.0,Shoes,"3,400.00","3,400.00"
+2025-01-23,2025,GOA Pants,0106,1,Piece,37.0,Clothes,750.00,750.00
+2025-01-23,2025,Holster,0201,1,Piece,—,Equipment,500.00,500.00
+2025-01-23,2025,Pershing Cap,0424,1,Piece,—,Accessories,"2,000.00","2,000.00"
+2025-01-23,2025,Sling Bag,0526,1,Piece,—,Accessories,900.00,900.00
+2025-01-23,2025,NCR,0532,1,Piece,—,Patches,40.00,40.00
+2025-01-23,2025,SPD,0554,1,Piece,—,Patches,40.00,40.00
+2025-01-23,2025,HSS,0555,2,Piece,—,Patches,40.00,80.00
+2025-01-23,2025,CSG,0556,1,Piece,—,Patches,40.00,40.00
+2025-01-23,2025,PEM,0558,2,Piece,—,Patches,50.00,100.00
+2025-01-23,2025,PEM,0558,1,Piece,—,Patches,50.00,50.00
+2025-01-23,2025,Garrison Only,0757,1,Piece,—,Accessories,100.00,100.00
+2025-01-23,2025,SAR Uniform Shirt,0841,1,Piece,M,Clothes,850.00,850.00
+2025-01-23,2025,SAR Uniform Shirt,0841,1,Piece,S,Clothes,850.00,850.00
+2025-01-23,2025,ASG,0998,1,Piece,—,Patches,40.00,40.00
+2025-01-23,2025,IAS,1024,2,Piece,—,Patches,40.00,80.00
+2025-01-23,2025,MPD,1032,1,Piece,—,Patches,40.00,40.00
+2025-01-23,2025,Patch,1050,200,Piece,—,Patches,60.00,"12,000.00"
+2025-01-23,2025,Patrolman,1054,1,Piece,—,Patches,50.00,50.00
+2025-01-23,2025,CES Patch,1087,5,Piece,—,Patches,70.00,350.00
+2025-01-24,2025,Patrol Shirt,0108,1,Piece,—,Clothes,"1,400.00","1,400.00"
+2025-01-24,2025,A Pants,0111,1,Piece,—,Clothes,700.00,700.00
+2025-01-24,2025,Vest,0209,1,Piece,—,Equipment,"2,300.00","2,300.00"
+2025-01-24,2025,GOA Upper,0566,2,Piece,—,Clothes,550.00,"1,100.00"
+2025-01-24,2025,Skeletal Buckle,0587,3,Piece,—,Metal,200.00,600.00
+2025-01-24,2025,A Shirt,0628,1,Piece,M,Clothes,400.00,400.00
+2025-01-25,2025,Awards,0911,3,Piece,—,Metal,150.00,450.00
+2025-01-28,2025,San Juan Logo,1069,1,Piece,—,Patches,150.00,150.00
+2025-01-30,2025,NHQ,0536,1,Piece,—,Patches,40.00,40.00
+2025-01-30,2025,QCPD,0549,2,Piece,—,Patches,40.00,80.00
+2025-01-30,2025,CSG,0556,3,Piece,—,Patches,40.00,120.00
+2025-01-30,2025,PNPTI,0559,1,Piece,—,Patches,40.00,40.00
+2025-01-30,2025,No Shine Buckle,0586,1,Piece,—,Metal,350.00,350.00
+2025-01-30,2025,Paupango (rescue machete),0882,1,Piece,—,Equipment,45.00,45.00
+2025-01-30,2025,Patrolman Fixed Insignia,0947,1,Piece,—,Metal,45.00,45.00
+2025-01-30,2025,MG,1031,1,Piece,—,Patches,40.00,40.00
+2025-01-30,2025,PPS,1046,1,Piece,—,Patches,40.00,40.00
+2025-01-30,2025,PSMS,1049,2,Piece,—,Patches,50.00,100.00
+2025-01-30,2025,GOA Name,1061,1,Piece,—,Patches,30.00,30.00
+2025-01-31,2025,GOA Pants,0106,2,Piece,31.0,Clothes,650.00,"1,300.00"
+2025-01-31,2025,GOA Pants,0106,1,Piece,33.0,Clothes,650.00,650.00
+2025-01-31,2025,GOA Pants,0106,2,Piece,31.0,Clothes,650.00,"1,300.00"
+2025-01-31,2025,Flight Pouch,0207,1,Piece,—,Equipment,250.00,250.00
+2025-01-31,2025,Carabiner,0436,1,Piece,—,Accessories,50.00,50.00
+2025-01-31,2025,PNCO Bullcap,0521,1,Piece,—,Accessories,550.00,550.00
+2025-01-31,2025,PNCO Bullcap,0521,1,Piece,—,Accessories,180.00,180.00
+2025-01-31,2025,Chinglopez Bullcap,0524,1,Piece,—,Accessories,550.00,550.00
+2025-01-31,2025,Baton Pouch,0616,1,Piece,—,Equipment,300.00,300.00
+2025-01-31,2025,Rank GOA,0671,2,Piece,—,Metal,90.00,180.00
+2025-01-31,2025,Rank GOA,0671,2,Piece,—,Metal,90.00,180.00
+2025-01-31,2025,PCMS Rank,0674,2,Piece,—,Metal,90.00,180.00
+2025-01-31,2025,Rank Patrol (Metal),0936,1,Piece,—,Metal,80.00,80.00
+2025-02-01,2025,Poncho,0592,1,Piece,—,Clothes,300.00,300.00
+2025-02-01,2025,Cycling Short,0664,5,Piece,—,Clothes,80.00,400.00
+2025-02-01,2025,Botak Short,0665,5,Piece,—,Clothes,70.00,350.00
+2025-02-03,2025,CS Volts,0004,1,Set,XL,Shoes,"3,700.00","3,700.00"
+2025-02-03,2025,Patrol Shirt,0108,1,Piece,S,Clothes,"1,400.00","1,400.00"
+2025-02-03,2025,Plain Bullcap,0748,1,Piece,—,Accessories,180.00,180.00
+2025-02-03,2025,FSO Rank,0929,1,Piece,—,Metal,80.00,80.00
+2025-02-03,2025,PMSG Rank (Metal),0990,1,Piece,—,Metal,80.00,80.00
+2025-02-04,2025,Nameplate (Metal),0621,1,Piece,—,Metal,300.00,300.00
+2025-02-06,2025,Change Rank GOA,0926,4,Piece,—,Metal,140.00,560.00
+2025-02-06,2025,Change Rank Patrol,1012,2,Piece,—,Patches,120.00,240.00
+2025-02-07,2025,Patches PRBS,0560,1,Piece,—,Patches,400.00,400.00
+2025-02-07,2025,Garrison Buckle,0585,1,Piece,—,Metal,230.00,230.00
+2025-02-07,2025,Single Clip,0711,4,Piece,—,Accessories,50.00,200.00
+2025-02-08,2025,QCPD,0549,3,Piece,—,Patches,80.00,240.00
+2025-02-08,2025,SPD,0554,1,Piece,—,Patches,40.00,40.00
+2025-02-08,2025,HSS,0555,1,Piece,—,Patches,40.00,40.00
+2025-02-08,2025,HSS,0555,2,Piece,—,Patches,40.00,80.00
+2025-02-08,2025,CSG,0556,1,Piece,—,Patches,40.00,40.00
+2025-02-08,2025,PEM,0558,3,Piece,—,Patches,50.00,150.00
+2025-02-08,2025,GOA Lower,0567,1,Piece,—,Clothes,700.00,700.00
+2025-02-08,2025,BISOC Pin,0662,1,Piece,—,Metal,150.00,150.00
+2025-02-08,2025,BISOC Pin,0662,1,Piece,—,Metal,150.00,150.00
+2025-02-08,2025,Beret Blue,0715,1,Piece,57.0,Accessories,400.00,400.00
+2025-02-08,2025,Beret Blue,0715,1,Piece,57.0,Accessories,400.00,400.00
+2025-02-08,2025,PNP-ITMS (Metal),0945,1,Piece,—,Metal,40.00,40.00
+2025-02-08,2025,BISOC Patch,1002,1,Piece,—,Patches,30.00,30.00
+2025-02-08,2025,Rank Patrol (Patch),1057,1,Piece,—,Patches,200.00,200.00
+2025-02-08,2025,BISOC Logo,1065,1,Piece,—,Patches,30.00,30.00
+2025-02-10,2025,Baton Pouch,0616,1,Piece,—,Equipment,300.00,300.00
+2025-02-10,2025,Awards,0911,1,Piece,—,Metal,470.00,470.00
+2025-02-10,2025,MIGS Awards,0915,1,Piece,—,Metal,315.00,315.00
+2025-02-11,2025,White Shirt,0157,4,Piece,L,Clothes,230.00,920.00
+2025-02-11,2025,SG Badge,0645,2,Piece,—,Metal,100.00,200.00
+2025-02-11,2025,Collar Pin,0689,1,Piece,—,Accessories,50.00,50.00
+2025-02-11,2025,Beret Blue,0715,1,Piece,57.0,Accessories,300.00,300.00
+2025-02-12,2025,GOA Pants,0106,1,Piece,39.0,Clothes,700.00,700.00
+2025-02-12,2025,Flashlight,0205,1,Piece,—,Equipment,150.00,150.00
+2025-02-12,2025,Carabiner,0436,1,Piece,—,Accessories,75.00,75.00
+2025-02-12,2025,Embroidered Only,0561,10,Piece,—,Patches,20.00,200.00
+2025-02-12,2025,GOA C Upper,0569,1,Piece,2XL,Clothes,950.00,950.00
+2025-02-12,2025,Flashlight Pouch,0583,1,Piece,—,Equipment,250.00,250.00
+2025-02-12,2025,Baton Pouch,0616,1,Piece,—,Equipment,300.00,300.00
+2025-02-12,2025,Whistle,0642,1,Piece,—,Equipment,75.00,75.00
+2025-02-12,2025,Cycling Short,0664,4,Piece,M,Clothes,100.00,400.00
+2025-02-12,2025,Radio Pouch,0680,1,Piece,—,Equipment,300.00,300.00
+2025-02-12,2025,Shock Pin,0984,1,Piece,—,Metal,180.00,180.00
+2025-02-13,2025,Shoulder Board,0406,1,Piece,—,Accessories,300.00,300.00
+2025-02-13,2025,GOA C,0568,2,Piece,L,Clothes,900.00,"1,800.00"
+2025-02-13,2025,Garrison Buckle,0585,1,Piece,—,Metal,"1,000.00","1,000.00"
+2025-02-14,2025,Buckle Belt,0739,1,Piece,—,Accessories,200.00,200.00
+2025-02-15,2025,A Pants,0111,1,Piece,—,Clothes,500.00,500.00
+2025-02-15,2025,Velcro,0309,1,Piece,—,Patches,380.00,380.00
+2025-02-15,2025,SAF,0551,5,Piece,—,Patches,35.00,175.00
+2025-02-15,2025,SAF,0551,1,Piece,—,Patches,100.00,100.00
+2025-02-15,2025,SWAT Logo,0562,2,Piece,—,Patches,70.00,140.00
+2025-02-15,2025,A Shirt,0628,1,Piece,—,Clothes,500.00,500.00
+2025-02-15,2025,Rank Attach,0675,3,Piece,—,Metal,120.00,360.00
+2025-02-15,2025,Rank Attach,0675,2,Piece,—,Metal,20.00,40.00
+2025-02-15,2025,Commando Logo,0712,5,Piece,—,Patches,70.00,350.00
+2025-02-15,2025,Embroidered Badge,0982,2,Piece,—,Metal,70.00,140.00
+2025-02-17,2025,Logo,0304,1,Piece,—,Patches,200.00,200.00
+2025-02-17,2025,Shoulder Board,0406,1,Piece,—,Accessories,800.00,800.00
+2025-02-17,2025,Shoulder Board,0406,1,Piece,—,Accessories,400.00,400.00
+2025-02-17,2025,Rank,0504,1,Piece,—,Metal,150.00,150.00
+2025-02-17,2025,Handcuffs,0619,1,Piece,—,Equipment,650.00,650.00
+2025-02-17,2025,PNP Raincoat,0708,2,Piece,—,Clothes,900.00,"1,800.00"
+2025-02-17,2025,PNP Raincoat,0708,1,Piece,—,Clothes,900.00,900.00
+2025-02-17,2025,PMSG Rank (Patch),1041,2,Piece,—,Patches,80.00,160.00
+2025-02-17,2025,PSG Patrol,1048,1,Piece,—,Patches,80.00,80.00
+2025-02-18,2025,TMRU,0125,3,Piece,—,Clothes,800.00,"2,400.00"
+2025-02-18,2025,Pershing Cap,0424,1,Piece,5.0,Accessories,700.00,700.00
+2025-02-18,2025,PNCO Buckle,0589,1,Piece,—,Metal,800.00,800.00
+2025-02-18,2025,GOA B,0788,1,Set,"M, 35",Clothes,"1,600.00","1,600.00"
+2025-02-18,2025,Pavehawk Pants Black,0846,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2025-02-20,2025,SG Pants,0117,1,Piece,—,Clothes,280.00,280.00
+2025-02-24,2025,GOA Pants,0106,1,Piece,—,Clothes,"1,825.00","1,825.00"
+2025-02-24,2025,Skeletal Buckle,0587,1,Piece,—,Metal,200.00,200.00
+2025-02-24,2025,GOA B,0788,1,Piece,—,Clothes,850.00,850.00
+2025-02-24,2025,GOA B Upper,0827,1,Piece,—,Clothes,"1,825.00","1,825.00"
+2025-02-26,2025,Nameplate (Metal),0621,1,Piece,—,Metal,"2,000.00","2,000.00"
+2025-02-28,2025,PNCO Bull Cup,0760,1,Piece,—,Accessories,350.00,350.00
+2025-03-01,2025,Clarino Shoes,0007,1,Pair,41.0,Shoes,"2,100.00","2,100.00"
+2025-03-03,2025,Vest,0209,1,Piece,—,Equipment,250.00,250.00
+2025-03-03,2025,Vest,0209,1,Piece,—,Equipment,250.00,250.00
+2025-03-03,2025,Nameplate (Metal),0621,14,Piece,—,Metal,250.00,"3,500.00"
+2025-03-04,2025,Sling Bag,0526,1,Piece,—,Accessories,"1,000.00","1,000.00"
+2025-03-05,2025,Ching Lopez Cap,0761,1,Piece,—,Accessories,"1,100.00","1,100.00"
+2025-03-05,2025,Unit Vest,0874,1,Piece,—,Equipment,200.00,200.00
+2025-03-06,2025,Patrol Shirt,0108,1,Piece,L,Clothes,"1,300.00","1,300.00"
+2025-03-06,2025,Belt Ganson,0752,2,Piece,—,Accessories,300.00,600.00
+2025-03-06,2025,NHQ Patch,1076,1,Piece,—,Patches,150.00,150.00
+2025-03-11,2025,Patrol Shirt,0108,2,Piece,L,Clothes,"1,200.00","2,400.00"
+2025-03-11,2025,QRP Shirt,0126,1,Piece,—,Clothes,950.00,950.00
+2025-03-11,2025,Flight Pouch,0207,1,Piece,S,Equipment,150.00,150.00
+2025-03-11,2025,Bullcap,0423,1,Piece,—,Accessories,800.00,800.00
+2025-03-11,2025,SAF,0551,5,Piece,—,Patches,70.00,350.00
+2025-03-11,2025,SAF,0551,5,Piece,—,Patches,50.00,250.00
+2025-03-11,2025,HSS,0555,2,Piece,—,Patches,70.00,140.00
+2025-03-11,2025,SWAT Logo,0562,5,Piece,—,Patches,70.00,350.00
+2025-03-11,2025,GOA C,0568,1,Piece,—,Clothes,220.00,220.00
+2025-03-11,2025,Pavehawk Pants,0618,1,Piece,XL,Clothes,"1,000.00","1,000.00"
+2025-03-11,2025,Tactical Pants,0687,1,Piece,L,Clothes,"1,000.00","1,000.00"
+2025-03-11,2025,Commando Logo,0712,5,Piece,—,Patches,70.00,350.00
+2025-03-11,2025,Garrison,0754,1,Piece,—,Accessories,100.00,100.00
+2025-03-11,2025,Change Rank (Metal),0925,2,Piece,—,Metal,140.00,280.00
+2025-03-11,2025,Boots,1106,1,Pair,—,Shoes,"1,000.00","1,000.00"
+2025-03-12,2025,6-Pocket Short,0573,3,Piece,L,Clothes,380.00,"1,140.00"
+2025-03-12,2025,Dryfit Green,0641,1,Piece,—,Clothes,280.00,280.00
+2025-03-12,2025,Logistician Pin,0656,1,Piece,—,Metal,200.00,200.00
+2025-03-12,2025,BAC,0938,1,Piece,—,Metal,200.00,200.00
+2025-03-13,2025,Flight Pouch,0207,1,Piece,S,Equipment,200.00,200.00
+2025-03-13,2025,Handcuffs,0619,1,Piece,—,Equipment,650.00,650.00
+2025-03-14,2025,6-Pocket Short,0573,3,Piece,M,Clothes,380.00,"1,140.00"
+2025-03-14,2025,Tickler (Notepad),0901,1,Piece,—,Equipment,50.00,50.00
+2025-03-14,2025,Surname,1064,1,Piece,—,Patches,200.00,200.00
+2025-03-17,2025,Hammock,0414,2,Piece,—,Accessories,400.00,800.00
+2025-03-18,2025,GOA Pants,0106,2,Piece,32.0,Clothes,650.00,"1,300.00"
+2025-03-18,2025,Baton,0204,1,Piece,—,Equipment,300.00,300.00
+2025-03-18,2025,Tactical Helmet,0210,3,Piece,—,Equipment,500.00,"1,500.00"
+2025-03-18,2025,Army Bonet,0421,1,Piece,—,Accessories,250.00,250.00
+2025-03-18,2025,Carabiner,0436,1,Piece,—,Accessories,150.00,150.00
+2025-03-18,2025,Tactical Sling,0527,1,Piece,—,Accessories,300.00,300.00
+2025-03-18,2025,Baton Pouch,0616,1,Piece,—,Equipment,300.00,300.00
+2025-03-18,2025,Tactical Knife,0704,1,Piece,—,Equipment,400.00,400.00
+2025-03-19,2025,Buckle Garrison,0967,1,Set,—,Metal,900.00,900.00
+2025-03-21,2025,Flashlight,0205,10,Piece,—,Equipment,150.00,"1,500.00"
+2025-03-21,2025,Carabiner,0436,1,Piece,—,Accessories,150.00,150.00
+2025-03-21,2025,Buckle,0506,1,Piece,—,Metal,30.00,30.00
+2025-03-21,2025,Riffle Bag,0717,1,Piece,—,Equipment,"1,800.00","1,800.00"
+2025-03-24,2025,Shoulder Board,0406,1,Piece,—,Accessories,400.00,400.00
+2025-03-24,2025,Carabiner,0436,1,Piece,—,Accessories,100.00,100.00
+2025-03-24,2025,Santi Buckle,0584,1,Piece,—,Metal,"1,100.00","1,100.00"
+2025-03-24,2025,No Shine Buckle,0586,2,Piece,—,Metal,400.00,800.00
+2025-03-25,2025,No Shine Buckle,0586,1,Piece,—,Metal,400.00,400.00
+2025-03-25,2025,Rank for Pixilized Uniform (Metal),0673,1,Piece,—,Metal,100.00,100.00
+2025-03-25,2025,Lowsy Hat,0777,1,Piece,—,Accessories,300.00,300.00
+2025-03-25,2025,HPG (Equipment),0885,1,Piece,—,Equipment,350.00,350.00
+2025-03-25,2025,Shoe Polish Brush (Bruno),0903,1,Piece,—,Equipment,250.00,250.00
+2025-03-25,2025,Shoe Polish Brush (Bruno),0903,1,Piece,—,Equipment,50.00,50.00
+2025-03-26,2025,GOA Patch,0544,10,Piece,—,Patches,50.00,500.00
+2025-03-27,2025,NHQ,0536,1,Piece,—,Patches,40.00,40.00
+2025-03-27,2025,QCPD,0549,1,Piece,—,Patches,40.00,40.00
+2025-03-27,2025,HSS,0555,1,Piece,—,Patches,40.00,40.00
+2025-03-27,2025,PNPTI,0559,3,Piece,—,Patches,40.00,120.00
+2025-03-27,2025,FG,0563,5,Piece,—,Patches,50.00,250.00
+2025-03-27,2025,FG,0563,2,Piece,—,Patches,40.00,80.00
+2025-03-27,2025,LAS,1029,2,Piece,—,Patches,40.00,80.00
+2025-03-27,2025,PSMS,1049,1,Piece,—,Patches,50.00,50.00
+2025-03-28,2025,Logo,0304,1,Piece,—,Patches,250.00,250.00
+2025-03-29,2025,Patrol Shirt,0108,1,Piece,L,Clothes,"1,300.00","1,300.00"
+2025-03-29,2025,Bullcap,0423,1,Piece,—,Accessories,350.00,350.00
+2025-03-29,2025,PNP Raincoat,0708,1,Piece,—,Clothes,550.00,550.00
+2025-03-29,2025,Garrison,0754,1,Piece,—,Accessories,100.00,100.00
+2025-03-29,2025,Socks,0817,1,Piece,—,Clothes,150.00,150.00
+2025-04-01,2025,Flashlight Pouch,0583,1,Piece,—,Equipment,250.00,250.00
+2025-04-01,2025,Canik Holster,0637,1,Piece,—,Equipment,600.00,600.00
+2025-04-01,2025,Collar Pin,0689,2,Piece,—,Accessories,60.00,120.00
+2025-04-01,2025,SOSIA,0728,1,Piece,—,Patches,70.00,70.00
+2025-04-01,2025,Magpouch Fiber,0867,1,Piece,—,Equipment,500.00,500.00
+2025-04-01,2025,Cleaning Cloth,0884,1,Piece,—,Equipment,120.00,120.00
+2025-04-03,2025,Embroided OG,0597,5,Piece,—,Clothes,255.00,"1,275.00"
+2025-04-03,2025,Embroided OG,0597,3,Piece,—,Clothes,265.00,795.00
+2025-04-03,2025,Handcuffs,0619,1,Piece,—,Equipment,650.00,650.00
+2025-04-03,2025,Cycling Short,0664,2,Piece,—,Clothes,80.00,160.00
+2025-04-03,2025,Botak Short,0665,1,Piece,—,Clothes,80.00,80.00
+2025-04-03,2025,Botak Short,0665,2,Piece,—,Clothes,80.00,160.00
+2025-04-03,2025,Lousy Hat,0690,1,Piece,—,Accessories,300.00,300.00
+2025-04-03,2025,Embroided Black Socks,0811,5,Piece,—,Clothes,95.00,475.00
+2025-04-03,2025,Embroided Black Socks,0811,5,Piece,—,Clothes,95.00,475.00
+2025-04-03,2025,Embroidered White Socks,0812,5,Piece,—,Clothes,95.00,475.00
+2025-04-03,2025,Embroided Cycling Short,0854,5,Piece,—,Clothes,95.00,475.00
+2025-04-04,2025,GOA Pants,0106,1,Piece,—,Clothes,700.00,700.00
+2025-04-04,2025,Bungee Cord,0238,1,Piece,—,Equipment,250.00,250.00
+2025-04-04,2025,Forensic Group Patch,0533,4,Piece,—,Patches,50.00,200.00
+2025-04-04,2025,Botak Short,0665,1,Piece,—,Clothes,80.00,80.00
+2025-04-04,2025,Garterized,0771,1,Piece,—,Accessories,250.00,250.00
+2025-04-04,2025,DMFB (District Mobile Force Battalion),0795,1,Piece,—,Clothes,"1,200.00","1,200.00"
+2025-04-04,2025,PNP Combat Socks,0810,1,Piece,—,Clothes,100.00,100.00
+2025-04-04,2025,Embroided,1090,1,Piece,—,Patches,200.00,200.00
+2025-04-08,2025,PNCO Bullcap,0521,1,Piece,—,Accessories,350.00,350.00
+2025-04-11,2025,HPG (Equipment),0885,1,Piece,—,Equipment,250.00,250.00
+2025-04-14,2025,Holster,0201,1,Piece,—,Equipment,600.00,600.00
+2025-04-14,2025,6-Pocket Short,0573,2,Piece,L,Clothes,400.00,800.00
+2025-04-14,2025,6-Pocket Short,0573,4,Piece,XL,Clothes,400.00,"1,600.00"
+2025-04-15,2025,Patrol Shirt,0108,2,Piece,M,Clothes,"1,200.00","2,400.00"
+2025-04-15,2025,Patrol Shirt,0108,1,Piece,L,Clothes,"1,400.00","1,400.00"
+2025-04-15,2025,Patrol Shirt,0108,1,Piece,S,Clothes,"1,400.00","1,400.00"
+2025-04-15,2025,GOA C,0568,1,Set,—,Clothes,"1,700.00","1,700.00"
+2025-04-15,2025,GOA B Upper,0827,1,Set,L,Clothes,"1,550.00","1,550.00"
+2025-04-15,2025,PSPG,1078,1,Piece,—,Patches,150.00,150.00
+2025-04-22,2025,FSU Pants Old,0130,1,Piece,—,Clothes,800.00,800.00
+2025-04-24,2025,Rank,0504,3,Piece,—,Metal,50.00,150.00
+2025-04-24,2025,A Shirt,0628,1,Piece,—,Clothes,300.00,300.00
+2025-04-24,2025,Metal Polish (MC),0894,1,Piece,—,Equipment,150.00,150.00
+2025-04-24,2025,Patch,1050,3,Piece,—,Patches,40.00,120.00
+2025-04-24,2025,Patch,1050,2,Piece,—,Patches,40.00,80.00
+2025-04-24,2025,Patch,1050,9,Piece,—,Patches,40.00,360.00
+2025-04-26,2025,Pants,0118,1,Piece,—,Clothes,250.00,250.00
+2025-04-26,2025,Flight Pouch,0207,1,Piece,—,Equipment,250.00,250.00
+2025-04-26,2025,Lanyard,0401,1,Piece,—,Accessories,80.00,80.00
+2025-04-26,2025,Army Bonet,0421,1,Piece,—,Accessories,200.00,200.00
+2025-04-26,2025,Pershing Cap,0424,1,Piece,—,Accessories,200.00,200.00
+2025-04-26,2025,Badge,0501,1,Piece,—,Metal,100.00,100.00
+2025-04-26,2025,Long Sleeve,0575,1,Piece,—,Clothes,400.00,400.00
+2025-04-26,2025,Baton Pouch,0616,1,Piece,—,Equipment,300.00,300.00
+2025-04-26,2025,Inside Holster,0631,1,Piece,—,Equipment,180.00,180.00
+2025-04-26,2025,Whistle,0642,1,Piece,—,Equipment,100.00,100.00
+2025-04-26,2025,Collar Pin,0689,1,Piece,—,Accessories,60.00,60.00
+2025-04-26,2025,Necktie,0706,1,Piece,—,Accessories,300.00,300.00
+2025-04-26,2025,Riffle Bag,0717,1,Piece,—,Equipment,"1,500.00","1,500.00"
+2025-04-29,2025,Bath Towel,0722,1,Piece,—,Accessories,200.00,200.00
+2025-05-02,2025,Patrol Shirt,0108,1,Piece,—,Clothes,400.00,400.00
+2025-05-03,2025,CS Volts,0004,1,Set,M,Shoes,"3,800.00","3,800.00"
+2025-05-03,2025,Vest,0209,1,Piece,—,Equipment,"1,000.00","1,000.00"
+2025-05-03,2025,Shoulder Board,0406,1,Piece,—,Accessories,800.00,800.00
+2025-05-03,2025,EORA,0459,1,Piece,—,Metal,50.00,50.00
+2025-05-05,2025,Patrol Shirt,0108,2,Piece,XL,Clothes,"1,400.00","2,800.00"
+2025-05-06,2025,Patrol Shirt,0108,1,Piece,XL,Clothes,"2,800.00","2,800.00"
+2025-05-06,2025,Pavehawk Pants,0618,1,Piece,—,Clothes,900.00,900.00
+2025-05-06,2025,PCOL,0668,2,Piece,—,Metal,100.00,200.00
+2025-05-08,2025,Name Cloth,0303,1,Piece,—,Patches,120.00,120.00
+2025-05-09,2025,GOA Pants,0106,1,Piece,—,Clothes,700.00,700.00
+2025-05-09,2025,SG Pants,0117,1,Piece,—,Clothes,280.00,280.00
+2025-05-09,2025,SG Upper,0171,1,Piece,—,Clothes,300.00,300.00
+2025-05-09,2025,Lanyard,0401,1,Piece,—,Accessories,180.00,180.00
+2025-05-09,2025,Bullcap,0423,1,Piece,—,Accessories,300.00,300.00
+2025-05-09,2025,KALASAG Pin,0509,1,Piece,—,Metal,70.00,70.00
+2025-05-09,2025,GOA C Upper,0569,1,Set,—,Clothes,"1,700.00","1,700.00"
+2025-05-09,2025,SG Pershing Cap,0614,1,Set,—,Accessories,200.00,200.00
+2025-05-09,2025,Whistle,0642,1,Piece,—,Equipment,180.00,180.00
+2025-05-09,2025,SG Badge,0645,1,Piece,—,Metal,200.00,200.00
+2025-05-09,2025,Patch,1050,1,Piece,—,Patches,250.00,250.00
+2025-05-15,2025,Rank for Pixilized Uniform (Metal),0673,2,Piece,—,Metal,200.00,400.00
+2025-05-20,2025,Combat Shoes,0001,1,Pair,10.0,Shoes,"2,200.00","2,200.00"
+2025-05-20,2025,Handkerchief,0697,1,Piece,—,Accessories,50.00,50.00
+2025-05-21,2025,PNCO Bullcap,0521,1,Piece,—,Accessories,450.00,450.00
+2025-05-21,2025,A Shirt,0628,1,Piece,XL,Clothes,500.00,500.00
+2025-05-22,2025,Polo Shirt,0610,3,Piece,3XL,Clothes,650.00,"1,950.00"
+2025-05-22,2025,Polo Shirt,0610,4,Piece,2XL,Clothes,650.00,"2,600.00"
+2025-05-22,2025,Polo Shirt,0610,1,Piece,L,Clothes,600.00,600.00
+2025-05-26,2025,Woven Patch,0718,2,Piece,—,Patches,150.00,300.00
+2025-05-27,2025,Holster,0201,1,Piece,—,Equipment,600.00,600.00
+2025-05-27,2025,Magpouch,0202,1,Piece,—,Equipment,500.00,500.00
+2025-05-27,2025,Pepper Spray,0248,80,Piece,—,Equipment,220.00,"17,600.00"
+2025-05-27,2025,Pepper Spray,0248,20,Piece,—,Equipment,220.00,"4,400.00"
+2025-05-27,2025,Tactical Belt,0601,1,Piece,—,Accessories,"1,400.00","1,400.00"
+2025-05-28,2025,Eye Protection,0218,3,Set,—,Equipment,280.00,840.00
+2025-05-28,2025,Ear Protection,0219,1,Piece,—,Equipment,200.00,200.00
+2025-05-29,2025,Vest,0209,1,Set,S,Equipment,"1,200.00","1,200.00"
+2025-05-29,2025,Socks,0817,1,Piece,—,Clothes,100.00,100.00
+2025-05-30,2025,Eye Protection,0218,2,Piece,—,Equipment,150.00,300.00
+2025-05-30,2025,DF Patrol Shirt,0574,2,Piece,—,Clothes,"1,300.00","2,600.00"
+2025-06-02,2025,Patrol Shoes,0005,1,Pair,—,Shoes,"1,900.00","1,900.00"
+2025-06-02,2025,Patrol Shirt,0108,1,Piece,M,Clothes,"1,400.00","1,400.00"
+2025-06-02,2025,Rig Belt,0878,1,Piece,—,Equipment,300.00,300.00
+2025-06-04,2025,Patrol Shirt,0108,2,Piece,L,Clothes,"1,450.00","2,900.00"
+2025-06-05,2025,Badge,0501,1,Piece,—,Metal,"1,200.00","1,200.00"
+2025-06-05,2025,A Shirt,0628,1,Piece,2XL,Clothes,450.00,450.00
+2025-06-09,2025,Patrol Shirt,0108,1,Piece,M,Clothes,"1,400.00","1,400.00"
+2025-06-09,2025,Vest HPG,0580,2,Piece,—,Equipment,"1,500.00","3,000.00"
+2025-06-10,2025,SG Pants,0117,1,Piece,35.0,Clothes,300.00,300.00
+2025-06-10,2025,Holster,0201,1,Piece,—,Equipment,250.00,250.00
+2025-06-10,2025,Single Clip,0711,4,Piece,—,Accessories,50.00,200.00
+2025-06-10,2025,Long Sleeve Blue,0720,1,Piece,L,Clothes,500.00,500.00
+2025-06-11,2025,Rubberize Raincoat,0144,1,Piece,—,Clothes,600.00,600.00
+2025-06-11,2025,GOA C,0568,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2025-06-13,2025,Metal Detector,0211,4,Piece,—,Equipment,"1,100.00","4,400.00"
+2025-06-15,2025,NP Magnet,0905,1,Piece,—,Equipment,300.00,300.00
+2025-06-16,2025,SG Pants,0117,2,Piece,—,Clothes,280.00,560.00
+2025-06-16,2025,Dryfit,0142,1,Piece,M,Clothes,"1,300.00","1,300.00"
+2025-06-16,2025,Vest HPG,0580,1,Piece,—,Equipment,"1,500.00","1,500.00"
+2025-06-16,2025,PNP Awards,0921,1,Piece,—,Metal,755.00,755.00
+2025-06-16,2025,Change Rank (Metal),0925,1,Piece,—,Metal,100.00,100.00
+2025-06-17,2025,Tactical Pants,0687,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2025-06-17,2025,Metal Polish (Pledge),0895,1,Piece,—,Equipment,400.00,400.00
+2025-06-17,2025,Metal Polish (Pledge),0895,1,Piece,—,Equipment,150.00,150.00
+2025-06-19,2025,PNP White Shoes,0015,1,Pair,—,Shoes,"2,000.00","2,000.00"
+2025-06-19,2025,KALASAG Pin,0509,2,Piece,—,Metal,50.00,100.00
+2025-06-19,2025,PNP Bullcap,0523,1,Piece,—,Accessories,400.00,400.00
+2025-06-19,2025,A Short,0572,2,Piece,M,Clothes,500.00,"1,000.00"
+2025-06-19,2025,A Shirt,0628,3,Piece,M,Clothes,400.00,"1,200.00"
+2025-06-19,2025,A Shirt,0628,2,Piece,M,Clothes,400.00,800.00
+2025-06-19,2025,A Shirt,0628,1,Piece,S,Clothes,400.00,400.00
+2025-06-19,2025,M16 Magpouch,0676,1,Piece,—,Equipment,350.00,350.00
+2025-06-19,2025,Olive Green (OG) Cotton,0838,2,Piece,M,Clothes,180.00,360.00
+2025-06-19,2025,Tickler (Notepad),0901,1,Piece,—,Equipment,50.00,50.00
+2025-06-19,2025,PRO,1047,5,Piece,—,Patches,50.00,250.00
+2025-06-20,2025,PICE,0919,1,Piece,—,Metal,520.00,520.00
+2025-06-20,2025,IG,1025,1,Piece,—,Patches,40.00,40.00
+2025-06-23,2025,Shoulder Board,0406,1,Piece,—,Accessories,800.00,800.00
+2025-06-23,2025,Shoulder Board,0406,1,Piece,—,Accessories,800.00,800.00
+2025-06-23,2025,Bullcap,0423,1,Piece,—,Accessories,350.00,350.00
+2025-06-23,2025,Skeletal Buckle,0587,1,Piece,—,Metal,400.00,400.00
+2025-06-23,2025,Baton Pouch,0616,1,Piece,—,Equipment,830.00,830.00
+2025-06-23,2025,Whistle,0642,1,Piece,—,Equipment,100.00,100.00
+2025-06-23,2025,Tabak Pin,0658,3,Piece,—,Metal,150.00,450.00
+2025-06-23,2025,V-Neck,0667,1,Piece,—,Clothes,120.00,120.00
+2025-06-23,2025,NUP Pants,0859,1,Piece,XS,Clothes,700.00,700.00
+2025-06-23,2025,One Star,0961,1,Piece,—,Metal,750.00,750.00
+2025-06-24,2025,Round Neck,0594,4,Piece,—,Clothes,150.00,600.00
+2025-06-24,2025,Garrison Blue,0756,2,Piece,—,Accessories,100.00,200.00
+2025-06-24,2025,Awards,0911,1,Piece,—,Metal,910.00,910.00
+2025-06-25,2025,Whistle,0642,2,Piece,—,Equipment,100.00,200.00
+2025-06-25,2025,GOA Upper type C,0829,1,Piece,—,Clothes,950.00,950.00
+2025-06-26,2025,SG Pants,0117,1,Piece,—,Clothes,280.00,280.00
+2025-06-26,2025,Long Sleeve White,0713,2,Piece,—,Clothes,580.00,"1,160.00"
+2025-06-27,2025,Athletic Uniform,0137,1,Set,—,Clothes,"1,600.00","1,600.00"
+2025-06-27,2025,A Shirt,0628,2,Piece,—,Clothes,400.00,800.00
+2025-06-28,2025,GOA C,0568,1,Set,"L, 33",Clothes,"1,650.00","1,650.00"
+2025-06-30,2025,Holster,0201,1,Piece,—,Equipment,400.00,400.00
+2025-06-30,2025,Baton,0204,1,Set,—,Equipment,300.00,300.00
+2025-06-30,2025,Flight Pouch,0207,1,Set,—,Equipment,700.00,700.00
+2025-06-30,2025,Lanyard,0401,1,Set,—,Accessories,122.86,122.86
+2025-06-30,2025,Medkit,0603,1,Piece,—,Equipment,100.00,100.00
+2025-06-30,2025,Baton Pouch,0616,1,Set,—,Equipment,300.00,300.00
+2025-06-30,2025,Whistle,0642,1,Set,—,Equipment,57.14,57.14
+2025-06-30,2025,Single Magpouch,0677,1,Piece,—,Equipment,150.00,150.00
+2025-06-30,2025,Collar Pin,0689,1,Piece,—,Accessories,60.00,60.00
+2025-06-30,2025,Handcuffs Case,0890,1,Piece,—,Equipment,300.00,300.00
+2025-07-01,2025,Badge,0501,1,Piece,—,Metal,"1,200.00","1,200.00"
+2025-07-01,2025,HPG (Equipment),0885,1,Piece,—,Equipment,250.00,250.00
+2025-07-02,2025,No Shine Buckle,0586,3,Piece,—,Metal,280.00,840.00
+2025-07-03,2025,MEDALYA PAPURI,0620,15,Piece,—,Metal,350.00,"5,250.00"
+2025-07-03,2025,Rig Leather,0623,1,Set,—,Equipment,"2,200.00","2,200.00"
+2025-07-03,2025,Buckle only Rig,0972,1,Piece,—,Metal,200.00,200.00
+2025-07-07,2025,Patrol Shirt,0108,1,Piece,—,Clothes,"1,500.00","1,500.00"
+2025-07-07,2025,1ID Security Patch,0552,100,Set,—,Patches,60.00,"6,000.00"
+2025-07-07,2025,Change Unit Patrol,1017,3,Piece,—,Patches,100.00,300.00
+2025-07-07,2025,Change Unit Patrol,1017,1,Piece,—,Patches,200.00,200.00
+2025-07-07,2025,Logo Black Hornet,1066,100,Set,—,Patches,60.00,"6,000.00"
+2025-07-08,2025,Baton,0204,1,Set,—,Equipment,500.00,500.00
+2025-07-08,2025,Flight Pouch,0207,1,Set,—,Equipment,700.00,700.00
+2025-07-08,2025,KALASAG Pin,0509,1,Piece,—,Metal,80.00,80.00
+2025-07-08,2025,Baton Pouch,0616,1,Set,—,Equipment,500.00,500.00
+2025-07-08,2025,HPG (Patch),1023,1,Piece,—,Patches,80.00,80.00
+2025-07-09,2025,Embossed Bullcap,0522,1,Piece,—,Accessories,350.00,350.00
+2025-07-09,2025,PNPTI,0559,5,Piece,—,Patches,60.00,300.00
+2025-07-09,2025,GOA C,0568,1,Set,34.0,Clothes,"1,650.00","1,650.00"
+2025-07-09,2025,PNCO Buckle,0589,1,Piece,—,Metal,850.00,850.00
+2025-07-09,2025,Big Flight Pouch,0609,1,Piece,—,Equipment,400.00,400.00
+2025-07-09,2025,Low Carry Holster,0633,1,Piece,—,Equipment,700.00,700.00
+2025-07-09,2025,PRBS,1089,10,Piece,—,Patches,60.00,600.00
+2025-07-10,2025,Tactical Helmet,0210,1,Piece,—,Equipment,"1,500.00","1,500.00"
+2025-07-11,2025,Vest,0209,1,Set,—,Equipment,"1,000.00","1,000.00"
+2025-07-14,2025,Single Clip,0711,5,Piece,—,Accessories,70.00,350.00
+2025-07-14,2025,PLTCOL Bullcap,0747,1,Piece,—,Accessories,"1,200.00","1,200.00"
+2025-07-15,2025,A Pants,0111,1,Piece,M,Clothes,700.00,700.00
+2025-07-15,2025,A Pants,0111,1,Piece,S,Clothes,400.00,400.00
+2025-07-16,2025,SG Pants,0117,10,Piece,—,Clothes,280.00,"2,800.00"
+2025-07-16,2025,Baton,0204,1,Piece,—,Equipment,300.00,300.00
+2025-07-16,2025,Bullcap,0423,1,Piece,—,Accessories,400.00,400.00
+2025-07-16,2025,GOA Patch,0544,48,Piece,—,Patches,60.00,"2,880.00"
+2025-07-16,2025,Vest HPG,0580,2,Piece,—,Equipment,"1,300.00","2,600.00"
+2025-07-16,2025,PNCO Buckle,0589,1,Set,—,Metal,900.00,900.00
+2025-07-16,2025,SG Belt,0600,13,Piece,—,Accessories,650.00,"8,450.00"
+2025-07-16,2025,Big Flight Pouch,0609,1,Piece,—,Equipment,400.00,400.00
+2025-07-16,2025,Handcuffs,0619,1,Piece,—,Equipment,650.00,650.00
+2025-07-16,2025,V-Neck,0667,2,Piece,L,Clothes,150.00,300.00
+2025-07-16,2025,Long Sleeve Blue,0720,13,Piece,—,Clothes,280.00,"3,640.00"
+2025-07-16,2025,Yellow Lanyard,0729,16,Piece,—,Accessories,80.00,"1,280.00"
+2025-07-18,2025,1ID Security Patch,0552,100,Set,—,Patches,60.00,"6,000.00"
+2025-07-18,2025,1ID Security Patch,0552,50,Set,—,Patches,60.00,"3,000.00"
+2025-07-23,2025,Awards,0911,1,Piece,—,Metal,"1,495.00","1,495.00"
+2025-07-24,2025,Poncho,0592,1,Piece,—,Clothes,350.00,350.00
+2025-07-29,2025,Silver Buckler,0959,2,Piece,—,Metal,120.00,240.00
+2025-07-31,2025,GOA C,0568,1,Set,"L, 35",Clothes,"1,700.00","1,700.00"
+2025-08-02,2025,A Pants,0111,1,Piece,L,Clothes,750.00,750.00
+2025-08-02,2025,PNP Raincoat,0708,1,Piece,—,Clothes,900.00,900.00
+2025-08-04,2025,GOA C,0568,1,Set,"L, 35",Clothes,"1,700.00","1,700.00"
+2025-08-04,2025,Garrison Buckle,0585,1,Set,—,Metal,250.00,250.00
+2025-08-04,2025,V-Neck,0667,1,Piece,L,Clothes,150.00,150.00
+2025-08-04,2025,A Shirt PCO,0692,1,Piece,—,Clothes,450.00,450.00
+2025-08-04,2025,Tactical Knife,0704,1,Piece,—,Equipment,400.00,400.00
+2025-08-04,2025,PNP Awards,0921,1,Piece,—,Metal,900.00,900.00
+2025-08-04,2025,Combat Shoes Gibson,1097,1,Pair,—,Shoes,"2,500.00","2,500.00"
+2025-08-05,2025,A Shirt PCO,0692,2,Piece,—,Clothes,500.00,"1,000.00"
+2025-08-06,2025,Backpack (7 Days),0744,1,Piece,—,Accessories,"1,000.00","1,000.00"
+2025-08-06,2025,Logbook (500 pages),0883,4,Piece,—,Equipment,250.00,"1,000.00"
+2025-08-07,2025,Rig,0223,1,Set,—,Equipment,"2,100.00","2,100.00"
+2025-08-07,2025,Shoulder Board,0406,1,Piece,—,Accessories,350.00,350.00
+2025-08-07,2025,Garrison Buckle,0585,1,Set,—,Metal,250.00,250.00
+2025-08-07,2025,No Shine Buckle,0586,1,Piece,—,Metal,350.00,350.00
+2025-08-07,2025,Tactical Belt,0601,1,Piece,—,Accessories,300.00,300.00
+2025-08-07,2025,Garrison Only,0757,3,Piece,—,Accessories,100.00,300.00
+2025-08-08,2025,Awards,0911,1,Piece,—,Metal,995.00,995.00
+2025-08-11,2025,Shoulder Board,0406,1,Piece,—,Accessories,350.00,350.00
+2025-08-11,2025,ITMS,1027,2,Piece,—,Patches,50.00,100.00
+2025-08-12,2025,SG Pants,0117,2,Piece,—,Clothes,280.00,560.00
+2025-08-12,2025,Sweatshirt SG,0840,1,Piece,—,Clothes,"1,200.00","1,200.00"
+2025-08-13,2025,Round Neck,0594,1,Piece,M,Clothes,150.00,150.00
+2025-08-13,2025,Pavehawk Pants,0618,1,Piece,L,Clothes,900.00,900.00
+2025-08-14,2025,PRO I,0564,24,Piece,—,Patches,40.00,960.00
+2025-08-14,2025,PRO II,0565,16,Piece,—,Patches,40.00,640.00
+2025-08-14,2025,Vest HPG,0580,1,Piece,—,Equipment,"1,300.00","1,300.00"
+2025-08-15,2025,A Pants,0111,1,Piece,—,Clothes,650.00,650.00
+2025-08-15,2025,Tumbler,0236,1,Piece,—,Equipment,400.00,400.00
+2025-08-15,2025,PNCO Bullcap,0521,1,Piece,—,Accessories,350.00,350.00
+2025-08-15,2025,GOA C,0568,1,Piece,—,Clothes,900.00,900.00
+2025-08-15,2025,SAR Uniform,0604,1,Piece,—,Clothes,900.00,900.00
+2025-08-15,2025,PNP Jacket,0852,1,Piece,—,Clothes,"1,100.00","1,100.00"
+2025-08-16,2025,Buckle,0506,2,Piece,—,Metal,150.00,300.00
+2025-08-16,2025,Handkerchief,0697,2,Piece,—,Accessories,50.00,100.00
+2025-08-16,2025,Tickler (Notepad),0901,3,Piece,—,Equipment,50.00,150.00
+2025-08-18,2025,PSPG Pin,0650,1,Piece,—,Metal,150.00,150.00
+2025-08-18,2025,Rig Buckle,0973,1,Piece,—,Metal,150.00,150.00
+2025-08-19,2025,PNP Awards,0921,1,Piece,—,Metal,365.00,365.00
+2025-08-22,2025,Vest,0209,1,Piece,—,Equipment,250.00,250.00
+2025-08-22,2025,GOA C,0568,1,Set,"2XL, 38",Clothes,"1,550.00","1,550.00"
+2025-08-22,2025,GOA C,0568,1,Set,"L, 34",Clothes,"1,550.00","1,550.00"
+2025-08-22,2025,GOA B,0788,1,Set,"2XL, 38",Clothes,"1,500.00","1,500.00"
+2025-08-27,2025,Awards,0911,1,Piece,—,Metal,730.00,730.00
+2025-08-30,2025,Nameplate (Metal),0621,1,Piece,—,Metal,300.00,300.00
+2025-09-01,2025,Patrol Shirt,0108,2,Piece,M,Clothes,"1,200.00","2,400.00"
+2025-09-01,2025,Patrol Shirt,0108,1,Piece,XL,Clothes,"1,200.00","1,200.00"
+2025-09-01,2025,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2025-09-01,2025,Chinglopez Bullcap,0524,1,Piece,—,Accessories,"1,100.00","1,100.00"
+2025-09-01,2025,Garterized Belt,0599,1,Piece,—,Accessories,250.00,250.00
+2025-09-01,2025,SAR Uniform,0604,1,Piece,—,Clothes,800.00,800.00
+2025-09-01,2025,A Shirt,0628,1,Piece,M,Clothes,350.00,350.00
+2025-09-01,2025,A Shirt,0628,1,Piece,L,Clothes,500.00,500.00
+2025-09-01,2025,A Shirt,0628,1,Piece,L,Clothes,450.00,450.00
+2025-09-02,2025,Patrol Shirt,0108,1,Piece,—,Clothes,"1,450.00","1,450.00"
+2025-09-02,2025,PNCO Bullcap,0521,1,Piece,—,Accessories,300.00,300.00
+2025-09-02,2025,GOA Patch,0544,4,Piece,—,Patches,50.00,200.00
+2025-09-02,2025,SAR Uniform,0604,1,Piece,—,Clothes,900.00,900.00
+2025-09-02,2025,Tactical Pants,0687,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2025-09-02,2025,TMRU Shirt,0700,2,Piece,—,Clothes,850.00,"1,700.00"
+2025-09-02,2025,MG PIXI Patches,1075,1,Piece,—,Patches,100.00,100.00
+2025-09-03,2025,SAR Uniform,0604,1,Piece,XL,Clothes,"1,000.00","1,000.00"
+2025-09-03,2025,SAR Uniform,0604,1,Piece,XL,Clothes,900.00,900.00
+2025-09-04,2025,Bullcap,0423,1,Piece,—,Accessories,"1,300.00","1,300.00"
+2025-09-04,2025,Vest HPG,0580,1,Piece,—,Equipment,"1,200.00","1,200.00"
+2025-09-04,2025,PNCO Buckle,0589,1,Piece,—,Metal,750.00,750.00
+2025-09-04,2025,Handkerchief,0697,1,Piece,—,Accessories,50.00,50.00
+2025-09-04,2025,Tickler (Notepad),0901,1,Set,—,Equipment,100.00,100.00
+2025-09-05,2025,Gun Oil (Redisol),0222,1,Piece,—,Equipment,220.00,220.00
+2025-09-05,2025,SAR Uniform,0604,1,Piece,M,Clothes,900.00,900.00
+2025-09-05,2025,GOA B,0788,1,Set,—,Clothes,"1,500.00","1,500.00"
+2025-09-05,2025,Awards,0911,1,Piece,—,Metal,"1,400.00","1,400.00"
+2025-09-05,2025,SR,1059,1,Piece,—,Patches,125.00,125.00
+2025-09-08,2025,SG Blue Long Sleeves,0120,1,Piece,—,Clothes,500.00,500.00
+2025-09-08,2025,A Short,0572,1,Piece,M,Clothes,550.00,550.00
+2025-09-08,2025,SAR Uniform,0604,1,Piece,S,Clothes,900.00,900.00
+2025-09-08,2025,Nameplate (Metal),0621,1,Piece,—,Metal,250.00,250.00
+2025-09-08,2025,A Shirt,0628,1,Piece,L,Clothes,500.00,500.00
+2025-09-08,2025,Logistician Pin,0656,1,Piece,—,Metal,250.00,250.00
+2025-09-08,2025,BRC Pin,0657,2,Piece,—,Metal,150.00,300.00
+2025-09-08,2025,Magnet,0727,1,Piece,—,Equipment,300.00,300.00
+2025-09-09,2025,A Pants,0111,1,Piece,S,Clothes,700.00,700.00
+2025-09-09,2025,Vest,0209,1,Piece,—,Equipment,350.00,350.00
+2025-09-09,2025,Socks,0817,1,Piece,—,Clothes,100.00,100.00
+2025-09-10,2025,Whistle,0642,3,Piece,—,Equipment,70.00,210.00
+2025-09-12,2025,Patrol Shoes,0005,1,Pair,7.0,Shoes,"2,300.00","2,300.00"
+2025-09-12,2025,CS Volts Midcut,0008,1,Pair,—,Shoes,"2,300.00","2,300.00"
+2025-09-12,2025,Bullcap,0423,1,Piece,—,Accessories,"1,100.00","1,100.00"
+2025-09-12,2025,Low Carry Holster,0633,1,Piece,—,Equipment,300.00,300.00
+2025-09-15,2025,SN02 Gibson Shoes,0010,1,Pair,—,Shoes,"2,200.00","2,200.00"
+2025-09-15,2025,Black belt,0737,1,Piece,—,Accessories,100.00,100.00
+2025-09-15,2025,Blue belt,0738,1,Piece,—,Accessories,100.00,100.00
+2025-09-15,2025,Ripstop FS Volts,1101,1,Set,—,Shoes,"3,700.00","3,700.00"
+2025-09-17,2025,SG Pants,0117,1,Piece,—,Clothes,300.00,300.00
+2025-09-17,2025,Sculing,0510,1,Piece,—,Metal,30.00,30.00
+2025-09-17,2025,PADPAO,0530,2,Piece,—,Patches,80.00,160.00
+2025-09-17,2025,No Shine Buckle,0586,1,Set,—,Metal,400.00,400.00
+2025-09-17,2025,SAR Uniform,0604,1,Piece,—,Clothes,850.00,850.00
+2025-09-17,2025,Tabak Pin,0658,1,Piece,—,Metal,150.00,150.00
+2025-09-17,2025,Field Service Uniform (FSU),0862,1,Set,S,Clothes,"3,000.00","3,000.00"
+2025-09-17,2025,SOSI,1094,1,Piece,—,Patches,40.00,40.00
+2025-09-18,2025,Badge,0501,1,Piece,—,Metal,"1,100.00","1,100.00"
+2025-09-18,2025,A Short,0572,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2025-09-18,2025,Nameplate (Metal),0621,1,Piece,—,Metal,250.00,250.00
+2025-09-18,2025,A Shirt,0628,1,Piece,—,Clothes,400.00,400.00
+2025-09-18,2025,Awards,0911,1,Piece,—,Metal,700.00,700.00
+2025-09-20,2025,Flight Pouch,0207,1,Piece,—,Equipment,400.00,400.00
+2025-09-20,2025,PNCO Bullcap,0521,1,Piece,—,Accessories,400.00,400.00
+2025-09-20,2025,GOA C,0568,1,Piece,—,Clothes,950.00,950.00
+2025-09-20,2025,Handcuffs,0619,2,Piece,—,Equipment,650.00,"1,300.00"
+2025-09-20,2025,Handkerchief,0697,2,Piece,—,Accessories,50.00,100.00
+2025-09-20,2025,Tactical Knife,0704,1,Piece,—,Equipment,400.00,400.00
+2025-09-20,2025,GOA B,0788,1,Piece,—,Clothes,850.00,850.00
+2025-09-22,2025,Pants,0118,1,Piece,—,Clothes,700.00,700.00
+2025-09-22,2025,GOA C,0568,1,Set,—,Clothes,"1,750.00","1,750.00"
+2025-09-23,2025,Office Buckle,0590,1,Piece,—,Metal,"1,100.00","1,100.00"
+2025-09-24,2025,Buckle Rig,0588,1,Piece,—,Metal,900.00,900.00
+2025-09-24,2025,Chinlopez Bullcap,0763,1,Piece,—,Accessories,"1,200.00","1,200.00"
+2025-09-24,2025,Awards,0911,1,Piece,—,Metal,695.00,695.00
+2025-09-24,2025,Pin Nameplate,0979,1,Piece,—,Metal,250.00,250.00
+2025-09-25,2025,Lanyard,0401,1,Piece,—,Accessories,80.00,80.00
+2025-09-25,2025,PNCO Bullcap,0521,1,Piece,—,Accessories,350.00,350.00
+2025-09-25,2025,Necktie,0706,1,Piece,—,Accessories,300.00,300.00
+2025-09-26,2025,SAF,0551,1,Piece,—,Patches,197.00,197.00
+2025-09-26,2025,GOA C Upper,0569,1,Piece,—,Clothes,900.00,900.00
+2025-09-26,2025,V-Neck,0667,2,Piece,—,Clothes,150.00,300.00
+2025-09-26,2025,Garrison Only,0757,1,Piece,—,Accessories,100.00,100.00
+2025-09-26,2025,GOA B,0788,1,Set,—,Clothes,"1,600.00","1,600.00"
+2025-09-26,2025,Awards,0911,1,Piece,—,Metal,"1,950.00","1,950.00"
+2025-10-02,2025,Pail,0242,4,Piece,—,Equipment,250.00,"1,000.00"
+2025-10-02,2025,Brads Magnet,0281,1,Piece,—,Equipment,500.00,500.00
+2025-10-02,2025,NP Magnet,0905,2,Piece,—,Equipment,300.00,600.00
+2025-10-06,2025,Gibson Lites,0002,1,Pair,—,Shoes,"2,300.00","2,300.00"
+2025-10-06,2025,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2025-10-06,2025,Garrison Only,0757,1,Piece,—,Accessories,100.00,100.00
+2025-10-06,2025,Olive Green (OG) Cotton,0838,1,Piece,—,Clothes,150.00,150.00
+2025-10-06,2025,Field Service Uniform (FSU),0862,1,Set,—,Clothes,300.00,300.00
+2025-10-06,2025,Awards,0911,1,Set,—,Metal,"1,120.00","1,120.00"
+2025-10-06,2025,Papuri Medal,0923,143,Piece,—,Metal,280.00,"40,040.00"
+2025-10-06,2025,Ugnayang Pampulisya,0924,12,Piece,—,Metal,280.00,"3,360.00"
+2025-10-07,2025,Vest,0209,1,Piece,M,Equipment,"1,250.00","1,250.00"
+2025-10-09,2025,Garrison Buckle,0585,1,Piece,—,Metal,250.00,250.00
+2025-10-09,2025,Cobra Belt,0602,78,Piece,—,Accessories,"1,000.00","78,000.00"
+2025-10-10,2025,A Shirt PCO,0692,1,Piece,—,Clothes,500.00,500.00
+2025-10-14,2025,A Pants,0111,1,Piece,S,Clothes,750.00,750.00
+2025-10-14,2025,PNP Sock,0146,1,Piece,—,Clothes,130.00,130.00
+2025-10-14,2025,Flight Pouch,0207,1,Piece,—,Equipment,250.00,250.00
+2025-10-14,2025,Reflector Vest,0579,1,Piece,—,Equipment,500.00,500.00
+2025-10-14,2025,Garrison Buckle,0585,2,Piece,—,Metal,220.00,440.00
+2025-10-14,2025,A Shirt,0628,1,Piece,M,Clothes,500.00,500.00
+2025-10-14,2025,Tactical Pants,0687,1,Piece,—,Clothes,850.00,850.00
+2025-10-14,2025,Charcoal Socks,0809,1,Piece,—,Clothes,90.00,90.00
+2025-10-15,2025,Awards,0911,4,Set,—,Metal,550.00,"2,200.00"
+2025-10-16,2025,Nameplate (Metal),0621,1,Piece,—,Metal,445.00,445.00
+2025-10-16,2025,Logistician Pin,0656,1,Piece,—,Metal,180.00,180.00
+2025-10-16,2025,GOA B Lower,0828,1,Set,—,Clothes,"1,600.00","1,600.00"
+2025-10-20,2025,Rank Star,0508,1,Piece,—,Metal,100.00,100.00
+2025-10-20,2025,Star,0996,2,Piece,—,Metal,100.00,200.00
+2025-10-24,2025,PS small,0791,1,Piece,S,Clothes,"1,400.00","1,400.00"
+2025-10-25,2025,A Shirt,0158,1,Piece,XL,Clothes,600.00,600.00
+2025-10-25,2025,A Shirt,0628,1,Piece,M,Clothes,400.00,400.00
+2025-10-25,2025,PNP Awards,0921,2,Set,—,Metal,220.00,440.00
+2025-10-27,2025,Nameplate (Patch),0683,1,Piece,—,Patches,140.00,140.00
+2025-10-27,2025,Batangas FSU,0802,1,Piece,—,Clothes,100.00,100.00
+2025-10-27,2025,PSG,0991,1,Piece,—,Metal,100.00,100.00
+2025-10-27,2025,Patrolman,1054,5,Set,—,Patches,400.00,"2,000.00"
+2025-10-29,2025,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2025-10-29,2025,Badge,0501,1,Piece,—,Metal,850.00,850.00
+2025-10-29,2025,CIC Patch,0550,1,Piece,—,Patches,150.00,150.00
+2025-10-29,2025,Nameplate (Metal),0621,1,Piece,—,Metal,250.00,250.00
+2025-10-29,2025,Bagong Pilipinas Pin,0659,1,Piece,—,Metal,150.00,150.00
+2025-10-29,2025,Bagong Pilipinas Pin,0659,1,Piece,—,Metal,150.00,150.00
+2025-10-29,2025,Black Gloves,0693,5,Piece,—,Accessories,40.00,200.00
+2025-10-29,2025,White Gloves,0694,13,Piece,—,Accessories,40.00,520.00
+2025-10-29,2025,Awards,0911,1,Set,—,Metal,900.00,900.00
+2025-10-30,2025,Double Clip,0427,3,Piece,—,Accessories,100.00,300.00
+2025-10-30,2025,No Shine Buckle,0586,1,Piece,—,Metal,400.00,400.00
+2025-10-31,2025,Eye Protection,0218,1,Set,—,Equipment,250.00,250.00
+2025-11-04,2025,Poncho,0592,1,Piece,—,Clothes,350.00,350.00
+2025-11-05,2025,Vest,0209,1,Piece,L,Equipment,"1,200.00","1,200.00"
+2025-11-05,2025,1ID Security Patch,0552,50,Set,—,Patches,60.00,"3,000.00"
+2025-11-05,2025,Garrison Black,0755,1,Piece,—,Accessories,100.00,100.00
+2025-11-08,2025,Tactical Pants,0687,2,Piece,—,Clothes,900.00,"1,800.00"
+2025-11-13,2025,Vest,0209,1,Piece,M,Equipment,"1,200.00","1,200.00"
+2025-11-13,2025,Shoulder Board,0406,1,Piece,—,Accessories,800.00,800.00
+2025-11-15,2025,Vest,0209,8,Piece,—,Equipment,312.00,"2,496.00"
+2025-11-15,2025,Handcuffs,0619,3,Piece,—,Equipment,650.00,"1,950.00"
+2025-11-15,2025,PS small,0791,1,Piece,S,Clothes,"1,200.00","1,200.00"
+2025-11-19,2025,Nameplate (Metal),0621,1,Piece,—,Metal,250.00,250.00
+2025-11-19,2025,A Shirt,0628,1,Piece,—,Clothes,400.00,400.00
+2025-11-20,2025,Handcuffs,0619,1,Piece,—,Equipment,650.00,650.00
+2025-11-20,2025,Charcoal Socks,0809,1,Piece,—,Clothes,100.00,100.00
+2025-11-20,2025,Buckle Ordinary,0951,1,Piece,—,Metal,200.00,200.00
+2025-11-21,2025,Bagong Pilipinas Pin,0659,1,Piece,—,Metal,150.00,150.00
+2025-11-22,2025,Flight Pouch,0207,1,Piece,—,Equipment,400.00,400.00
+2025-11-22,2025,Handcuffs,0619,1,Piece,—,Equipment,700.00,700.00
+2025-11-25,2025,Reflector Vest,0579,1,Piece,M,Equipment,"1,300.00","1,300.00"
+2025-12-01,2025,Vest,0209,1,Piece,S,Equipment,"1,200.00","1,200.00"
+2025-12-02,2025,Dryfit Black,0804,1,Piece,M,Clothes,220.00,220.00
+2025-12-05,2025,A Pants,0111,1,Piece,L,Clothes,700.00,700.00
+2025-12-08,2025,A Short,0572,1,Piece,L,Clothes,550.00,550.00
+2025-12-08,2025,V-Neck,0667,1,Piece,L,Clothes,180.00,180.00
+2025-12-12,2025,Shoulder Board Metal (PLTCOL),0732,1,Pair,—,Accessories,"1,100.00","1,100.00"
+2025-12-18,2025,Garrison Buckle,0585,2,Set,—,Metal,180.00,360.00
+2025-12-18,2025,Cycling Short,0664,10,Piece,M,Clothes,70.00,700.00
+2025-12-18,2025,Cycling Short,0664,10,Piece,L,Clothes,70.00,700.00
+2025-12-18,2025,Burda,0724,11,Piece,—,Patches,18.18,200.00
+2025-12-19,2025,FSU Embroided,0305,1,Piece,—,Patches,200.00,200.00
+2025-12-19,2025,Face Towel,0416,10,Piece,—,Accessories,25.00,250.00
+2025-12-19,2025,No Shine Buckle,0586,1,Piece,—,Metal,400.00,400.00
+2025-12-19,2025,Buckle Rig,0588,1,Piece,—,Metal,150.00,150.00
+2025-12-19,2025,PNCO Buckle,0589,1,Piece,—,Metal,"1,100.00","1,100.00"
+2025-12-19,2025,Single Clip,0711,1,Piece,—,Accessories,250.00,250.00
+2025-12-19,2025,Backpack (7 Days),0744,1,Piece,—,Accessories,700.00,700.00
+2025-12-19,2025,PNP Combat Socks,0810,10,Piece,—,Clothes,80.00,800.00
+2025-12-19,2025,White Socks,0824,10,Piece,—,Clothes,80.00,800.00
+2026-01-05,2026,SAR Uniform,0604,2,Piece,—,Clothes,"1,100.00","2,200.00"
+2026-01-06,2026,Plain Bullcap,0748,1,Piece,—,Accessories,350.00,350.00
+2026-01-06,2026,Chinglopez PNP Bullcap,0762,1,Piece,—,Accessories,"1,100.00","1,100.00"
+2026-01-08,2026,Vest,0209,1,Piece,—,Equipment,"1,300.00","1,300.00"
+2026-01-09,2026,Fiber Rig,0622,1,Set,—,Equipment,"2,500.00","2,500.00"
+2026-01-09,2026,GOA B,0788,1,Set,—,Clothes,"1,650.00","1,650.00"
+2026-01-10,2026,GOA Pants,0106,1,Piece,31.0,Clothes,550.00,550.00
+2026-01-10,2026,Garrison Belt,0442,1,Piece,—,Accessories,100.00,100.00
+2026-01-10,2026,Cycling Short,0664,3,Piece,—,Clothes,70.00,210.00
+2026-01-12,2026,No Shine Buckle,0586,1,Piece,—,Metal,450.00,450.00
+2026-01-12,2026,Garterized Belt,0599,1,Piece,—,Accessories,300.00,300.00
+2026-01-12,2026,Charcoal Socks,0809,3,Piece,—,Clothes,100.00,300.00
+2026-01-13,2026,Clip for Garrison,0441,20,Piece,—,Accessories,10.00,200.00
+2026-01-13,2026,Badge,0501,1,Piece,—,Metal,"1,200.00","1,200.00"
+2026-01-13,2026,Nameplate (Metal),0621,1,Piece,—,Metal,300.00,300.00
+2026-01-13,2026,PCO Shirt Female,0710,1,Piece,M,Clothes,350.00,350.00
+2026-01-13,2026,Socks,0817,1,Piece,—,Clothes,100.00,100.00
+2026-01-13,2026,Awards,0911,1,Set,—,Metal,"1,200.00","1,200.00"
+2026-01-13,2026,BATAAN Patch,1001,1,Piece,—,Patches,40.00,40.00
+2026-01-13,2026,GenSan,1022,1,Piece,—,Patches,40.00,40.00
+2026-01-13,2026,ILOCOS SUR Patch,1026,2,Piece,—,Patches,40.00,80.00
+2026-01-13,2026,PANGASINAN Patch,1037,6,Piece,—,Patches,40.00,240.00
+2026-01-14,2026,A Shirt PCO,0692,1,Piece,—,Clothes,500.00,500.00
+2026-01-14,2026,Olive Green (OG) Cotton,0838,2,Piece,M,Clothes,150.00,300.00
+2026-01-15,2026,PNCO Bullcap,0521,1,Piece,—,Accessories,300.00,300.00
+2026-01-15,2026,Black PNP Socks,0807,1,Piece,—,Clothes,150.00,150.00
+2026-01-15,2026,Charcoal Socks,0809,1,Piece,—,Clothes,100.00,100.00
+2026-01-15,2026,PNP Combat Socks,0810,1,Piece,—,Clothes,100.00,100.00
+2026-01-15,2026,Olive Green (OG) Cotton,0838,1,Piece,L,Clothes,200.00,200.00
+2026-01-16,2026,Vest,0209,1,Piece,—,Equipment,"1,300.00","1,300.00"
+2026-01-19,2026,Sling Bag,0526,1,Piece,—,Accessories,"1,000.00","1,000.00"
+2026-01-19,2026,Bagong Pilipinas Pin,0659,1,Piece,—,Metal,130.00,130.00
+2026-01-19,2026,Criminology pin,0660,1,Piece,—,Metal,130.00,130.00
+2026-01-19,2026,PSBRC Pin,0987,1,Piece,—,Metal,130.00,130.00
+2026-01-23,2026,SG Pershing Cap,0614,1,Piece,—,Accessories,250.00,250.00
+2026-01-26,2026,Gun Oil (Redisol),0222,2,Piece,—,Equipment,230.00,460.00
+2026-01-26,2026,Pavehawk Pants,0618,2,Piece,M,Clothes,"1,000.00","2,000.00"
+2026-01-26,2026,Plain Jacket,0629,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2026-01-26,2026,Awards,0911,1,Set,—,Metal,"1,170.00","1,170.00"
+2026-01-27,2026,Garrison Belt,0442,1,Piece,—,Accessories,100.00,100.00
+2026-01-27,2026,LED Light,0581,1,Piece,—,Equipment,250.00,250.00
+2026-01-27,2026,PNCO Pershing Cap,0612,1,Piece,—,Accessories,750.00,750.00
+2026-01-27,2026,Shine Buckle,0969,1,Piece,—,Metal,200.00,200.00
+2026-01-28,2026,GOA C,0568,1,Piece,—,Clothes,900.00,900.00
+2026-01-28,2026,Shoe Polish Brush (Bruno),0903,1,Piece,—,Equipment,200.00,200.00
+2026-01-28,2026,Shoe Polish Brush (Bruno),0903,1,Piece,—,Equipment,200.00,200.00
+2026-01-29,2026,Vest,0209,1,Piece,—,Equipment,200.00,200.00
+2026-01-29,2026,HPG Pin,0661,1,Piece,—,Metal,350.00,350.00
+2026-01-29,2026,PNP Awards,0921,1,Piece,—,Metal,"1,095.00","1,095.00"
+2026-01-31,2026,A Kids,0140,1,Piece,L,Clothes,400.00,400.00
+2026-02-02,2026,Pershing Cap,0424,1,Piece,8.0,Accessories,700.00,700.00
+2026-02-03,2026,GOA Pants,0106,1,Piece,33.0,Clothes,700.00,700.00
+2026-02-03,2026,Pavehawk Pants,0618,1,Piece,2XL,Clothes,"1,100.00","1,100.00"
+2026-02-03,2026,Bagong Pilipinas Pin,0659,1,Piece,—,Metal,150.00,150.00
+2026-02-03,2026,Chinglopez PNP Bullcap,0762,1,Piece,—,Accessories,"1,100.00","1,100.00"
+2026-02-03,2026,Rig 34,0877,1,Set,—,Equipment,"2,100.00","2,100.00"
+2026-02-03,2026,Change Unit GOA,1014,3,Piece,—,Patches,80.00,240.00
+2026-02-03,2026,Change Unit Patrol,1017,1,Piece,—,Patches,180.00,180.00
+2026-02-03,2026,Rank for Pixilized Uniform (Patch),1084,2,Piece,—,Patches,100.00,200.00
+2026-02-09,2026,Nameplate (Metal),0621,1,Piece,—,Metal,350.00,350.00
+2026-02-12,2026,GOA Pants,0106,2,Piece,33.0,Clothes,650.00,"1,300.00"
+2026-02-12,2026,Pants,0118,1,Piece,M,Clothes,500.00,500.00
+2026-02-12,2026,No Shine Buckle,0586,1,Piece,—,Metal,350.00,350.00
+2026-02-12,2026,Santi Badge,0648,1,Piece,—,Metal,"1,200.00","1,200.00"
+2026-02-12,2026,PSSG,0669,1,Piece,—,Metal,100.00,100.00
+2026-02-12,2026,Nameplate (Patch),0683,1,Piece,—,Patches,200.00,200.00
+2026-02-12,2026,SAR Uniform Shirt,0841,1,Piece,M,Clothes,500.00,500.00
+2026-02-12,2026,PCPT,0930,1,Piece,—,Metal,100.00,100.00
+2026-02-12,2026,PRO NIR Patch,1091,1,Piece,—,Patches,350.00,350.00
+2026-02-19,2026,Bullcap,0423,1,Piece,—,Accessories,400.00,400.00
+2026-02-19,2026,PNP Pershing Cap (Female),0773,1,Piece,—,Accessories,700.00,700.00
+2026-02-19,2026,Rig 30,0876,1,Set,—,Equipment,"2,300.00","2,300.00"
+2026-02-20,2026,Canik Holster,0637,1,Piece,—,Equipment,650.00,650.00
+2026-02-20,2026,PNP Awards,0921,1,Set,—,Metal,950.00,950.00
+2026-02-20,2026,Nameplate Magnet,0977,1,Piece,—,Metal,350.00,350.00
+2026-02-23,2026,Vest,0209,1,Piece,XS,Equipment,"1,200.00","1,200.00"
+2026-02-23,2026,Pershing Cap,0424,1,Piece,—,Accessories,700.00,700.00
+2026-02-24,2026,Vest,0209,1,Piece,—,Equipment,"1,000.00","1,000.00"
+2026-02-25,2026,Cup Device PCO,0751,1,Piece,—,Accessories,500.00,500.00
+2026-02-26,2026,Metal Detector,0211,1,Piece,—,Equipment,"1,600.00","1,600.00"
+2026-02-26,2026,Pershing Cap,0424,1,Piece,6.0,Accessories,700.00,700.00
+2026-02-26,2026,Pavehawk Pants,0618,2,Piece,—,Clothes,"1,050.00","2,100.00"
+2026-02-26,2026,Tactical Knife,0704,1,Piece,—,Equipment,400.00,400.00
+2026-02-26,2026,GOA B,0788,1,Piece,M,Clothes,900.00,900.00
+2026-02-26,2026,FSU Black,0853,2,Piece,—,Clothes,250.00,500.00
+2026-02-27,2026,PNCO Bullcap,0521,1,Piece,—,Accessories,400.00,400.00
+2026-02-27,2026,GOA Patch,0544,4,Piece,—,Patches,50.00,200.00
+2026-02-27,2026,DF Patrol Shirt,0574,1,Piece,M,Clothes,"1,300.00","1,300.00"
+2026-02-27,2026,Patch Woven,0719,1,Piece,—,Patches,150.00,150.00
+2026-02-27,2026,PNP Pershing Cap (Female),0773,1,Piece,8.0,Accessories,750.00,750.00
+2026-02-27,2026,Charcoal Socks,0809,2,Piece,—,Clothes,100.00,200.00
+2026-02-27,2026,No Shine,0968,1,Piece,—,Metal,400.00,400.00
+2026-03-02,2026,Magpouch,0202,1,Piece,—,Equipment,650.00,650.00
+2026-03-02,2026,GOA C,0568,1,Set,XL,Clothes,"1,000.00","1,000.00"
+2026-03-02,2026,GOA B,0788,1,Set,XL - 35,Clothes,"1,700.00","1,700.00"
+2026-03-02,2026,GOA B,0788,1,Set,XL - 37,Clothes,"1,700.00","1,700.00"
+2026-03-06,2026,Vest,0209,1,Piece,M,Equipment,"1,300.00","1,300.00"
+2026-03-06,2026,Awards,0911,1,Set,—,Metal,930.00,930.00
+2026-03-09,2026,SG Pants,0117,1,Piece,—,Clothes,300.00,300.00
+2026-03-09,2026,PNCO Bullcap,0521,1,Piece,—,Accessories,350.00,350.00
+2026-03-09,2026,Medkit,0603,1,Piece,—,Equipment,100.00,100.00
+2026-03-09,2026,Whistle,0642,1,Piece,—,Equipment,80.00,80.00
+2026-03-09,2026,Collar Pin,0689,2,Piece,—,Accessories,50.00,100.00
+2026-03-09,2026,Field Service Uniform (FSU),0862,1,Set,M,Clothes,"3,000.00","3,000.00"
+2026-03-13,2026,Vest Patch,0540,3,Piece,—,Patches,316.67,950.00
+2026-03-16,2026,Handcuffs,0619,2,Piece,—,Equipment,550.00,"1,100.00"
+2026-03-17,2026,Patrol Shirt,0108,1,Piece,S,Clothes,"1,400.00","1,400.00"
+2026-03-17,2026,Tactical Pants,0687,2,Piece,S,Clothes,"1,000.00","2,000.00"
+2026-03-26,2026,No Shine Buckle,0586,1,Piece,—,Metal,400.00,400.00
+2026-03-26,2026,Handcuffs,0619,20,Piece,—,Equipment,550.00,"11,000.00"
+2026-03-26,2026,Garrison Only,0757,1,Piece,—,Accessories,100.00,100.00
+2026-03-26,2026,GOA B,0788,1,Set,2XL - 39,Clothes,"1,750.00","1,750.00"
+2026-03-30,2026,Awards,0911,1,Set,—,Metal,"1,300.00","1,300.00"
+2026-03-31,2026,Awards,0911,1,Set,—,Metal,"1,500.00","1,500.00"
+2026-04-07,2026,GOA Pants,0106,1,Piece,32.0,Clothes,700.00,700.00
+2026-04-07,2026,DF Patrol Uniform,0833,1,Set,M,Clothes,"1,300.00","1,300.00"
+2026-04-07,2026,DF Patrol Uniform,0833,1,Set,L,Clothes,"1,300.00","1,300.00"
+2026-04-07,2026,Awards,0911,1,Set,—,Metal,"1,500.00","1,500.00"
+2026-04-14,2026,Pants,0118,1,Piece,—,Clothes,300.00,300.00
+2026-04-16,2026,Sling Bag,0526,1,Piece,—,Accessories,700.00,700.00
+2026-04-16,2026,Low Carry Holster,0633,1,Piece,—,Equipment,300.00,300.00
+2026-04-16,2026,Olive Green (OG) Cotton,0838,1,Piece,M,Clothes,200.00,200.00
+2026-04-16,2026,Field Service Uniform (FSU),0862,1,Set,M,Clothes,"3,000.00","3,000.00"
+2026-04-17,2026,SG Pants,0117,1,Piece,—,Clothes,300.00,300.00
+2026-04-17,2026,PNP Sock,0146,1,Piece,—,Clothes,150.00,150.00
+2026-04-17,2026,CIC Patch,0550,1,Piece,—,Patches,150.00,150.00
+2026-04-17,2026,GOA C Upper,0569,1,Piece,2XL,Clothes,900.00,900.00
+2026-04-17,2026,A Short,0572,1,Piece,S,Clothes,500.00,500.00
+2026-04-17,2026,SAR Uniform,0604,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2026-04-17,2026,A Shirt,0628,2,Piece,M,Clothes,450.00,900.00
+2026-04-17,2026,Inside Holster,0631,1,Piece,—,Equipment,250.00,250.00
+2026-04-17,2026,GOA B,0788,1,Set,2XL - 38,Clothes,"1,700.00","1,700.00"
+2026-04-17,2026,Field Service Uniform (FSU),0862,1,Set,L,Clothes,"2,800.00","2,800.00"
+2026-04-17,2026,Awards,0911,1,Set,—,Metal,"1,000.00","1,000.00"
+2026-04-17,2026,PSBRC Pin,0987,1,Piece,—,Metal,150.00,150.00
+2026-04-28,2026,Nameplate Magnet,0977,3,Piece,—,Metal,380.00,"1,140.00"
+2026-04-29,2026,Gibson Lites,0002,1,Pair,8.0,Shoes,"2,400.00","2,400.00"
+2026-04-29,2026,Vest MG,1079,2,Piece,—,Patches,200.00,400.00
+2026-04-30,2026,BFP Shirt,0182,2,Piece,S,Clothes,380.00,760.00
+2026-04-30,2026,BFP Shirt,0182,2,Piece,M,Clothes,380.00,760.00
+2026-04-30,2026,Nameplate (Metal),0621,2,Piece,—,Metal,380.00,760.00
+2026-04-30,2026,PNP Awards,0921,1,Piece,—,Metal,980.00,980.00
+2026-05-02,2026,Shoulder Board,0406,1,Piece,—,Accessories,400.00,400.00
+2026-05-08,2026,Army Bonet,0421,1,Piece,—,Accessories,250.00,250.00
+2026-05-08,2026,OD Lock,0899,4,Piece,—,Equipment,15.00,60.00
+2026-05-08,2026,OR Lock,0900,2,Piece,—,Equipment,70.00,140.00
+2026-05-08,2026,Awards,0911,1,Piece,—,Metal,775.00,775.00
+2026-05-18,2026,Pants,0118,1,Piece,S,Clothes,"1,000.00","1,000.00"
+2026-05-18,2026,Pants,0118,1,Piece,M,Clothes,800.00,800.00
+2026-05-18,2026,Black belt,0737,2,Piece,—,Accessories,350.00,700.00
+2026-05-19,2026,Outside Holster,0638,1,Piece,—,Equipment,300.00,300.00
+2026-05-20,2026,PCO Female Shirt,0110,2,Piece,M,Clothes,400.00,800.00
+2026-05-20,2026,Vest,0209,1,Piece,L,Equipment,"1,200.00","1,200.00"
+2026-05-20,2026,A Short,0572,1,Piece,XL,Clothes,600.00,600.00
+2026-05-20,2026,Change Unit (Patch),1013,1,Piece,—,Patches,180.00,180.00
+2026-05-26,2026,PMO Shirt,0127,1,Piece,XL,Clothes,400.00,400.00
+2026-05-26,2026,Awards,0911,1,Piece,—,Metal,"1,600.00","1,600.00"
+2026-05-28,2026,Lock for Pin,0216,10,Piece,—,Equipment,50.00,500.00
+2026-06-01,2026,PNP Awards,0921,1,Piece,—,Metal,"1,200.00","1,200.00"
+2026-06-01,2026,PNP Nameplate,0978,1,Piece,—,Metal,300.00,300.00
+2026-06-02,2026,KASANAYAN,1028,2,Piece,—,Patches,400.00,800.00
+2026-06-02,2026,PAPURI,1038,4,Piece,—,Patches,400.00,"1,600.00"
+2026-06-05,2026,PCOL Buckle,0976,1,Piece,—,Metal,"2,200.00","2,200.00"
+2026-06-08,2026,A Pants,0111,1,Piece,M,Clothes,700.00,700.00
+2026-06-09,2026,PCO Shirt Female,0710,1,Piece,M,Clothes,400.00,400.00
+2026-06-11,2026,SAR Uniform,0604,1,Piece,L,Clothes,"1,000.00","1,000.00"
+2026-06-15,2026,Medkit,0603,1,Piece,—,Equipment,400.00,400.00
+2026-06-16,2026,Combo SB,0529,1,Piece,—,Metal,600.00,600.00
+2026-06-16,2026,Combo SB,0529,1,Piece,—,Metal,400.00,400.00
+2026-06-18,2026,SN02 Gibson Shoes,0010,1,Pair,9.0,Shoes,"2,700.00","2,700.00"
+2026-06-18,2026,Dryfit,0142,2,Piece,S,Clothes,"1,300.00","2,600.00"
+2026-06-18,2026,Female Shirt,0159,2,Piece,S,Clothes,400.00,800.00
+2026-06-18,2026,Male Shirt,0160,2,Piece,S,Clothes,400.00,800.00
+2026-06-18,2026,Bullcap,0423,1,Piece,—,Accessories,250.00,250.00
+2026-06-19,2026,GOA Pants,0106,1,Piece,34.0,Clothes,750.00,750.00
+2026-06-19,2026,Handkerchief,0697,1,Piece,—,Accessories,50.00,50.00
+2026-06-19,2026,PNP Combat Socks,0810,5,Piece,—,Clothes,100.00,500.00
+2026-06-19,2026,Socks White,0821,5,Piece,—,Clothes,150.00,750.00
+2026-06-19,2026,Tickler (Notepad),0901,1,Piece,—,Equipment,50.00,50.00
+2026-06-20,2026,No Shine Buckle,0586,1,Piece,—,Metal,350.00,350.00
+2026-06-26,2026,Tactical Pants,0687,1,Piece,M,Clothes,900.00,900.00
+2026-06-29,2026,GOA Pants,0106,1,Piece,30.0,Clothes,700.00,700.00
+2026-06-29,2026,GOA Pants,0106,1,Piece,31.0,Clothes,700.00,700.00
+2026-06-29,2026,GOA Pants,0106,1,Piece,32.0,Clothes,700.00,700.00
+2026-06-29,2026,GOA Pants,0106,1,Piece,33.0,Clothes,700.00,700.00
+2026-06-29,2026,GOA Pants,0106,1,Piece,34.0,Clothes,700.00,700.00
+2026-06-29,2026,GOA Pants,0106,1,Piece,35.0,Clothes,700.00,700.00
+2026-06-29,2026,GOA Pants,0106,1,Piece,37.0,Clothes,700.00,700.00
+2026-06-29,2026,GOA Upper,0566,1,Piece,XS,Clothes,800.00,800.00
+2026-06-29,2026,GOA Upper,0566,1,Piece,S,Clothes,800.00,800.00
+2026-06-29,2026,GOA Upper,0566,1,Piece,M,Clothes,800.00,800.00
+2026-06-29,2026,GOA Upper,0566,1,Piece,L,Clothes,800.00,800.00
+2026-06-29,2026,GOA Upper,0566,1,Piece,XL,Clothes,800.00,800.00
+2026-06-29,2026,GOA Upper,0566,1,Piece,XXL,Clothes,800.00,800.00
+2026-06-29,2026,Bagong Pilipinas Award,0914,1,Piece,—,Metal,"1,000.00","1,000.00"
+2026-07-01,2026,PNP Sock,0146,1,Piece,—,Clothes,120.00,120.00
+2026-07-01,2026,Garment Bag,0413,1,Piece,—,Accessories,700.00,700.00
+2026-07-01,2026,GOA C,0568,1,Piece,M,Clothes,950.00,950.00
+2026-07-01,2026,Cycling Short,0664,3,Piece,L,Clothes,80.00,240.00
+2026-07-02,2026,Tactical Pants,0687,1,Piece,L,Clothes,900.00,900.00
+2026-07-04,2026,Tactical Pants,0687,1,Piece,XL,Clothes,700.00,700.00
+2026-07-04,2026,Tactical Pants,0687,2,Piece,S,Clothes,700.00,"1,400.00"
+2026-07-04,2026,Tactical Pants,0687,10,Piece,M,Clothes,700.00,"7,000.00"
+2026-07-04,2026,Tactical Pants,0687,8,Piece,L,Clothes,700.00,"5,600.00"
+2026-07-04,2026,Tactical Pants,0687,5,Piece,M,Clothes,700.00,"3,500.00"
+2026-07-04,2026,Tactical Pants,0687,1,Piece,L,Clothes,700.00,700.00
+2026-07-04,2026,Tactical Pants,0687,2,Piece,S,Clothes,700.00,"1,400.00"
+2026-07-07,2026,Combat Shoes,0001,1,Pair,—,Shoes,"2,600.00","2,600.00"
+2026-07-07,2026,Pershing Cap,0424,1,Piece,6.0,Accessories,700.00,700.00
+2026-07-07,2026,No Shine Buckle,0586,1,Piece,—,Metal,350.00,350.00
+2026-07-09,2026,PNP Sock,0146,2,Piece,—,Clothes,150.00,300.00
+2026-07-09,2026,Sticker,0312,1,Piece,—,Patches,70.00,70.00
+2026-07-09,2026,Pershing Cap,0424,1,Piece,4.0,Accessories,700.00,700.00
+2026-07-09,2026,Triple Tap Magpouch,0678,1,Piece,—,Equipment,400.00,400.00
+2026-07-09,2026,Charcoal Socks,0809,2,Piece,—,Clothes,100.00,200.00
+2026-07-09,2026,Awards,0911,1,Piece,—,Metal,900.00,900.00
+2026-07-12,2026,Pail and Dipper,0214,1,Set,—,Equipment,450.00,450.00
+2026-07-12,2026,Pig Leather,0282,1,Piece,34.0,Equipment,"2,200.00","2,200.00"
+2026-07-12,2026,Cycling Short,0664,2,Piece,—,Clothes,80.00,160.00
+2026-07-12,2026,Botak Short,0665,3,Piece,—,Clothes,80.00,240.00
+2026-07-12,2026,Shoe Polish Brush (Bruno),0903,1,Piece,—,Equipment,50.00,50.00
+2026-07-12,2026,Shoe Polish Brush (Bruno),0903,1,Piece,—,Equipment,200.00,200.00
+2026-07-13,2026,SARPNCO,0131,1,Piece,—,Clothes,"1,000.00","1,000.00"
+2026-07-14,2026,Bagong Pilipinas,1005,2,Piece,—,Patches,150.00,300.00
+2026-07-15,2026,Logo,0304,1,Piece,—,Patches,140.00,140.00
+2026-07-15,2026,Rig Leather,0623,1,Set,—,Equipment,"2,200.00","2,200.00"
+2026-07-15,2026,Cycling Short,0664,1,Piece,L,Clothes,100.00,100.00
+2026-07-15,2026,Cycling Short,0664,1,Piece,XL,Clothes,100.00,100.00
+2026-07-15,2026,Black Garrison,0753,1,Piece,—,Accessories,100.00,100.00
+2026-07-15,2026,Skeletal Buckle Blue,0971,1,Set,—,Metal,250.00,250.00
+2026-07-23,2026,ID Lace,0696,3,Piece,—,Accessories,100.00,300.00
+2026-07-24,2026,Combo SB,0529,1,Piece,—,Metal,500.00,500.00
+2026-07-24,2026,SG Pershing Cap,0614,1,Piece,—,Accessories,"2,600.00","2,600.00"
+2026-07-24,2026,Service Blouse Pins,0908,1,Piece,—,Metal,"1,200.00","1,200.00"
+2026-07-27,2026,Unit,0311,1,Piece,—,Patches,200.00,200.00
+2026-07-27,2026,Badge,0501,1,Piece,—,Metal,250.00,250.00
+2026-07-27,2026,Rank Metal Pin,0672,1,Piece,—,Metal,250.00,250.00
+2026-07-27,2026,Nameplate (Patch),0683,1,Piece,—,Patches,250.00,250.00
+2026-07-29,2026,PNP Raincoat,0708,1,Piece,—,Clothes,500.00,500.00
