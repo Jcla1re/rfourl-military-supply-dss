@@ -30,6 +30,10 @@ ml-service/*.log
 # ==============================
 database/*.sql.bak
 *.sqlite3
+# one-off reseed backups (dss:seed-dataset)
+data-cleaning/backup/rfourl_dss_before_reseed_*.sql
+data-cleaning/backup/xampp_mysql_data_cold_*/
+backend-ci4/writable/dss-seed-dataset/
 
 # ==============================
 # OS / Editor
