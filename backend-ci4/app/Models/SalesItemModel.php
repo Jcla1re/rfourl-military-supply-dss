@@ -17,6 +17,7 @@ class SalesItemModel extends Model
         'item_id',
         'quantity_sold',
         'selling_price',
+        'is_bulk',
     ];
 
     protected $useTimestamps = false;
