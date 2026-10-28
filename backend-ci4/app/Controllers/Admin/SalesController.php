@@ -210,10 +210,12 @@ class SalesController extends BaseController
             $changeDue   = round($cashReceived - $total, 2);
         }
 
-        $receiptNo = $this->salesTransactionModel->generateReceiptNo();
-
         $db = db_connect();
         $db->transStart();
+
+        // Generated inside the transaction (it locks the highest receipt number), so two
+        // cashiers checking out at the same moment can never be given the same number.
+        $receiptNo = $this->salesTransactionModel->generateReceiptNo();
 
         $salesId = $this->salesTransactionModel->insert([
             'receipt_no'          => $receiptNo,

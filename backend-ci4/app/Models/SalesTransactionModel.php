@@ -27,14 +27,38 @@ class SalesTransactionModel extends Model
 
     protected $useTimestamps = false;
 
+    /** The first receipt number the shop's invoice booklets started from. */
+    public const FIRST_RECEIPT_NO = 1001;
+
     /**
      * Plain sequential invoice number (e.g. "1001", "1002", ...) matching
      * the numbering style pre-printed on the shop's real Sales Invoice
      * booklets, rather than a system-style "RCPT-YYYYMMDD-####" code.
+     *
+     * It is the highest numeric receipt_no plus one (never fewer than 1001), not a
+     * row count, so a deleted or archived receipt never makes it hand out a number
+     * that is already in use. Call it inside the same transaction as the insert:
+     * on MySQL/MariaDB the read locks the highest receipt, so two cashiers checking
+     * out together cannot both be given the same number (receipt_no is also UNIQUE).
+     * Receipt numbers that are not plain numbers are ignored.
      */
     public function generateReceiptNo(): string
     {
-        return (string) (1000 + $this->countAll() + 1);
+        $table = $this->db->protectIdentifiers($this->table, true);
+
+        if ($this->db->DBDriver === 'MySQLi') {
+            $row     = $this->db->query("SELECT MAX(CAST(receipt_no AS UNSIGNED)) AS mx FROM {$table} WHERE receipt_no REGEXP '^[0-9]+\$' FOR UPDATE")->getRowArray();
+            $highest = (int) ($row['mx'] ?? 0);
+        } else {
+            $highest = 0;
+            foreach ($this->db->query("SELECT receipt_no FROM {$table}")->getResultArray() as $r) {
+                if (ctype_digit((string) $r['receipt_no'])) {
+                    $highest = max($highest, (int) $r['receipt_no']);
+                }
+            }
+        }
+
+        return (string) (max($highest, self::FIRST_RECEIPT_NO - 1) + 1);
     }
 
     public function totalForToday(): float
