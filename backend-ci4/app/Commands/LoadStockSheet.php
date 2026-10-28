@@ -28,10 +28,19 @@ class LoadStockSheet extends BaseCommand
 {
     protected $group       = 'DSS';
     protected $name        = 'dss:load-stock-sheet';
-    protected $description = 'Loads the filled stock-count sheet as active size products (dry run unless --commit).';
+    protected $description = '[DEPRECATED - use dss:seed-dataset] Loads the filled stock-count sheet as active size products.';
     protected $usage       = 'dss:load-stock-sheet [--commit] [--rollback] [--file path] [--sales path] [--db name]';
 
     public function run(array $params)
+    {
+        CLI::error('dss:load-stock-sheet is deprecated: it loads the OLD sales data and would bring it back.');
+        CLI::write('Use `php spark dss:seed-dataset` instead (see the README, "Rebuild the database").', 'yellow');
+
+        return;
+    }
+
+    /** The original command, kept for reference; no longer reachable. */
+    private function legacyRun(array $params)
     {
         $dbName = CLI::getOption('db');
         $db     = $dbName ? db_connect(array_merge((array) config('Database')->default, ['database' => $dbName])) : db_connect();

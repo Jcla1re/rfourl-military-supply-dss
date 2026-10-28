@@ -28,12 +28,21 @@ class ImportHistory extends BaseCommand
 {
     protected $group       = 'DSS';
     protected $name        = 'dss:import-history';
-    protected $description = 'Imports the cleaned 2021-2026 sales history (dry run unless --commit).';
+    protected $description = '[DEPRECATED - use dss:seed-dataset] Imports the old cleaned 2021-2026 sales history.';
     protected $usage       = 'dss:import-history [--commit] [--rollback] [--file path] [--user id] [--db name]';
 
     private const PREFIX = 'BIR-';
 
     public function run(array $params)
+    {
+        CLI::error('dss:import-history is deprecated: it loads the OLD sales data and would bring it back.');
+        CLI::write('Use `php spark dss:seed-dataset` instead (see the README, "Rebuild the database").', 'yellow');
+
+        return;
+    }
+
+    /** The original command, kept for reference; no longer reachable. */
+    private function legacyRun(array $params)
     {
         $dbName = CLI::getOption('db');
         $db     = $dbName ? db_connect(array_merge((array) config('Database')->default, ['database' => $dbName])) : db_connect();
