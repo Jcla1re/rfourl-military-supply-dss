@@ -13,12 +13,12 @@ use App\Models\SupplierModel;
 
 class ReorderAlertController extends BaseController
 {
-    protected $reorderAlertModel;
-    protected $productModel;
-    protected $supplierModel;
-    protected $pdssComputationModel;
-    protected $dssParameterModel;
-    protected $clusterSegmentModel;
+    protected ReorderAlertModel $reorderAlertModel;
+    protected ProductModel $productModel;
+    protected SupplierModel $supplierModel;
+    protected PdssComputationModel $pdssComputationModel;
+    protected DssParameterModel $dssParameterModel;
+    protected ClusterSegmentModel $clusterSegmentModel;
 
     public function __construct()
     {
@@ -141,7 +141,7 @@ class ReorderAlertController extends BaseController
      * Marks a single alert seen/acknowledged without ordering or
      * dismissing it yet.
      */
-    public function acknowledge($alertId)
+    public function acknowledge(int|string $alertId)
     {
         $this->reorderAlertModel->update((int) $alertId, ['status' => 'Acknowledged']);
         session()->setFlashdata('success', 'Alert acknowledged.');
@@ -153,7 +153,7 @@ class ReorderAlertController extends BaseController
      * corrected manually, etc.) — distinct from Fulfilled, which only
      * happens when a linked stock order is actually delivered.
      */
-    public function dismiss($alertId)
+    public function dismiss(int|string $alertId)
     {
         $this->reorderAlertModel->update((int) $alertId, ['status' => 'Dismissed']);
         session()->setFlashdata('success', 'Alert dismissed.');
