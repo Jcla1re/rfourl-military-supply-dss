@@ -137,6 +137,7 @@ foreach ($products as $p) {
         color: #1F2617;
         line-height: 1.2;
         overflow-wrap: anywhere;
+        font-variant-numeric: tabular-nums;
     }
 
     .ta-card .value.is-text {
@@ -736,7 +737,8 @@ foreach ($products as $p) {
         <div class="col-sm-6 col-xl-3">
             <div class="ta-card">
                 <div class="label">Items sold in <?= esc($yearLabel) ?></div>
-                <div class="value"><?= number_format($unitsYtd ?? 0) ?></div>
+                <div class="value" data-count="<?= (int) ($unitsYtd ?? 0) ?>" aria-hidden="true"><?= number_format($unitsYtd ?? 0) ?></div>
+                <span class="visually-hidden"><?= number_format($unitsYtd ?? 0) ?></span>
                 <div class="sub"><?= esc($periodLabel ?? '') ?></div>
             </div>
         </div>
@@ -751,7 +753,11 @@ foreach ($products as $p) {
                         <?php if ($changeDir === 'up'): ?><i class="bi bi-arrow-up" aria-hidden="true"></i>
                         <?php elseif ($changeDir === 'down'): ?><i class="bi bi-arrow-down"
                                 aria-hidden="true"></i><?php endif; ?>
-                        <span><?= ($changeDir === 'up' ? '+' : '') . number_format($changePct, 1) ?>%</span>
+                        <span data-count="<?= number_format(abs($changePct), 1, '.', '') ?>"
+                            data-decimals="1" data-suffix="%"
+                            data-prefix="<?= $changeDir === 'up' ? '+' : ($changeDir === 'down' ? '-' : '') ?>"
+                            aria-hidden="true"><?= ($changeDir === 'up' ? '+' : '') . number_format($changePct, 1) ?>%</span>
+                        <span class="visually-hidden"><?= ($changeDir === 'up' ? '+' : '') . number_format($changePct, 1) ?>%</span>
                     </div>
                     <div class="sub"><?= number_format($unitsPrev ?? 0) ?> items in <?= (int) $selectedYear - 1 ?></div>
                 <?php endif; ?>
@@ -979,6 +985,7 @@ foreach ($products as $p) {
     </div>
 </div>
 
+<script src="/assets/js/count-up.js"></script>
 <script src="/assets/js/chart-reveal.js"></script>
 <script>
     // ---- Item picker: searchable, submits the item's id ----------------------
@@ -1208,6 +1215,8 @@ foreach ($products as $p) {
     varScroll?.addEventListener('scroll', updateVarScroll, { passive: true });
     window.addEventListener('resize', updateVarScroll);
     updateVarScroll();
+
+    initCountUp('.ta-card [data-count]');
 </script>
 
 <?= $this->endSection() ?>
