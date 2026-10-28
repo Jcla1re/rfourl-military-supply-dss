@@ -667,6 +667,14 @@ class SeedDataset extends BaseCommand
         $inputs = $this->planInputs(); // read BEFORE the first pass is removed: ROP, EOQ and class come from it
         $this->cleanFirstPass();
         $plan = $this->openingStock($d, $owner, $inputs);
+        if ($d['stockFile'] === null) {
+            $zero = $this->count('SELECT COUNT(*) c FROM products WHERE current_stock = 0');
+            if ($zero > 0) {
+                CLI::error("RUN FAILED: {$zero} products have current_stock = 0 after the opening stock. Stopping.");
+
+                return;
+            }
+        }
 
         $this->heading('4. dss:run again (statuses and reorder alerts)');
         if (! $this->dssRun()) {
@@ -756,7 +764,7 @@ class SeedDataset extends BaseCommand
     }
 
     /** @return list<array{0:string,1:string,2:string,3:bool}> */
-    private function dbChecks(array $d): array
+    private function dbChecks(array $d, bool $stockSet = false): array
     {
         $e = self::EXPECT;
         $c = [];
@@ -806,6 +814,9 @@ class SeedDataset extends BaseCommand
         $bulk = array_filter($d['lines'], static fn ($l) => $l['bulk'] === 1);
         $add('Bulk lines', count($bulk), $this->count('SELECT COUNT(*) c FROM sales_item WHERE is_bulk = 1'));
         $add('Bulk units', array_sum(array_column($bulk, 'qty')), $this->count('SELECT SUM(quantity_sold) c FROM sales_item WHERE is_bulk = 1'));
+        if ($stockSet) {
+            $add('Products with current_stock = 0', 0, $this->count('SELECT COUNT(*) c FROM products WHERE current_stock = 0'));
+        }
 
         return $c;
     }
@@ -1018,8 +1029,12 @@ class SeedDataset extends BaseCommand
         $model = new ProductModel();
 
         $this->heading('Checks after everything (the database)');
-        $checks = $this->dbChecks($d);
+        $demo   = $d['stockFile'] === null;
+        $checks = $this->dbChecks($d, $demo);
         $this->printChecks($checks);
+        if ($this->failed($checks)) {
+            CLI::error('RUN FAILED: a final check did not pass (see above).');
+        }
 
         $products = $this->db->query('SELECT p.*, (SELECT COUNT(*) FROM reorder_alert a WHERE a.item_id = p.item_id AND a.status IN (\'Active\',\'Acknowledged\',\'Ordered\')) open_alerts FROM products p')->getResultArray();
 
@@ -1030,7 +1045,7 @@ class SeedDataset extends BaseCommand
             CLI::write("  Class {$k}: {$n}");
         }
 
-        $this->heading('Stock status (the app\'s own rule)');
+        $this->heading('Stock status BY ITEM (every size is its own row, the app\'s own rule)');
         $counts = array_fill_keys(ProductModel::STATUSES, 0);
         $classA = ['Reorder Now' => [], 'Low Stock' => []];
         foreach ($products as $p) {
@@ -1045,7 +1060,25 @@ class SeedDataset extends BaseCommand
         foreach ($counts as $label => $c) {
             $rows[] = [$label, (string) $c, sprintf('%.1f%%', 100 * $c / max(1, $n)), $plan ? (string) $plan['targets'][$label] : '-'];
         }
-        CLI::table($rows, ['Status', 'Products', 'Share', 'Target']);
+        CLI::table($rows, ['Status', 'Items', 'Share', 'Target']);
+
+        // The Inventory page counts PRODUCTS: sizes of one name + category grouped, shown at the worst size's status.
+        $byProduct = $model->statusCounts(array_map(static function ($p) {
+            unset($p['open_alerts']);
+
+            return $p;
+        }, $products));
+        $groups = array_sum($byProduct);
+        $this->heading('Stock status BY PRODUCT (as the Inventory page counts: sizes grouped, worst size wins)');
+        $rows = [];
+        foreach ($byProduct as $label => $c) {
+            $rows[] = [$label, (string) $c, sprintf('%.1f%%', 100 * $c / max(1, $groups))];
+        }
+        CLI::table($rows, ['Status', 'Products', 'Share']);
+        CLI::write("  {$groups} products from {$n} items.");
+        if (! $demo) {
+            CLI::write('  Items with stock 0 (from the stock file): ' . $this->count('SELECT COUNT(*) c FROM products WHERE current_stock = 0'));
+        }
 
         foreach ($classA as $label => $list) {
             CLI::write("Class A items in {$label}: " . count($list), 'yellow');

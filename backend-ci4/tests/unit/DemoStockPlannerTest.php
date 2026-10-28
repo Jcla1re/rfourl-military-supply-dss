@@ -33,7 +33,7 @@ final class DemoStockPlannerTest extends CIUnitTestCase
     {
         $planner = new DemoStockPlanner();
 
-        $this->assertSame(['In Stock' => 623, 'Low Stock' => 134, 'Reorder Now' => 89, 'Out of Stock' => 44], $planner->targets(890));
+        $this->assertSame(['In Stock' => 668, 'Low Stock' => 133, 'Reorder Now' => 89, 'Out of Stock' => 0], $planner->targets(890));
         $this->assertSame(890, array_sum($planner->targets(890)));
         $this->assertSame(100, array_sum($planner->targets(100)));
     }
@@ -51,6 +51,22 @@ final class DemoStockPlannerTest extends CIUnitTestCase
         $this->assertSame($plan['targets']['Reorder Now'], $plan['counts']['Reorder Now']);
         $this->assertSame($plan['targets']['Low Stock'], $plan['counts']['Low Stock']);
         $this->assertSame($plan['targets']['Out of Stock'], $plan['counts']['Out of Stock']);
+    }
+
+    public function testNoProductStartsWithoutStock(): void
+    {
+        $plan = (new DemoStockPlanner())->plan($this->items());
+
+        $this->assertSame(0, $plan['counts']['Out of Stock']);
+        $this->assertSame([], array_keys(array_filter($plan['stock'], static fn ($q) => $q < 1)));
+        // the products with no reorder point (no demand) get 2-10 and are In Stock
+        foreach ($this->items() as $it) {
+            if ($it['rop'] === 0) {
+                $this->assertGreaterThanOrEqual(2, $plan['stock'][$it['item_id']]);
+                $this->assertLessThanOrEqual(10, $plan['stock'][$it['item_id']]);
+                $this->assertSame('In Stock', $plan['status'][$it['item_id']]);
+            }
+        }
     }
 
     public function testQuantityRules(): void

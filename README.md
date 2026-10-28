@@ -105,7 +105,7 @@ What to know about the data:
   price. The list is written to `backend-ci4/writable/dss-seed-dataset/estimated_cost_products.csv`.
   Real costs: `--cost-file <csv>` (columns `Product_ID`, `Size`, `Unit_Cost`).
 - **Stock** is empty in the master, so a **demo opening stock** is generated (fixed seed 2026, so every rebuild gives the
-  same numbers): about 70% In Stock, 15% Low Stock, 10% Reorder Now, 5% Out of Stock by the app's own status rules
+  same numbers): about 75% In Stock, 15% Low Stock, 10% Reorder Now and none Out of Stock (every product starts with at least 1 unit) by the app's own status rules
   (In Stock = from just above the Low Stock band up to band + EOQ), at least 8 Class A items in each of Reorder Now and Low Stock. Each quantity is an `inventory_log` entry
   ("Opening balance (demo)"). A real count replaces it: `--stock-file <csv>` (columns `Product_ID`, `Size`,
   `Current_Stock`; products not listed get 0).

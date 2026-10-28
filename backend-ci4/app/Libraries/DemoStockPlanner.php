@@ -12,12 +12,13 @@ use App\Models\ProductModel;
  * ProductModel::lowStockLimit), never thresholds of our own: each planned quantity is
  * checked against getStatus() before it is returned.
  *
- * Target mix, by product count: 70% In Stock, 15% Low Stock, 10% Reorder Now, 5% Out of Stock.
+ * Target mix, by product count: 75% In Stock, 15% Low Stock, 10% Reorder Now, none Out of Stock:
+ * every product starts with at least 1 unit.
  *
  *   In Stock      from the first unit above the Low Stock band up to band + EOQ (at least 3)
  *   Low Stock     inside the Low Stock band just above ROP
  *   Reorder Now   1 .. ROP
- *   Out of Stock  0  (the app only calls an item Out of Stock when it has no ROP)
+ *   Out of Stock  0  (target share 0 today; the app only calls an item Out of Stock when it has no ROP)
  *   no ROP        2 .. 10, In Stock (no recent demand)
  *   Class A       at least 8 Reorder Now and 8 Low Stock, so the demo has meaningful alerts
  *
@@ -29,7 +30,7 @@ final class DemoStockPlanner
     public const SEED = 2026;
 
     /** Target share of products per status. */
-    public const MIX = ['In Stock' => 0.70, 'Low Stock' => 0.15, 'Reorder Now' => 0.10, 'Out of Stock' => 0.05];
+    public const MIX = ['In Stock' => 0.75, 'Low Stock' => 0.15, 'Reorder Now' => 0.10, 'Out of Stock' => 0.0];
 
     /** Class A items put in each of Reorder Now and Low Stock. */
     public const CLASS_A_MIN = 8;
@@ -152,6 +153,14 @@ final class DemoStockPlanner
             $actual = $model->getStatus(['current_stock' => $stock[$id], 'manual_rop_warning' => $rop])['label'];
             if ($actual !== $status[$id]) {
                 throw new \RuntimeException("Item {$id}: planned {$status[$id]} with stock {$stock[$id]} and ROP {$rop}, but the app calls it {$actual}.");
+            }
+        }
+
+        // With no Out of Stock in the mix, every product must hold at least 1 unit.
+        if (self::MIX['Out of Stock'] <= 0.0) {
+            $empty = array_keys(array_filter($stock, static fn ($q) => $q < 1));
+            if ($empty !== []) {
+                throw new \RuntimeException(count($empty) . ' products would start with no stock (e.g. ' . $empty[0] . ').');
             }
         }
 
