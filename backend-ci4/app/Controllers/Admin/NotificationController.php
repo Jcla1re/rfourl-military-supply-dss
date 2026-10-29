@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\DemoGuard;
 use App\Libraries\StaffPasswordAlert;
 use App\Libraries\StaffPasswordReset;
 use App\Libraries\Toast;
@@ -112,6 +113,8 @@ class NotificationController extends BaseController
             return redirect()->to('/admin/notifications')->with('toast', Toast::error("Couldn't approve", $result['message']));
         }
 
+        DemoGuard::reveal("Temporary password for {$result['staff']['full_name']}", (string) ($result['password'] ?? ''));
+
         return redirect()->to('/admin/notifications')->with('toast', Toast::success(
             'Reset approved',
             'A temporary password was emailed to ' . StaffPasswordReset::maskEmail((string) $result['staff']['email']) . '.'
@@ -139,6 +142,10 @@ class NotificationController extends BaseController
 
         if (! $staff) {
             return redirect()->to('/admin/notifications')->with('toast', Toast::error("Couldn't lock the account", 'It was already locked, or no longer exists.'));
+        }
+
+        if (DemoGuard::locksUser($staff)) {
+            return DemoGuard::refuse('/admin/notifications');
         }
 
         StaffPasswordAlert::lock($notification, $staff, 'account_locked_via_notification', (string) session()->get('username'));

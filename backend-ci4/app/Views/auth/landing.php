@@ -21,8 +21,10 @@ $lockedSeconds = [
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="/assets/css/auth-theme.css" rel="stylesheet">
+<?= view('partials/demo_head') ?>
 </head>
 <body class="landing-body">
+<?= view('partials/demo_banner') ?>
     <div class="landing-shell" id="landingShell">
         <div class="dark-panel" id="darkPanel">
             <!-- Default brand view -->
@@ -120,6 +122,7 @@ $lockedSeconds = [
                         <span>Sign in</span> <i class="bi bi-arrow-right btn-login-arrow"></i>
                     </button>
                 </form>
+                <?= view('partials/demo_credentials', ['role' => 'admin']) ?>
                 <?php if ($attemptedRole === 'admin' && $errorMsg): ?>
                     <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
                 <?php endif; ?>
@@ -151,6 +154,7 @@ $lockedSeconds = [
                         <span>Sign in</span> <i class="bi bi-arrow-right btn-login-arrow"></i>
                     </button>
                 </form>
+                <?= view('partials/demo_credentials', ['role' => 'staff']) ?>
                 <?php if ($attemptedRole === 'staff' && $errorMsg): ?>
                     <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
                 <?php endif; ?>
@@ -186,6 +190,7 @@ $lockedSeconds = [
                         <span>Sign in</span> <i class="bi bi-arrow-right btn-login-arrow"></i>
                     </button>
                 </form>
+                <?= view('partials/demo_credentials', ['role' => 'supplier']) ?>
                 <?php if ($attemptedRole === 'supplier' && $errorMsg): ?>
                     <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
                 <?php endif; ?>

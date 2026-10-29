@@ -2,7 +2,10 @@
 
 namespace Config;
 
+use App\Libraries\DemoEmail;
 use CodeIgniter\Config\BaseService;
+use CodeIgniter\Email\Email;
+use Config\Email as EmailConfig;
 
 /**
  * Services Configuration file.
@@ -29,4 +32,23 @@ class Services extends BaseService
      *     return new \CodeIgniter\Example();
      * }
      */
+
+    /**
+     * The mailer. In demo mode every email is redirected to DEMO_MAIL_TO by DemoEmail;
+     * otherwise this is exactly the stock service.
+     */
+    public static function email($config = null, bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('email', $config);
+        }
+
+        if (empty($config) || (! is_array($config) && ! $config instanceof EmailConfig)) {
+            $config = config(EmailConfig::class);
+        }
+
+        helper('demo');
+
+        return demo_mode() ? new DemoEmail($config) : new Email($config);
+    }
 }

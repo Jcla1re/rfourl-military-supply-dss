@@ -23,8 +23,10 @@ $errorMsg = session()->getFlashdata('error') ?? $error;
             border-radius: var(--radius-pill); padding: 0.6rem 1rem; font-weight: 700; margin-top: 0.75rem;
         }
     </style>
+<?= view('partials/demo_head') ?>
 </head>
 <body class="auth-body">
+<?= view('partials/demo_banner') ?>
     <div class="auth-card">
         <h2>Can't access your account?</h2>
         <p class="auth-hint">The owner resets staff passwords. Send a request.</p>

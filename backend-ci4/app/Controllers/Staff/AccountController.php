@@ -4,6 +4,7 @@ namespace App\Controllers\Staff;
 
 use App\Controllers\BaseController;
 use App\Libraries\AttemptStore;
+use App\Libraries\DemoGuard;
 use App\Libraries\PasswordPolicy;
 use App\Libraries\StaffPasswordAlert;
 use App\Libraries\Toast;
@@ -47,6 +48,10 @@ class AccountController extends BaseController
         }
 
         $user = $this->userModel->activeStaff()->find($userId);
+
+        if (DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse($back, 'error');
+        }
 
         if (! $user || ! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
             SecurityLogModel::log('password_change_failed', $user ?: null, 'wrong current password');

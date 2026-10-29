@@ -16,8 +16,10 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
     <?php // The one stock status rule (ProductModel::getStatus), shared with the browser. ?>
     <script>window.STOCK_RULE = <?= json_encode(\App\Models\ProductModel::statusRule()) ?>;</script>
     <script src="/assets/js/stock-status.js"></script>
+<?= view('partials/demo_head') ?>
 </head>
 <body>
+<?= view('partials/demo_banner') ?>
 <div class="d-flex app-shell">
     <!-- SIDEBAR -->
     <div class="sidebar" id="adminSidebar">

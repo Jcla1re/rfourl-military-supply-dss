@@ -115,6 +115,89 @@ What to know about the data:
 - The old seed files and `transactions_final.csv` are in `data-cleaning/archive/`. `dss:import-history` and
   `dss:load-stock-sheet` are deprecated and do nothing but point here.
 
+## Demo site
+
+A second, public copy of the system (for example `demo.rfourlms.tech`) for testing and the survey. It runs the same code
+with its **own database**; the live site is unchanged. (Not to be confused with the "demo opening stock" above.)
+
+**Demo mode is off unless `DEMO_MODE = true`** in that copy's `.env`. The live `.env` never needs any of these keys.
+
+### What demo mode does
+
+- **Three demo logins**: Owner (`demo_owner`), Staff (`demo_staff`) and Supplier (`demo_supplier`, linked to SUP-001),
+  flagged `users.is_demo = 1`. Their passwords come from `.env`.
+- **Locked actions** for those accounts, enforced in the controllers and again in `UserModel` (not just hidden buttons):
+  changing the password, email, username or name; password reset (owner reset, approving a request, forgot password);
+  deactivate / remove; "Lock account". Each shows "Disabled in the demo version." and the buttons are disabled with that
+  tooltip. New Owner accounts can't be created; staff and suppliers can. Everything else works normally.
+- **All email goes to the team**: one place (`App\Libraries\DemoEmail`, wired in `Config\Services::email()`) sends every
+  email to `DEMO_MAIL_TO` and adds the real recipient to the subject, e.g. `[DEMO to owner@... ] Your verification code`.
+  Forgot-password codes and temporary passwords are also shown on screen in a "Demo code" box.
+- **Banner** on every page, a "Demo account" card on the login pages (if `DEMO_SHOW_CREDENTIALS`), and
+  `noindex, nofollow` (a meta tag on the pages).
+- **No real people in the data**: `demo:setup` switches off every other login (Owner, Staff and Supplier), replaces their
+  names ("Former Owner", "Cashier 1", ...), usernames, phone numbers and passwords, points every user and supplier
+  email at a `+alias` of `DEMO_MAIL_TO`, replaces supplier contact people and numbers, and clears the notifications and
+  security log. Supplier company names stay.
+
+### `.env` keys (all optional)
+
+```
+DEMO_MODE = true
+DEMO_MAIL_TO = ourteam@gmail.com        # every demo email goes here (as ourteam+owner@gmail.com, ourteam+staff3@gmail.com, ...)
+DEMO_OWNER_PASSWORD = ...
+DEMO_STAFF_PASSWORD = ...               # must differ from every other staff password (staff login is password-only)
+DEMO_SUPPLIER_PASSWORD = ...
+DEMO_SHOW_CREDENTIALS = true            # show the demo logins on the login pages
+DEMO_RESET_TIME = '12:00 AM'            # text for the banner only; the real time is the cron job
+# DEMO_MYSQLDUMP_PATH / DEMO_MYSQL_PATH only if mysqldump / mysql are not on the PATH (typical on Windows)
+```
+
+`backend-ci4/env.demo.example` has the same keys.
+
+### Commands (`php spark ...`)
+
+Each one refuses to run unless `DEMO_MODE = true` **and** the database name contains "demo". They log to
+`writable/logs/demo.log`.
+
+| Command | What it does |
+|---|---|
+| `demo:setup` | Creates or updates the three demo accounts and removes real people, as described above. Safe to run again. |
+| `demo:snapshot` | Saves the demo database to `writable/demo/snapshot.sql` (git-ignored, `DEFINER` clauses removed). |
+| `demo:reset` | Restores the snapshot, brings the schema up to date (`migrate`), re-runs `demo:setup` and logs everyone out. |
+
+`mysqldump` / `mysql` get the database login through a temporary `--defaults-extra-file` (mode 600, deleted afterwards),
+never on the command line.
+
+### Setting up the demo on the server
+
+The demo needs its own folder (for example `/var/www/rfourl-demo`), its own web host name, and its own `.env` and
+database. The ML service is shared: the demo uses the same one at `127.0.0.1:5001`, which keeps no state.
+
+1. Migrate the **live** site as usual (`php spark migrate`). This adds `users.is_demo` (harmless; nothing reads it unless demo mode is on).
+2. Create a database user for the demo only, with full rights on the demo database (the demo is disposable and needs
+   `CREATE/ALTER/DROP/TRIGGER` for the restore and `migrate`): `GRANT ALL ON rfourl_demo.* TO 'rfourl_demo_app'@'localhost'`.
+3. Copy live to demo, as root. It only **reads** the live database, and refuses unless the target name contains "demo":
+   `sudo bash tools/demo/copy_live_to_demo.sh rfourl_dss rfourl_demo` (it prints product and receipt counts for both).
+4. In the demo folder's `.env` set `database.default.database = rfourl_demo`, its own `app.baseURL`, and the `DEMO_*` keys.
+5. `php spark migrate` (harmless if live was already migrated: it only adds what is missing),
+   then `php spark demo:setup`, then `php spark demo:snapshot`. Check the logins it prints.
+6. Nightly reset (cron, as the web user):
+   ```
+   0 0 * * * cd /var/www/rfourl-demo/backend-ci4 && sudo -u www-data php spark demo:reset >> /var/log/rfourl-demo-reset.log 2>&1
+   ```
+   After a code deploy, run `php spark migrate`, `demo:setup` and `demo:snapshot` again so the snapshot matches the new code
+   (`demo:reset` also runs `migrate`, so a stale snapshot still comes back usable).
+
+### Trying it on your own computer
+
+1. Copy your local database: `mysqldump rfourl_dss | mysql rfourl_demo` (create `rfourl_demo` first).
+2. Copy `backend-ci4/env.demo.example` into `backend-ci4/.env.demo`, add your database settings with
+   `database.default.database = rfourl_demo`, and set `DEMO_MAIL_TO` to an inbox you can read.
+3. `powershell tools\demo\use-demo.ps1` switches `.env` to the demo (your normal `.env` is saved as `.env.normal`);
+   run `php spark migrate`, `php spark demo:setup`, then `php spark serve`.
+4. `powershell tools\demo\use-normal.ps1` switches back. Restart `php spark serve` after switching.
+
 ## Branching Convention
 
 - `main` — stable, demo-ready

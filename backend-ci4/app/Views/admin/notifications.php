@@ -170,7 +170,8 @@ $unreadCount = $unreadCount ?? 0;
                                           data-confirm-ok="Lock account"
                                           data-confirm-variant="danger">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="decline">Lock account</button>
+                                        <?php $__lockTarget = demo_mode() ? model('UserModel')->find((int) $n['action_user_id']) : null; ?>
+                                        <button type="submit" class="decline"<?= demo_lock_attr($__lockTarget) ?>>Lock account</button>
                                     </form>
                                 <?php elseif (($n['status'] ?? '') === 'locked'): ?>
                                     <div class="msg"><em>Account locked</em></div>

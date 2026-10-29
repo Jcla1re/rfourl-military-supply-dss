@@ -138,17 +138,21 @@ class StaffPasswordReset
         if (! $staff) {
             return ['ok' => false, 'message' => "We couldn't match this request to a staff account. Use Reset Password in Settings > Manage Accounts instead."];
         }
+        if (DemoGuard::locksUser($staff)) {
+            return ['ok' => false, 'message' => DemoGuard::MESSAGE];
+        }
         if (empty($staff['email'])) {
             return ['ok' => false, 'message' => "{$staff['full_name']} has no email on file. Use Reset Password in Settings > Manage Accounts instead."];
         }
-        if ($this->issueAndEmail($staff, self::KIND_RESET) === null) {
+        $password = $this->issueAndEmail($staff, self::KIND_RESET);
+        if ($password === null) {
             return ['ok' => false, 'message' => "We couldn't send the email, so nothing was changed. Please try again."];
         }
 
         (new NotificationModel())->approveAccessRequest((int) $notification['notification_id']);
         SecurityLogModel::log('password_reset_approved', ['user_id' => null, 'username' => $actorName, 'role' => 'Admin'], 'staff: ' . $staff['username'] . ', temporary password emailed');
 
-        return ['ok' => true, 'staff' => $staff];
+        return ['ok' => true, 'staff' => $staff, 'password' => $password];
     }
 
     public function emailPassword(array $staff, string $password, string $kind): bool

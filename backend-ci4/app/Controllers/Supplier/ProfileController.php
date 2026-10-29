@@ -3,6 +3,7 @@
 namespace App\Controllers\Supplier;
 
 use App\Controllers\BaseController;
+use App\Libraries\DemoGuard;
 use App\Libraries\PasswordPolicy;
 use App\Models\SecurityLogModel;
 use App\Models\SoItemModel;
@@ -68,6 +69,16 @@ class ProfileController extends BaseController
     {
         $supplierId = session()->get('supplier_id');
 
+        // Demo mode: the demo supplier's contact name and email stay as they are (the rest of the form still works).
+        if (DemoGuard::locksUser($this->userModel->find((int) session()->get('user_id')))) {
+            $current = $this->supplierModel->find($supplierId);
+            $same    = fn (string $field) => trim((string) $this->request->getPost($field)) === trim((string) ($current[$field] ?? ''));
+
+            if (! $same('contact_person') || ! $same('contact_email')) {
+                return DemoGuard::refuse('/supplier/profile', 'error');
+            }
+        }
+
         if (! $this->validate(['contact_email' => 'permit_empty|valid_email'])) {
             return redirect()->to('/supplier/profile')->with('error', implode(' ', $this->validator->getErrors()));
         }
@@ -89,6 +100,10 @@ class ProfileController extends BaseController
     public function updateUsername()
     {
         $user = $this->userModel->find((int) session()->get('user_id'));
+
+        if (DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse('/supplier/profile', 'error');
+        }
 
         if (! $user || ! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
             SecurityLogModel::log('username_change_failed', null, 'wrong current password');
@@ -114,6 +129,10 @@ class ProfileController extends BaseController
     {
         $user = $this->userModel->find((int) session()->get('user_id'));
 
+        if (DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse('/supplier/profile', 'error');
+        }
+
         if (! $user || ! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
             SecurityLogModel::log('email_change_failed', null, 'wrong current password');
             return redirect()->to('/supplier/profile')->with('error', 'Current password is incorrect.');
@@ -135,6 +154,10 @@ class ProfileController extends BaseController
     public function changePassword()
     {
         $user = $this->userModel->find((int) session()->get('user_id'));
+
+        if (DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse('/supplier/profile', 'error');
+        }
 
         if (! $user || ! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
             SecurityLogModel::log('password_change_failed', null, 'wrong current password');

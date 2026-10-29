@@ -207,7 +207,7 @@ $tabs = [
                             <input id="pfPhone" name="phone" value="<?= esc($admin['phone'] ?? '') ?>" placeholder="e.g. 0917 123 4567">
                         </div>
                     </div>
-                    <div class="pf-actions"><button type="submit" class="btn btn-success pf-save">Save</button></div>
+                    <div class="pf-actions"><button type="submit" class="btn btn-success pf-save"<?= demo_lock_attr($admin ?? null) ?>>Save</button></div>
                 </form>
                     </div>
                 </div>
@@ -233,7 +233,7 @@ $tabs = [
                         <div class="col-md-6 col-xl-3 set-field"><label for="pwCurrent">Current Password</label><input id="pwCurrent" name="current_password" type="password" required autocomplete="current-password"></div>
                         <div class="col-md-6 col-xl-3 set-field"><label for="pwNew">New Password</label><input id="pwNew" name="new_password" type="password" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" required autocomplete="new-password"></div>
                         <div class="col-md-6 col-xl-3 set-field"><label for="pwConfirm">Confirm New Password</label><input id="pwConfirm" name="confirm_password" type="password" required autocomplete="new-password"></div>
-                        <div class="col-md-6 col-xl-3"><button type="submit" class="btn btn-success pf-save w-100" style="padding:11px;">Change Password</button></div>
+                        <div class="col-md-6 col-xl-3"><button type="submit" class="btn btn-success pf-save w-100"<?= demo_lock_attr($admin ?? null) ?> style="padding:11px;">Change Password</button></div>
                     </div>
                 </form>
             </div>
@@ -294,20 +294,20 @@ $tabs = [
                         <?php endif; ?>
                         <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#resetStaffPwModal"
                                 data-action="<?= site_url('admin/settings/staff-accounts/password/' . $s['user_id']) ?>"
-                                data-name="<?= esc($s['full_name'], 'attr') ?>">Reset Password</button>
+                                data-name="<?= esc($s['full_name'], 'attr') ?>"<?= demo_lock_attr($s) ?>>Reset Password</button>
                         <form method="post" action="<?= site_url('admin/settings/staff-accounts/toggle/' . $s['user_id']) ?>"
                               data-confirm="<?= $s['is_active'] ? "They won't be able to sign in until you reactivate the account." : 'They will be able to sign in again with their password.' ?>"
                               data-confirm-title="<?= ($s['is_active'] ? 'Deactivate ' : 'Reactivate ') . esc($s['full_name'], 'attr') ?>?"
                               data-confirm-ok="<?= $s['is_active'] ? 'Deactivate' : 'Reactivate' ?>"
                               data-confirm-variant="<?= $s['is_active'] ? 'danger' : 'success' ?>">
                             <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-sm <?= $s['is_active'] ? 'btn-maroon' : 'btn-success' ?>"><?= $s['is_active'] ? 'Deactivate' : 'Reactivate' ?></button>
+                            <button type="submit" class="btn btn-sm <?= $s['is_active'] ? 'btn-maroon' : 'btn-success' ?>"<?= demo_lock_attr($s) ?>><?= $s['is_active'] ? 'Deactivate' : 'Reactivate' ?></button>
                         </form>
                         <form method="post" action="<?= site_url('admin/settings/staff-accounts/delete/' . $s['user_id']) ?>" data-confirm="They will no longer be able to sign in. Their past sales and records will be kept."
                               data-confirm-title="Remove <?= esc($s['full_name'], 'attr') ?>?"
                               data-confirm-ok="Remove" data-confirm-variant="danger">
                             <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                            <button type="submit" class="btn btn-sm btn-outline-danger"<?= demo_lock_attr($s) ?>>Remove</button>
                         </form>
                     </div>
                 <?php endforeach; ?>

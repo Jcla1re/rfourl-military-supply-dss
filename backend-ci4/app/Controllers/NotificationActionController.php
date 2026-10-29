@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\DemoGuard;
 use App\Libraries\StaffPasswordAlert;
 use App\Libraries\StaffPasswordReset;
 use App\Models\NotificationModel;
@@ -61,6 +62,10 @@ class NotificationActionController extends BaseController
 
             if (! $notification || ! $staff) {
                 return view('notification_action/problem', ['message' => 'This link is no longer valid.']);
+            }
+
+            if (DemoGuard::locksUser($staff)) {
+                return view('notification_action/problem', ['message' => DemoGuard::MESSAGE]);
             }
 
             StaffPasswordAlert::lock($notification, $staff, 'account_locked_via_email', 'owner (email link)');

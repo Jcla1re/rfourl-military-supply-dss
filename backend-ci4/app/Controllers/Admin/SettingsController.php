@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Libraries\DssRunner;
 use App\Libraries\SalesArchive;
 use App\Libraries\AttemptStore;
+use App\Libraries\DemoGuard;
 use App\Libraries\PasswordPolicy;
 use App\Libraries\StaffPasswordReset;
 use App\Libraries\Toast;
@@ -173,6 +174,9 @@ class SettingsController extends BaseController
         if (! $user) {
             return redirect()->to('/admin/settings')->with('error', 'Account not found.');
         }
+        if (DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse('/admin/settings?tab=profile');
+        }
 
         if (! $this->validate([
             'email' => "permit_empty|valid_email|is_unique[users.email,user_id,{$userId}]",
@@ -199,6 +203,10 @@ class SettingsController extends BaseController
     {
         $user = $this->userModel->find((int) session()->get('user_id'));
 
+        if (DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse('/admin/settings?tab=profile');
+        }
+
         // The Owner must prove they know the current password, so a stolen
         // or left-open session cannot be used to lock the Owner out.
         if (! $user || ! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
@@ -224,6 +232,9 @@ class SettingsController extends BaseController
         if (! $staff) {
             return redirect()->to($back)->with('error', 'Staff account not found.');
         }
+        if (DemoGuard::locksUser($staff)) {
+            return DemoGuard::refuse($back);
+        }
         if (AttemptStore::hit('owner_reset_' . (int) session()->get('user_id'), 600) > 5) {
             return redirect()->to($back)->with('error', 'Too many attempts. Please wait a few minutes and try again.');
         }
@@ -239,9 +250,11 @@ class SettingsController extends BaseController
         $reset = new StaffPasswordReset();
 
         if (! empty($staff['email'])) {
-            if ($reset->issueAndEmail($staff, StaffPasswordReset::KIND_RESET) === null) {
+            $password = $reset->issueAndEmail($staff, StaffPasswordReset::KIND_RESET);
+            if ($password === null) {
                 return redirect()->to($back)->with('error', "We couldn't send the email, so nothing was changed. Please try again.");
             }
+            DemoGuard::reveal("Temporary password for {$staff['full_name']}", $password);
             $toast = Toast::success('Temporary password sent', 'Emailed to ' . StaffPasswordReset::maskEmail($staff['email']) . '. They set their own when they sign in.');
         } else {
             $password = $reset->issue($staff, StaffPasswordReset::KIND_RESET);
@@ -319,6 +332,7 @@ class SettingsController extends BaseController
         }
         $db->transComplete();
 
+        DemoGuard::reveal("Temporary password for {$staff['full_name']}", $password);
         SecurityLogModel::log('account_created', null, 'staff: ' . $staff['username'] . ' (temporary password emailed)');
 
         return redirect()->to($back)->with('toast', Toast::success('Account created', 'A temporary password was emailed to ' . StaffPasswordReset::maskEmail($email) . '.'));
@@ -333,9 +347,11 @@ class SettingsController extends BaseController
         if (! $staff || ! StaffPasswordReset::isPending($staff) || ($staff['temp_password_kind'] ?? '') !== StaffPasswordReset::KIND_INVITE || empty($staff['email'])) {
             return redirect()->to($back)->with('error', "This invite can't be resent.");
         }
-        if ((new StaffPasswordReset())->issueAndEmail($staff, StaffPasswordReset::KIND_INVITE) === null) {
+        $password = (new StaffPasswordReset())->issueAndEmail($staff, StaffPasswordReset::KIND_INVITE);
+        if ($password === null) {
             return redirect()->to($back)->with('error', "We couldn't send the email. Please try again.");
         }
+        DemoGuard::reveal("Temporary password for {$staff['full_name']}", $password);
 
         SecurityLogModel::log('invite_resent', null, 'staff: ' . $staff['username']);
 
@@ -348,6 +364,9 @@ class SettingsController extends BaseController
 
         if (! $user) {
             return redirect()->to('/admin/settings?tab=accounts')->with('error', 'Staff account not found.');
+        }
+        if (DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse('/admin/settings?tab=accounts');
         }
 
         // Reactivating must not recreate a shared password. Hashes can't be
@@ -392,6 +411,9 @@ class SettingsController extends BaseController
 
         if (! $user) {
             return redirect()->to('/admin/settings?tab=accounts')->with('error', 'Staff account not found.');
+        }
+        if (DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse('/admin/settings?tab=accounts');
         }
 
         $db = db_connect();

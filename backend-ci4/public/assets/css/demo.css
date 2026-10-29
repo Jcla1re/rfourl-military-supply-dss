@@ -1,0 +1,29 @@
+/* Demo mode only (loaded by partials/demo_head.php when DEMO_MODE=true). */
+:root { --demo-banner-h: 28px; }
+
+.demo-banner {
+    position: fixed; top: 0; left: 0; right: 0; height: var(--demo-banner-h); z-index: 3000;
+    background: #7a4b00; color: #fff; text-align: center; font: 600 0.78rem/var(--demo-banner-h) 'Poppins', 'Segoe UI', sans-serif;
+}
+
+/* Push the page down by the banner height; the app shells size themselves to the viewport. */
+body { padding-top: var(--demo-banner-h) !important; box-sizing: border-box; }
+.app-shell, .app-shell .sidebar, .app-shell .main-panel { height: calc(100vh - var(--demo-banner-h)) !important; min-height: 0 !important; }
+body.landing-body { height: 100vh !important; }
+body.landing-body .landing-shell { height: calc(100vh - var(--demo-banner-h)) !important; }
+body.auth-body { min-height: 100vh; }
+
+.demo-secret {
+    position: fixed; top: calc(var(--demo-banner-h) + 10px); left: 50%; transform: translateX(-50%); z-index: 3000;
+    background: #fff8e1; border: 2px solid #c98a00; border-radius: 10px; padding: 10px 22px; text-align: center;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .25); font-family: 'Poppins', 'Segoe UI', sans-serif; color: #4a3200;
+}
+.demo-secret-label { font-size: 0.75rem; font-weight: 600; }
+.demo-secret-code { font-size: 1.1rem; font-weight: 700; }
+.demo-secret-code span { font-size: 1.5rem; font-weight: 800; letter-spacing: 3px; user-select: all; }
+
+.demo-credentials {
+    margin-top: 14px; padding: 8px 12px; border: 1px dashed #c98a00; background: #fff8e1; color: #4a3200;
+    border-radius: 8px; font-size: 0.78rem; line-height: 1.5;
+}
+.demo-credentials code { background: transparent; color: inherit; font-weight: 700; user-select: all; }

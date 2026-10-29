@@ -120,9 +120,9 @@
                 <div class="pf-row"><span>Login Email</span><strong><?= esc($loginAccount['email'] ?? '—') ?></strong></div>
                 <div class="pf-row"><span>Last Login</span><strong><?= !empty($loginAccount['last_login']) ? esc(date('M j, Y g:i A', strtotime($loginAccount['last_login']))) : '—' ?></strong></div>
                 <div class="pf-actions">
-                    <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#usernameModal">Change Username</button>
-                    <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#loginEmailModal">Change Login Email</button>
-                    <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#passwordModal">Change Password</button>
+                    <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#usernameModal"<?= demo_lock_attr($loginAccount ?? null) ?>>Change Username</button>
+                    <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#loginEmailModal"<?= demo_lock_attr($loginAccount ?? null) ?>>Change Login Email</button>
+                    <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#passwordModal"<?= demo_lock_attr($loginAccount ?? null) ?>>Change Password</button>
                 </div>
             </div>
         </div>

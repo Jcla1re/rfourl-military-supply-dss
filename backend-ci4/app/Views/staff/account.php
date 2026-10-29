@@ -57,7 +57,7 @@ $dash    = '—';
                         <label for="acctConfirm">Confirm New Password</label>
                         <input id="acctConfirm" name="confirm_password" type="password" required autocomplete="new-password">
                     </div>
-                    <div class="acct-actions"><button type="submit" class="btn btn-success acct-save">Change Password</button></div>
+                    <div class="acct-actions"><button type="submit" class="btn btn-success acct-save"<?= demo_lock_attr($account ?? null) ?>>Change Password</button></div>
                 </form>
             </div>
         </div>

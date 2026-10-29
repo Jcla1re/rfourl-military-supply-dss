@@ -4,6 +4,7 @@
 namespace App\Controllers;
 
 use App\Libraries\AttemptStore;
+use App\Libraries\DemoGuard;
 use App\Libraries\EmailNotifier;
 use App\Libraries\PasswordPolicy;
 use App\Libraries\LoginLockout;
@@ -287,6 +288,11 @@ class AuthController extends BaseController
             return redirect()->to("/login/{$role}/forgot")->with('error', $genericMessage);
         }
 
+        // Demo mode: the demo accounts' passwords can't be reset.
+        if (DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse("/login/{$role}/forgot", 'error');
+        }
+
         $otp = (string) random_int(100000, 999999);
 
         $this->userModel->update($user['user_id'], [
@@ -367,6 +373,10 @@ class AuthController extends BaseController
 
         $user = $this->userModel->find(session()->get('pwd_reset_user_id'));
 
+        if (DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse("/login/{$role}/forgot", 'error');
+        }
+
         if (! $this->withinLimit('otp_resend', (string) $user['user_id'], 3, 600)) {
             return redirect()->to("/login/{$role}/otp")->with('error', 'Too many requests. Try again in a few minutes.');
         }
@@ -422,6 +432,10 @@ class AuthController extends BaseController
 
         $userId = session()->get('pwd_reset_user_id');
 
+        if (DemoGuard::locksUser($this->userModel->find($userId))) {
+            return DemoGuard::refuse("/login/{$role}/forgot", 'error');
+        }
+
         $this->userModel->update($userId, [
             'password_hash'     => password_hash($newPass, PASSWORD_DEFAULT),
             'reset_otp_hash'    => null,
@@ -474,6 +488,11 @@ class AuthController extends BaseController
             ->groupStart()->where('LOWER(full_name)', $needle)->orWhere('LOWER(username)', $needle)->groupEnd()
             ->findAll();
         $matched = count($matches) === 1 ? $matches[0] : null;
+
+        // Demo mode: the demo staff account's password can't be reset.
+        if (DemoGuard::locksUser($matched)) {
+            return DemoGuard::refuse('/login/staff/forgot', 'error');
+        }
 
         $notifications  = new NotificationModel();
         $notificationId = $notifications->push(
@@ -544,10 +563,13 @@ class AuthController extends BaseController
 
     /**
      * Sends the OTP by email. Returns true if actually emailed. The code is
-     * never shown on-screen; on failure it is only logged (without the code).
+     * never shown on-screen (except in demo mode); on failure it is only logged (without the code).
      */
     private function deliverOtpEmail(array $user, string $otp): bool
     {
+        // Demo mode: testers see the code on the next page, so they don't need the inbox.
+        DemoGuard::reveal('Demo code', $otp);
+
         if (empty($user['email'])) {
             log_message('error', "OTP not sent: no email on file for user {$user['user_id']}");
             return false;

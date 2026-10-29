@@ -3,6 +3,8 @@
 
 namespace App\Models;
 
+use App\Exceptions\DemoLockedException;
+use App\Libraries\DemoGuard;
 use CodeIgniter\Model;
 
 class UserModel extends Model
@@ -29,7 +31,13 @@ class UserModel extends Model
         'temp_password_kind',
         'temp_password_expires_at',
         'deleted_at',
+        'is_demo',
     ];
+
+    // Demo-mode backstop: see DemoGuard. Does nothing unless DEMO_MODE is true.
+    protected $beforeInsert = ['demoRefuseNewAdmin'];
+    protected $beforeUpdate = ['demoRefuseLockedChange'];
+    protected $beforeDelete = ['demoRefuseLockedDelete'];
 
     protected $useTimestamps = false; // schema only has created_at, no updated_at
     protected $createdField  = 'created_at';
@@ -42,6 +50,45 @@ class UserModel extends Model
     ];
 
     // Helper: find a user by username, used in login
+    /** Demo mode: no new Admin/Owner accounts (staff and suppliers are fine). */
+    protected function demoRefuseNewAdmin(array $data): array
+    {
+        if (demo_mode() && ! DemoGuard::bypassed() && ($data['data']['role'] ?? null) === 'Admin') {
+            throw new DemoLockedException();
+        }
+
+        return $data;
+    }
+
+    /** Demo mode: a locked demo account's name, email, username, password, role and active flag can't change. */
+    protected function demoRefuseLockedChange(array $data): array
+    {
+        if (! demo_mode() || DemoGuard::bypassed() || empty($data['id'])) {
+            return $data;
+        }
+
+        if (array_intersect(array_keys($data['data'] ?? []), DemoGuard::PROTECTED_FIELDS) !== [] && $this->anyDemoAccount((array) $data['id'])) {
+            throw new DemoLockedException();
+        }
+
+        return $data;
+    }
+
+    /** Demo mode: a demo account can't be deleted. */
+    protected function demoRefuseLockedDelete(array $data): array
+    {
+        if (demo_mode() && ! DemoGuard::bypassed() && ! empty($data['id']) && $this->anyDemoAccount((array) $data['id'])) {
+            throw new DemoLockedException();
+        }
+
+        return $data;
+    }
+
+    private function anyDemoAccount(array $ids): bool
+    {
+        return db_connect()->table('users')->whereIn('user_id', $ids)->where('is_demo', 1)->countAllResults() > 0;
+    }
+
     public function findByUsername(string $username)
     {
         return $this->where('username', $username)->first();

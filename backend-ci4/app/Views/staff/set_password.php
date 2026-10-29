@@ -11,8 +11,10 @@ $invite   = ($kind ?? '') === 'invite';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="/assets/css/auth-theme.css" rel="stylesheet">
+<?= view('partials/demo_head') ?>
 </head>
 <body class="auth-body">
+<?= view('partials/demo_banner') ?>
     <div class="auth-card">
         <h2>Set your password</h2>
         <p class="auth-hint"><?= $invite ? 'Welcome! Choose your own password to continue.' : 'Choose your own password to continue.' ?></p>

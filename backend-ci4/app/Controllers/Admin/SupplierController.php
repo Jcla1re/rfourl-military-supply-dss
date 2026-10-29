@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\DemoGuard;
 use App\Libraries\PasswordPolicy;
 use App\Libraries\Toast;
 use App\Models\DssParameterModel;
@@ -193,6 +194,14 @@ class SupplierController extends BaseController
 
         $status = $this->request->getPost('supplier_status') ?: 'Active';
 
+        // Demo mode: the demo supplier can't be archived, renamed, or have its contact email changed.
+        if ($this->isDemoSupplier((string) $supplierId)
+            && ($status === 'Inactive'
+                || trim((string) $this->request->getPost('company_name')) !== (string) $supplier['company_name']
+                || trim((string) $this->request->getPost('contact_email')) !== trim((string) ($supplier['contact_email'] ?? '')))) {
+            return DemoGuard::refuse('/admin/suppliers');
+        }
+
         $this->supplierModel->update($supplierId, [
             'company_name'   => $this->request->getPost('company_name'),
             'category'       => $this->request->getPost('category') ?: null,
@@ -215,6 +224,10 @@ class SupplierController extends BaseController
             return redirect()->to('/admin/suppliers')->with('error', 'Supplier not found.');
         }
 
+        if ($this->isDemoSupplier((string) $supplierId)) {
+            return DemoGuard::refuse('/admin/suppliers');
+        }
+
         $this->supplierModel->update($supplierId, ['is_active' => 0]);
         SecurityLogModel::log('supplier_archived', null, $supplierId . ' ' . $supplier['company_name']);
 
@@ -227,6 +240,13 @@ class SupplierController extends BaseController
             $supplier['company_name'],
             ['undo' => site_url('admin/suppliers/restore/' . rawurlencode((string) $supplierId))]
         ));
+    }
+
+    /** Demo mode: does this supplier have a demo portal account? Always false outside demo mode. */
+    private function isDemoSupplier(string $supplierId): bool
+    {
+        return demo_mode()
+            && $this->userModel->where('supplier_id', $supplierId)->where('is_demo', 1)->countAllResults() > 0;
     }
 
     public function restore($supplierId)

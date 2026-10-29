@@ -13,8 +13,10 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="/assets/css/admin-theme.css" rel="stylesheet">
+<?= view('partials/demo_head') ?>
 </head>
 <body>
+<?= view('partials/demo_banner') ?>
 <div class="d-flex app-shell">
     <!-- SIDEBAR -->
     <div class="sidebar" id="adminSidebar">
