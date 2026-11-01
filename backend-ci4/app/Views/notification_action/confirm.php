@@ -42,7 +42,7 @@ $isApprove    = $action === 'approve';
                     <span>I confirmed with them</span>
                 </label>
             <?php endif; ?>
-            <button type="submit" class="btn-login" style="background:<?= $isApprove ? '#2f6431' : '#7a2020' ?>;">
+            <button type="submit" class="btn-login" style="background:<?= $isApprove ? '#2f6431' : '#A1261B' ?>;">
                 <?= $isLock ? 'Lock account' : ($isApprove ? 'Approve reset' : 'Yes, Decline This Request') ?>
             </button>
         </form>

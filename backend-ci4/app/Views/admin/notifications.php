@@ -97,7 +97,7 @@ $unreadCount = $unreadCount ?? 0;
 .notif-actions { display: flex; gap: 10px; margin-top: 12px; }
 .notif-actions button { padding: 9px 18px; border-radius: var(--radius-control); font-weight: 700; border: 1px solid #ccc; background: #fff; cursor: pointer; }
 .notif-actions .approve { background: var(--green-text); color: #fff; border: none; }
-.notif-actions .decline { background: var(--accent-maroon); color: #fff; border: none; }
+.notif-actions .decline { background: #A1261B; color: #fff; border: none; }
 .notif-actions .done { background: var(--sidebar-bg); color: #fff; border: none; }
 </style>
 

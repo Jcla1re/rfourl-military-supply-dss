@@ -97,8 +97,7 @@ $restockDates = $restockDates ?? [];
 .ord-actions { display: flex; gap: 10px; }
 .ord-actions form { flex: 1; }
 .ord-actions button { width: 100%; padding: 12px; border-radius: var(--radius-control); border: 1px solid #333; background: #fff; font-weight: 700; cursor: pointer; }
-.ord-actions button.cancel-order { width: auto; padding: 12px 18px; border-color: var(--accent-maroon); color: var(--accent-maroon); }
-.ord-actions button.cancel-order:hover { background: var(--red-bg); }
+.ord-actions button.cancel-order { width: auto; padding: 12px 18px; border-color: #A1261B; color: #A1261B; }
 .ord-note { margin: 10px 0 0; font-size: 13px; color: #777; }
 .hist-note { display: block; font-size: 12px; color: #777; margin-top: 4px; }
 

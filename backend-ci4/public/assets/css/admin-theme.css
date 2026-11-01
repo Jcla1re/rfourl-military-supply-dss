@@ -85,6 +85,48 @@ html:root select:not(.inv-size-select):not(:disabled):focus:hover {
 :root :is(.btn-success, .btn-primary, .inv-action-btn, .notify-btn:not(.notify-done), .qa-btn.primary, .lt-submit, .admin-pagination a.active):focus-visible:not(#focus-boost) {
     box-shadow: 0 0 0 2px #fff, 0 0 0 5px rgba(74, 103, 65, .35);
 }
+/* One danger/error red everywhere: #A1261B. Bootstrap's own danger red (#dc3545) is used by
+   .btn-outline-danger, .text-danger and invalid form fields; point them all at it. */
+:root {
+    --bs-danger: #A1261B;
+    --bs-danger-rgb: 161, 38, 27;
+    --bs-danger-text-emphasis: #A1261B;
+    --bs-form-invalid-color: #A1261B;
+    --bs-form-invalid-border-color: #A1261B;
+}
+.btn-outline-danger {
+    --bs-btn-color: #A1261B;
+    --bs-btn-border-color: #A1261B;
+    --bs-btn-hover-bg: #A1261B;
+    --bs-btn-hover-border-color: #A1261B;
+    --bs-btn-active-bg: #A1261B;
+    --bs-btn-active-border-color: #A1261B;
+    --bs-btn-disabled-color: #A1261B;
+    --bs-btn-disabled-border-color: #A1261B;
+    --bs-btn-focus-shadow-rgb: 161, 38, 27;
+}
+/* Red outlined (danger) buttons: Archive (item dialog), Cancel order, Clear all, Remove, Decline.
+   Hover/press fills them red with white text (no lift); keyboard focus keeps the red border
+   and shows a red ring instead of the green one. */
+:root :is(.btn-outline-danger, .im-btn-archive, .ord-actions button.cancel-order):is(:hover, :active):not(:disabled) {
+    background: #A1261B;
+    border-color: #A1261B;
+    color: #fff;
+    transform: none;
+}
+:root :is(.btn-outline-danger, .im-btn-archive, .ord-actions button.cancel-order) {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+:root :is(.btn-outline-danger, .im-btn-archive, .ord-actions button.cancel-order):focus-visible:not(#focus-boost) {
+    outline: none;
+    border-color: #A1261B;
+    box-shadow: 0 0 0 3px rgba(161, 38, 27, .2);
+}
+/* Bootstrap fills .btn on keyboard focus; keep the resting look (just the ring), like Archive. */
+:root .btn-outline-danger:focus-visible:not(:hover):not(:active):not(#focus-boost) {
+    background-color: var(--bs-btn-bg);
+    color: var(--bs-btn-color);
+}
 /* Dark green areas: sidebar and page header (e.g. Trend Analysis year picker, header buttons).
    Wins over the green-button style too (a green button in the header gets this ring). */
 :root :is(.sidebar, .topbar) :focus-visible:not(#focus-boost):not(#focus-boost-2) {
@@ -705,14 +747,14 @@ body {
     background: #71AA60; transform-origin: left;
     animation: toastTimer var(--toast-duration, 4s) linear forwards;
 }
-.alert-danger .toast-timer { background: #B42318; }
+.alert-danger .toast-timer { background: #A1261B; }
 .is-paused > .toast-timer { animation-play-state: paused; }
 @keyframes toastTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 @media (prefers-reduced-motion: reduce) { .toast-timer { display: none; } }
 
 .toast-icon { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
 .toast-icon.success { background: var(--green-bg); color: var(--green-text); }
-.toast-icon.error { background: #FDECEA; color: #B42318; }
+.toast-icon.error { background: #FDECEA; color: #A1261B; }
 .toast-title { font-weight: 800; font-size: 13.5px; color: var(--text-dark); }
 .toast-msg { font-size: 12px; color: #555; margin-top: 1px; }
 
@@ -723,7 +765,7 @@ body {
 .app-toast .toast-title { font-weight: 600; font-size: 14px; color: #1F2617; }
 .app-toast .toast-msg { font-size: 13px; color: #5C6152; overflow-wrap: anywhere; }
 .app-toast .toast-msg strong { font-weight: 600; color: #1F2617; }
-.app-toast.is-error .toast-title { color: #912018; }
+.app-toast.is-error .toast-title { color: #A1261B; }
 .app-toast-undo-form { margin: 0; }
 .app-toast-undo {
     border: 0; background: none; padding: 4px 8px; border-radius: var(--radius-icon);
@@ -977,7 +1019,7 @@ body {
     gap: 6px;
 }
 .inv-search.is-invalid {
-    border-color: #B42318;
+    border-color: #A1261B;
 }
 .search-error {
     display: flex;
@@ -985,7 +1027,7 @@ body {
     gap: 6px;
     margin: 0;
     font-size: 13px;
-    color: #B42318;
+    color: #A1261B;
 }
 .search-error[hidden] { display: none; }
 .inv-empty-search {
@@ -1264,7 +1306,7 @@ body {
     font-size: 26px;
     background: var(--alert-bg); color: var(--text-dark);
 }
-.confirm-icon.danger  { background: var(--red-bg);   color: var(--red-text); }
+.confirm-icon.danger  { background: var(--red-bg);   color: #A1261B; }
 .confirm-icon.success { background: var(--green-bg); color: var(--green-text); }
 .confirm-title { font-weight: 700; margin-bottom: 8px; color: var(--text-dark); }
 .confirm-message { color: #6c757d; margin-bottom: 0; overflow-wrap: anywhere; }

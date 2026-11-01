@@ -39,7 +39,7 @@ $archived  = $status === 'archived';
     flex: 1; text-align: center; border-radius: var(--radius-control); padding: 8px; font-weight: 700; text-decoration: none; cursor: pointer;
 }
 .sup-card-actions .edit-link { border: 1px solid #ccc; color: #333; background: #fff; }
-.sup-card-actions .archive-btn { border: 1px solid #f0bcbc; color: var(--accent-maroon); background: #fff; }
+.sup-card-actions .archive-btn { border: 1px solid #f0bcbc; color: #A1261B; background: #fff; }
 .sup-card-actions .restore-btn { border: 1px solid var(--green-text); color: var(--green-text); background: #fff; }
 
 .sup-tabs { display: flex; gap: 8px; }

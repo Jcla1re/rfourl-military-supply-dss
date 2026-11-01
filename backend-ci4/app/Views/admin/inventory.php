@@ -350,7 +350,7 @@ $products ??= [];
     display: flex; align-items: center; gap: 8px;
     margin: 14px 0 0; font-size: 13px; color: #2C3A1E;
 }
-.im-margin.is-error { color: #B42318; }
+.im-margin.is-error { color: #A1261B; }
 .im-margin.is-pending { color: #5C6152; } /* "Margin: —" until both prices are entered */
 
 .im-archive {
@@ -363,13 +363,10 @@ $products ??= [];
 .im-archive p { margin: 4px 0 0; font-size: 13px; color: #6a3a35; line-height: 1.45; }
 .im-btn-archive {
     flex-shrink: 0; height: 44px; padding: 0 20px;
-    border: 1px solid #B42318; border-radius: var(--radius-control);
-    background: #fff; color: #B42318; font-weight: 500; cursor: pointer;
-    transition: background-color 0.15s ease, transform 0.12s ease;
+    border: 1px solid #A1261B; border-radius: var(--radius-control);
+    background: #fff; color: #A1261B; font-weight: 500; cursor: pointer;
 }
-.im-btn-archive:hover { background: #FDECEA; }
-.im-btn-archive:active { transform: translateY(0); }
-.im-btn-archive:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+/* Hover (solid red) and the red focus ring: shared danger-button rules in admin-theme.css. */
 
 .im-foot {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -407,7 +404,7 @@ $products ??= [];
 .im-btn-secondary:active { transform: translateY(0); }
 .im-btn-secondary:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .im-btn-danger {
-    border: 1px solid #B42318; background: #B42318; color: #fff;
+    border: 1px solid #A1261B; background: #A1261B; color: #fff;
     transition: background-color 0.15s ease, transform 0.12s ease;
 }
 .im-btn-danger:hover { background: #912018; border-color: #912018; }
@@ -421,7 +418,7 @@ $products ??= [];
     width: 44px; height: 44px; margin-bottom: 16px;
     border-radius: 50%; font-size: 18px;
 }
-.im-confirm-icon.is-danger { background: #FDECEA; color: #B42318; }
+.im-confirm-icon.is-danger { background: #FDECEA; color: #A1261B; }
 .im-confirm-icon.is-success { background: #EAF3E6; color: #3B5434; }
 .im-confirm h2 { margin: 0 0 6px; font-size: 18px; font-weight: 600; color: #2C3A1E; word-break: break-word; }
 .im-confirm p { margin: 0 0 22px; font-size: 14px; color: #5C6152; line-height: 1.5; }

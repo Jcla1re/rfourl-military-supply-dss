@@ -76,7 +76,7 @@
                     <form method="post" action="<?= site_url('supplier/new-orders/decline/' . $o['so_id']) ?>" onsubmit="var r = prompt('Reason for declining this order?'); if (!r || !r.trim()) { return false; } this.reason.value = r.trim(); return true;">
                         <?= csrf_field() ?>
                         <input type="hidden" name="reason" value="">
-                        <button type="submit" class="btn" style="background: var(--red-bg); color: var(--red-text); font-weight:700;">Decline</button>
+                        <button type="submit" class="btn btn-outline-danger fw-bold">Decline</button>
                     </form>
                     <form method="post" action="<?= site_url('supplier/new-orders/accept/' . $o['so_id']) ?>">
                         <?= csrf_field() ?>
