@@ -838,15 +838,18 @@ body {
 /* ===== Data table ===== */
 .data-table-wrap { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; }
+/* Header row: solid white (rows never show through it while it's sticky), set off from the
+   rows by a 2px line. While stuck, it also gets a soft shadow (.is-stuck, below). */
 .data-table th {
-    --th-bg: #e6e1da;
+    --th-bg: #ffffff;
     background: var(--th-bg);
     padding: 13px 10px;
     text-align: left;
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: .03em;
-    color: #3a3a3a;
+    color: #5C6152;
+    border-bottom: 2px solid #E3E0D7;
 }
 .data-table td {
     padding: 13px 10px;
@@ -1319,6 +1322,11 @@ body {
    neighbouring header cells' backgrounds don't quite meet and the card shows through as a
    thin light line. Each header cell's background reaches 1px into its right neighbour. */
 .data-table thead th:not(:last-child) { box-shadow: 1px 0 0 0 var(--th-bg); }
+/* Stuck under the page header (rows scrolled beneath it; sticky-offset.js sets .is-stuck):
+   a soft shadow under the header row. At the top of the table, just the 2px line. The shadow
+   is on the row, not the cells: per-cell shadows overlap their neighbours and show as faint
+   vertical lines. */
+.data-table.is-stuck thead tr { box-shadow: 0 2px 6px rgba(31, 38, 23, .08); }
 
 /* ===== Sticky page tabs and table headers =====
    Only .main-scroll scrolls (see .app-shell). Page-level tab bars carry

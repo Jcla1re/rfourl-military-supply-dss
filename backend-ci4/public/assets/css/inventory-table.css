@@ -27,19 +27,12 @@
         z-index: 10;
     }
 }
-.inv-table thead th {
-    --th-bg: #ECEEE6;
-    background: var(--th-bg);
-}
+/* Header colours, 2px line and the stuck shadow come from the shared .data-table rules
+   (admin-theme.css). */
 .inv-table thead th:first-child { border-top-left-radius: var(--radius-control); }
 .inv-table thead th:last-child  { border-top-right-radius: var(--radius-control); }
-/* Stuck: one crisp 1px line under the header (a blurred per-cell shadow showed as light
-   vertical bands). The 1px right-hand overlap keeps neighbouring cells seamless. */
-.inv-table.is-stuck thead th {
-    box-shadow: 1px 0 0 0 var(--th-bg), inset 0 -1px 0 #E8E5DC;
-    border-radius: 0;
-}
-.inv-table.is-stuck thead th:last-child { box-shadow: inset 0 -1px 0 #E8E5DC; }
+/* Stuck: square corners. */
+.inv-table.is-stuck thead th { border-radius: 0; }
 .inv-table-card .data-table tbody tr:last-child td { border-bottom: 0; }
 /* Lighter row hover (Owner + Staff), so the outlined row buttons' hover stands out on it. */
 .inv-table.data-table tbody tr:hover { background-color: #FAF8F4; }

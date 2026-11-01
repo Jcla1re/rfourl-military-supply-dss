@@ -24,6 +24,7 @@
             if (box.width > 0 && box.height > 0) height = Math.max(height, box.height);
         });
         scroller.style.setProperty('--sticky-top', height + 'px');
+        if (window.updateStickyHeaders) window.updateStickyHeaders();
     }
 
     function schedule() {
@@ -31,7 +32,27 @@
         frame = requestAnimationFrame(measure);
     }
 
+    // Stuck table headers: .is-stuck on a .data-table while its sticky header row is pinned
+    // under the tabs with rows scrolled beneath it (admin-theme.css adds a soft shadow).
+    // Global, so a page that swaps a table in (live search) can call it again.
+    window.updateStickyHeaders = function () {
+        var line = scroller.getBoundingClientRect().top + (parseFloat(scroller.style.getPropertyValue('--sticky-top')) || 0);
+        Array.prototype.forEach.call(document.querySelectorAll('.data-table'), function (table) {
+            var head = table.tHead;
+            var sticky = head && getComputedStyle(head).position === 'sticky';
+            var box = table.getBoundingClientRect();
+            table.classList.toggle('is-stuck', !!sticky && box.top < line - 0.5 && box.bottom > line);
+        });
+    };
+
+    var stuckFrame = 0;
+    scroller.addEventListener('scroll', function () {
+        cancelAnimationFrame(stuckFrame);
+        stuckFrame = requestAnimationFrame(window.updateStickyHeaders);
+    }, { passive: true });
+
     measure();
+    window.updateStickyHeaders();
     window.addEventListener('resize', schedule);
     window.addEventListener('load', schedule);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);

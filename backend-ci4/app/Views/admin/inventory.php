@@ -90,7 +90,7 @@ $products ??= [];
 /* Bar on top of the table while a search has active results. */
 .inv-search-bar {
     display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-    padding: 12px 16px; background: #F7F6F2; border-bottom: 1px solid #E8E5DC;
+    padding: 12px 16px; background: #ffffff; border-bottom: 1px solid #EFECE4;
     border-radius: var(--radius-control) var(--radius-control) 0 0;
 }
 .inv-search-bar-text { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 14px; color: #3A4030; }
