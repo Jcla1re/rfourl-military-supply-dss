@@ -434,7 +434,8 @@ body {
     overflow: hidden;
 }
 
-.sidebar.collapsed .brand + .nav-section-label {
+.sidebar.collapsed .brand + .nav-section-label,
+.sidebar.collapsed .brand + .sidebar-scroll > .nav-section-label:first-child {
     display: none;
 }
 
@@ -445,11 +446,13 @@ body {
     position: relative;
 }
 
+/* Fixed, not absolute: the nav scrolls (.sidebar-scroll), which would clip a tooltip sticking out
+   of the sidebar. assets/js/sidebar-tips.js sets --tip-x / --tip-y from the hovered link. */
 .sidebar.collapsed .nav-link::after {
     content: attr(data-tooltip);
-    position: absolute;
-    left: calc(100% + 0.75rem);
-    top: 50%;
+    position: fixed;
+    left: var(--tip-x, -9999px);
+    top: var(--tip-y, 0);
     transform: translateY(-50%);
     background-color: #1a220f;
     color: #fff;
@@ -1585,3 +1588,13 @@ body {
 
 /* Keep the navigation column sized to fill the space above the user footer. */
 .app-shell .sidebar > div:not(.user-footer) { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+/* Short windows: the nav links (below the brand) scroll inside the sidebar instead of running
+   under the user footer, which always stays fully visible. */
+.app-shell .sidebar .sidebar-scroll {
+    flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0;
+    overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+    scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .22) transparent;
+}
+.app-shell .sidebar .sidebar-scroll::-webkit-scrollbar { width: 6px; }
+.app-shell .sidebar .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .22); border-radius: 3px; }
+.app-shell .sidebar .user-footer { flex-shrink: 0; }

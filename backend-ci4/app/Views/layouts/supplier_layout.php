@@ -46,6 +46,8 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
                 </button>
             </div>
 
+            <?php // Scrolls on its own when the window is too short, so the user footer never covers it. ?>
+            <div class="sidebar-scroll">
             <div class="nav-section-label">MAIN</div>
             <nav class="sidebar-nav">
                 <a href="<?= site_url('supplier/dashboard') ?>" class="nav-link <?= ($active ?? '') === 'dashboard' ? 'active' : '' ?>" data-tooltip="Dashboard">
@@ -93,6 +95,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
                 </span>
                 <span class="nav-label">Help</span>
             </a>
+            </div>
         </div>
 
         <div class="user-footer">
@@ -103,7 +106,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
                     <small><?= esc(session()->get('role')) ?></small>
                 </div>
             </a>
-            <form method="post" action="<?= site_url('logout') ?>" class="m-0 d-inline"><?= csrf_field() ?><button type="submit" class="logout-link" title="Logout" aria-label="Log out"><i class="bi bi-box-arrow-right"></i></button></form>
+            <form method="post" action="<?= site_url('logout') ?>" class="m-0 d-inline"><?= csrf_field() ?><button type="submit" class="logout-link" title="Log out" aria-label="Log out"><i class="bi bi-box-arrow-right"></i></button></form>
             <?= view('partials/_account_menu', [
                 'profileUrl' => site_url('supplier/profile'),
                 'name'       => (string) session()->get('full_name'),
@@ -157,6 +160,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
     <script src="/assets/js/toast-timer.js"></script>
     <script src="/assets/js/sticky-offset.js"></script>
     <script src="/assets/js/account-menu.js"></script>
+    <script src="/assets/js/sidebar-tips.js"></script>
     <script src="/assets/js/help-tip.js"></script>
     <script src="/assets/js/custom-select.js"></script>
     <?= view('partials/_confirm_modal') ?>
