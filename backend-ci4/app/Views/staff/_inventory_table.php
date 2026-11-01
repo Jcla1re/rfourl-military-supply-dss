@@ -95,6 +95,7 @@
                     <?php if (($search ?? '') !== ''): ?>
                         <tr>
                             <td colspan="10" class="inv-empty-search">
+                                <div class="inv-empty-icon" aria-hidden="true"><i class="bi bi-search"></i></div>
                                 <div class="title">No items match &ldquo;<?= esc($search) ?>&rdquo;</div>
                                 <p class="hint">Check the spelling or try a shorter word.</p>
                                 <button type="button" class="btn-clear-search">Clear search</button>

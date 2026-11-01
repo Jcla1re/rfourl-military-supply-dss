@@ -104,46 +104,39 @@ $products ??= [];
 .inv-archived-btn {
     display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
     height: 36px; padding: 0 14px; border: 1px solid #D6D2C6; border-radius: 9px; background: #fff;
-    color: #2C3A1E; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
-    transition: background-color .15s ease;
+    color: #1F2617; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
-.inv-archived-btn:hover { background: #F2F0EA; color: #2C3A1E; }
-.inv-archived-btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .inv-archived-btn .bi-archive { font-size: 15px; color: #5C6152; }
 .inv-archived-btn .bi-arrow-right { font-size: 14px; }
 .inv-archived-count {
-    display: inline-flex; align-items: center; justify-content: center;
-    height: 20px; min-width: 20px; padding: 0 6px; border-radius: 999px;
-    background: #EFECE4; color: #3A4030; font-size: 11.5px; font-weight: 600;
+    border-radius: 999px; background: #EFECE4; color: #3A4030; font-size: 11.5px; font-weight: 600;
 }
 /* Empty states (owner, active list). */
 .inv-empty-owner .title { font-size: 16px; font-weight: 600; color: #1F2617; }
-.inv-empty-owner .hint { margin: 4px 0 16px; font-size: 13.5px; color: #5C6152; }
+.inv-empty-owner .hint { font-size: 14px; color: #5C6152; }
 .inv-archived-box {
     display: flex; align-items: center; gap: 14px;
     max-width: 620px; margin: 0 auto; padding: 14px 16px;
-    background: #F5F8FD; border: 1px solid #D9E2F0; border-radius: 12px; text-align: left;
+    background: #FAF8F4; border: 1px solid #E8E5DC; border-radius: 12px; text-align: left;
 }
 .inv-archived-box-icon {
     display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-    width: 34px; height: 34px; border-radius: 9px; background: #E7EEF8; color: #2F4F86; font-size: 18px;
+    width: 34px; height: 34px; border-radius: 9px; background: #F2F0EA; color: #5C6152; font-size: 18px;
 }
 .inv-archived-box-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .inv-archived-box-text strong { font-size: 13.5px; font-weight: 600; color: #1F2617; }
 .inv-archived-box-text span { font-size: 13px; color: #5C6152; overflow-wrap: anywhere; }
 .inv-archived-view {
     display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
-    height: 36px; padding: 0 14px; border: 1px solid #C9D6EA; border-radius: 9px; background: #fff;
-    color: #2F4F86; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
-    transition: background-color .15s ease;
+    height: 36px; padding: 0 14px; border: 1px solid #D6D2C6; border-radius: 9px; background: #fff;
+    color: #1F2617; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
-.inv-archived-view:hover { background: #EEF3FB; color: #2F4F86; }
-.inv-archived-view:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .btn-clear-search.inv-clear-outline {
     height: 36px; padding: 0 14px; border: 1px solid #D6D2C6; border-radius: 9px; background: #fff;
     color: #2C3A1E; font-size: 13px; font-weight: 600; transform: none;
 }
-.btn-clear-search.inv-clear-outline:hover { background: #F2F0EA; border-color: #D6D2C6; transform: none; }
 
 .inv-more-btn {
     display: inline-flex;
@@ -163,15 +156,8 @@ $products ??= [];
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .inv-more-btn svg { display: block; flex: none; }
-/* Edit (pencil) button: outlined square, light green on hover (stands out on the hovered row). */
-.inv-more-btn:hover {
-    background: #EAF1E3;
-    border-color: #A9C79C;
-    color: #2F5A27;
-}
-.inv-more-btn:active {
-    background: #dedbd3;
-}
+/* Edit (pencil) button: outlined square; its light-green hover is the shared outlined-button rule
+   (admin-theme.css), which stands out on the hovered row. */
 .inv-more-btn:focus-visible {
     outline: 3px solid var(--focus-ring);
     outline-offset: 2px;
@@ -400,7 +386,6 @@ $products ??= [];
     border: 1px solid #E8E5DC; background: #fff; color: #2C3A1E;
     transition: background-color 0.15s ease, transform 0.12s ease;
 }
-.im-btn-secondary:hover { background: #F5F3EE; }
 .im-btn-secondary:active { transform: translateY(0); }
 .im-btn-secondary:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .im-btn-danger {
@@ -458,18 +443,9 @@ $products ??= [];
     transition: background-color .15s ease;
 }
 .archived-back .bi-arrow-left { font-size: 15px; }
-.archived-back:hover { background: #F2F0EA; color: #2C3A1E; }
 .archived-back:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 /* Archived rows: Reorder At, Order Qty and Stock Level don't apply. */
 .data-table tr.is-archived td.inv-na { color: #9A9C8F; }
-.archived-empty { padding: 40px 16px; text-align: center; }
-.archived-empty-icon {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 48px; height: 48px; margin-bottom: 12px;
-    border-radius: 50%; background: #F5F3EE; color: #5C6152; font-size: 20px;
-}
-.archived-empty-title { font-size: 15px; font-weight: 600; color: #1F2617; }
-.archived-empty-text { margin: 4px 0 0; font-size: 14px; color: #5C6152; }
 .data-table tr.is-archived td { color: #5C6152; }
 .status-pill.archived { background: #EEECE5; color: #4A5040; }
 .stock-bar.archived > span { background: #B9B6AC; }
@@ -481,7 +457,6 @@ $products ??= [];
     cursor: pointer; white-space: nowrap;
     transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
-.btn-restore:hover { background: #F5F3EE; border-color: #71AA60; }
 .btn-restore:active { transform: translateY(0); }
 .btn-restore:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 #restoreConfirm { z-index: 1010; }
@@ -519,13 +494,11 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
     transition: background-color .15s ease, border-color .15s ease;
 }
 .clear-filters[hidden] { display: none; }
-.clear-filters:hover { background: #F2F0EA; border-color: #B9B4A6; color: #1C1C1C; text-decoration: none; }
 .clear-filters:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .clear-filters-count {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
-    background: #EFECE4; color: #3A4030; font-size: 12px; font-weight: 600;
+    border-radius: 999px; background: #EFECE4; color: #3A4030; font-size: 12px; font-weight: 600;
 }
+/* Centring, and white-with-green on button hover: shared badge rules in admin-theme.css. */
 
 /* Size filter: disabled ("No sizes") for categories without sized items. */
 .size-filter-wrap { display: inline-flex; }

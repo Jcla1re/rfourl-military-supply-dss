@@ -47,16 +47,22 @@ a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
 
 
 
-/* Summary cards are toggles; "Clear filters" sits after the filters. */
+/* Summary cards are toggles; "Clear all" sits after the filters. */
 a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColor, 0 2px 8px rgba(31, 38, 23, .08); }
+/* "Clear all [n]": outlined button as tall as the dropdowns beside it (same as the Owner page). */
 .clear-filters {
-    align-self: center; display: inline-flex; align-items: center; gap: 6px;
-    padding: 4px 2px; font-size: 14px; color: #3B5434; font-weight: 500;
+    align-self: stretch; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+    padding: 0 16px; border: 1px solid #D6D2C6; border-radius: 10px; background: #fff;
+    color: #1C1C1C; font-size: 16px; font-weight: 400; line-height: 1; /* same text as the dropdowns beside it */
     text-decoration: none; white-space: nowrap;
+    transition: background-color .15s ease, border-color .15s ease;
 }
 .clear-filters[hidden] { display: none; }
-.clear-filters:hover { text-decoration: underline; color: #2C3A1E; }
-.clear-filters:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
+.clear-filters:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.clear-filters-count {
+    border-radius: 999px; background: #EFECE4; color: #3A4030; font-size: 12px; font-weight: 600;
+}
+/* Centring, and white-with-green on button hover: shared badge rules in admin-theme.css. */
 
 /* Size filter: disabled ("No sizes") for categories without sized items. */
 .size-filter-wrap { display: inline-flex; }
@@ -146,13 +152,17 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
             </select>
 
             <?php
-            // "Clear filters": only when any filter is on (status/card, category, size, search).
-            $hasFilters = ($status ?? '') !== '' || (($category ?? 'All') !== 'All' && ($category ?? '') !== '')
-                || ($size ?? '') !== '' || ($search ?? '') !== '' || ($searchInput ?? '') !== '';
-            $keepPer    = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' => $_GET['per_page']]) : '';
+            // "Clear all": only when any filter is on. Each filter counts once: the category tab
+            // and dropdown are one filter, a stat card and the Status dropdown are one.
+            $activeFilters = (int) (($search ?? '') !== '' || ($searchInput ?? '') !== '')
+                + (int) (($category ?? 'All') !== 'All' && ($category ?? '') !== '')
+                + (int) (($size ?? '') !== '')
+                + (int) (($status ?? '') !== '');
+            $keepPer = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' => $_GET['per_page']]) : '';
             ?>
-            <a href="<?= site_url('staff/inventory') . $keepPer ?>" class="clear-filters" id="clearFilters"<?= $hasFilters ? '' : ' hidden' ?>>
-                <i class="bi bi-x-circle" aria-hidden="true"></i> Clear filters
+            <a href="<?= site_url('staff/inventory') . $keepPer ?>" class="clear-filters" id="clearFilters"
+               aria-label="Clear all filters (<?= $activeFilters ?> active)"<?= $activeFilters ? '' : ' hidden' ?>>
+                Clear all <span class="clear-filters-count" id="clearFiltersCount" aria-hidden="true"><?= $activeFilters ?></span>
             </a>
         </div>
 
@@ -213,15 +223,18 @@ const SIZES_BY_CATEGORY = <?= json_encode($sizesByCategory ?? new stdClass()) ?>
     });
 });
 
-// "Clear filters" link: shown only while a filter is on. Live search
-// changes the URL without a reload, so re-check after each search.
+// "Clear all [n]": shown only while a filter is on, with how many (each counted
+// once: search, category, size, status). Live search changes the URL
+// without a reload, so re-check after each search.
 function syncClearFilters() {
     const link = document.getElementById('clearFilters');
     if (!link) return;
     const q = new URL(window.location.href).searchParams;
-    const on = ['status', 'size', 'search'].some(k => (q.get(k) || '') !== '')
-        || ((q.get('category') || 'All') !== 'All');
-    link.hidden = !on;
+    const count = ['status', 'size', 'search'].filter(k => (q.get(k) || '') !== '').length
+        + ((q.get('category') || 'All') !== 'All' ? 1 : 0);
+    link.hidden = count === 0;
+    document.getElementById('clearFiltersCount').textContent = count;
+    link.setAttribute('aria-label', `Clear all filters (${count} active)`);
 }
 
 // Live search: fetches the real server-side search result in the

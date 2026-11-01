@@ -48,7 +48,6 @@
 .ar-btn-primary { background: #71AA60; color: #fff; }
 .ar-btn-primary:hover { background: #5F9850; color: #fff; }
 .ar-btn-outline { background: #fff; border-color: #D6D2C6; color: #2C3A1E; }
-.ar-btn-outline:hover { background: #F5F3EE; color: #2C3A1E; }
 .ar-btn-danger { background: #A1261B; color: #fff; }
 .ar-btn-danger:hover:not(:disabled) { background: #912018; }
 .ar-btn:disabled { background: #E8E5DC; border-color: #E8E5DC; color: #8A8D7E; cursor: not-allowed; }

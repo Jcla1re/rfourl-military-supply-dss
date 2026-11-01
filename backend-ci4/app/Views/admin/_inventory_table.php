@@ -172,6 +172,7 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                         <?php // No active match, but archived items match: point to the Archived tab (same search). ?>
                         <tr>
                             <td colspan="11" class="inv-empty-search inv-empty-owner">
+                                <div class="inv-empty-icon" aria-hidden="true"><i class="bi bi-archive"></i></div>
                                 <div class="title">No active items match &ldquo;<?= esc($searchTerm) ?>&rdquo;</div>
                                 <p class="hint">It may be archived, or check the spelling.</p>
                                 <div class="inv-archived-box">
@@ -187,6 +188,7 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                     <?php elseif ($searchTerm !== '' && empty($showArchived)): ?>
                         <tr>
                             <td colspan="11" class="inv-empty-search inv-empty-owner">
+                                <div class="inv-empty-icon" aria-hidden="true"><i class="bi bi-search"></i></div>
                                 <div class="title">No items match &ldquo;<?= esc($searchTerm) ?>&rdquo;</div>
                                 <p class="hint">Check the spelling or try a shorter word. Archived items were searched too.</p>
                                 <button type="button" class="btn-clear-search inv-clear-outline">Clear search</button>
@@ -195,6 +197,7 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                     <?php elseif ($searchTerm !== ''): ?>
                         <tr>
                             <td colspan="11" class="inv-empty-search">
+                                <div class="inv-empty-icon" aria-hidden="true"><i class="bi bi-search"></i></div>
                                 <div class="title">No items match &ldquo;<?= esc($searchTerm) ?>&rdquo;</div>
                                 <p class="hint">Check the spelling or try a shorter word.</p>
                                 <button type="button" class="btn-clear-search">Clear search</button>
@@ -202,10 +205,10 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                         </tr>
                     <?php elseif (! empty($showArchived)): ?>
                         <tr>
-                            <td colspan="11" class="archived-empty">
-                                <div class="archived-empty-icon" aria-hidden="true"><i class="bi bi-archive"></i></div>
-                                <div class="archived-empty-title">No archived items</div>
-                                <p class="archived-empty-text">Archived items show here.</p>
+                            <td colspan="11" class="inv-empty-state">
+                                <div class="inv-empty-icon" aria-hidden="true"><i class="bi bi-archive"></i></div>
+                                <div class="inv-empty-title">No archived items</div>
+                                <p class="inv-empty-line">Archived items show here.</p>
                             </td>
                         </tr>
                     <?php else: ?>

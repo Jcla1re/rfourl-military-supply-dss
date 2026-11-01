@@ -127,6 +127,50 @@ html:root select:not(.inv-size-select):not(:disabled):focus:hover {
     background-color: var(--bs-btn-bg);
     color: var(--bs-btn-color);
 }
+/* White outlined buttons: one hover everywhere, light green (a beige hover blends into the page).
+   Clear all (Owner + Staff), Clear search, Clear filters,
+   View in Archived, Also in Archived, the row pencil, View order, Back / Restore (Archived),
+   the item dialog's Cancel, Archive page outline buttons, page numbers, and Bootstrap's
+   neutral/green outline buttons. Red danger buttons keep their solid red hover (above). */
+:root :is(.btn-clear-search, .inv-empty-clear, a.clear-filters:has(.clear-filters-count), .inv-archived-view, .inv-archived-btn,
+          .inv-more-btn, .inv-view-order, .archived-back, .btn-restore, .im-btn-secondary, .ar-btn-outline,
+          .pager-footer .admin-pagination a:not(.active), .btn-outline-secondary, .btn-outline-dark, .btn-outline-success) {
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+:root :is(.btn-clear-search, .inv-empty-clear, a.clear-filters:has(.clear-filters-count), .inv-archived-view, .inv-archived-btn,
+          .inv-more-btn, .inv-view-order, .archived-back, .btn-restore, .im-btn-secondary, .ar-btn-outline,
+          .pager-footer .admin-pagination a:not(.active), .btn-outline-secondary, .btn-outline-dark, .btn-outline-success):is(:hover, :active):not(:disabled) {
+    background: #EAF1E3;
+    border-color: #A9C79C;
+    color: #2F5A27;
+    text-decoration: none;
+    transform: none;
+}
+:root :is(.btn-clear-search, .inv-empty-clear, a.clear-filters:has(.clear-filters-count), .inv-archived-view, .inv-archived-btn,
+          .inv-more-btn, .inv-view-order, .archived-back, .btn-restore, .im-btn-secondary, .ar-btn-outline,
+          .btn-outline-secondary, .btn-outline-dark, .btn-outline-success):is(:hover, :active):not(:disabled) :is(i, svg):not(.clear-filters-count *, .inv-archived-count *) {
+    color: inherit;
+}
+/* Bootstrap fills .btn on keyboard focus; keep the resting look (just the ring). */
+:root :is(.btn-outline-secondary, .btn-outline-dark, .btn-outline-success):focus-visible:not(:hover):not(:active):not(#focus-boost) {
+    background-color: var(--bs-btn-bg);
+    color: var(--bs-btn-color);
+}
+/* Count badges inside buttons (Clear all, Also in Archived): centred digits; white with green text
+   while the button is hovered or focused. */
+.clear-filters-count,
+.inv-archived-count {
+    display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
+    /* 2px top / 0 bottom: the 11.5px Poppins digits sit ~1px high in their line box; this centres the ink. */
+    min-width: 20px; height: 20px; padding: 2px 6px 0; line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: background-color .15s ease, color .15s ease;
+}
+.clear-filters .clear-filters-count { padding-top: 0; } /* its 12px digits already sit centred */
+:is(.clear-filters, .inv-archived-btn):is(:hover, :focus-visible) :is(.clear-filters-count, .inv-archived-count) {
+    background: #ffffff;
+    color: #2F5A27;
+}
 /* Dark green areas: sidebar and page header (e.g. Trend Analysis year picker, header buttons).
    Wins over the green-button style too (a green button in the header gets this ring). */
 :root :is(.sidebar, .topbar) :focus-visible:not(#focus-boost):not(#focus-boost-2) {
@@ -1030,18 +1074,23 @@ body {
     color: #A1261B;
 }
 .search-error[hidden] { display: none; }
-.inv-empty-search {
-    padding: 36px 16px;
+/* Search empty states: same spacing as partials/_inventory_empty.php (44 / 48, icon 14px above
+   the title, title 4px above the hint, hint 16px above the button or archived card).
+   The extra classes beat the table's own cell padding. */
+.inv-table.data-table td.inv-empty-search {
+    padding: 44px 16px 48px;
     text-align: center;
 }
+/* Same title as the other empty states (Owner and Staff). */
 .inv-empty-search .title {
+    font-size: 16px;
     font-weight: 600;
-    color: var(--text-dark);
+    color: #1F2617;
     word-break: break-word;
 }
 .inv-empty-search .hint {
-    margin: 4px 0 14px;
-    color: #666;
+    margin: 4px 0 16px;
+    color: #5C6152;
     font-size: 14px;
 }
 /* Secondary button (white) used by "Clear search" */
@@ -1055,10 +1104,6 @@ body {
     cursor: pointer;
     transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
-.btn-clear-search:hover {
-    background: #F5F3EE;
-    border-color: #71AA60;
-}
 .btn-clear-search:active { transform: translateY(0); }
 .btn-clear-search:focus-visible {
     outline: 3px solid var(--focus-ring);
@@ -1068,7 +1113,8 @@ body {
 /* Inventory empty states (Owner + Staff, partials/_inventory_empty.php): why the list is empty. */
 /* Beats the table's own cell padding (.data-table td / .inv-table td). */
 .inv-table.data-table td.inv-empty-state { padding: 44px 16px 48px; text-align: center; }
-.inv-table.data-table tbody tr:has(> .inv-empty-state):hover { background-color: transparent; }
+/* Empty-state rows (reason, search, archived match, no archived items) aren't item rows: no hover. */
+.inv-table.data-table tbody tr:has(> .inv-empty-state, > .inv-empty-search):hover { background-color: transparent; }
 /* Icon: a flex circle with the glyph as a block (no inline baseline gap), 14px above the title. */
 .inv-empty-icon {
     display: flex; align-items: center; justify-content: center;
@@ -1088,7 +1134,6 @@ body {
     color: #2C3A1E; font-size: 13px; font-weight: 600; text-decoration: none;
     transition: background-color .15s ease;
 }
-.inv-empty-clear:hover { background: #F2F0EA; color: #2C3A1E; }
 
 /* ===== Equal-height cards in a row (Dashboard, Trend Analysis) =====
    Bootstrap rows already stretch their columns (align-items: stretch);
@@ -1134,7 +1179,6 @@ body {
     padding: 6px 8px; border: 1px solid #E3E0D7; border-radius: var(--radius-control);
     background: #fff; color: #2C3A1E; font-size: 13px; font-weight: 500; text-decoration: none; white-space: nowrap;
 }
-.inv-view-order:hover { background: #EAF1E3; border-color: #A9C79C; color: #2F5A27; }
 .inv-view-order:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .on-order-note { font-size: 12px; color: #2B4C7E; font-weight: 600; }
 
@@ -1210,10 +1254,6 @@ body {
     background: #FFFFFF;
     border: 1px solid #E8E5DC;
     color: #2C3A1E;
-}
-.pager-footer .admin-pagination a:not(.active):hover {
-    background: #F5F3EE;
-    border-color: #71AA60;
 }
 .pager-footer .admin-pagination a:focus-visible {
     outline: 3px solid var(--focus-ring);
