@@ -455,21 +455,75 @@ html, body.landing-body {
     box-sizing: border-box;
 }
 
+/* Show/hide password: a 32x32 square in the field's right side (4.5px from the edges of the
+   41px field), transparent at rest, beige on hover and keyboard focus. */
 .pw-toggle {
     position: absolute;
-    right: 12px;
-    background: none;
+    right: 5px;
+    width: 32px;
+    height: 32px;
+    background: transparent;
     border: none;
-    padding: 4px;
-    color: #999;
+    border-radius: 8px;
+    padding: 0;
+    color: #5C6152;
+    font-size: 19px;
+    line-height: 1;
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
+    /* Hidden while the field is empty (pw-toggle.js adds .is-visible once it has a value);
+       visibility keeps it out of the tab order, and its space stays reserved. */
+    opacity: 0;
+    visibility: hidden;
+    transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease, visibility 0s linear 0.15s;
+}
+/* inherit, not visible: on the landing page the inactive role panels are visibility:hidden and
+   stacked in the same spot, so a forced "visible" eye in a hidden panel would sit on top and
+   take the clicks meant for the active panel's eye. */
+.pw-toggle.is-visible {
+    opacity: 1;
+    visibility: inherit;
+    transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease, visibility 0s;
+}
+.pw-toggle i { line-height: 1; }
+
+.pw-toggle:hover,
+.pw-toggle:focus-visible {
+    background: #F2F0EA;
+    color: #1F2617;
 }
 
-.pw-toggle:hover {
-    color: #4b6a3f;
+@media (prefers-reduced-motion: reduce) {
+    .pw-toggle,
+    .pw-toggle.is-visible { transition: none; }
 }
+
+/* The password text stops before the eye button (5px gap + 32px button + 7px). */
+.input-icon-wrap:has(.pw-toggle) input {
+    padding-right: 44px;
+}
+
+/* Set / reset password: the same eye in the plain .auth-card fields. The wrapper takes the
+   field's bottom margin so the button stays centred on the input. */
+.pw-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.auth-card .pw-field input {
+    margin-bottom: 0;
+    padding-right: 44px;
+}
+
+/* Lets pw-toggle.js notice a browser autofill (the value stays unreadable until the user
+   interacts, but animationstart still fires). */
+@keyframes pw-autofill-start { from { opacity: 1; } to { opacity: 1; } }
+@keyframes pw-autofill-end { from { opacity: 1; } to { opacity: 1; } }
+input:has(+ .pw-toggle) { animation: pw-autofill-end 0.001s; }
+input:has(+ .pw-toggle):-webkit-autofill { animation: pw-autofill-start 0.001s; }
 
 .form-row-between {
     display: flex;

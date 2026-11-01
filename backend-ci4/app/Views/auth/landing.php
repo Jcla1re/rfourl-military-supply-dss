@@ -117,7 +117,7 @@ $lockedSeconds = [
                         <div class="input-icon-wrap">
                             <i class="bi bi-lock"></i>
                             <input type="password" name="password" placeholder="Enter your password" required>
-                            <button type="button" class="pw-toggle" aria-label="Show password"><i class="bi bi-eye"></i></button>
+                            <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" tabindex="-1"><i class="bi bi-eye"></i></button>
                         </div>
                     </div>
                     <div class="form-row-between">
@@ -149,7 +149,7 @@ $lockedSeconds = [
                         <div class="input-icon-wrap">
                             <i class="bi bi-lock"></i>
                             <input type="password" name="password" placeholder="Enter your password" required>
-                            <button type="button" class="pw-toggle" aria-label="Show password"><i class="bi bi-eye"></i></button>
+                            <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" tabindex="-1"><i class="bi bi-eye"></i></button>
                         </div>
                     </div>
                     <div class="form-row-between">
@@ -185,7 +185,7 @@ $lockedSeconds = [
                         <div class="input-icon-wrap">
                             <i class="bi bi-lock"></i>
                             <input type="password" name="password" placeholder="Enter your password" required>
-                            <button type="button" class="pw-toggle" aria-label="Show password"><i class="bi bi-eye"></i></button>
+                            <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" tabindex="-1"><i class="bi bi-eye"></i></button>
                         </div>
                     </div>
                     <div class="form-row-between">
@@ -206,6 +206,7 @@ $lockedSeconds = [
         </div>
     </div>
 
+    <script src="/assets/js/pw-toggle.js"></script>
     <script>
         const ROLES = {
             admin:    { label: 'Owner',    description: 'Manage inventory, reorders, reports, and settings.' },
@@ -261,20 +262,6 @@ $lockedSeconds = [
 
         document.querySelectorAll('.back-to-roles').forEach(btn => {
             btn.addEventListener('click', showRoleSelect);
-        });
-
-        document.querySelectorAll('.pw-toggle').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const input = btn.previousElementSibling;
-                const icon = btn.querySelector('i');
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icon.className = 'bi bi-eye-slash';
-                } else {
-                    input.type = 'password';
-                    icon.className = 'bi bi-eye';
-                }
-            });
         });
 
         <?php foreach (['admin', 'staff', 'supplier'] as $r): ?>

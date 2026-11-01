@@ -15,6 +15,7 @@ $invite   = ($kind ?? '') === 'invite';
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous" rel="stylesheet">
     <link href="/assets/css/auth-theme.css" rel="stylesheet">
 <?= view('partials/demo_head') ?>
 </head>
@@ -31,9 +32,15 @@ $invite   = ($kind ?? '') === 'invite';
         <form action="<?= site_url('staff/set-password') ?>" method="post">
             <?= csrf_field() ?>
             <label>New password:</label>
-            <input type="password" name="new_password" minlength="8" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" pattern="(?=.*[A-Za-z])(?=.*\d).{8,}" title="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" required autofocus autocomplete="new-password">
+            <div class="pw-field">
+                <input type="password" name="new_password" minlength="8" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" pattern="(?=.*[A-Za-z])(?=.*\d).{8,}" title="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" required autofocus autocomplete="new-password">
+                <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" tabindex="-1"><i class="bi bi-eye"></i></button>
+            </div>
             <label>Confirm new password:</label>
-            <input type="password" name="confirm_password" minlength="8" required autocomplete="new-password">
+            <div class="pw-field">
+                <input type="password" name="confirm_password" minlength="8" required autocomplete="new-password">
+                <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" tabindex="-1"><i class="bi bi-eye"></i></button>
+            </div>
             <button type="submit" class="btn-login">Save password</button>
         </form>
 
@@ -42,5 +49,6 @@ $invite   = ($kind ?? '') === 'invite';
             <button type="submit" class="btn btn-link p-0">&larr; Sign out</button>
         </form>
     </div>
+    <script src="/assets/js/pw-toggle.js"></script>
 </body>
 </html>
