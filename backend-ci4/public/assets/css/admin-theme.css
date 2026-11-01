@@ -1065,6 +1065,31 @@ body {
     outline-offset: 2px;
 }
 
+/* Inventory empty states (Owner + Staff, partials/_inventory_empty.php): why the list is empty. */
+/* Beats the table's own cell padding (.data-table td / .inv-table td). */
+.inv-table.data-table td.inv-empty-state { padding: 44px 16px 48px; text-align: center; }
+.inv-table.data-table tbody tr:has(> .inv-empty-state):hover { background-color: transparent; }
+/* Icon: a flex circle with the glyph as a block (no inline baseline gap), 14px above the title. */
+.inv-empty-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 52px; height: 52px; margin: 0 auto 14px; border-radius: 50%;
+    background: #F2F0EA; color: #5C6152; font-size: 24px; line-height: 1;
+}
+.inv-empty-state.is-good .inv-empty-icon { background: #EAF1E3; color: #2F5A27; font-size: 28px; }
+.inv-empty-icon i,
+.inv-empty-icon i::before { display: block; line-height: 1; vertical-align: 0; }
+.inv-empty-title { font-size: 16px; font-weight: 600; color: #1F2617; overflow-wrap: anywhere; }
+.inv-empty-line { margin: 4px 0 0; font-size: 14px; color: #5C6152; }
+.inv-empty-add,
+.inv-empty-clear { margin-top: 16px; }
+.inv-empty-clear {
+    display: inline-flex; align-items: center; height: 36px; padding: 0 14px;
+    border: 1px solid #D6D2C6; border-radius: 9px; background: #fff;
+    color: #2C3A1E; font-size: 13px; font-weight: 600; text-decoration: none;
+    transition: background-color .15s ease;
+}
+.inv-empty-clear:hover { background: #F2F0EA; color: #2C3A1E; }
+
 /* ===== Equal-height cards in a row (Dashboard, Trend Analysis) =====
    Bootstrap rows already stretch their columns (align-items: stretch);
    the cards fill the column so cards in the same row end on the same line.

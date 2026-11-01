@@ -101,13 +101,22 @@
                             </td>
                         </tr>
                     <?php else: ?>
-                        <tr><td colspan="10" class="text-center py-4">No inventory items found.</td></tr>
+                        <?= view('partials/_inventory_empty', [
+                            'colspan'  => 10,
+                            'category' => $category ?? 'All',
+                            'size'     => $size ?? '',
+                            'status'   => $status ?? '',
+                            'clearUrl' => site_url('staff/inventory') . (isset($_GET['per_page']) ? '?' . http_build_query(['per_page' => $_GET['per_page']]) : ''),
+                            'canAdd'   => false,
+                        ]) ?>
                     <?php endif; ?>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
 
+    <?php // No rows: no footer ("No results" / rows per page) under the empty state. ?>
+    <?php if (! empty($products)): ?>
     <?= view('partials/_pager', [
         'baseUrl'        => site_url('staff/inventory'),
         'currentPage'    => $currentPage ?? 1,
@@ -117,4 +126,5 @@
         'perPageOptions' => $perPageOptions ?? [10, 25, 50],
         'shownCount'     => count($products ?? []),
     ]) ?>
+    <?php endif; ?>
 </div>

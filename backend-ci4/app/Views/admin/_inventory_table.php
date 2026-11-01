@@ -209,15 +209,22 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                             </td>
                         </tr>
                     <?php else: ?>
-                        <tr><td colspan="11" class="text-center py-4">No inventory items found.</td></tr>
+                        <?= view('partials/_inventory_empty', [
+                            'colspan'  => 11,
+                            'category' => $category ?? 'All',
+                            'size'     => $size ?? '',
+                            'status'   => $status ?? '',
+                            'clearUrl' => site_url('admin/inventory') . (isset($_GET['per_page']) ? '?' . http_build_query(['per_page' => $_GET['per_page']]) : ''),
+                            'canAdd'   => true,
+                        ]) ?>
                     <?php endif; ?>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
 
-    <?php // Empty archived list: no footer ("No results" / rows per page) under the empty state. ?>
-    <?php if (! (! empty($showArchived) && empty($products) && ($search ?? '') === '')): ?>
+    <?php // No rows: no footer ("No results" / rows per page) under the empty state. ?>
+    <?php if (! empty($products)): ?>
     <?= view('partials/_pager', [
         'baseUrl'        => site_url('admin/inventory'),
         'currentPage'    => $currentPage ?? 1,

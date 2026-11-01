@@ -1236,6 +1236,11 @@ function closeItemModal() {
     if (modalOpener) modalOpener.focus();
 }
 
+// "Add item" in the empty "No items yet" state (delegated: the table is swapped in place).
+document.addEventListener('click', event => {
+    if (event.target.closest('.inv-empty-add')) document.getElementById('openAddModal').click();
+});
+
 document.getElementById('openAddModal').addEventListener('click', event => {
     itemForm.reset();
     itemForm.action = storeUrl;
