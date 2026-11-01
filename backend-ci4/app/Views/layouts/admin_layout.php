@@ -151,7 +151,12 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
                     <small><?= esc(session()->get('role') === 'Admin' ? 'Owner' : session()->get('role')) ?></small>
                 </div>
             </a>
-            <form method="post" action="<?= site_url('logout') ?>" class="m-0 d-inline"><?= csrf_field() ?><button type="submit" class="logout-link" title="Logout"><i class="bi bi-box-arrow-right"></i></button></form>
+            <form method="post" action="<?= site_url('logout') ?>" class="m-0 d-inline"><?= csrf_field() ?><button type="submit" class="logout-link" title="Logout" aria-label="Log out"><i class="bi bi-box-arrow-right"></i></button></form>
+            <?= view('partials/_account_menu', [
+                'profileUrl' => site_url('admin/settings?tab=profile'),
+                'name'       => (string) session()->get('full_name'),
+                'role'       => (string) (session()->get('role') === 'Admin' ? 'Owner' : session()->get('role')),
+            ]) ?>
         </div>
     </div>
 
@@ -196,6 +201,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
     <?= view('partials/_toast', ['toast' => session()->getFlashdata('toast')]) ?>
     <script src="/assets/js/toast-timer.js"></script>
     <script src="/assets/js/sticky-offset.js"></script>
+    <script src="/assets/js/account-menu.js"></script>
     <script src="/assets/js/help-tip.js"></script>
     <script src="/assets/js/custom-select.js"></script>
     <?= view('partials/_confirm_modal') ?>

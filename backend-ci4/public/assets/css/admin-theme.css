@@ -600,18 +600,34 @@ body {
     color: #a5580a;
 }
 
+/* Log out: a 36x36 icon button, transparent at rest. The -9px right margin keeps the icon where
+   it was (the box grew around it), so the name / role beside it don't move. */
 .sidebar .logout-link {
-    background: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-right: -9px;
+    background: transparent;
     border: 0;
+    border-radius: 8px;
     padding: 0;
     cursor: pointer;
     color: #ef4444;
     font-size: 1.1rem;
-    transition: color 0.15s ease;
+    line-height: 1;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
+.sidebar .logout-link i,
+.sidebar .logout-link i::before { display: block; line-height: 1; vertical-align: 0; }
 
-.sidebar .logout-link:hover {
-    color: #ff6b6b;
+/* Hover and keyboard focus: soft white tile, brighter icon. The focus ring is the shared
+   sidebar ring (Keyboard focus section above). */
+.sidebar .logout-link:hover,
+.sidebar .logout-link:focus-visible {
+    background: rgba(255, 255, 255, .10);
+    color: #F87171;
 }
 
 .sidebar .user-footer {
@@ -646,6 +662,48 @@ body {
     margin: 0;
     padding: 0.35rem;
 }
+
+/* ===== Account menu (collapsed sidebar; partials/_account_menu.php + assets/js/account-menu.js) =====
+   Collapsed: the avatar link is replaced by an "Account menu" button. Expanded: unchanged. */
+.sidebar .account-menu-btn { display: none; }
+.sidebar.collapsed .user-footer-link { display: none; }
+/* The 72px collapsed sidebar has no room for the footer's side padding around a 46px button. */
+.sidebar.collapsed .user-footer { padding-left: 0; padding-right: 0; }
+.sidebar.collapsed .account-menu-btn {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 46px; height: 46px; padding: 0; border: 0; border-radius: 10px;
+    background: transparent; color: inherit; font-size: 1.5rem; line-height: 1; cursor: pointer;
+    transition: background-color .15s ease, box-shadow .15s ease;
+}
+.sidebar .account-menu-btn i,
+.sidebar .account-menu-btn i::before { display: block; line-height: 1; vertical-align: 0; }
+.sidebar.collapsed .account-menu-btn:hover,
+.sidebar.collapsed .account-menu-btn:focus-visible,
+.sidebar.collapsed .account-menu-btn[aria-expanded="true"] { background: rgba(255, 255, 255, .10); }
+/* The card: fixed to the right of the sidebar (placed by the script), above page content. */
+.account-menu {
+    position: fixed; z-index: 1060; width: 220px; padding: 6px;
+    background: #fff; border: 1px solid #E8E5DC; border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(31, 38, 23, .16);
+    color: #1F2617; font-family: 'Poppins', 'Segoe UI', sans-serif; text-align: left;
+}
+.account-menu[hidden] { display: none; }
+.account-menu-head { padding: 8px 10px 10px; margin-bottom: 6px; border-bottom: 1px solid #EFECE4; }
+.account-menu-name { font-size: 14px; font-weight: 600; color: #1F2617; overflow-wrap: anywhere; }
+.account-menu-role { margin-top: 2px; font-size: 12.5px; color: #5C6152; }
+.account-menu-item {
+    display: flex; align-items: center; gap: 10px; width: 100%; height: 40px; padding: 0 10px;
+    border: 0; border-radius: 8px; background: transparent;
+    color: #1F2617; font: inherit; font-size: 14px; text-align: left; text-decoration: none; cursor: pointer;
+    transition: background-color .15s ease;
+}
+.account-menu-item i { font-size: 16px; color: #5C6152; line-height: 1; }
+.account-menu-item:hover,
+.account-menu-item:focus-visible { background: #F2F0EA; color: #1F2617; }
+.account-menu-item.is-logout,
+.account-menu-item.is-logout i { color: #A1261B; }
+.account-menu-item.is-logout:hover,
+.account-menu-item.is-logout:focus-visible { background: #FCEEEC; color: #A1261B; }
 
 .topbar {
     background-color: var(--topbar-bg);
