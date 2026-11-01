@@ -14,7 +14,7 @@
     background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); padding: 22px 16px; text-align: center;
     text-decoration: none; color: #1c1c1c; transition: box-shadow .15s;
 }
-.lt-type-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08); color: #1c1c1c; }
+.lt-type-card:hover { box-shadow: 0 2px 8px rgba(31, 38, 23, .08); color: #1c1c1c; }
 .lt-type-card .icon { font-size: 26px; margin-bottom: 10px; }
 .lt-type-card .name { font-weight: 700; }
 .lt-type-card .sub { color: #888; font-size: 12px; margin-top: 4px; }

@@ -38,8 +38,9 @@ $statuses = $statuses ?? \App\Models\ProductModel::STATUSES;
 
 
 /* Summary cards are links: each applies its status filter. */
-a.stat-pill { text-decoration: none; cursor: pointer; transition: transform 0.12s ease, box-shadow 0.15s ease; }
-a.stat-pill:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(31, 38, 23, .08); }
+a.stat-pill { text-decoration: none; cursor: pointer; transition: box-shadow 0.15s ease; }
+/* Hover cue without movement: a soft shadow (same on every clickable card). */
+a.stat-pill:hover { box-shadow: 0 2px 8px rgba(31, 38, 23, .08); }
 a.stat-pill:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
 
@@ -47,7 +48,7 @@ a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
 
 
 /* Summary cards are toggles; "Clear filters" sits after the filters. */
-a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColor, 0 3px 8px rgba(31, 38, 23, .08); }
+a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColor, 0 2px 8px rgba(31, 38, 23, .08); }
 .clear-filters {
     align-self: center; display: inline-flex; align-items: center; gap: 6px;
     padding: 4px 2px; font-size: 14px; color: #3B5434; font-weight: 500;

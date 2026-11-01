@@ -41,6 +41,14 @@
 }
 .inv-table.is-stuck thead th:last-child { box-shadow: inset 0 -1px 0 #E8E5DC; }
 .inv-table-card .data-table tbody tr:last-child td { border-bottom: 0; }
+/* Lighter row hover (Owner + Staff), so the outlined row buttons' hover stands out on it. */
+.inv-table.data-table tbody tr:hover { background-color: #FAF8F4; }
+/* Every row as tall as a row with the Order button (Owner + Staff), with or without one.
+   A table row's height works as a minimum, so a longer two-line name can still grow it. */
+.inv-table.data-table tbody tr { height: 67px; }
+@media (max-width: 1400px) {
+    .inv-table.data-table tbody tr { height: 61.5px; }
+}
 .inv-table-footer {
     padding: 14px 16px;
     border-top: 1px solid #e2e2e2;

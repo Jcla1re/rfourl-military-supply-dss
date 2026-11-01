@@ -80,7 +80,6 @@ body.auth-body {
 }
 .btn-login:hover:not(:disabled),
 .btn-login:focus-visible:not(:disabled) { background: var(--btn-bg-hover); gap: 6px; }
-.btn-login:hover:not(:disabled) { transform: translateY(-1px); }
 .btn-login:hover:not(:disabled) .btn-login-arrow,
 .btn-login:focus-visible:not(:disabled) .btn-login-arrow {
     opacity: 0.9;

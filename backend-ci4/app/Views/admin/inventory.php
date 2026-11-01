@@ -149,21 +149,25 @@ $products ??= [];
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    box-sizing: border-box;
+    width: 40px;
+    height: 40px; /* as tall as the Order button beside it */
     padding: 0;
-    border: 0;
-    border-radius: var(--radius-icon);
-    background: transparent;
-    color: #444;
+    border: 1px solid #E3E0D7;
+    border-radius: 10px;
+    background: #fff;
+    color: #3A4030;
     font-size: 18px;
     line-height: 1;
     cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
+.inv-more-btn svg { display: block; flex: none; }
+/* Edit (pencil) button: outlined square, light green on hover (stands out on the hovered row). */
 .inv-more-btn:hover {
-    background: #eceae4;
-    color: #222;
+    background: #EAF1E3;
+    border-color: #A9C79C;
+    color: #2F5A27;
 }
 .inv-more-btn:active {
     background: #dedbd3;
@@ -174,11 +178,11 @@ $products ??= [];
 }
 
 
-/* Two fixed slots: Order (shown only when reordering) + the ··· button,
-   so the ··· sits in the same spot on every row. */
+/* Two fixed slots: Order (shown only when reordering) + the Edit (pencil) button,
+   so the pencil sits in the same spot on every row. */
 .inv-actions {
     display: inline-grid;
-    grid-template-columns: auto 38px;
+    grid-template-columns: auto 40px;
     align-items: center;
     gap: 6px;
 }
@@ -193,8 +197,9 @@ $products ??= [];
 /* 1400px and below: the admin-only action slots get a little tighter
    (the rest of the table's compact rules are in inventory-table.css). */
 @media (max-width: 1400px) {
-    .inv-actions { grid-template-columns: auto 32px; gap: 4px; }
-    .inv-actions .inv-more-btn { width: 32px; height: 32px; font-size: 16px; }
+    /* The compact Order button is 34.5px tall here (6px padding + 15px text); the pencil matches it. */
+    .inv-actions { grid-template-columns: auto 34.5px; gap: 4px; }
+    .inv-actions .inv-more-btn { width: 34.5px; height: 34.5px; font-size: 16px; }
 }
 
 /* ===== Add / Edit item modal =====
@@ -362,7 +367,7 @@ $products ??= [];
     background: #fff; color: #B42318; font-weight: 500; cursor: pointer;
     transition: background-color 0.15s ease, transform 0.12s ease;
 }
-.im-btn-archive:hover { background: #FDECEA; transform: translateY(-1px); }
+.im-btn-archive:hover { background: #FDECEA; }
 .im-btn-archive:active { transform: translateY(0); }
 .im-btn-archive:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
@@ -398,14 +403,14 @@ $products ??= [];
     border: 1px solid #E8E5DC; background: #fff; color: #2C3A1E;
     transition: background-color 0.15s ease, transform 0.12s ease;
 }
-.im-btn-secondary:hover { background: #F5F3EE; transform: translateY(-1px); }
+.im-btn-secondary:hover { background: #F5F3EE; }
 .im-btn-secondary:active { transform: translateY(0); }
 .im-btn-secondary:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .im-btn-danger {
     border: 1px solid #B42318; background: #B42318; color: #fff;
     transition: background-color 0.15s ease, transform 0.12s ease;
 }
-.im-btn-danger:hover { background: #912018; border-color: #912018; transform: translateY(-1px); }
+.im-btn-danger:hover { background: #912018; border-color: #912018; }
 .im-btn-danger:active { transform: translateY(0); }
 .im-btn-danger:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
@@ -479,15 +484,16 @@ $products ??= [];
     cursor: pointer; white-space: nowrap;
     transition: transform 0.12s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
-.btn-restore:hover { background: #F5F3EE; border-color: #71AA60; transform: translateY(-1px); }
+.btn-restore:hover { background: #F5F3EE; border-color: #71AA60; }
 .btn-restore:active { transform: translateY(0); }
 .btn-restore:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 #restoreConfirm { z-index: 1010; }
 
 
 /* Summary cards are links: each applies its status filter. */
-a.stat-pill { text-decoration: none; cursor: pointer; transition: transform 0.12s ease, box-shadow 0.15s ease; }
-a.stat-pill:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(31, 38, 23, .08); }
+a.stat-pill { text-decoration: none; cursor: pointer; transition: box-shadow 0.15s ease; }
+/* Hover cue without movement: a soft shadow (same on every clickable card). */
+a.stat-pill:hover { box-shadow: 0 2px 8px rgba(31, 38, 23, .08); }
 a.stat-pill:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
 
@@ -506,7 +512,7 @@ a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
 
 
 /* Summary cards are toggles; "Clear filters" sits after the filters. */
-a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColor, 0 3px 8px rgba(31, 38, 23, .08); }
+a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColor, 0 2px 8px rgba(31, 38, 23, .08); }
 /* "Clear all [n]": outlined button as tall as the dropdowns beside it. */
 .clear-filters {
     align-self: stretch; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;

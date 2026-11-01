@@ -214,8 +214,8 @@ select.cs-native.cs-plain {
     color: var(--btn-text);
     font-weight: var(--btn-font-weight);
     border-radius: var(--radius-control);
-    /* Hover lift + transition come from the "Motion polish" .btn rules
-       below, so these behave exactly like + Add Item. */
+    /* Transition comes from the shared .btn rules below, so these behave
+       exactly like + Add Item (hover = darker green, no lift). */
 }
 .inv-action-btn:hover,
 .notify-btn:hover,
@@ -627,7 +627,6 @@ body {
 .notification-button:hover {
     background: rgba(255,255,255,0.2);
     color: #fff;
-    transform: translateY(-1px);
 }
 
 .notif-badge {
@@ -915,9 +914,6 @@ body {
     cursor: pointer;
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
-.pill-tabs button:hover {
-    transform: translateY(-1px);
-}
 .pill-tabs button.active {
     background: var(--sidebar-active-text, #2f3b24);
     background: #3d5230;
@@ -1011,7 +1007,6 @@ body {
 .btn-clear-search:hover {
     background: #F5F3EE;
     border-color: #71AA60;
-    transform: translateY(-1px);
 }
 .btn-clear-search:active { transform: translateY(0); }
 .btn-clear-search:focus-visible {
@@ -1060,10 +1055,10 @@ body {
 }
 .inv-view-order {
     grid-column: 1; justify-self: end;
-    padding: 6px 8px; border: 1px solid #E8E5DC; border-radius: var(--radius-control);
+    padding: 6px 8px; border: 1px solid #E3E0D7; border-radius: var(--radius-control);
     background: #fff; color: #2C3A1E; font-size: 13px; font-weight: 500; text-decoration: none; white-space: nowrap;
 }
-.inv-view-order:hover { background: #F5F3EE; border-color: #71AA60; color: #2C3A1E; }
+.inv-view-order:hover { background: #EAF1E3; border-color: #A9C79C; color: #2F5A27; }
 .inv-view-order:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 .on-order-note { font-size: 12px; color: #2B4C7E; font-weight: 600; }
 
@@ -1235,11 +1230,7 @@ body {
     transition: transform 0.12s ease, box-shadow 0.15s ease,
         background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
-.btn:hover,
-.inv-action-btn:hover,
-.notify-btn:hover,
-.qa-btn.primary:hover,
-.lt-submit:hover { transform: translateY(-1px); }
+/* No hover lift on any button: hover only changes colour. */
 .btn:active,
 .inv-action-btn:active,
 .notify-btn:active,

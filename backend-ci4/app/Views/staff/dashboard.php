@@ -38,9 +38,9 @@
 .dash-stat {
     background: #fff; border-radius: var(--radius-card); padding: 20px 22px; display: flex; align-items: center; gap: 16px;
     box-shadow: 0 1px 3px rgba(0,0,0,.06); height: 100%; text-decoration: none; color: inherit;
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
+    transition: box-shadow 0.15s ease;
 }
-a.dash-stat:hover { box-shadow: 0 4px 10px rgba(0,0,0,.1); transform: translateY(-1px); cursor: pointer; }
+a.dash-stat:hover { box-shadow: 0 2px 8px rgba(31, 38, 23, .08); cursor: pointer; }
 .dash-stat .icon { font-size: 26px; flex-shrink: 0; }
 .dash-stat .label { color: #444; font-size: 14px; }
 .dash-stat .value { font-size: 26px; font-weight: 800; line-height: 1.15; }
