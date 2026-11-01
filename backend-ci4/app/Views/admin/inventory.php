@@ -62,7 +62,7 @@ $products ??= [];
     gap: 8px;
     min-height: 46px;
     padding: 8px 14px;
-    border: 1px solid #d8d5cd;
+    border: 1px solid #D6D2C6;
     border-radius: var(--radius-control);
     background: #fff;
 }

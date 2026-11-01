@@ -88,7 +88,7 @@ body.auth-body {
     margin-left: 0;
 }
 .btn-login:active:not(:disabled) { background: var(--btn-bg-active); transform: translateY(0); }
-.btn-login:focus-visible { outline: 3px solid var(--btn-focus-ring); outline-offset: 2px; }
+/* Keyboard focus ring: see "Keyboard focus" at the end of this file. */
 .btn-login:disabled { background: var(--btn-disabled-bg); color: var(--btn-disabled-text); cursor: not-allowed; }
 .auth-error { color: #a33; text-align: center; font-size: 0.85rem; margin-top: 1rem; }
 .auth-success { color: #2f6431; text-align: center; font-size: 0.85rem; margin-top: 1rem; }
@@ -292,9 +292,22 @@ html, body.landing-body {
     transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.role-card:hover {
-    border-color: #4b6a3f;
+/* Hover and keyboard focus look the same: the icon tile turns solid green so it doesn't blend
+   into the light green card. No movement. */
+.role-card:hover,
+.role-card:focus-visible {
+    border-color: #9DBF8F;
     background: #eef5ea;
+}
+/* Keyboard focus: the shared green ring, instead of the browser's dark outline. */
+.role-card:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
+}
+.role-card:hover .role-icon,
+.role-card:focus-visible .role-icon {
+    background: #4A6741;
+    color: #ffffff;
 }
 
 .role-icon {
@@ -308,6 +321,7 @@ html, body.landing-body {
     align-items: center;
     justify-content: center;
     font-size: 1.3rem;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .role-text {
@@ -334,8 +348,9 @@ html, body.landing-body {
     flex-shrink: 0;
 }
 
-.role-card:hover .role-arrow {
-    color: #4b6a3f;
+.role-card:hover .role-arrow,
+.role-card:focus-visible .role-arrow {
+    color: #4A6741;
 }
 
 .back-to-roles {
@@ -434,7 +449,7 @@ html, body.landing-body {
 .input-icon-wrap input {
     width: 100%;
     padding: 0.75rem 0.85rem 0.75rem 2.6rem;
-    border: 1px solid #ccc;
+    border: 1px solid #D6D2C6;
     border-radius: var(--radius-control);
     background: #fff;
     box-sizing: border-box;
@@ -547,3 +562,37 @@ input[type="password"]::-ms-clear {
 .auth-back a:focus-visible,
 .auth-resend button:hover,
 .auth-resend button:focus-visible { color: #4A6741; text-decoration: underline; }
+
+/* ===== Keyboard focus: the same style as the app (admin-theme.css isn't loaded on these pages) =====
+   No dark outline: a soft green ring, and a green border where the element has one. ":not(#focus-boost)"
+   only raises the priority (no element has that id), so these win over the older outlines above. */
+:root :focus-visible:not(#focus-boost):not(.role-card) {
+    outline: none;
+    border-color: #4A6741;
+    box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
+}
+/* Text inputs: green on mouse focus too (like the item form). */
+:root input:not([type="checkbox"]):not([type="radio"]):focus:not(#focus-boost) {
+    outline: none;
+    border-color: #4A6741;
+    box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
+}
+/* Autofilled (saved password) inputs keep their white fill under the ring, so the browser's
+   autofill tint never shows. Same :not() chain as the rule above, so this one wins over it. */
+:root input:not([type="checkbox"]):not([type="radio"]):-webkit-autofill:focus:not(#focus-boost) {
+    -webkit-box-shadow: 0 0 0 1000px #fff inset, 0 0 0 3px rgba(74, 103, 65, .18);
+    box-shadow: 0 0 0 1000px #fff inset, 0 0 0 3px rgba(74, 103, 65, .18);
+}
+/* Solid green Sign in button: white gap + stronger ring. */
+:root .btn-login:focus-visible:not(#focus-boost) {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 5px rgba(74, 103, 65, .35);
+}
+/* An input showing an error stays red while focused. */
+:root input:is(.is-invalid, [aria-invalid="true"]):focus:not(#focus-boost):not(#focus-boost-2) {
+    border-color: #A1261B;
+    box-shadow: 0 0 0 3px rgba(161, 38, 27, .15);
+}
+:root input:is(.is-invalid, [aria-invalid="true"]):-webkit-autofill:focus:not(#focus-boost):not(#focus-boost-2) {
+    -webkit-box-shadow: 0 0 0 1000px #fff inset, 0 0 0 3px rgba(161, 38, 27, .15);
+    box-shadow: 0 0 0 1000px #fff inset, 0 0 0 3px rgba(161, 38, 27, .15);
+}

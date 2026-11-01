@@ -46,7 +46,7 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('supplier
             <div class="panel-content login-form-view is-active">
                 <a href="<?= site_url('/') ?>" class="back-to-roles"><i class="bi bi-chevron-left"></i> Change role</a>
                 <div class="portal-badge"><i class="bi bi-truck"></i> SUPPLIER PORTAL</div>
-                <h2>Welcome back</h2>
+                <h2>Welcome</h2>
                 <p class="form-subtitle">Sign in with your supplier account.</p>
                 <form action="/login/supplier" method="post">
                     <?= csrf_field() ?>

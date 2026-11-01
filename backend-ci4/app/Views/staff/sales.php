@@ -52,7 +52,7 @@
 .pos-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
 @media (max-width: 1100px) { .pos-layout { grid-template-columns: 1fr; } }
 
-.pos-search { padding: 14px 18px; border: 1px solid #ddd; border-radius: var(--radius-control); width: 100%; margin-bottom: 16px; }
+.pos-search { padding: 14px 18px; border: 1px solid #D6D2C6; border-radius: var(--radius-control); width: 100%; margin-bottom: 16px; }
 .pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
 .pos-card {
     background: #fff; border: 2px solid transparent; border-radius: var(--radius-card); padding: 18px; text-align: center;

@@ -116,13 +116,16 @@ $restockDates = $restockDates ?? [];
 
 .ord-filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
 .ord-search {
-    display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #ddd;
+    display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #D6D2C6;
     border-radius: var(--radius-control); padding: 10px 14px; max-width: 360px; flex: 1; min-width: 220px;
 }
 .ord-search i { color: #888; font-size: 16px; flex-shrink: 0; }
 .ord-search input { flex: 1; min-width: 0; border: none; outline: none; font-size: 14px; }
 .ord-filter-bar input[type="date"] { border: 1px solid #ddd; border-radius: var(--radius-control); padding: 9px 12px; font-size: 14px; }
 .ord-filter-bar .sep { color: #888; font-size: 13px; }
+/* Item picker search, the picker's Qty / Unit cost fields and the order line Qty / Unit price fields:
+   border here (not inline), so the shared focus styles can turn it green. */
+#pickerSearch, .picker-qty, .picker-cost, #lineItemsBody input:not([type="hidden"]) { border: 1px solid #D6D2C6; }
 
 </style>
 
@@ -404,7 +407,7 @@ $restockDates = $restockDates ?? [];
             <button type="button" class="btn-close" id="closeItemPicker"></button>
         </div>
         <div id="pickerStep1">
-            <input type="search" id="pickerSearch" placeholder="Search items..." style="width:100%; padding:10px 14px; border:1px solid #ccc; border-radius: var(--radius-control); margin-bottom:12px;">
+            <input type="search" id="pickerSearch" placeholder="Search items..." style="width:100%; padding:10px 14px; border-radius: var(--radius-control); margin-bottom:12px;">
             <div id="pickerGroupList" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
         </div>
         <div id="pickerStep2" style="display:none;">
@@ -490,8 +493,8 @@ function openSizeStep(group) {
     pickerVariantBody.innerHTML = group.variants.map((v, i) => `
         <tr>
             <td style="padding:6px 8px;">${escapeHtml(v.size || '—')}</td>
-            <td style="padding:6px 8px;"><input type="number" min="0" value="0" data-idx="${i}" class="picker-qty" style="width:90px; padding:6px 8px; border:1px solid #ccc; border-radius: var(--radius-control);"></td>
-            <td style="padding:6px 8px;"><input type="number" min="0" step="0.01" value="${v.unit_cost}" data-idx="${i}" class="picker-cost" style="width:100px; padding:6px 8px; border:1px solid #ccc; border-radius: var(--radius-control);"></td>
+            <td style="padding:6px 8px;"><input type="number" min="0" value="0" data-idx="${i}" class="picker-qty" style="width:90px; padding:6px 8px; border-radius: var(--radius-control);"></td>
+            <td style="padding:6px 8px;"><input type="number" min="0" step="0.01" value="${v.unit_cost}" data-idx="${i}" class="picker-cost" style="width:100px; padding:6px 8px; border-radius: var(--radius-control);"></td>
         </tr>
     `).join('');
 
@@ -529,8 +532,8 @@ document.getElementById('pickerAddBtn').addEventListener('click', () => {
                 <input type="hidden" name="item_id[]" value="${escapeHtml(v.item_id)}">
                 ${escapeHtml(label)}
             </td>
-            <td><input type="number" name="quantity[]" min="1" value="${qty}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius: var(--radius-control);"></td>
-            <td><input type="number" name="unit_price[]" min="0" step="0.01" value="${cost}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius: var(--radius-control);"></td>
+            <td><input type="number" name="quantity[]" min="1" value="${qty}" style="width:100%; padding:8px; border-radius: var(--radius-control);"></td>
+            <td><input type="number" name="unit_price[]" min="0" step="0.01" value="${cost}" style="width:100%; padding:8px; border-radius: var(--radius-control);"></td>
             <td><button type="button" class="btn-close remove-line"></button></td>
         `;
         lineItemsBody.appendChild(row);
@@ -569,8 +572,8 @@ if (reorderPrefill) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td style="padding:8px;"><input type="hidden" name="item_id[]" value="${escapeHtml(l.item_id)}">${escapeHtml(l.label)}</td>
-            <td><input type="number" name="quantity[]" min="1" value="${l.qty}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius: var(--radius-control);"></td>
-            <td><input type="number" name="unit_price[]" min="0" step="0.01" value="${l.price}" style="width:100%; padding:8px; border:1px solid #ccc; border-radius: var(--radius-control);"></td>
+            <td><input type="number" name="quantity[]" min="1" value="${l.qty}" style="width:100%; padding:8px; border-radius: var(--radius-control);"></td>
+            <td><input type="number" name="unit_price[]" min="0" step="0.01" value="${l.price}" style="width:100%; padding:8px; border-radius: var(--radius-control);"></td>
             <td><button type="button" class="btn-close remove-line"></button></td>`;
         lineItemsBody.appendChild(row);
         row.querySelector('.remove-line').addEventListener('click', () => row.remove());

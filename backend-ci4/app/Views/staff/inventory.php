@@ -31,7 +31,7 @@ $statuses = $statuses ?? \App\Models\ProductModel::STATUSES;
 .inv-toolbar select.has-value { color: var(--text-dark); }
 .inv-search {
     display: flex; align-items: center; gap: 8px;
-    min-height: 46px; padding: 8px 14px; border: 1px solid #d8d5cd; border-radius: var(--radius-control); background: #fff;
+    min-height: 46px; padding: 8px 14px; border: 1px solid #D6D2C6; border-radius: var(--radius-control); background: #fff;
 }
 .inv-search i { color: #888; font-size: 16px; flex-shrink: 0; }
 .inv-search input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; padding: 0; }

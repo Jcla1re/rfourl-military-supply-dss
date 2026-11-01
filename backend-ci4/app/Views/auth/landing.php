@@ -69,7 +69,7 @@ $lockedSeconds = [
 
                 <div class="role-cards">
                     <button type="button" class="role-card" data-role="admin">
-                        <span class="role-icon"><i class="bi bi-shield-check"></i></span>
+                        <span class="role-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12v8h14v-8"/><path d="M10 20v-5h4v5"/></svg></span>
                         <span class="role-text">
                             <strong>Owner</strong>
                             <span>Manage inventory, reorders, reports, and settings.</span>
@@ -100,8 +100,8 @@ $lockedSeconds = [
             <!-- Admin login -->
             <div class="panel-content login-form-view" id="loginView-admin" data-role="admin">
                 <button type="button" class="back-to-roles"><i class="bi bi-chevron-left"></i> Change role</button>
-                <div class="portal-badge"><i class="bi bi-shield-check"></i> OWNER PORTAL</div>
-                <h2>Welcome back</h2>
+                <div class="portal-badge"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12v8h14v-8"/><path d="M10 20v-5h4v5"/></svg> OWNER PORTAL</div>
+                <h2>Welcome</h2>
                 <p class="form-subtitle">Sign in with your owner account.</p>
                 <form action="/login/admin" method="post">
                     <?= csrf_field() ?>
@@ -140,7 +140,7 @@ $lockedSeconds = [
             <div class="panel-content login-form-view" id="loginView-staff" data-role="staff">
                 <button type="button" class="back-to-roles"><i class="bi bi-chevron-left"></i> Change role</button>
                 <div class="portal-badge"><i class="bi bi-receipt"></i> STAFF PORTAL</div>
-                <h2>Welcome back</h2>
+                <h2>Welcome</h2>
                 <p class="form-subtitle">Sign in with your staff account.</p>
                 <form action="/login/staff" method="post">
                     <?= csrf_field() ?>
@@ -169,7 +169,7 @@ $lockedSeconds = [
             <div class="panel-content login-form-view" id="loginView-supplier" data-role="supplier">
                 <button type="button" class="back-to-roles"><i class="bi bi-chevron-left"></i> Change role</button>
                 <div class="portal-badge"><i class="bi bi-truck"></i> SUPPLIER PORTAL</div>
-                <h2>Welcome back</h2>
+                <h2>Welcome</h2>
                 <p class="form-subtitle">Sign in with your supplier account.</p>
                 <form action="/login/supplier" method="post">
                     <?= csrf_field() ?>

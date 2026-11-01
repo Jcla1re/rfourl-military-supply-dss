@@ -45,8 +45,8 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('admin');
         <div class="content-panel slid">
             <div class="panel-content login-form-view is-active">
                 <a href="<?= site_url('/') ?>" class="back-to-roles"><i class="bi bi-chevron-left"></i> Change role</a>
-                <div class="portal-badge"><i class="bi bi-shield-check"></i> OWNER PORTAL</div>
-                <h2>Welcome back</h2>
+                <div class="portal-badge"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12v8h14v-8"/><path d="M10 20v-5h4v5"/></svg> OWNER PORTAL</div>
+                <h2>Welcome</h2>
                 <p class="form-subtitle">Sign in with your owner account.</p>
                 <form action="/login/admin" method="post">
                     <?= csrf_field() ?>

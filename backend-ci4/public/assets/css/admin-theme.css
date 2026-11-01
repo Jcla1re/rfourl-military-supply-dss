@@ -55,6 +55,12 @@ html:root select:not(.inv-size-select) {
     transition: border-color .15s ease, box-shadow .15s ease;
 }
 html:root select:not(.inv-size-select):not(:disabled) { background-color: #fff; }
+/* Text inputs and textareas: the same resting border colour as the dropdowns (and the login fields).
+   Only the resting state: focused, disabled and error fields keep their own styles. Inputs with no
+   border (e.g. inside the search boxes) stay borderless, since only the colour is set. */
+html:root :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"]):not([type="hidden"]), textarea):not(:focus):not(:disabled):not(.is-invalid):not([aria-invalid="true"]) {
+    border-color: #D6D2C6;
+}
 html:root select:not(.inv-size-select):not(:disabled):hover { border-color: #B9B4A6; }
 /* Focus wins over hover, so an open dropdown keeps its green border while the pointer is on it. */
 html:root select:not(.inv-size-select):focus,
