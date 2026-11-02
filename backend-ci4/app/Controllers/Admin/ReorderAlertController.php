@@ -37,9 +37,35 @@ class ReorderAlertController extends BaseController
         // last computed (stock changes constantly via POS/restocks).
         $this->reorderAlertModel->syncFromLiveInventory();
 
-        $alerts = $this->reorderAlertModel->openAlerts();
-        $dss    = $this->dssParameterModel->current();
+        $dss             = $this->dssParameterModel->current();
+        $dismissed       = $this->reorderAlertModel->dismissedAlerts();
+        $showDismissed   = $dismissed !== [] && $this->request->getGet('dismissed') === '1';
+        $alerts          = $this->withDetails($this->reorderAlertModel->openAlerts(), $dss);
+        $dismissedAlerts = $showDismissed ? $this->withDetails($dismissed, $dss) : [];
 
+        $data = [
+            'title'           => 'Reorder Alerts',
+            'active'          => 'reorder_alerts',
+            'alerts'          => $alerts,
+            'dismissedAlerts' => $dismissedAlerts,
+            'dismissedCount'  => count($dismissed),
+            'showDismissed'   => $showDismissed,
+            'counts'          => $this->productModel->reorderCounts(),
+            'suppliers'       => $this->supplierModel->where('is_active', 1)->findAll(),
+            'products'        => $this->productModel->where('is_active', 1)->findAll(),
+            'dss'             => $dss,
+            'receivedCount'   => $this->reorderAlertModel->resolvedThisWeek(),
+            'lastUpdated'     => 'just now',
+            'success'         => session()->getFlashdata('success'),
+            'error'           => session()->getFlashdata('error'),
+        ];
+
+        return view('admin/reorder_alerts', $data);
+    }
+
+    /** Adds what each alert card shows: DSS numbers, supplier, delivery time, class. */
+    private function withDetails(array $alerts, ?array $dss): array
+    {
         foreach ($alerts as &$alert) {
             $computation = $alert['computation_id']
                 ? $this->pdssComputationModel->find($alert['computation_id'])
@@ -58,25 +84,7 @@ class ReorderAlertController extends BaseController
         }
         unset($alert);
 
-        $critical  = count(array_filter($alerts, fn ($a) => (int) $a['stock_at_trigger'] <= 0));
-        $lowStock  = count($alerts) - $critical;
-
-        $data = [
-            'title'          => 'Reorder Alerts',
-            'active'         => 'reorder_alerts',
-            'alerts'         => $alerts,
-            'suppliers'      => $this->supplierModel->where('is_active', 1)->findAll(),
-            'products'       => $this->productModel->where('is_active', 1)->findAll(),
-            'dss'            => $dss,
-            'criticalCount'  => $critical,
-            'lowStockCount'  => $lowStock,
-            'receivedCount'  => $this->reorderAlertModel->resolvedThisWeek(),
-            'lastUpdated'    => 'just now',
-            'success'        => session()->getFlashdata('success'),
-            'error'          => session()->getFlashdata('error'),
-        ];
-
-        return view('admin/reorder_alerts', $data);
+        return $alerts;
     }
 
     public function report()
@@ -128,11 +136,12 @@ class ReorderAlertController extends BaseController
     /**
      * Bulk-dismisses every currently pending (Active/Acknowledged) alert
      * without creating a stock order for it — for false positives or
-     * stock the admin already corrected by hand.
+     * stock the admin already corrected by hand. Each stays hidden until
+     * its size recovers.
      */
     public function resolveAll()
     {
-        $this->reorderAlertModel->whereIn('status', ReorderAlertModel::PENDING_STATUSES)->set(['status' => 'Dismissed'])->update();
+        $this->reorderAlertModel->dismissAllPending();
         session()->setFlashdata('success', 'All pending reorder alerts dismissed.');
         return redirect()->to('/admin/reorder-alerts');
     }
@@ -151,11 +160,12 @@ class ReorderAlertController extends BaseController
     /**
      * Closes a single alert without ordering (false positive, stock
      * corrected manually, etc.) — distinct from Fulfilled, which only
-     * happens when a linked stock order is actually delivered.
+     * happens when a linked stock order is actually delivered. It stays
+     * hidden until its size recovers.
      */
     public function dismiss(int|string $alertId)
     {
-        $this->reorderAlertModel->update((int) $alertId, ['status' => 'Dismissed']);
+        $this->reorderAlertModel->dismissPending((int) $alertId);
         session()->setFlashdata('success', 'Alert dismissed.');
         return redirect()->to('/admin/reorder-alerts');
     }

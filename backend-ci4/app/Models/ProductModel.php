@@ -403,6 +403,36 @@ class ProductModel extends Model
     }
 
     /**
+     * The Reorder Alerts page's numbers, from the live status rule (never from
+     * alert rows), so they always match Inventory:
+     *   items    = Inventory's Reorder Now count (needs + on_order)
+     *   needs    = items that still need action (dismissed ones included)
+     *   on_order = items whose reordering sizes are all on order
+     *   sizes    = size rows at Reorder Now
+     *   at_zero  = size rows at Reorder Now with nothing on hand
+     *
+     * @return array{items: int, needs: int, on_order: int, sizes: int, at_zero: int}
+     */
+    public function reorderCounts(?array $products = null): array
+    {
+        $products ??= $this->where('is_active', 1)->findAll();
+
+        $summary = $this->reorderSummary($products);
+        $sizes   = 0;
+        $atZero  = 0;
+        foreach ($products as $p) {
+            if ($this->getStatus($p)['label'] === 'Reorder Now') {
+                $sizes++;
+                if ((int) $p['current_stock'] <= 0) {
+                    $atZero++;
+                }
+            }
+        }
+
+        return ['items' => $summary['needs'] + $summary['on_order'], 'sizes' => $sizes, 'at_zero' => $atZero] + $summary;
+    }
+
+    /**
      * Items per status (by each item's worst status). Same unit as the
      * category tabs, so In Stock + Low Stock + Reorder Now + Out of Stock =
      * All Items.

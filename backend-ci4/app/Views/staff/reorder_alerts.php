@@ -19,7 +19,6 @@
 .ra-card-head { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #eee; }
 .ra-card-head .icon { font-size: 26px; }
 .ra-card-head.critical .icon { color: var(--accent-maroon); }
-.ra-card-head.warning .icon { color: #d39b28; }
 .ra-card-head h4 { margin: 0; font-weight: 800; font-size: 19px; }
 .ra-card-head span.sub { display: block; color: #555; font-size: 14px; }
 .ra-card-head .notify-btn { margin-left: auto; border: 0; padding: 10px 18px; cursor: pointer; } /* colors: shared primary-button rules */
@@ -47,11 +46,14 @@
         <div class="ra-summary">
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-exclamation-triangle"></i></span>
-                <div><span>Out of Stock</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
+                <div><span>At 0 units</span><strong><?= esc($counts['at_zero']) ?></strong></div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-lightning-fill"></i></span>
-                <div><span>Reorder Now (still in stock)</span><strong><?= esc($lowStockCount ?? 0) ?></strong></div>
+                <div>
+                    <span>Reorder Now</span><strong><?= esc($counts['items']) ?></strong>
+                    <small class="text-muted"><?= esc($counts['sizes']) ?> <?= $counts['sizes'] === 1 ? 'size' : 'sizes' ?></small>
+                </div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-check-lg"></i></span>
@@ -59,19 +61,35 @@
             </div>
         </div>
 
-        <?php if (empty($alerts)): ?>
-            <div class="ra-empty"><i class="bi bi-check-circle" aria-hidden="true"></i> All stocked up. Nothing to reorder. <a href="<?= site_url('staff/inventory') ?>">View Inventory</a></div>
+        <p class="text-muted small mb-1"><?= esc($counts['needs']) ?> need action + <?= esc($counts['on_order']) ?> on order = <?= esc($counts['items']) ?> Reorder Now in Inventory.</p>
+        <p class="text-muted small mb-3">What do these numbers mean? <?= help_tip('Reading these numbers', [
+            'Reorder Now counts items, the same as Inventory. An item with several sizes counts once; the line under the number says how many sizes that is.',
+            'At 0 units counts the sizes that need reordering and have nothing on hand.',
+            'Need action plus on order adds up to Reorder Now in Inventory.',
+            'Dismissed sizes still count. They stay hidden from the list until they are no longer Reorder Now.',
+            'Low Stock items are not alerts yet.',
+            'Items with no sales in 2 years are not counted.',
+        ]) ?></p>
+        <?php if ($dismissedCount > 0): ?>
+            <p class="text-muted small mb-3">
+                <?= esc($dismissedCount) ?> dismissed (<?= $showDismissed ? 'shown' : 'hidden' ?>) &middot;
+                <a href="<?= site_url('staff/reorder-alerts') . ($showDismissed ? '' : '?dismissed=1') ?>"><?= $showDismissed ? 'Hide' : 'Show' ?></a>
+            </p>
+        <?php endif; ?>
+
+        <?php $listed = array_merge($alerts, $dismissedAlerts); ?>
+        <?php if (empty($listed)): ?>
+            <div class="ra-empty"><i class="bi bi-check-circle" aria-hidden="true"></i> <?= $counts['items'] > 0 ? 'Nothing to act on here right now.' : 'All stocked up. Nothing to reorder.' ?> <a href="<?= site_url('staff/inventory') ?>">View Inventory</a></div>
         <?php else: ?>
-            <?php foreach ($alerts as $alert): ?>
+            <?php foreach ($listed as $alert): ?>
                 <?php
-                $isCritical = (int) $alert['stock_at_trigger'] <= 0 || $alert['trigger_reason'] === 'At ROP';
                 $computation = $alert['computation'] ?? null;
                 ?>
                 <div class="ra-card">
-                    <div class="ra-card-head <?= $isCritical ? 'critical' : 'warning' ?>">
-                        <span class="icon"><i class="bi <?= $isCritical ? 'bi-exclamation-triangle' : 'bi-exclamation-circle' ?>"></i></span>
+                    <div class="ra-card-head critical">
+                        <span class="icon"><i class="bi bi-exclamation-triangle"></i></span>
                         <div>
-                            <h4><?= $isCritical ? 'Reorder Now — order now' : 'Low Stock — order soon' ?></h4>
+                            <h4>Reorder Now — order now</h4>
                             <span class="sub"><?= esc($alert['item_name'] ?? 'Unknown item') ?><?= !empty($alert['size']) ? ' - Size ' . esc($alert['size']) : '' ?></span>
                         </div>
                         <form method="post" action="<?= site_url('staff/reorder-alerts/notify/' . $alert['alert_id']) ?>">
@@ -83,7 +101,7 @@
                     <div class="ra-stats">
                         <div class="ra-stat-box stock">
                             <span>Current Stock</span>
-                            <strong><?= esc($alert['stock_at_trigger'] ?? $alert['current_stock'] ?? 0) ?></strong>
+                            <strong><?= esc($alert['current_stock'] ?? 0) ?></strong>
                             <small>units</small>
                         </div>
                         <div class="ra-stat-box eoq">

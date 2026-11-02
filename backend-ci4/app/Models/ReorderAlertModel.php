@@ -20,6 +20,7 @@ class ReorderAlertModel extends Model
         'recommended_eoq',
         'stock_at_trigger',
         'status',
+        'hidden_until_recovered',
     ];
 
     protected $useTimestamps = false;
@@ -32,6 +33,8 @@ class ReorderAlertModel extends Model
      * StockOrderModel::markDelivered()); Dismissed = manually closed
      * without ordering (false positive, stock corrected by hand, etc.) or
      * auto-closed by syncFromLiveInventory() once stock is replenished.
+     * Only a manual dismissal sets hidden_until_recovered: the alert stays
+     * hidden and no new one is raised for that size until it recovers.
      */
     public const STATUSES          = ['Active', 'Acknowledged', 'Ordered', 'Fulfilled', 'Dismissed'];
     public const PENDING_STATUSES  = ['Active', 'Acknowledged'];
@@ -45,6 +48,54 @@ class ReorderAlertModel extends Model
             ->where('products.is_active', 1) // archived items' alerts stay hidden until restored
             ->orderBy('reorder_alert.alert_timestamp', 'DESC')
             ->findAll();
+    }
+
+    /** Alerts the Owner dismissed whose size hasn't recovered yet (active items only). */
+    public function dismissedAlerts(): array
+    {
+        return $this->select('reorder_alert.*, products.item_name, products.size, products.category, products.current_stock, products.supplier_id')
+            ->join('products', 'products.item_id = reorder_alert.item_id', 'left')
+            ->where('reorder_alert.status', 'Dismissed')
+            ->where('reorder_alert.hidden_until_recovered', 1)
+            ->where('products.is_active', 1)
+            ->orderBy('reorder_alert.alert_timestamp', 'DESC')
+            ->findAll();
+    }
+
+    /** Dismisses one pending alert; it stays hidden until its size recovers. */
+    public function dismissPending(int $alertId): void
+    {
+        $this->where('alert_id', $alertId)
+            ->whereIn('status', self::PENDING_STATUSES)
+            ->set(['status' => 'Dismissed', 'hidden_until_recovered' => 1])
+            ->update();
+    }
+
+    /** "Dismiss All Pending": same rule as dismissing each one. */
+    public function dismissAllPending(): void
+    {
+        $this->whereIn('status', self::PENDING_STATUSES)
+            ->set(['status' => 'Dismissed', 'hidden_until_recovered' => 1])
+            ->update();
+    }
+
+    /**
+     * Items that must not get a new alert: already open (an "Ordered" one has
+     * a stock order in flight, so no second order) or dismissed until recovery.
+     *
+     * @return list<string>
+     */
+    public function blockingItemIds(): array
+    {
+        $rows = $this->db->table($this->table)->select('item_id')
+            ->whereIn('status', self::OPEN_STATUSES)
+            ->orGroupStart()
+                ->where('status', 'Dismissed')
+                ->where('hidden_until_recovered', 1)
+            ->groupEnd()
+            ->get()->getResultArray();
+
+        return array_column($rows, 'item_id');
     }
 
     /**
@@ -84,6 +135,9 @@ class ReorderAlertModel extends Model
      * - Any pending alert whose product is no longer "Reorder Now" (stock
      *   was replenished) is auto-dismissed, so it stops cluttering the
      *   list and pendingCount()/openAlerts() stay accurate.
+     * - A size the Owner dismissed stays hidden with no new alert while it is
+     *   still "Reorder Now"; once it recovers the dismissal ends, so a later
+     *   drop raises a fresh alert. Archived items keep theirs until restored.
      */
     /**
      * One in-app notification per newly raised alert; when many are raised at
@@ -135,27 +189,36 @@ class ReorderAlertModel extends Model
         $products = $productModel->where('is_active', 1)->findAll();
 
         $criticalByItem = [];
+        $activeByItem   = [];
         foreach ($products as $p) {
+            $activeByItem[$p['item_id']] = true;
             if ($productModel->getStatus($p)['label'] === 'Reorder Now') {
                 $criticalByItem[$p['item_id']] = $p;
             }
         }
 
+        // Dismissals end once the size has recovered.
+        $recoveredIds = [];
+        foreach ($this->where('status', 'Dismissed')->where('hidden_until_recovered', 1)->findAll() as $alert) {
+            if (isset($activeByItem[$alert['item_id']]) && ! isset($criticalByItem[$alert['item_id']])) {
+                $recoveredIds[] = $alert['alert_id'];
+            }
+        }
+        if ($recoveredIds) {
+            $this->whereIn('alert_id', $recoveredIds)->set(['hidden_until_recovered' => 0])->update();
+        }
+
         // An item with an "Ordered" alert already has a stock order in
         // flight — it must NOT get a second alert (and therefore a second
         // order) just because the delivery hasn't arrived yet and stock is
-        // still critical in the meantime.
-        $openByItem = array_column(
-            $this->whereIn('status', self::OPEN_STATUSES)->findAll(),
-            null,
-            'item_id'
-        );
+        // still critical in the meantime. Same for one dismissed until recovery.
+        $blockedByItem = array_flip($this->blockingItemIds());
 
         $fallbackEoq = (int) ($dssParameterModel->current()['minimum_order_qty'] ?? 5);
 
         $newRows = [];
         foreach ($criticalByItem as $itemId => $p) {
-            if (isset($openByItem[$itemId])) {
+            if (isset($blockedByItem[$itemId])) {
                 continue;
             }
 

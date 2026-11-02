@@ -27,7 +27,6 @@ $dss = $dss ?? [];
 .ra-card-head { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #eee; }
 .ra-card-head .icon { font-size: 26px; }
 .ra-card-head.critical .icon { color: var(--accent-maroon); }
-.ra-card-head.warning .icon { color: #d39b28; }
 .ra-card-head h4 { margin: 0; font-weight: 800; font-size: 19px; }
 .ra-card-head span.sub { display: block; color: #555; font-size: 14px; }
 .ra-card-head .order-btn { margin-left: auto; }
@@ -60,25 +59,38 @@ $dss = $dss ?? [];
         <div class="ra-summary">
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-exclamation-triangle"></i></span>
-                <div><span>Out of Stock</span><strong><?= esc($criticalCount ?? 0) ?></strong></div>
+                <div><span>At 0 units</span><strong><?= esc($counts['at_zero']) ?></strong></div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-lightning-fill"></i></span>
-                <div><span>Reorder Now (still in stock)</span><strong><?= esc($lowStockCount ?? 0) ?></strong></div>
+                <div>
+                    <span>Reorder Now</span><strong><?= esc($counts['items']) ?></strong>
+                    <small class="text-muted"><?= esc($counts['sizes']) ?> <?= $counts['sizes'] === 1 ? 'size' : 'sizes' ?></small>
+                </div>
             </div>
             <div class="icon-stat-card">
                 <span class="icon-box"><i class="bi bi-check-lg"></i></span>
                 <div><span>Received This Week</span><strong><?= esc($receivedCount ?? 0) ?></strong></div>
             </div>
         </div>
+        <p class="text-muted small mb-1"><?= esc($counts['needs']) ?> need action + <?= esc($counts['on_order']) ?> on order = <?= esc($counts['items']) ?> Reorder Now in Inventory.</p>
         <p class="text-muted small mb-3">What do these numbers mean? <?= help_tip('Reading these numbers', [
-            'Out of Stock plus Reorder Now (still in stock) add up to Reorder Now in Inventory.',
+            'Reorder Now counts items, the same as Inventory. An item with several sizes counts once; the line under the number says how many sizes that is.',
+            'At 0 units counts the sizes that need reordering and have nothing on hand.',
+            'Need action plus on order adds up to Reorder Now in Inventory.',
+            'Dismissed sizes still count. They stay hidden from the list until they are no longer Reorder Now.',
             'Low Stock items are not alerts yet.',
             'Items with no sales in 2 years are not counted.',
         ]) ?></p>
+        <?php if ($dismissedCount > 0): ?>
+            <p class="text-muted small mb-3">
+                <?= esc($dismissedCount) ?> dismissed (<?= $showDismissed ? 'shown' : 'hidden' ?>) &middot;
+                <a href="<?= site_url('admin/reorder-alerts') . ($showDismissed ? '' : '?dismissed=1') ?>"><?= $showDismissed ? 'Hide' : 'Show' ?></a>
+            </p>
+        <?php endif; ?>
 
         <?php if (!empty($alerts)): ?>
-            <form method="post" action="<?= site_url('admin/reorder-alerts/resolve-all') ?>" data-confirm="Every pending alert will be dismissed without creating orders for them."
+            <form method="post" action="<?= site_url('admin/reorder-alerts/resolve-all') ?>" data-confirm="Every pending alert will be dismissed without creating orders for them. Each stays hidden until its stock recovers."
                   data-confirm-title="Dismiss all pending alerts?"
                   data-confirm-ok="Dismiss all" data-confirm-variant="danger">
                 <?= csrf_field() ?>
@@ -86,23 +98,23 @@ $dss = $dss ?? [];
             </form>
         <?php endif; ?>
 
-        <?php if (empty($alerts)): ?>
-            <div class="ra-empty"><i class="bi bi-check-circle" aria-hidden="true"></i> All stocked up. Nothing to reorder. <a href="<?= site_url('admin/inventory') ?>">View Inventory</a></div>
+        <?php $listed = array_merge($alerts, $dismissedAlerts); ?>
+        <?php if (empty($listed)): ?>
+            <div class="ra-empty"><i class="bi bi-check-circle" aria-hidden="true"></i> <?= $counts['items'] > 0 ? 'Nothing to act on here right now.' : 'All stocked up. Nothing to reorder.' ?> <a href="<?= site_url('admin/inventory') ?>">View Inventory</a></div>
         <?php else: ?>
-            <?php foreach ($alerts as $alert): ?>
+            <?php foreach ($listed as $alert): ?>
                 <?php
-                $isCritical = (int) $alert['stock_at_trigger'] <= 0 || $alert['trigger_reason'] === 'At ROP';
                 $computation = $alert['computation'] ?? null;
                 ?>
                 <div class="ra-card">
-                    <div class="ra-card-head <?= $isCritical ? 'critical' : 'warning' ?>">
-                        <span class="icon"><i class="bi <?= $isCritical ? 'bi-exclamation-triangle' : 'bi-exclamation-circle' ?>"></i></span>
+                    <div class="ra-card-head critical">
+                        <span class="icon"><i class="bi bi-exclamation-triangle"></i></span>
                         <div>
-                            <h4><?= $isCritical ? 'Reorder Now — order now' : 'Low Stock — order soon' ?></h4>
+                            <h4>Reorder Now — order now</h4>
                             <span class="sub"><?= esc($alert['item_name'] ?? 'Unknown item') ?><?= !empty($alert['size']) ? ' - Size ' . esc($alert['size']) : '' ?></span>
                         </div>
                         <button type="button"
-                                class="btn <?= $isCritical ? 'btn-maroon' : 'btn-warning' ?> order-btn open-order-modal"
+                                class="btn btn-success order-btn open-order-modal"
                                 data-alert-id="<?= esc($alert['alert_id']) ?>"
                                 data-item-id="<?= esc($alert['item_id']) ?>"
                                 data-item-name="<?= esc($alert['item_name'] ?? '') ?>"
@@ -113,7 +125,9 @@ $dss = $dss ?? [];
                     </div>
 
                     <div class="ra-card-actions">
-                        <?php if (($alert['status'] ?? 'Active') === 'Acknowledged'): ?>
+                        <?php if (($alert['status'] ?? 'Active') === 'Dismissed'): ?>
+                            <span class="ra-status-badge">Dismissed</span>
+                        <?php elseif (($alert['status'] ?? 'Active') === 'Acknowledged'): ?>
                             <span class="ra-status-badge">Acknowledged</span>
                         <?php else: ?>
                             <form method="post" action="<?= site_url('admin/reorder-alerts/acknowledge/' . $alert['alert_id']) ?>">
@@ -121,18 +135,20 @@ $dss = $dss ?? [];
                                 <button type="submit" class="btn btn-sm btn-outline-secondary">Acknowledge</button>
                             </form>
                         <?php endif; ?>
-                        <form method="post" action="<?= site_url('admin/reorder-alerts/dismiss/' . $alert['alert_id']) ?>" data-confirm="This alert will be dismissed without creating an order."
+                        <?php if (($alert['status'] ?? 'Active') !== 'Dismissed'): ?>
+                        <form method="post" action="<?= site_url('admin/reorder-alerts/dismiss/' . $alert['alert_id']) ?>" data-confirm="This alert will be dismissed without creating an order. It stays hidden until its stock recovers."
                               data-confirm-title="Dismiss <?= esc($alert['item_name'] ?? 'this item', 'attr') ?> alert?"
                               data-confirm-ok="Dismiss" data-confirm-variant="primary">
                             <?= csrf_field() ?>
                             <button type="submit" class="btn btn-sm btn-outline-dark">Dismiss</button>
                         </form>
+                        <?php endif; ?>
                     </div>
 
                     <div class="ra-stats">
                         <div class="ra-stat-box stock">
                             <span>Current Stock</span>
-                            <strong><?= esc($alert['stock_at_trigger'] ?? $alert['current_stock'] ?? 0) ?></strong>
+                            <strong><?= esc($alert['current_stock'] ?? 0) ?></strong>
                             <small>units</small>
                         </div>
                         <div class="ra-stat-box eoq">

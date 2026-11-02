@@ -266,8 +266,7 @@ class DssRun extends BaseCommand
             }
         }
 
-        $existingOpenItems = $db->table('reorder_alert')->select('item_id')->whereIn('status', \App\Models\ReorderAlertModel::OPEN_STATUSES)->get()->getResultArray();
-        $existingOpenItems = array_column($existingOpenItems, 'item_id');
+        $existingOpenItems = (new \App\Models\ReorderAlertModel())->blockingItemIds();
         $newAlerts = [];
         foreach ($alertRows as $itemId => $row) {
             if (! in_array($itemId, $existingOpenItems, true)) {

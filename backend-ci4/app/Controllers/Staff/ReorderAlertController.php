@@ -9,6 +9,7 @@ use App\Models\DssParameterModel;
 use App\Models\NotificationModel;
 use App\Models\NotificationPreferenceModel;
 use App\Models\PdssComputationModel;
+use App\Models\ProductModel;
 use App\Models\ReorderAlertModel;
 use App\Models\SupplierModel;
 
@@ -35,9 +36,32 @@ class ReorderAlertController extends BaseController
         // and admin always see the identical set of critical items.
         $this->reorderAlertModel->syncFromLiveInventory();
 
-        $alerts = $this->reorderAlertModel->openAlerts();
-        $dss    = $this->dssParameterModel->current();
+        $dss             = $this->dssParameterModel->current();
+        $dismissed       = $this->reorderAlertModel->dismissedAlerts();
+        $showDismissed   = $dismissed !== [] && $this->request->getGet('dismissed') === '1';
+        $alerts          = $this->withDetails($this->reorderAlertModel->openAlerts(), $dss);
+        $dismissedAlerts = $showDismissed ? $this->withDetails($dismissed, $dss) : [];
 
+        $data = [
+            'title'           => 'Reorder Alerts',
+            'active'          => 'reorder_alerts',
+            'alerts'          => $alerts,
+            'dismissedAlerts' => $dismissedAlerts,
+            'dismissedCount'  => count($dismissed),
+            'showDismissed'   => $showDismissed,
+            'counts'          => (new ProductModel())->reorderCounts(),
+            'dss'             => $dss,
+            'receivedCount'   => $this->reorderAlertModel->resolvedThisWeek(),
+            'lastUpdated'     => 'just now',
+            'success'         => session()->getFlashdata('success'),
+        ];
+
+        return view('staff/reorder_alerts', $data);
+    }
+
+    /** Adds what each alert card shows: DSS numbers, supplier, delivery time, class. */
+    private function withDetails(array $alerts, ?array $dss): array
+    {
         foreach ($alerts as &$alert) {
             $computation = $alert['computation_id']
                 ? $this->pdssComputationModel->find($alert['computation_id'])
@@ -54,22 +78,7 @@ class ReorderAlertController extends BaseController
         }
         unset($alert);
 
-        $critical = count(array_filter($alerts, fn ($a) => (int) $a['stock_at_trigger'] <= 0));
-        $lowStock = count($alerts) - $critical;
-
-        $data = [
-            'title'         => 'Reorder Alerts',
-            'active'        => 'reorder_alerts',
-            'alerts'        => $alerts,
-            'dss'           => $dss,
-            'criticalCount' => $critical,
-            'lowStockCount' => $lowStock,
-            'receivedCount' => $this->reorderAlertModel->resolvedThisWeek(),
-            'lastUpdated'   => 'just now',
-            'success'       => session()->getFlashdata('success'),
-        ];
-
-        return view('staff/reorder_alerts', $data);
+        return $alerts;
     }
 
     public function notifyAdmin(string $alertId)
