@@ -16,7 +16,7 @@ $peso   = fn ($n) => 'PHP ' . number_format((float) $n, 2);
     <meta name="apple-mobile-web-app-title" content="RfourL MS" />
     <link rel="manifest" href="/assets/img/favicon/site.webmanifest?v=4">
 <meta charset="utf-8">
-<title>Sales before <?= esc($summary['cutoff']) ?></title>
+<title>Sales Before <?= esc($summary['cutoff']) ?> | RfourL</title>
 <style>
     body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10px; color: #222; }
     h1 { font-size: 18px; margin: 0 0 4px; }

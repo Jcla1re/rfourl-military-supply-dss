@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-title" content="RfourL MS" />
     <link rel="manifest" href="/assets/img/favicon/site.webmanifest?v=4">
     <meta charset="utf-8">
-    <title><?= lang('Errors.pageNotFound') ?></title>
+    <title>Page Not Found | RfourL</title>
 
     <style>
         div.logo {

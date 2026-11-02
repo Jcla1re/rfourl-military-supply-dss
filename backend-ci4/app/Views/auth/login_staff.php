@@ -13,7 +13,7 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('staff');
     <link rel="manifest" href="/assets/img/favicon/site.webmanifest?v=4">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Staff Login - RfourL</title>
+    <title>Staff Sign In | RfourL</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

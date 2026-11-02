@@ -12,7 +12,7 @@ $errorMsg  = session()->getFlashdata('error');
     <link rel="apple-touch-icon" href="/assets/img/favicon/apple-touch-icon.png?v=4">
     <meta name="apple-mobile-web-app-title" content="RfourL MS" />
     <link rel="manifest" href="/assets/img/favicon/site.webmanifest?v=4">
-    <title>Verification Code - RfourL</title>
+    <title>Verification Code | RfourL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
