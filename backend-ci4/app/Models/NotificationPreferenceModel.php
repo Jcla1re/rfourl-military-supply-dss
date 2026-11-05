@@ -15,19 +15,12 @@ class NotificationPreferenceModel extends Model
 
     protected $allowedFields = [
         'rop_alerts',
-        'low_stock_warnings',
-        'daily_sales_summary',
-        'procurement_reminders',
-        'weekly_trend_report',
         'updated_by',
     ];
 
+    // The only preference with a feature behind it. The other columns stay in the table, unused.
     public const KEYS = [
         'rop_alerts',
-        'low_stock_warnings',
-        'daily_sales_summary',
-        'procurement_reminders',
-        'weekly_trend_report',
     ];
 
     /**
@@ -39,10 +32,6 @@ class NotificationPreferenceModel extends Model
         return $this->first() ?? [
             'id'                     => null,
             'rop_alerts'             => 1,
-            'low_stock_warnings'     => 1,
-            'daily_sales_summary'    => 1,
-            'procurement_reminders'  => 1,
-            'weekly_trend_report'    => 0,
         ];
     }
 

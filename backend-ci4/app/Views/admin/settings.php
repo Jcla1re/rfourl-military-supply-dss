@@ -380,17 +380,13 @@ $tabs = [
 
         <?php elseif ($tab === 'notif'): ?>
             <h4>Notification Preferences</h4>
-            <div class="set-hint">Choose which alerts you get.</div>
+            <div class="set-hint">Choose which alerts you receive.</div>
 
             <div class="set-card">
                 <?php
                 $notifPrefs = $notifPrefs ?? [];
                 $prefs = [
                     ['rop_alerts', 'Reorder At Alerts', 'Notify when an item reaches its Reorder At number'],
-                    ['low_stock_warnings', 'Low Stock Warnings', 'Warns you before an item hits Reorder At.', \App\Models\ProductModel::LOW_STOCK_HELP],
-                    ['daily_sales_summary', 'Daily Sales Summary', "Receive a summary of the day's transactions every night at 9 PM"],
-                    ['procurement_reminders', 'Order Schedule Reminders', 'Alert 2 days before a scheduled restock date'],
-                    ['weekly_trend_report', 'Weekly Trend Report', 'Auto-generate and display a demand summary every Monday'],
                 ];
                 ?>
                 <?php foreach ($prefs as $pref): [$key, $label, $desc] = $pref; $tip = $pref[3] ?? null; ?>
