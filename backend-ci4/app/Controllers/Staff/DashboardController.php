@@ -4,15 +4,16 @@
 namespace App\Controllers\Staff;
 
 use App\Controllers\BaseController;
-use App\Models\NotificationModel;
-use App\Models\NotificationPreferenceModel;
 use App\Models\ProductModel;
 use App\Models\ReorderAlertModel;
+use App\Models\ReorderNoticeModel;
 use App\Models\SalesItemModel;
 use App\Models\SalesTransactionModel;
 
 class DashboardController extends BaseController
 {
+    use NotifiesOwner;
+
     public function index()
     {
         $productModel          = new ProductModel();
@@ -78,6 +79,8 @@ class DashboardController extends BaseController
             // Items (sizes grouped) that need reordering vs. already on order — same rule as Inventory.
             'reorderSummary'      => (new \App\Models\ProductModel())->reorderSummary(),
             'alertItem'           => $alertItem,
+            // Already notified (any staff account or page): shown instead of the button.
+            'alertNotice'         => $alertItem ? ((new ReorderNoticeModel())->openFor([$alertItem['item_id']])[$alertItem['item_id']] ?? null) : null,
             'success'             => session()->getFlashdata('success'),
         ];
 
@@ -86,20 +89,11 @@ class DashboardController extends BaseController
 
     public function notifyAdmin()
     {
-        $itemId   = $this->request->getPost('item_id');
-        $itemName = $this->request->getPost('item_name') ?: 'an item';
-
-        if ((new NotificationPreferenceModel())->isEnabled('rop_alerts')) {
-            (new NotificationModel())->push(
-                'Admin',
-                'Reorder Point Notice',
-                "Staff flagged {$itemName} as needing reorder attention.",
-                $itemId ? "Item ID: {$itemId}" : null,
-                null,
-                'staff_activity'
-            );
+        $product = (new ProductModel())->find((string) $this->request->getPost('item_id'));
+        if (! $product) {
+            return redirect()->to('/staff/dashboard');
         }
 
-        return redirect()->to('/staff/dashboard')->with('success', 'Owner notified: reorder notice');
+        return $this->notifyOwnerAbout($product, redirect()->to('/staff/dashboard'));
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Model;
 
 class ReorderAlertModel extends Model
@@ -64,6 +63,66 @@ class ReorderAlertModel extends Model
     }
 
     /**
+     * The Owner's Reorder Alerts tabs: every active size at Reorder Now (the same
+     * rule and the same sizes as Inventory's Reorder Now), each in exactly one tab,
+     * so the tab counts add up to the headline:
+     *   ordered   = on an open stock order, or its alert is "Ordered" (an order wins)
+     *   dismissed = dismissed until its stock recovers
+     *   order     = everything else ("To order")
+     * Alerts for sizes no longer at Reorder Now are not listed.
+     *
+     * @return list<array> products row + 'tab', 'alert' (the size's alert row or null), 'so_id'
+     */
+    public function reorderNowBoard(): array
+    {
+        $productModel = new ProductModel();
+
+        $sizes = [];
+        foreach ($productModel->where('is_active', 1)->findAll() as $p) {
+            if ($productModel->getStatus($p)['label'] === 'Reorder Now') {
+                $sizes[$p['item_id']] = $p;
+            }
+        }
+        if ($sizes === []) {
+            return [];
+        }
+
+        // One alert per size; if old data has more, Ordered beats pending beats dismissed.
+        $rank   = ['Ordered' => 0, 'Active' => 1, 'Acknowledged' => 1, 'Dismissed' => 2];
+        $alerts = [];
+        $rows   = $this->whereIn('item_id', array_map('strval', array_keys($sizes)))
+            ->groupStart()
+                ->whereIn('status', self::OPEN_STATUSES)
+                ->orGroupStart()->where('status', 'Dismissed')->where('hidden_until_recovered', 1)->groupEnd()
+            ->groupEnd()
+            ->orderBy('alert_id', 'DESC')
+            ->findAll();
+        foreach ($rows as $a) {
+            $current = $alerts[$a['item_id']] ?? null;
+            if ($current === null || $rank[$a['status']] < $rank[$current['status']]) {
+                $alerts[$a['item_id']] = $a;
+            }
+        }
+
+        $openOrders = $productModel->openOrders();
+        $board      = [];
+        foreach ($sizes as $itemId => $p) {
+            $alert  = $alerts[$itemId] ?? null;
+            $status = $alert['status'] ?? null;
+            $soId   = ($status === 'Ordered' ? $alert['so_id'] : null) ?: ($openOrders[$itemId] ?? null);
+
+            $tab = match (true) {
+                $soId !== null || $status === 'Ordered' => 'ordered',
+                $status === 'Dismissed'                 => 'dismissed',
+                default                                 => 'order',
+            };
+            $board[] = $p + ['tab' => $tab, 'alert' => $alert, 'so_id' => $soId];
+        }
+
+        return $board;
+    }
+
+    /**
      * Stock 0 first, then the lowest stock compared with its reorder point, then
      * item name. Size and alert ID only keep the order the same between page loads.
      * A size with no reorder point can't be compared, so it goes last. Needs the
@@ -87,15 +146,6 @@ class ReorderAlertModel extends Model
     {
         $this->where('alert_id', $alertId)
             ->whereIn('status', self::PENDING_STATUSES)
-            ->set(['status' => 'Dismissed', 'hidden_until_recovered' => 1])
-            ->update();
-    }
-
-    /** "Dismiss All Pending": same rule as dismissing each one. Archived items keep their alerts. */
-    public function dismissAllPending(): void
-    {
-        $this->whereIn('status', self::PENDING_STATUSES)
-            ->whereIn('item_id', static fn (BaseBuilder $builder) => $builder->select('item_id')->from('products')->where('is_active', 1))
             ->set(['status' => 'Dismissed', 'hidden_until_recovered' => 1])
             ->update();
     }
@@ -160,47 +210,6 @@ class ReorderAlertModel extends Model
      *   still "Reorder Now"; once it recovers the dismissal ends, so a later
      *   drop raises a fresh alert. Archived items keep theirs until restored.
      */
-    /**
-     * One in-app notification per newly raised alert; when many are raised at
-     * once (first sync after seeding, a bulk import) a single summary is sent
-     * instead so the Admin's inbox is not flooded.
-     *
-     * @param array<int,array<string,mixed>> $newRows
-     * @param array<string,array<string,mixed>> $productsByItem
-     */
-    private function notifyAdminOfNewAlerts(array $newRows, array $productsByItem): void
-    {
-        $notifications = new NotificationModel();
-        $link          = '/admin/reorder-alerts';
-
-        if (count($newRows) > 5) {
-            $notifications->push(
-                'Admin',
-                'Reorder Alert',
-                count($newRows) . ' items reached their reorder point',
-                'Open Reorder Alerts to review and order them.',
-                null,
-                'reorder_alert',
-                $link
-            );
-
-            return;
-        }
-
-        foreach ($newRows as $row) {
-            $name = $productsByItem[$row['item_id']]['item_name'] ?? $row['item_id'];
-            $notifications->push(
-                'Admin',
-                'Reorder Alert',
-                "Reorder alert: {$name}",
-                $row['trigger_reason'] . '. Suggested order quantity: ' . (int) $row['recommended_eoq'] . '.',
-                null,
-                'reorder_alert',
-                $link
-            );
-        }
-    }
-
     public function syncFromLiveInventory(): void
     {
         $productModel      = new ProductModel();
@@ -229,10 +238,8 @@ class ReorderAlertModel extends Model
             $this->whereIn('alert_id', $recoveredIds)->set(['hidden_until_recovered' => 0])->update();
         }
 
-        // An item with an "Ordered" alert already has a stock order in
-        // flight — it must NOT get a second alert (and therefore a second
-        // order) just because the delivery hasn't arrived yet and stock is
-        // still critical in the meantime. Same for one dismissed until recovery.
+        // Sizes with an open alert, or one dismissed until recovery, get no new one
+        // (raiseAlerts() checks again); skipping them here saves their lookups.
         $blockedByItem = array_flip($this->blockingItemIds());
 
         $fallbackEoq = (int) ($dssParameterModel->current()['minimum_order_qty'] ?? 5);
@@ -243,7 +250,7 @@ class ReorderAlertModel extends Model
                 continue;
             }
 
-            $rop         = (int) ($p['manual_rop_warning'] ?? 0);
+            $rop        = (int) ($p['manual_rop_warning'] ?? 0);
             $computation = $computationModel->latestFor($itemId);
 
             $newRows[] = [
@@ -256,10 +263,7 @@ class ReorderAlertModel extends Model
                 'status'           => 'Active',
             ];
         }
-        if ($newRows) {
-            $this->insertBatch($newRows);
-            $this->notifyAdminOfNewAlerts($newRows, $criticalByItem);
-        }
+        $this->raiseAlerts($newRows);
 
         // Only auto-dismiss Active/Acknowledged alerts whose stock recovered
         // on its own — never "Ordered" ones, even if stock happens to look
@@ -280,6 +284,87 @@ class ReorderAlertModel extends Model
         }
         if ($staleIds) {
             $this->whereIn('alert_id', $staleIds)->set(['status' => 'Dismissed'])->update();
+        }
+    }
+
+    /**
+     * Saves new alerts and tells the Owner. The one place alerts are raised, for
+     * both the live sync and the DSS run (dss:run), so no size is ever raised
+     * without a notification. Sizes that already have an open alert, or one
+     * dismissed until recovery, are skipped: an "Ordered" one has a stock order
+     * in flight and must not get a second order.
+     *
+     * @param list<array<string,mixed>> $rows reorder_alert rows (item_id, trigger_reason, ...)
+     *
+     * @return list<array<string,mixed>> the rows actually saved
+     */
+    public function raiseAlerts(array $rows): array
+    {
+        $blocked = array_flip($this->blockingItemIds());
+        $new     = [];
+        foreach ($rows as $row) {
+            if (! isset($blocked[$row['item_id']])) {
+                $new[] = $row;
+                $blocked[$row['item_id']] = true; // never two alerts for one size in one call
+            }
+        }
+
+        foreach (array_chunk($new, 200) as $chunk) {
+            $this->db->table($this->table)->insertBatch($chunk);
+        }
+        $this->notifyOwnerOfNewAlerts($new);
+
+        return $new;
+    }
+
+    /**
+     * One in-app notification per newly raised alert, titled with the size when
+     * the item has one; when many are raised at once (first sync after seeding,
+     * a DSS run, a bulk import) a single summary is sent instead so the Owner's
+     * inbox is not flooded. Off when the Settings switch "Reorder At Alerts"
+     * (rop_alerts) is off.
+     *
+     * @param list<array<string,mixed>> $newRows
+     */
+    private function notifyOwnerOfNewAlerts(array $newRows): void
+    {
+        if ($newRows === [] || ! (new NotificationPreferenceModel())->isEnabled('rop_alerts')) {
+            return;
+        }
+
+        $notifications = new NotificationModel();
+        $link          = '/admin/reorder-alerts';
+
+        if (count($newRows) > 5) {
+            $notifications->push(
+                'Admin',
+                'Reorder Alert',
+                count($newRows) . ' items reached their reorder point',
+                'Open Reorder Alerts to review and order them.',
+                null,
+                'reorder_alert',
+                $link
+            );
+
+            return;
+        }
+
+        $names = [];
+        foreach ((new ProductModel())->whereIn('item_id', array_column($newRows, 'item_id'))->findAll() as $p) {
+            $names[$p['item_id']] = ProductModel::nameWithSize($p);
+        }
+
+        foreach ($newRows as $row) {
+            $name = $names[$row['item_id']] ?? $row['item_id'];
+            $notifications->push(
+                'Admin',
+                'Reorder Alert',
+                "Reorder alert: {$name}",
+                $row['trigger_reason'] . '. Suggested order quantity: ' . (int) $row['recommended_eoq'] . '.',
+                null,
+                'reorder_alert',
+                $link
+            );
         }
     }
 }

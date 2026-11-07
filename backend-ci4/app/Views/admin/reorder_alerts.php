@@ -1,27 +1,42 @@
 
 <?= $this->extend('layouts/admin_layout') ?>
 
-<?= $this->section('header_actions') ?>
-<a href="<?= site_url('admin/procurement-report') ?>" class="btn btn-success">Ordering Report</a>
-<?= $this->endSection() ?>
-
 <?= $this->section('content') ?>
 
 <?php
-$alerts = $alerts ?? [];
-$suppliers = $suppliers ?? [];
-$dss = $dss ?? [];
+$tabs          = $tabs ?? ['order' => [], 'ordered' => [], 'dismissed' => []];
+$suppliers     = $suppliers ?? [];
+$dss           = $dss ?? [];
+$filters       = $filters ?? ['q' => '', 'cat' => '', 'sup' => '', 'only' => []];
+$activeTab     = $activeTab ?? 'order';
+$items         = (int) ($counts['items'] ?? 0);
+$sizes         = (int) ($counts['sizes'] ?? 0);
+$plural        = static fn (int $n, string $word): string => $n . ' ' . $word . ($n === 1 ? '' : 's');
+$searchText    = static fn (array $r): string => strtolower(implode(' ', array_filter([$r['item_name'] ?? '', $r['item_id'] ?? '', $r['product_code'] ?? '', $r['supplier_name'] ?? ''])));
+$lateCount     = count(array_filter($tabs['ordered'], static fn ($r) => $r['late_days'] > 0));
+$tabLabels     = ['order' => 'To order', 'ordered' => 'Ordered', 'dismissed' => 'Dismissed'];
+$captions      = [
+    'order'     => 'Sorted by stock left: out of stock first, then lowest compared to Reorder at. The black tick on each bar marks Reorder at.',
+    'ordered'   => 'Late deliveries first, then by expected arrival. Items leave this tab when the delivery is received.',
+    'dismissed' => "Dismissed alerts stay here until the item's stock is above Reorder at again.",
+];
+$emptyTexts    = [
+    'order'     => $sizes === 0 ? 'All stocked up. Nothing is at Reorder Now.' : 'Nothing left to order. Every size at Reorder Now is ordered or dismissed.',
+    'ordered'   => 'Nothing on order. Sizes move here when you order them.',
+    'dismissed' => 'No dismissed alerts.',
+];
+// Data the filters read (search, category, supplier, Show only chips, late).
+$rowAttrs = static fn (array $r): string => ' data-ra-row data-tab="' . esc($r['tab'], 'attr') . '"'
+    . ' data-search="' . esc($searchText($r), 'attr') . '"'
+    . ' data-category="' . esc($r['category'] ?? '', 'attr') . '"'
+    . ' data-supplier="' . esc($r['supplier_id'] ?: 'none', 'attr') . '"'
+    . ' data-out="' . ($r['out'] ? 1 : 0) . '" data-new="' . ($r['is_new'] ? 1 : 0) . '" data-late="' . ($r['late_days'] > 0 ? 1 : 0) . '"';
 ?>
 
+<link href="/assets/css/reorder-alerts.css" rel="stylesheet">
+
 <style>
-.ra-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
-@media (max-width: 900px) { .ra-summary { grid-template-columns: 1fr; } }
-
-.ra-empty {
-    padding: 70px 20px; border: 1px dashed #c9c9c9; border-radius: var(--radius-card);
-    text-align: center; color: #666; font-size: 16px;
-}
-
+/* Item cards: replaced in Phase 3 (To order, Dismissed) and Phase 4 (Ordered). */
 .ra-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); margin-top: 16px; overflow: hidden; }
 .ra-card-head { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #eee; }
 .ra-card-head .icon { font-size: 26px; }
@@ -47,65 +62,104 @@ $dss = $dss ?? [];
 .ra-card-actions form { margin: 0; }
 .ra-status-badge { display: inline-flex; align-items: center; background: #eef3ee; color: #3d5230; border-radius: var(--radius-pill); padding: 4px 10px; font-size: 12px; font-weight: 700; }
 
-@media (max-width: 700px) { .ra-stats { grid-template-columns: 1fr; } }
+.ra-ordered-card .ra-card-head { border-bottom: 0; flex-wrap: wrap; }
+.ra-ordered-meta { margin-left: auto; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; font-size: 14px; color: #3A4030; }
 </style>
 
-<div class="page-wrap">
-    <div class="page-panel">
-        <?php if (!empty($success)): ?><div class="alert alert-success"><?= esc($success) ?></div><?php endif; ?>
-        <?php if (!empty($error)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
+<div class="page-wrap ra-page" id="raBoard" data-active-tab="<?= esc($activeTab, 'attr') ?>">
+    <?php if (!empty($success)): ?><div class="alert alert-success"><?= esc($success) ?></div><?php endif; ?>
+    <?php if (!empty($error)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
 
-        <div class="ra-summary">
-            <div class="icon-stat-card">
-                <span class="icon-box"><i class="bi bi-exclamation-triangle"></i></span>
-                <div><span>At 0 units</span><strong><?= esc($counts['at_zero']) ?></strong></div>
-            </div>
-            <div class="icon-stat-card">
-                <span class="icon-box"><i class="bi bi-lightning-fill"></i></span>
-                <div>
-                    <span>Reorder Now</span><strong><?= esc($counts['items']) ?></strong>
-                    <small class="text-muted"><?= esc($counts['sizes']) ?> <?= $counts['sizes'] === 1 ? 'size' : 'sizes' ?></small>
-                </div>
-            </div>
-            <div class="icon-stat-card">
-                <span class="icon-box"><i class="bi bi-check-lg"></i></span>
-                <div><span>Received This Week</span><strong><?= esc($receivedCount ?? 0) ?></strong></div>
+    <div class="ra-top">
+        <div class="ra-top-left">
+            <?php // Same numbers as Inventory's Reorder Now (dismissed sizes included); never filtered. ?>
+            <span class="stat-pill red ra-headline"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> <span>Reorder Now: <span class="text-nowrap"><?= esc($plural($items, 'item')) ?></span> &middot; <span class="text-nowrap"><?= esc($plural($sizes, 'size')) ?></span></span></span>
+            <span class="ra-calc"><?= ! empty($lastRunAt) ? 'Reorder levels calculated ' . esc(date('M j, Y', strtotime($lastRunAt))) : 'Reorder levels not calculated yet' ?></span>
+        </div>
+        <a href="<?= site_url('admin/procurement-report') ?>" class="btn btn-outline-success ra-report-btn">Ordering Report</a>
+    </div>
+
+    <div class="inv-toolbar ra-toolbar">
+        <div class="inv-search-field">
+            <div class="inv-search">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input id="raSearch" type="search" value="<?= esc($filters['q']) ?>" placeholder="Search by item, ID or supplier…" maxlength="50" aria-label="Search by item, ID or supplier">
+                <button type="button" class="inv-search-clear" id="raSearchClear" aria-label="Clear search"<?= $filters['q'] === '' ? ' hidden' : '' ?>><i class="bi bi-x-lg" aria-hidden="true"></i></button>
             </div>
         </div>
-        <p class="text-muted small mb-1"><?= esc($counts['needs']) ?> need action + <?= esc($counts['on_order']) ?> on order = <?= esc($counts['items']) ?> Reorder Now in Inventory.</p>
-        <p class="text-muted small mb-3">What do these numbers mean? <?= help_tip('Reading these numbers', [
-            'Reorder Now counts items, the same as Inventory. An item with several sizes counts once; the line under the number says how many sizes that is.',
-            'At 0 units counts the sizes that need reordering and have nothing on hand.',
-            'Need action plus on order adds up to Reorder Now in Inventory.',
-            'Dismissed sizes still count. They stay hidden from the list until they are no longer Reorder Now.',
-            'Low Stock items are not alerts yet.',
-            'Items with no sales in 2 years are not counted.',
-        ]) ?></p>
-        <?php if ($dismissedCount > 0): ?>
-            <p class="text-muted small mb-3">
-                <?= esc($dismissedCount) ?> dismissed (<?= $showDismissed ? 'shown' : 'hidden' ?>) &middot;
-                <a href="<?= site_url('admin/reorder-alerts') . ($showDismissed ? '' : '?dismissed=1') ?>"><?= $showDismissed ? 'Hide' : 'Show' ?></a>
-            </p>
-        <?php endif; ?>
+        <select id="raCategory" aria-label="Category" class="<?= $filters['cat'] !== '' ? 'has-value' : '' ?>">
+            <option value="">All categories</option>
+            <?php foreach ($categories ?? [] as $c): ?>
+                <option value="<?= esc($c, 'attr') ?>"<?= $filters['cat'] === $c ? ' selected' : '' ?>><?= esc($c) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <select id="raSupplier" aria-label="Supplier" class="<?= $filters['sup'] !== '' ? 'has-value' : '' ?>">
+            <option value="">All suppliers</option>
+            <?php foreach ($supplierOptions ?? [] as $id => $name): ?>
+                <option value="<?= esc((string) $id, 'attr') ?>"<?= $filters['sup'] === (string) $id ? ' selected' : '' ?>><?= esc($name) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <button type="button" class="clear-filters" id="raClearAll" data-clear-all hidden aria-label="Clear all filters">
+            Clear all <span class="clear-filters-count" id="raClearCount" aria-hidden="true">0</span>
+        </button>
+    </div>
 
-        <?php if (!empty($alerts)): ?>
-            <form method="post" action="<?= site_url('admin/reorder-alerts/resolve-all') ?>" data-confirm="Every pending alert will be dismissed without creating orders for them. Each stays hidden until its stock recovers."
-                  data-confirm-title="Dismiss all pending alerts?"
-                  data-confirm-ok="Dismiss all" data-confirm-variant="danger">
-                <?= csrf_field() ?>
-                <button type="submit" class="btn btn-success">Dismiss All Pending</button>
-            </form>
-        <?php endif; ?>
+    <?php // Counts are sizes; with no filter on they add up to the headline's sizes. ?>
+    <div class="underline-tabs ra-tabs" role="tablist" aria-label="Reorder alerts">
+        <?php foreach ($tabLabels as $key => $label): ?>
+            <a href="<?= site_url('admin/reorder-alerts') . '?tab=' . $key ?>" role="tab" data-tab-link="<?= $key ?>"
+               class="<?= $activeTab === $key ? 'active' : '' ?>" aria-selected="<?= $activeTab === $key ? 'true' : 'false' ?>"><?= esc($label) ?> (<span data-tab-count="<?= $key ?>"><?= count($tabs[$key]) ?></span>)<?php if ($key === 'ordered'): ?><span class="ra-tab-late" data-late-count<?= $lateCount ? '' : ' hidden' ?>> &middot; <span data-late-number><?= $lateCount ?></span> late</span><?php endif; ?></a>
+        <?php endforeach; ?>
+    </div>
 
-        <?php $listed = array_merge($alerts, $dismissedAlerts); ?>
-        <?php if (empty($listed)): ?>
-            <div class="ra-empty"><i class="bi bi-check-circle" aria-hidden="true"></i> <?= $counts['items'] > 0 ? 'Nothing to act on here right now.' : 'All stocked up. Nothing to reorder.' ?> <a href="<?= site_url('admin/inventory') ?>">View Inventory</a></div>
-        <?php else: ?>
-            <?php foreach ($listed as $alert): ?>
-                <?php
-                $computation = $alert['computation'] ?? null;
-                ?>
-                <div class="ra-card">
+    <?php foreach ($tabLabels as $key => $label): ?>
+        <section class="ra-panel" data-panel="<?= $key ?>" role="tabpanel"<?= $activeTab === $key ? '' : ' hidden' ?>>
+            <?php if ($key === 'order'): ?>
+                <?php $outCount = count(array_filter($tabs['order'], static fn ($r) => $r['out'])); $newCount = count(array_filter($tabs['order'], static fn ($r) => $r['is_new'])); ?>
+                <div class="ra-only">
+                    <span class="ra-only-label">Show only:</span>
+                    <div class="pill-tabs ra-chips">
+                        <button type="button" data-only="out" class="<?= in_array('out', $filters['only'], true) ? 'active' : '' ?>" aria-pressed="<?= in_array('out', $filters['only'], true) ? 'true' : 'false' ?>">Out of stock &middot; <span data-chip-count="out"><?= $outCount ?></span></button>
+                        <?php if (! empty($previousLogin)): ?>
+                            <?php // New = the alert was raised after the Owner's previous login. ?>
+                            <button type="button" data-only="new" class="<?= in_array('new', $filters['only'], true) ? 'active' : '' ?>" aria-pressed="<?= in_array('new', $filters['only'], true) ? 'true' : 'false' ?>">New since <?= esc(date('M j, g:i A', strtotime($previousLogin))) ?> &middot; <span data-chip-count="new"><?= $newCount ?></span></button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <p class="ra-caption"><?= esc($captions[$key]) ?></p>
+
+            <div class="ra-empty" data-tab-empty<?= $tabs[$key] === [] ? '' : ' hidden' ?>>
+                <i class="bi bi-check-circle" aria-hidden="true"></i> <?= esc($emptyTexts[$key]) ?>
+                <?php if ($key === 'order' && $sizes === 0): ?><a href="<?= site_url('admin/inventory') ?>">View Inventory</a><?php endif; ?>
+            </div>
+            <div class="ra-empty" data-no-results hidden>
+                <span>No sizes match these filters.</span>
+                <button type="button" class="btn btn-outline-secondary" data-clear-all>Clear all</button>
+            </div>
+
+            <div class="ra-list">
+            <?php foreach ($tabs[$key] as $alert): ?>
+                <?php if ($key === 'ordered'): ?>
+                    <div class="ra-card ra-ordered-card"<?= $rowAttrs($alert) ?>>
+                        <div class="ra-card-head">
+                            <div>
+                                <h4><?= esc($alert['item_name'] ?? 'Unknown item') ?></h4>
+                                <span class="sub"><?= esc(implode(' · ', array_filter([! empty($alert['size']) ? 'Size ' . $alert['size'] : null, $alert['category'] ?? null, $alert['item_id']]))) ?></span>
+                            </div>
+                            <div class="ra-ordered-meta">
+                                <?php if (! empty($alert['so_id'])): ?><span>Order <?= esc($alert['so_id']) ?></span><?php endif; ?>
+                                <span>Expected <?= ! empty($alert['expected_date']) ? esc(date('M j, Y', strtotime($alert['expected_date']))) : '—' ?></span>
+                                <?php if ($alert['late_days'] > 0): ?><span class="status-pill red">Late &middot; <?= esc($plural((int) $alert['late_days'], 'day')) ?></span><?php endif; ?>
+                                <?php if (! empty($alert['so_id'])): ?><a class="inv-view-order btn btn-outline-secondary btn-sm" href="<?= site_url('admin/orders/' . $alert['so_id']) ?>">View order</a><?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php continue; ?>
+                <?php endif; ?>
+                <?php $computation = $alert['computation'] ?? null; ?>
+                <div class="ra-card"<?= $rowAttrs($alert) ?>>
                     <div class="ra-card-head critical">
                         <span class="icon"><i class="bi bi-exclamation-triangle"></i></span>
                         <div>
@@ -114,7 +168,7 @@ $dss = $dss ?? [];
                         </div>
                         <button type="button"
                                 class="btn btn-success order-btn open-order-modal"
-                                data-alert-id="<?= esc($alert['alert_id']) ?>"
+                                data-alert-id="<?= esc($alert['alert_id'] ?? '') ?>"
                                 data-item-id="<?= esc($alert['item_id']) ?>"
                                 data-item-name="<?= esc(($alert['item_name'] ?? '') . (! empty($alert['size']) ? ' · Size ' . $alert['size'] : '')) ?>"
                                 data-supplier-id="<?= esc($alert['supplier_id'] ?? '') ?>"
@@ -124,17 +178,9 @@ $dss = $dss ?? [];
                     </div>
 
                     <div class="ra-card-actions">
-                        <?php if (($alert['status'] ?? 'Active') === 'Dismissed'): ?>
+                        <?php if ($key === 'dismissed'): ?>
                             <span class="ra-status-badge">Dismissed</span>
-                        <?php elseif (($alert['status'] ?? 'Active') === 'Acknowledged'): ?>
-                            <span class="ra-status-badge">Acknowledged</span>
-                        <?php else: ?>
-                            <form method="post" action="<?= site_url('admin/reorder-alerts/acknowledge/' . $alert['alert_id']) ?>">
-                                <?= csrf_field() ?>
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">Acknowledge</button>
-                            </form>
-                        <?php endif; ?>
-                        <?php if (($alert['status'] ?? 'Active') !== 'Dismissed'): ?>
+                        <?php elseif (! empty($alert['alert_id'])): ?>
                         <form method="post" action="<?= site_url('admin/reorder-alerts/dismiss/' . $alert['alert_id']) ?>" data-confirm="This alert will be dismissed without creating an order. It stays hidden until its stock recovers."
                               data-confirm-title="Dismiss <?= esc($alert['item_name'] ?? 'this item', 'attr') ?> alert?"
                               data-confirm-ok="Dismiss" data-confirm-variant="primary">
@@ -176,9 +222,12 @@ $dss = $dss ?? [];
                     </div>
                 </div>
             <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
+            </div>
+        </section>
+    <?php endforeach; ?>
 </div>
+
+<script src="/assets/js/reorder-alerts.js" defer></script>
 
 <div class="order-modal" id="orderModal">
     <div class="order-modal-card">

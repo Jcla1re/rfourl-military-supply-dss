@@ -89,12 +89,19 @@ a.dash-stat:hover { box-shadow: 0 2px 8px rgba(31, 38, 23, .08); cursor: pointer
                 <?= esc(($alertItem['item_name'] ?? 'An item') . (! empty($alertItem['size']) ? ' (Size ' . $alertItem['size'] . ')' : '')) ?> is at its Reorder At number.
             </div>
         </div>
+        <?php if (! empty($alertNotice)): ?>
+            <?php /* Already notified for this size (any staff account or page): no second notification. */ ?>
+            <div class="text-end">
+                <button type="button" class="btn btn-success" disabled>Owner notified</button>
+                <div class="small text-muted mt-1"><?= esc(\App\Models\ReorderNoticeModel::summary($alertNotice)) ?></div>
+            </div>
+        <?php else: ?>
         <form method="post" action="<?= site_url('staff/dashboard/notify') ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="item_id" value="<?= esc($alertItem['item_id'] ?? '') ?>">
-            <input type="hidden" name="item_name" value="<?= esc($alertItem['item_name'] ?? '') ?>">
             <button type="submit" class="btn btn-success">Notify Owner</button>
         </form>
+        <?php endif; ?>
     </div>
     <?php endif; ?>
 

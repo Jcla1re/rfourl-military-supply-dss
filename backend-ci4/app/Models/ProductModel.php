@@ -82,7 +82,7 @@ class ProductModel extends Model
 
     /**
      * Stock or reorder point changed (sale, logged transaction, delivery,
-     * admin edit): a staff "Admin notified" for an item that no longer needs
+     * admin edit): a staff "Owner notified" for an item that no longer needs
      * reordering is closed (see ReorderNoticeModel).
      */
     protected function clearReorderNotices(array $data): array
@@ -213,6 +213,16 @@ class ProductModel extends Model
         $class  = self::statusColor($label);
 
         return ['pct' => $pct, 'class' => $class, 'empty' => $stock <= 0];
+    }
+
+    /** "Tactical Pants · Size L", or just the name when the item has no size. */
+    public static function nameWithSize(array $product): string
+    {
+        $name = (string) ($product['item_name'] ?? $product['item_id'] ?? 'Unknown item');
+
+        $size = trim((string) ($product['size'] ?? ''));
+
+        return $size !== '' ? "{$name} · Size {$size}" : $name;
     }
 
     /** Letter sizes, smallest first (2XL = XXL, 3XL = XXXL). */

@@ -346,7 +346,7 @@ class StockOrderController extends BaseController
             ->whereIn('status', ReorderAlertModel::PENDING_STATUSES)
             ->set(['status' => 'Ordered', 'so_id' => $soId])
             ->update();
-        // Staff "Admin notified" on those items is answered by this order.
+        // Staff "Owner notified" on those items is answered by this order.
         (new ReorderNoticeModel())->clear(array_column($lines, 'item_id'), 'ordered');
 
         $alert   = null;

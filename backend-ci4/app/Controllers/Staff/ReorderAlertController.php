@@ -6,15 +6,16 @@ namespace App\Controllers\Staff;
 use App\Controllers\BaseController;
 use App\Models\ClusterSegmentModel;
 use App\Models\DssParameterModel;
-use App\Models\NotificationModel;
-use App\Models\NotificationPreferenceModel;
 use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
 use App\Models\ReorderAlertModel;
+use App\Models\ReorderNoticeModel;
 use App\Models\SupplierModel;
 
 class ReorderAlertController extends BaseController
 {
+    use NotifiesOwner;
+
     protected ReorderAlertModel $reorderAlertModel;
     protected SupplierModel $supplierModel;
     protected PdssComputationModel $pdssComputationModel;
@@ -52,6 +53,8 @@ class ReorderAlertController extends BaseController
             'counts'          => (new ProductModel())->reorderCounts(),
             'dss'             => $dss,
             'receivedCount'   => $this->reorderAlertModel->resolvedThisWeek(),
+            // Sizes already notified (any staff account or page): no second Notify Owner.
+            'notices'         => (new ReorderNoticeModel())->openFor(array_column(array_merge($alerts, $dismissedAlerts), 'item_id')),
             'success'         => session()->getFlashdata('success'),
         ];
 
@@ -82,19 +85,13 @@ class ReorderAlertController extends BaseController
 
     public function notifyAdmin(string $alertId)
     {
-        $alert = $this->reorderAlertModel->find((int) $alertId);
-
-        if ((new NotificationPreferenceModel())->isEnabled('rop_alerts')) {
-            (new NotificationModel())->push(
-                'Admin',
-                'Reorder Point Notice',
-                'Staff flagged ' . ($alert['item_name'] ?? "alert #{$alertId}") . ' as needing reorder attention.',
-                'Reason: ' . ($alert['trigger_reason'] ?? '—'),
-                null,
-                'staff_activity'
-            );
+        // The alert row has no name: the notice is about its size's product row.
+        $alert   = $this->reorderAlertModel->find((int) $alertId);
+        $product = $alert ? (new ProductModel())->find($alert['item_id']) : null;
+        if (! $product) {
+            return redirect()->to('/staff/reorder-alerts');
         }
 
-        return redirect()->to('/staff/reorder-alerts')->with('success', 'Owner notified: reorder notice');
+        return $this->notifyOwnerAbout($product, redirect()->to('/staff/reorder-alerts'));
     }
 }

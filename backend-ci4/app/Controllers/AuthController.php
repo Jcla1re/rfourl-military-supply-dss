@@ -239,6 +239,9 @@ class AuthController extends BaseController
             'supplier_id' => $user['supplier_id'] ?? null,
             'isLoggedIn'  => true,
             'last_activity' => time(),
+            // users.last_login is overwritten just below, so the login before this one is
+            // kept here (Reorder Alerts: "New since {previous login}").
+            'previous_login' => $user['last_login'] ?? null,
         ]);
         $this->userModel->update($user['user_id'], ['last_login' => date('Y-m-d H:i:s')]);
         SecurityLogModel::log('login_success', $user);

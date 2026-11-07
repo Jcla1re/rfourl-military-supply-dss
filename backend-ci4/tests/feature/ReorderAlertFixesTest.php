@@ -8,7 +8,7 @@ use Config\Services;
 
 /**
  * Reorder Alerts: the Order dialog names the size and the order is saved for that size row;
- * archived items keep their alerts; alerts are listed most urgent first; no fixed
+ * archived items keep their alerts through the sync; alerts are listed most urgent first; no fixed
  * "Last updated" text. Email goes to a fake mailer. Runs on the in-memory 'tests' database.
  *
  * @internal
@@ -171,27 +171,6 @@ final class ReorderAlertFixesTest extends CIUnitTestCase
     }
 
     // ------------------------------------------------------------ 2. archived items
-
-    public function testDismissAllLeavesArchivedItemsAlone(): void
-    {
-        $this->product('P-1', 'Active Item', null, 1, 3);
-        $this->product('P-2', 'Acknowledged Item', null, 1, 3);
-        $this->product('P-3', 'Ordered Item', null, 1, 3);
-        $this->product('P-4', 'Archived Item', null, 1, 3, 0);
-        $active       = $this->alert('P-1');
-        $acknowledged = $this->alert('P-2', 'Acknowledged');
-        $ordered      = $this->alert('P-3', 'Ordered');
-        $archived     = $this->alert('P-4');
-
-        $this->asOwner()->post('admin/reorder-alerts/resolve-all');
-
-        $this->assertSame('Dismissed', $this->alertRow($active)->status);
-        $this->assertSame(1, (int) $this->alertRow($active)->hidden_until_recovered);
-        $this->assertSame('Dismissed', $this->alertRow($acknowledged)->status);
-        $this->assertSame('Ordered', $this->alertRow($ordered)->status);
-        $this->assertSame('Active', $this->alertRow($archived)->status);
-        $this->assertSame(0, (int) $this->alertRow($archived)->hidden_until_recovered);
-    }
 
     public function testSyncKeepsAnArchivedItemsAlertAndRestoreBringsItBack(): void
     {

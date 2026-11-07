@@ -253,7 +253,7 @@ class DssRun extends BaseCommand
         foreach ($ropUpdates as $itemId => $rop) {
             $db->table('products')->where('item_id', $itemId)->update(['manual_rop_warning' => $rop]);
         }
-        // A new reorder point can take an item out of Reorder Now: close its staff "Admin notified".
+        // A new reorder point can take an item out of Reorder Now: close its staff "Owner notified".
         (new \App\Models\ReorderNoticeModel())->clearResolved(array_map('strval', array_keys($ropUpdates)));
 
         // Only rewrite the cluster cache when we actually got a fresh
@@ -266,16 +266,11 @@ class DssRun extends BaseCommand
             }
         }
 
-        $existingOpenItems = (new \App\Models\ReorderAlertModel())->blockingItemIds();
-        $newAlerts = [];
-        foreach ($alertRows as $itemId => $row) {
-            if (! in_array($itemId, $existingOpenItems, true)) {
-                $newAlerts[] = $row;
-            }
-        }
-        foreach (array_chunk($newAlerts, 200) as $chunk) {
-            $db->table('reorder_alert')->insertBatch($chunk);
-        }
+        // Same path as the live sync: skips sizes that already have an alert and
+        // notifies the Owner about the new ones (unless "Reorder At Alerts" is off).
+        $alertModel        = new \App\Models\ReorderAlertModel();
+        $existingOpenItems = $alertModel->blockingItemIds();
+        $newAlerts         = $alertModel->raiseAlerts(array_values($alertRows));
 
         // --- BI reporting ledger (Data Dictionary Table 24) — persist a ---
         // --- summary of this run so historical trend data survives past ---

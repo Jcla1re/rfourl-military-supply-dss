@@ -340,7 +340,7 @@ function rowStatusText(row, selectedIndex, variants) {
 
 // Size dropdown is delegated so it keeps working after live search swaps the table.
 // Picking a different size in a row's Size dropdown swaps every other cell
-// (and the Notify Admin button's target) to that size's own real product
+// (and the Notify Owner button's target) to that size's own real product
 // row — each size is independently stock-tracked, this is purely a display
 // switch, no page reload.
 // Status cell: the badge keeps the item's worst status; when it refers to a size other
@@ -397,10 +397,10 @@ document.addEventListener('change', event => {
         const target = v.status_label === 'Reorder Now' && !v.open_so ? v : (info.target || v);
         notifyForm.action = notifyForm.action.replace(/\/notify\/.*$/, '/notify/' + target.item_id);
         const notifyBtn = notifyForm.querySelector('.notify-btn');
-        // Always just "Notify Admin"; the size is in the badge and this tooltip.
+        // Always just "Notify Owner"; the size is in the badge and this tooltip.
         if (notifyBtn) { if (target.size) notifyBtn.title = 'Notify about size ' + target.size; else notifyBtn.removeAttribute('title'); }
         const needsReorder = row.dataset.rowStatus === 'Reorder Now' && !row.querySelector('.ordered-tag');
-        // Already notified for that size (any staff account): "✓ Admin notified" instead.
+        // Already notified for that size (any staff account): "✓ Owner notified" instead.
         const notifyDone = row.querySelector('.notify-done');
         notifyDone.dataset.tip = target.notice || '';
         notifyForm.style.display = needsReorder && !target.notice ? '' : 'none';

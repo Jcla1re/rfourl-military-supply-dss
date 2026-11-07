@@ -1,0 +1,108 @@
+/* Owner: Reorder Alerts (app/Views/admin/reorder_alerts.php, assets/js/reorder-alerts.js).
+   Shared pieces come from admin-theme.css: .stat-pill, .underline-tabs, .pill-tabs,
+   .status-pill, outlined-button hovers and the Clear-all count badge. The toolbar,
+   search box and Clear-all base rules below are the same as Inventory's (inline there). */
+
+/* ---- Top row: headline pill + "Reorder levels calculated", Ordering Report on the right ---- */
+/* Layout follows the content width (sidebar open or collapsed), not the window. */
+.ra-page { container-type: inline-size; container-name: ra; }
+
+.ra-top {
+    display: flex;
+    align-items: flex-start; /* Ordering Report stays top right when the left side wraps */
+    justify-content: space-between;
+    gap: 12px 16px;
+}
+.ra-top-left { flex: 1; min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
+.ra-headline { cursor: default; }
+.ra-calc { color: #6B6E60; font-size: 14px; }
+.ra-report-btn { white-space: nowrap; }
+
+/* ---- Filters (same as Inventory's toolbar) ---- */
+.inv-toolbar {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 18px 0;
+}
+.inv-toolbar select {
+    min-height: 46px;
+    padding: 8px 34px 8px 14px;
+    border: 1px solid #d8d5cd;
+    border-radius: var(--radius-control);
+    background: #fff;
+    min-width: 150px;
+    max-width: 260px;
+    font-family: 'Poppins', sans-serif;
+    color: #888;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23888888' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    text-overflow: ellipsis;
+}
+.inv-toolbar select.has-value { color: var(--text-dark); }
+.inv-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 8px 14px;
+    border: 1px solid #D6D2C6;
+    border-radius: var(--radius-control);
+    background: #fff;
+}
+.inv-search i { color: #888; font-size: 16px; flex-shrink: 0; }
+.inv-search input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; padding: 0; }
+.inv-search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+.inv-search-clear {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 26px; height: 26px; margin-right: -6px; padding: 0;
+    border: 0; border-radius: 50%; background: transparent; color: #5C6152; font-size: 13px; cursor: pointer;
+}
+.inv-search-clear[hidden] { display: none; }
+.inv-search-clear:hover { background: #F2F0EA; color: #1F2617; }
+.inv-search-clear:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 1px; }
+.clear-filters {
+    align-self: stretch; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+    min-height: 46px; padding: 0 16px; border: 1px solid #D6D2C6; border-radius: 10px; background: #fff;
+    color: #1C1C1C; font-size: 16px; font-weight: 400; line-height: 1;
+    text-decoration: none; white-space: nowrap; cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease;
+}
+.clear-filters[hidden] { display: none; }
+.clear-filters:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.clear-filters-count { border-radius: 999px; background: #EFECE4; color: #3A4030; font-size: 12px; font-weight: 600; }
+/* Clear all is a <button> here (filters run in the page): same white-to-green hover as Inventory's link. */
+.clear-filters:is(:hover, :focus-visible) { background: #EAF1E3; border-color: #A9C79C; color: #2F5A27; }
+.clear-filters:is(:hover, :focus-visible) .clear-filters-count { background: #fff; color: #2F5A27; }
+
+/* Narrow content: search on its own row, the two dropdowns share the next one. */
+@container ra (max-width: 720px) {
+    .ra-toolbar .inv-search-field { flex-basis: 100%; }
+    .ra-toolbar select { flex: 1 1 0; max-width: none; min-width: 0; }
+}
+
+/* ---- Tabs ---- */
+.ra-tabs { margin-bottom: 12px; }
+.ra-tab-late { color: var(--red-text); font-weight: 600; }
+.ra-tab-late[hidden] { display: none; }
+
+/* ---- "Show only:" chips (To order) ---- */
+.ra-only { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin: 4px 0 10px; }
+.ra-only-label { color: #5C6152; font-size: 14px; }
+.ra-chips { gap: 8px; }
+.ra-chips button { padding: 6px 14px; font-size: 14px; font-weight: 500; }
+
+/* ---- Caption, empty states ---- */
+.ra-caption { margin: 0 0 4px; color: #6B6E60; font-size: 14px; }
+.ra-empty {
+    margin-top: 12px; padding: 56px 20px; border: 1px dashed #c9c9c9; border-radius: var(--radius-card);
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    text-align: center; color: #555; font-size: 16px; background: #fff;
+}
+.ra-empty[hidden] { display: none; }
+.ra-card[hidden] { display: none; }
