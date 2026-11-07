@@ -246,6 +246,39 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->assertSame('approved', $this->db->table('notifications')->where('notification_id', $id)->get()->getRow()->status);
     }
 
+    public function testApprovingAResetTellsTheOwnerWhoWasApprovedAndWhen(): void
+    {
+        $id = $this->request();
+        $this->approveViaLink($id);
+
+        $note = $this->db->table('notifications')->where('title', 'Password reset approved')->get()->getRow();
+        $this->assertNotNull($note);
+        $this->assertSame('Admin', $note->recipient_role);
+        $this->assertSame(0, (int) $note->is_read);
+        $this->assertNull($note->action_user_id);
+        $this->assertSame(
+            'You approved the password reset of Cashier1 on ' . date('M j, Y, g:i A') . '. A temporary password was emailed to them.',
+            $note->message
+        );
+        $this->assertStringNotContainsString($this->emailedPassword('cashier1@example.test'), $note->message);
+    }
+
+    public function testApprovingFromTheNotificationsPageTellsTheOwnerToo(): void
+    {
+        $id = $this->request();
+        $this->asOwner()->post("admin/notifications/approve/{$id}", ['confirmed' => '1']);
+
+        $this->assertSame(1, $this->db->table('notifications')->where('title', 'Password reset approved')->countAllResults());
+    }
+
+    public function testNoApprovalNoticeWhenTheApprovalFails(): void
+    {
+        $this->db->table('users')->where('user_id', $this->staffId)->update(['email' => null]);
+        $this->approveViaLink($this->request());
+
+        $this->assertSame(0, $this->db->table('notifications')->where('title', 'Password reset approved')->countAllResults());
+    }
+
     public function testApproveIsSingleUse(): void
     {
         $id = $this->request();

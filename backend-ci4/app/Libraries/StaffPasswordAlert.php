@@ -120,5 +120,27 @@ class StaffPasswordAlert
         ]);
 
         SecurityLogModel::log($event, ['user_id' => null, 'username' => $actor, 'role' => 'Admin'], 'staff: ' . $staff['username']);
+
+        // Both the in-system button and the email link end up here.
+        self::ownerNotice('Account locked', "You locked the account of {$staff['full_name']} on " . self::now() . '.');
+    }
+
+    /**
+     * An informational in-app note for the owner (no email, no action). Never lets a
+     * failed note undo the lock or reset that triggered it.
+     */
+    public static function ownerNotice(string $title, string $message): void
+    {
+        try {
+            (new NotificationModel())->push('Admin', 'Security', $title, $message, null, self::CATEGORY, '/admin/settings?tab=accounts');
+        } catch (\Throwable $e) {
+            log_message('error', 'Owner notice failed: ' . $e->getMessage());
+        }
+    }
+
+    /** Now in the app's timezone (Asia/Manila), e.g. "Nov 7, 2026, 3:21 PM". */
+    public static function now(): string
+    {
+        return date('M j, Y, g:i A');
     }
 }

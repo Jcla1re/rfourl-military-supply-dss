@@ -24,6 +24,7 @@ final class StaffLoginTest extends CIUnitTestCase
 
     private const GENERIC = 'Incorrect password. Please try again';
     private const SHARED  = "This password can't be used. Ask the owner to reset it.";
+    private const LOCKED  = 'Sorry, this account was locked by the Owner. Please contact the Owner.';
 
     private int $adminId;
 
@@ -120,7 +121,6 @@ final class StaffLoginTest extends CIUnitTestCase
     public static function refusedPasswords(): array
     {
         return [
-            'inactive staff'               => ['Inactive1Pass3'],
             'removed staff'                => ['Removed1Pass4'],
             'removed but flagged active'   => ['Removed2Pass5'],
             'admin password on staff form' => ['OwnerPass123'],
@@ -130,12 +130,44 @@ final class StaffLoginTest extends CIUnitTestCase
     /**
      * @dataProvider refusedPasswords
      */
-    public function testInactiveRemovedAndNonStaffPasswordsGetTheGenericError(string $password): void
+    public function testRemovedAndNonStaffPasswordsGetTheGenericError(string $password): void
     {
         $result = $this->post('login/staff', ['password' => $password]);
 
         $result->assertSessionHas('error', self::GENERIC);
         $result->assertSessionMissing('isLoggedIn');
+    }
+
+    public function testLockedStaffWithTheirCorrectPasswordSeeTheLockedMessage(): void
+    {
+        $result = $this->post('login/staff', ['password' => 'Inactive1Pass3']);
+
+        $result->assertSessionHas('error', self::LOCKED);
+        $result->assertSessionHas('attempted_role', 'staff');
+        $result->assertSessionMissing('isLoggedIn');
+    }
+
+    public function testTheLockedMessageIsNotACountedFailedAttempt(): void
+    {
+        $lockout = new LoginLockout();
+
+        // More tries than the 3-try limit: none of them counts, so the form is never locked out.
+        for ($i = 0; $i < LoginLockout::MAX_ATTEMPTS + 2; $i++) {
+            $this->post('login/staff', ['password' => 'Inactive1Pass3'])->assertSessionHas('error', self::LOCKED);
+            $this->assertSame(0, $lockout->secondsRemaining('staff'));
+        }
+
+        // Nor did they use up the tries of a real mistake: two wrong passwords still do not lock the form.
+        $this->post('login/staff', ['password' => 'wrong-1'])->assertSessionHas('error', self::GENERIC);
+        $this->post('login/staff', ['password' => 'wrong-2'])->assertSessionHas('error', self::GENERIC);
+        $this->assertSame(0, $lockout->secondsRemaining('staff'));
+        $this->post('login/staff', ['password' => 'Cashier1Pass1'])->assertSessionHas('username', 'cashier1');
+    }
+
+    public function testWrongAndRemovedPasswordsStillGetTheGenericMessage(): void
+    {
+        $this->post('login/staff', ['password' => 'definitely-wrong'])->assertSessionHas('error', self::GENERIC);
+        $this->post('login/staff', ['password' => 'Removed1Pass4'])->assertSessionHas('error', self::GENERIC);
     }
 
     public function testTwoActiveStaffOnTheSamePasswordBothFail(): void

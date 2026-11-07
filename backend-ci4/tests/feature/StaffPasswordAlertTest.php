@@ -314,6 +314,48 @@ final class StaffPasswordAlertTest extends CIUnitTestCase
         $this->assertSame(1, $this->db->table('security_log')->where('event', 'account_locked_via_notification')->countAllResults());
     }
 
+    public function testLockingFromTheNotificationTellsTheOwnerWhoWasLockedAndWhen(): void
+    {
+        [$id] = $this->alertLink();
+        $this->db->table('notifications')->where('notification_id', $id)->update(['is_read' => 1]);
+        $before = $this->db->table('notifications')->countAllResults();
+
+        $this->asOwner()->post("admin/notifications/lock/{$id}");
+
+        $this->assertSame($before + 1, $this->db->table('notifications')->countAllResults());
+        $note = $this->db->table('notifications')->where('title', 'Account locked')->get()->getRow();
+        $this->assertNotNull($note);
+        $this->assertSame('Admin', $note->recipient_role);
+        $this->assertSame(0, (int) $note->is_read);
+        $this->assertNull($note->action_user_id);
+        $this->assertNull($note->status);
+        $this->assertSame('You locked the account of Cashier1 on ' . date('M j, Y, g:i A') . '.', $note->message);
+        $this->assertSame('Asia/Manila', config('App')->appTimezone);
+        $this->assertSame('Asia/Manila', date_default_timezone_get());
+    }
+
+    public function testLockingFromTheEmailLinkTellsTheOwnerToo(): void
+    {
+        [$id, $token] = $this->alertLink();
+
+        $this->post("notification-action/{$id}/{$token}/lock");
+
+        $note = $this->db->table('notifications')->where('title', 'Account locked')->get()->getRow();
+        $this->assertNotNull($note);
+        $this->assertStringContainsString('You locked the account of Cashier1 on ', $note->message);
+        $this->assertSame(1, $this->db->table('notifications')->where('title', 'Account locked')->countAllResults());
+    }
+
+    public function testNoLockNoticeWhenTheLockDidNotHappen(): void
+    {
+        [$id] = $this->alertLink();
+
+        $this->post("notification-action/{$id}/wrong-token/lock");
+
+        $this->assertSame(0, $this->db->table('notifications')->where('title', 'Account locked')->countAllResults());
+        $this->assertTrue($this->staffActive());
+    }
+
     public function testExactlyOneAlertIsVisibleToTheAdminBellAndNotificationsList(): void
     {
         $this->change(self::OLD_PASSWORD, self::NEW_PASSWORD);

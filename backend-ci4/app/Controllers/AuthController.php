@@ -103,6 +103,21 @@ class AuthController extends BaseController
         }
 
         if (count($matches) === 0) {
+            // The password is right but the owner has locked the account. Removed accounts
+            // (deleted_at set) are not considered, and this is not a failed attempt.
+            $locked = array_values(array_filter(
+                $this->userModel->staffMatchingPassword((string) $password, false),
+                static fn ($u) => ! $u['is_active']
+            ));
+
+            if ($locked !== []) {
+                SecurityLogModel::log('login_blocked_locked', $locked[0]);
+
+                return redirect()->back()
+                    ->with('error', 'Sorry, this account was locked by the Owner. Please contact the Owner.')
+                    ->with('attempted_role', 'staff');
+            }
+
             return $this->failLogin('staff');
         }
 

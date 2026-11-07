@@ -152,6 +152,11 @@ class StaffPasswordReset
         (new NotificationModel())->approveAccessRequest((int) $notification['notification_id']);
         SecurityLogModel::log('password_reset_approved', ['user_id' => null, 'username' => $actorName, 'role' => 'Admin'], 'staff: ' . $staff['username'] . ', temporary password emailed');
 
+        StaffPasswordAlert::ownerNotice(
+            'Password reset approved',
+            "You approved the password reset of {$staff['full_name']} on " . StaffPasswordAlert::now() . '. A temporary password was emailed to them.'
+        );
+
         return ['ok' => true, 'staff' => $staff, 'password' => $password];
     }
 
