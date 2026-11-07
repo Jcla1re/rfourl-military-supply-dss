@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\TrendReport;
 use App\Models\ClusterSegmentModel;
 use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
@@ -213,6 +214,8 @@ class TrendAnalysisController extends BaseController
             'unitsPrev' => $unitsPrev,
             'changePct' => $unitsPrev > 0 ? (($unitsYtd - $unitsPrev) / $unitsPrev) * 100 : null,
             'periodLabel' => self::dateRangeLabel(new \DateTime("{$year}-01-01"), new \DateTime($periodEnd)),
+            'periodEnd' => $periodEnd,
+            'prevPeriodLabel' => self::dateRangeLabel(new \DateTime(($year - 1) . '-01-01'), new \DateTime($prevEnd)),
             'bestMonth' => $bestMonth,
             'topItem' => $topItem,
             'topSellers' => $topSellers,
@@ -237,19 +240,99 @@ class TrendAnalysisController extends BaseController
         return view('admin/trend_analysis', $this->buildData());
     }
 
+    /**
+     * The PDF report: the page's own data (buildData) plus what only the report shows, laid out by
+     * TrendReport. Charts are drawn as SVG on the server because Dompdf can't run JavaScript.
+     */
     public function pdf()
     {
-        $data = $this->buildData();
+        $data           = $this->reportData();
+        $data['report'] = TrendReport::build($data);
 
-        $dompdf = new \Dompdf\Dompdf();
+        $options = new \Dompdf\Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('isRemoteEnabled', false);
+
+        $dompdf = new \Dompdf\Dompdf($options);
         $dompdf->setPaper('a4', 'portrait');
         $dompdf->loadHtml(view('admin/trend_analysis_pdf', $data));
         $dompdf->render();
+        $this->addFooter($dompdf, $data['report']['footer']);
 
         return $this->response
             ->setHeader('Content-Type', 'application/pdf')
             ->setHeader('Content-Disposition', 'attachment; filename="trend-analysis-' . $data['selectedYear'] . '.pdf"')
             ->setBody($dompdf->output());
+    }
+
+    /** buildData() plus the few extras only the report needs (nothing the page shows is recomputed differently). */
+    private function reportData(): array
+    {
+        $data   = $this->buildData();
+        $itemId = $data['selectedItem'];
+        $db     = db_connect();
+
+        $itemLabel = null;
+        foreach ($data['products'] as $p) {
+            if ($itemId && $p['item_id'] === $itemId) {
+                $size      = trim((string) ($p['size'] ?? ''));
+                $itemLabel = $p['item_name'] . ($size !== '' ? " ({$size})" : '');
+            }
+        }
+
+        return $data + [
+            'itemLabel'   => $itemLabel,
+            'generatedAt' => date('M j, Y g:i A'), // the app's timezone is Asia/Manila
+            'lastSaleAt'  => $db->table('sales_transaction')->selectMax('sale_date', 'mx')->get()->getRowArray()['mx'] ?? null,
+            'dssRunAt'    => $db->table('pdss_computation')->selectMax('computed_at', 'mx')->get()->getRowArray()['mx'] ?? null,
+            'weeks12'     => $this->weeksSeries($data['weekAsOf'], $itemId, 12),
+        ];
+    }
+
+    /**
+     * Units sold in each of the last $count 7-day weeks, oldest first. The last week is the same 7
+     * days as the page's Weekly view ("this week"), the one before it is the week it compares with.
+     *
+     * @return list<array{label: string, short: string, units: int}>
+     */
+    private function weeksSeries(string $endDate, ?string $itemId, int $count): array
+    {
+        $end   = new \DateTime($endDate);
+        $start = (clone $end)->modify('-' . ($count * 7 - 1) . ' days');
+
+        $byDate = [];
+        foreach ($this->salesItemModel->dailyQuantities($start->format('Y-m-d'), $end->format('Y-m-d'), $itemId) as $r) {
+            $byDate[$r['d']] = (int) $r['qty'];
+        }
+
+        $weeks = [];
+        for ($w = $count - 1; $w >= 0; $w--) {
+            $weekEnd   = (clone $end)->modify('-' . ($w * 7) . ' days');
+            $weekStart = (clone $weekEnd)->modify('-6 days');
+            $units     = 0;
+            for ($d = clone $weekStart; $d <= $weekEnd; $d->modify('+1 day')) {
+                $units += $byDate[$d->format('Y-m-d')] ?? 0;
+            }
+            $weeks[] = [
+                'label' => self::dateRangeLabel($weekStart, $weekEnd),
+                'short' => $weekStart->format('M j'),
+                'units' => $units,
+            ];
+        }
+
+        return $weeks;
+    }
+
+    /** "RfourL Military Apparel · Trend Analysis 2026 · Page X of Y" at the foot of every page. */
+    private function addFooter(\Dompdf\Dompdf $dompdf, string $footer): void
+    {
+        $canvas  = $dompdf->getCanvas();
+        $metrics = $dompdf->getFontMetrics();
+        $font    = $metrics->getFont('DejaVu Sans', 'normal');
+        $size    = 8;
+        $width   = $metrics->getTextWidth(str_replace(['{PAGE_NUM}', '{PAGE_COUNT}'], ['99', '99'], $footer), $font, $size);
+
+        $canvas->page_text(($canvas->get_width() - $width) / 2, $canvas->get_height() - 28, $footer, $font, $size, [0.36, 0.38, 0.32]);
     }
 
     /** Every year that has sales (newest first), always including the current year. */
