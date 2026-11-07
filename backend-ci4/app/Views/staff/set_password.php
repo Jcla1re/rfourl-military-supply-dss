@@ -1,6 +1,7 @@
 <?php
 // Shown after signing in with a temporary password: the only page a staff member can open until they set their own.
-$errorMsg = session()->getFlashdata('error');
+$errorMsg   = session()->getFlashdata('error');
+$suggestion = session()->getFlashdata('password_suggestion');
 $invite   = ($kind ?? '') === 'invite';
 ?>
 <!DOCTYPE html>
@@ -26,7 +27,12 @@ $invite   = ($kind ?? '') === 'invite';
         <p class="auth-hint"><?= $invite ? 'Welcome! Choose your own password to continue.' : 'Choose your own password to continue.' ?></p>
 
         <?php if ($errorMsg): ?>
-            <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
+            <div class="auth-error">
+                <?= esc((string) $errorMsg) ?>
+                <?php if (! empty($suggestion)): ?>
+                    <button type="button" class="btn btn-sm btn-outline-dark" id="useSuggestion" data-value="<?= esc($suggestion, 'attr') ?>" style="margin-left:8px;">Use this</button>
+                <?php endif; ?>
+            </div>
         <?php endif; ?>
 
         <form action="<?= site_url('staff/set-password') ?>" method="post">
@@ -50,5 +56,15 @@ $invite   = ($kind ?? '') === 'invite';
         </form>
     </div>
     <script src="/assets/js/pw-toggle.js"></script>
+    <script>
+    // "Use this": fills the suggested password into both fields (no reload).
+    (function () {
+        var btn = document.getElementById('useSuggestion');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('input[name=new_password], input[name=confirm_password]').forEach(function (i) { i.value = btn.dataset.value; });
+        });
+    })();
+    </script>
 </body>
 </html>

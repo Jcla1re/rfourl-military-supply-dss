@@ -91,6 +91,12 @@ class StaffPasswordReset
             $password = self::generate();
         } while ($this->users->staffPasswordInUse($password, (int) $staff['user_id']));
 
+        // An owner reset replaces a password the person chose: remember it so they can't go straight back
+        // to it. Not for a new account (nothing chosen yet) or while an earlier temporary one is still pending.
+        if ($kind === self::KIND_RESET && ! self::isPending($staff)) {
+            PasswordHistory::record((int) $staff['user_id'], $staff['password_hash'] ?? null);
+        }
+
         $this->users->update((int) $staff['user_id'], [
             'password_hash'            => password_hash($password, PASSWORD_DEFAULT),
             'must_change_password'     => 1,

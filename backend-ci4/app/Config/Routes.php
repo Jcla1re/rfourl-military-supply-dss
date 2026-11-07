@@ -130,6 +130,9 @@ $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'ro
 
     $routes->get('account', 'AccountController::index');
     $routes->post('account/password', 'AccountController::changePassword');
+    $routes->post('account/profile', 'AccountController::updateProfile');
+    $routes->post('account/email/confirm', 'AccountController::confirmEmail');
+    $routes->post('account/email/cancel', 'AccountController::cancelEmail');
 
     // Only page open to a staff member who signed in with a temporary password.
     $routes->get('set-password', 'SetPasswordController::index');

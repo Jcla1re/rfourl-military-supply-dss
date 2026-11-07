@@ -140,8 +140,10 @@ final class StaffAccountTest extends CIUnitTestCase
 
     public function testNewPasswordMustDifferFromCurrent(): void
     {
-        $this->change('Cashier1Pass1', 'Cashier1Pass1')
-            ->assertSessionHas('error', 'New password must be different from your current password.');
+        $result = $this->change('Cashier1Pass1', 'Cashier1Pass1');
+
+        $this->assertStringStartsWith("You can't use your old password. Try something new, like: ", (string) $_SESSION['error']);
+        $this->assertTrue(password_verify('Cashier1Pass1', $this->hashOf($this->staffId)));
     }
 
     public function testWeakOrMismatchedPasswordsAreRefused(): void
@@ -168,7 +170,7 @@ final class StaffAccountTest extends CIUnitTestCase
         $result = $this->asStaff()->get('staff/account');
 
         $result->assertOK();
-        $result->assertSee('To change your name or email, ask the owner.');
+        $result->assertSee('Your username and role are set by the owner.');
         $result->assertSee('Cashier1');
     }
 

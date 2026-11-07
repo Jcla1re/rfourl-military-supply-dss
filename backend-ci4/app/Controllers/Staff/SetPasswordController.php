@@ -4,6 +4,7 @@ namespace App\Controllers\Staff;
 
 use App\Controllers\BaseController;
 use App\Libraries\AttemptStore;
+use App\Libraries\PasswordHistory;
 use App\Libraries\PasswordPolicy;
 use App\Libraries\StaffPasswordReset;
 use App\Libraries\Toast;
@@ -65,6 +66,15 @@ class SetPasswordController extends BaseController
         }
         if (password_verify($newPass, $user['password_hash'])) {
             return redirect()->to($back)->with('error', 'Choose a different password from the temporary one.');
+        }
+        // Not one of the last passwords they chose themselves (the temporary one doesn't count as one).
+        if (PasswordHistory::reuses($user, $newPass, false)) {
+            SecurityLogModel::log('password_reuse_blocked', $user, 'tried an earlier password');
+            $suggestion = PasswordHistory::suggest((int) $user['user_id']);
+
+            return redirect()->to($back)
+                ->with('error', "You can't use your old password. Try something new, like: {$suggestion}")
+                ->with('password_suggestion', $suggestion);
         }
         // Staff sign in by password alone, so it must be unique (never say whose it is).
         if ($this->users->staffPasswordInUse($newPass, (int) $user['user_id'])) {
