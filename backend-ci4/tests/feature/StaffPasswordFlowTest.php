@@ -195,6 +195,123 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->assertStringContainsString('Approve reset', $mail['setMessage']);
     }
 
+    // ------------------------------------------------ requests with no active account to approve
+
+    private const LOCKED_LINE = 'This name matches Cashier1, whose account is locked. Reset their password in Settings > Manage Accounts to unlock it.';
+
+    public function testALockedAccountsRequestHasNoApproveButAnExplanationEverywhere(): void
+    {
+        $this->db->table('users')->where('user_id', $this->staffId)->update(['is_active' => 0]);
+
+        // The requester sees the same "sent" result as ever.
+        $this->post('login/staff/forgot', ['staff_name' => 'cashier1', 'reason' => 'locked out'])->assertSessionHas('sent');
+
+        $n = $this->db->table('notifications')->get()->getRow();
+        $this->assertSame($this->staffId, (int) $n->action_user_id);
+
+        // Owner's email: explanation + Manage Accounts + Decline, no Approve.
+        $mail = $this->mailer->sent[0];
+        $this->assertStringContainsString(self::LOCKED_LINE, $mail['setAltMessage']);
+        $this->assertStringContainsString(esc(self::LOCKED_LINE, 'html'), $mail['setMessage']);
+        $this->assertStringContainsString('Manage Accounts', $mail['setMessage']);
+        $this->assertStringContainsString(site_url('admin/settings?tab=accounts'), $mail['setMessage']);
+        $this->assertStringContainsString('Decline', $mail['setMessage']);
+        $this->assertStringNotContainsString('Approve reset', $mail['setMessage']);
+        $this->assertStringNotContainsString('/approve', $mail['setMessage']);
+        $this->assertStringNotContainsString('/approve', $mail['setAltMessage']);
+
+        // In-app: same line, no Approve button, Decline still there.
+        $page = $this->asOwner()->get('admin/notifications');
+        $this->assertStringContainsString(self::LOCKED_LINE, html_entity_decode($page->getBody()));
+        $this->assertStringNotContainsString('data-approve-open="', $page->getBody());
+        $this->assertStringNotContainsString('class="approve-confirm"', $page->getBody());
+        $page->assertSee('Decline');
+
+        // Email-link confirm page: the explanation instead of the Approve form.
+        $link = $this->get("notification-action/{$n->notification_id}/{$n->action_token}/approve");
+        $this->assertStringContainsString(self::LOCKED_LINE, html_entity_decode($link->getBody()));
+        $link->assertDontSee('I confirmed with them');
+
+        // Approving it anyway changes nothing.
+        $hash = $this->user($this->staffId)->password_hash;
+        $this->approveViaLink((int) $n->notification_id, $n->action_token);
+        $this->assertSame($hash, $this->user($this->staffId)->password_hash);
+        $this->assertSame([], array_filter($this->mailer->sent, static fn ($m) => ($m['setTo'] ?? '') === 'cashier1@example.test'));
+    }
+
+    public function testAnUnknownNamesRequestHasNoApproveButAnExplanationEverywhere(): void
+    {
+        $line = 'No single staff account matches "Nobody Here". Check the name, then use Reset Password in Settings > Manage Accounts.';
+
+        $this->post('login/staff/forgot', ['staff_name' => 'Nobody Here', 'reason' => 'x'])->assertSessionHas('sent');
+
+        $n = $this->db->table('notifications')->get()->getRow();
+        $this->assertNull($n->action_user_id);
+
+        $mail = $this->mailer->sent[0];
+        $this->assertStringContainsString($line, $mail['setAltMessage']);
+        $this->assertStringContainsString(esc($line, 'html'), $mail['setMessage']);
+        $this->assertStringContainsString('Manage Accounts', $mail['setMessage']);
+        $this->assertStringNotContainsString('Approve reset', $mail['setMessage']);
+        $this->assertStringNotContainsString('/approve', $mail['setAltMessage']);
+
+        $page = $this->asOwner()->get('admin/notifications');
+        $this->assertStringContainsString($line, html_entity_decode($page->getBody()));
+        $this->assertStringNotContainsString('data-approve-open="', $page->getBody());
+
+        $link = $this->get("notification-action/{$n->notification_id}/{$n->action_token}/approve");
+        $this->assertStringContainsString($line, html_entity_decode($link->getBody()));
+        $link->assertDontSee('I confirmed with them');
+    }
+
+    public function testMoreThanOneMatchOrARemovedAccountIsTreatedAsNoMatch(): void
+    {
+        // Two staff accounts with the same name: no single match.
+        $this->db->table('users')->where('user_id', $this->otherId)->update(['full_name' => 'Cashier1']);
+        $this->post('login/staff/forgot', ['staff_name' => 'Cashier1', 'reason' => 'x']);
+        // A removed account is not offered as a locked match either.
+        $this->db->table('users')->where('user_id', $this->otherId)->update(['full_name' => 'Gone Person', 'is_active' => 0, 'deleted_at' => '2026-10-01 08:00:00']);
+        $this->post('login/staff/forgot', ['staff_name' => 'Gone Person', 'reason' => 'x']);
+
+        foreach ($this->db->table('notifications')->get()->getResult() as $n) {
+            $this->assertNull($n->action_user_id);
+        }
+        $this->assertStringContainsString('No single staff account matches "Cashier1"', $this->mailer->sent[0]['setAltMessage']);
+        $this->assertStringContainsString('No single staff account matches "Gone Person"', $this->mailer->sent[1]['setAltMessage']);
+    }
+
+    public function testAMatchedRequestStillHasTheApproveButtonAndForm(): void
+    {
+        $this->post('login/staff/forgot', ['staff_name' => 'cashier1', 'reason' => 'forgot'])->assertSessionHas('sent');
+        $n = $this->db->table('notifications')->get()->getRow();
+
+        $mail = $this->mailer->sent[0];
+        $this->assertStringContainsString('Approve reset', $mail['setMessage']);
+        $this->assertStringContainsString('/approve', $mail['setAltMessage']);
+        $this->assertStringNotContainsString('Manage Accounts', $mail['setMessage']);
+
+        $page = $this->asOwner()->get('admin/notifications');
+        $this->assertStringContainsString('data-approve-open="', $page->getBody());
+        $this->assertStringContainsString('class="approve-confirm"', $page->getBody());
+        $page->assertDontSee('whose account is locked');
+
+        $this->get("notification-action/{$n->notification_id}/{$n->action_token}/approve")->assertSee('I confirmed with them');
+
+        // And it can still be approved.
+        $this->approveViaLink((int) $n->notification_id, $n->action_token)->assertSee('A temporary password was emailed to Cashier1');
+    }
+
+    public function testALockedRequestBecomesApprovableOnceTheAccountIsUnlocked(): void
+    {
+        $this->db->table('users')->where('user_id', $this->staffId)->update(['is_active' => 0]);
+        $this->post('login/staff/forgot', ['staff_name' => 'cashier1', 'reason' => 'x']);
+        $n = $this->db->table('notifications')->get()->getRow();
+
+        $this->db->table('users')->where('user_id', $this->staffId)->update(['is_active' => 1]);
+
+        $this->get("notification-action/{$n->notification_id}/{$n->action_token}/approve")->assertSee('I confirmed with them');
+    }
+
     public function testUnknownNameLooksTheSameToTheRequesterButIsNotMatched(): void
     {
         $this->post('login/staff/forgot', ['staff_name' => 'Nobody Here', 'reason' => 'x'])->assertSessionHas('sent');

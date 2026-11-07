@@ -26,6 +26,9 @@ class StaffPasswordReset
     public const KIND_RESET  = 'reset';
     public const KIND_INVITE = 'invite';
 
+    /** Start of the title of a "Can't access your account?" request; the typed name follows. */
+    public const REQUEST_TITLE = 'Password reset requested by ';
+
     public const RESET_TTL  = 7200;   // 2 hours
     public const INVITE_TTL = 172800; // 48 hours
 
@@ -120,6 +123,42 @@ class StaffPasswordReset
         $db->transComplete();
 
         return $password;
+    }
+
+    /**
+     * Where a "Can't access your account?" request stands, worked out from the account it was
+     * linked to when it was made: 'matched' (an active account, so Approve works), 'locked' (the
+     * name matched one locked account) or 'none' (no single account matched). For the last two
+     * 'message' tells the owner what to do instead. Matching itself is done in AuthController.
+     *
+     * @return array{state: string, staff: ?array, message: ?string}
+     */
+    public static function requestState(array $notification): array
+    {
+        $staff = ! empty($notification['action_user_id'])
+            ? (new UserModel())->activeStaff()->find((int) $notification['action_user_id'])
+            : null;
+
+        if ($staff && $staff['is_active']) {
+            return ['state' => 'matched', 'staff' => $staff, 'message' => null];
+        }
+
+        $title = (string) ($notification['title'] ?? '');
+        $typed = str_starts_with($title, self::REQUEST_TITLE) ? trim(substr($title, strlen(self::REQUEST_TITLE))) : '';
+
+        return [
+            'state'   => $staff ? 'locked' : 'none',
+            'staff'   => $staff,
+            'message' => self::unmatchedMessage($staff, $typed),
+        ];
+    }
+
+    /** What to tell the owner when the request has no active account to approve. */
+    public static function unmatchedMessage(?array $lockedStaff, string $typed): string
+    {
+        return $lockedStaff
+            ? "This name matches {$lockedStaff['full_name']}, whose account is locked. Reset their password in Settings > Manage Accounts to unlock it."
+            : "No single staff account matches \"{$typed}\". Check the name, then use Reset Password in Settings > Manage Accounts.";
     }
 
     /**

@@ -194,13 +194,18 @@ $unreadCount = $unreadCount ?? 0;
                             <?php if (!empty($n['message'])): ?><div class="msg"><?= esc($n['message']) ?></div><?php endif; ?>
                             <span class="type-pill"><?= esc(['Reorder Point Notice' => 'Reorder At Notice'][$n['type']] ?? $n['type']) ?></span>
                             <?php if (empty($n['status'])): ?>
+                                <?php $__req = \App\Libraries\StaffPasswordReset::requestState($n); ?>
+                                <?php if ($__req['state'] !== 'matched'): ?><div class="msg" style="margin-top:6px;"><?= esc($__req['message']) ?></div><?php endif; ?>
                                 <div class="notif-actions">
+                                    <?php if ($__req['state'] === 'matched'): ?>
                                     <button type="button" class="approve" data-approve-open="<?= (int) $n['notification_id'] ?>">Approve reset</button>
+                                    <?php endif; ?>
                                     <form method="post" action="<?= site_url('admin/notifications/decline/' . $n['notification_id']) ?>">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="decline">Decline</button>
                                     </form>
                                 </div>
+                                <?php if ($__req['state'] === 'matched'): ?>
                                 <form method="post" action="<?= site_url('admin/notifications/approve/' . $n['notification_id']) ?>"
                                       class="approve-confirm" id="approveConfirm<?= (int) $n['notification_id'] ?>" hidden>
                                     <?= csrf_field() ?>
@@ -214,6 +219,7 @@ $unreadCount = $unreadCount ?? 0;
                                         <button type="button" class="approve-cancel">Cancel</button>
                                     </div>
                                 </form>
+                                <?php endif; ?>
                             <?php else: ?>
                                 <div class="msg" style="margin-top:8px;"><em>Resolved: <?= esc(ucfirst($n['status'])) ?></em></div>
                             <?php endif; ?>

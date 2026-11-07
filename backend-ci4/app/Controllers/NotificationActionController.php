@@ -48,6 +48,15 @@ class NotificationActionController extends BaseController
             ]);
         }
 
+        // Nothing to approve when the request was not matched to an active account: say why, right away.
+        if ($action === 'approve') {
+            $request = StaffPasswordReset::requestState($notification);
+
+            if ($request['state'] !== 'matched') {
+                return view('notification_action/problem', ['heading' => "Can't approve this request", 'message' => $request['message']]);
+            }
+        }
+
         return view('notification_action/confirm', [
             'notification' => $notification,
             'action'       => $action,

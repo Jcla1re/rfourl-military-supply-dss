@@ -1,6 +1,7 @@
 <?php
 // app/Views/notification_action/problem.php
 $message = $message ?? 'This link is invalid or has expired.';
+$heading = $heading ?? 'Link Unavailable';
 ?>
 <!DOCTYPE html>
 <html>
@@ -20,7 +21,7 @@ $message = $message ?? 'This link is invalid or has expired.';
 <body class="auth-body">
 <?= view('partials/demo_banner') ?>
     <div class="auth-card">
-        <h2>Link Unavailable</h2>
+        <h2><?= esc($heading) ?></h2>
         <p class="auth-hint"><?= esc($message) ?></p>
         <div class="auth-back"><a href="<?= site_url('login/admin') ?>">Go to owner login</a></div>
     </div>

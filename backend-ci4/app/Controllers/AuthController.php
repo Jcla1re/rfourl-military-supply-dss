@@ -7,6 +7,7 @@ use App\Libraries\AttemptStore;
 use App\Libraries\DemoGuard;
 use App\Libraries\EmailNotifier;
 use App\Libraries\PasswordPolicy;
+use App\Libraries\StaffPasswordReset;
 use App\Libraries\LoginLockout;
 use App\Models\NotificationModel;
 use App\Models\SecurityLogModel;
@@ -504,6 +505,15 @@ class AuthController extends BaseController
             ->findAll();
         $matched = count($matches) === 1 ? $matches[0] : null;
 
+        // No active match: is it one locked (inactive, not removed) account? Only the owner is told.
+        $locked = null;
+        if ($matched === null && $matches === []) {
+            $inactive = $this->userModel->activeStaff()->where('is_active', 0)
+                ->groupStart()->where('LOWER(full_name)', $needle)->orWhere('LOWER(username)', $needle)->groupEnd()
+                ->findAll();
+            $locked = count($inactive) === 1 ? $inactive[0] : null;
+        }
+
         // Demo mode: the demo staff account's password can't be reset.
         if (DemoGuard::locksUser($matched)) {
             return DemoGuard::refuse('/login/staff/forgot', 'error');
@@ -513,23 +523,25 @@ class AuthController extends BaseController
         $notificationId = $notifications->push(
             'Admin',
             'Access Request',
-            "Password reset requested by {$staffName}",
+            StaffPasswordReset::REQUEST_TITLE . $staffName,
             $reasonText,
             null,
             'access_request',
             null,
             $actionToken
         );
-        if ($matched) {
+        // The linked account tells the owner's views which case this is (see StaffPasswordReset::requestState()).
+        if ($matched || $locked) {
             try {
-                $notifications->update($notificationId, ['action_user_id' => (int) $matched['user_id']]);
+                $notifications->update($notificationId, ['action_user_id' => (int) ($matched ?? $locked)['user_id']]);
             } catch (\Throwable $e) {
                 log_message('error', 'Reset request not linked to an account (run php spark migrate): ' . $e->getMessage());
             }
         }
         $matchLine = $matched
             ? "Matches staff account: {$matched['full_name']} (@{$matched['username']})."
-            : "No single staff account matches this name. Use Reset Password in Settings > Manage Accounts instead.";
+            : StaffPasswordReset::unmatchedMessage($locked, $staffName);
+        $accountsUrl = site_url('admin/settings?tab=accounts');
 
         $approveUrl = site_url("notification-action/{$notificationId}/{$actionToken}/approve");
         $declineUrl = site_url("notification-action/{$notificationId}/{$actionToken}/decline");
@@ -547,19 +559,22 @@ class AuthController extends BaseController
         $htmlMessage = "<div style=\"font-family:'Poppins',Arial,sans-serif;\"><p>{$staffNameHtml} can't log in and is requesting a password reset.</p>"
             . "<p><strong>Reason given:</strong> {$reasonHtml}</p>"
             . "<p>{$matchHtml}</p>"
-            . '<p>Check with them, by call or chat, that they really sent this request. Approving emails them a temporary password.</p>'
+            . ($matched ? '<p>Check with them, by call or chat, that they really sent this request. Approving emails them a temporary password.</p>' : '')
             . '<p style="margin:24px 0;">'
-            . "<a href=\"{$approveUrl}\" style=\"background:#2f6431;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin-right:12px;display:inline-block;\">Approve reset</a>"
+            . ($matched
+                ? "<a href=\"{$approveUrl}\" style=\"background:#2f6431;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin-right:12px;display:inline-block;\">Approve reset</a>"
+                : "<a href=\"{$accountsUrl}\" style=\"background:#2f6431;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin-right:12px;display:inline-block;\">Manage Accounts</a>")
             . "<a href=\"{$declineUrl}\" style=\"background:#7a2020;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;\">Decline</a>"
             . '</p>'
             . '<p style="color:#888;font-size:12px;">Or sign in and open Notifications.</p></div>';
 
         $plainText = "{$staffName} can't log in and is requesting a password reset.\n\n"
             . "Reason given: {$reasonText}\n\n{$matchLine}\n\n"
-            . "Check with them, by call or chat, that they really sent this request. Approving emails them a temporary password.\n\n"
-            . "Approve reset: {$approveUrl}\n"
+            . ($matched
+                ? "Check with them, by call or chat, that they really sent this request. Approving emails them a temporary password.\n\nApprove reset: {$approveUrl}\n"
+                : "Manage Accounts: {$accountsUrl}\n")
             . "Decline: {$declineUrl}\n\n"
-            . "Or sign in and open Notifications to approve or decline this request.";
+            . ($matched ? 'Or sign in and open Notifications to approve or decline this request.' : 'Or sign in and open Notifications to decline this request.');
 
         (new EmailNotifier())->toRoleHtml(
             'Admin',
