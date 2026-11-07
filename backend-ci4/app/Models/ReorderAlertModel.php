@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Model;
 
 class ReorderAlertModel extends Model
@@ -46,7 +47,7 @@ class ReorderAlertModel extends Model
             ->join('products', 'products.item_id = reorder_alert.item_id', 'left')
             ->whereIn('reorder_alert.status', self::PENDING_STATUSES)
             ->where('products.is_active', 1) // archived items' alerts stay hidden until restored
-            ->orderBy('reorder_alert.alert_timestamp', 'DESC')
+            ->mostUrgentFirst()
             ->findAll();
     }
 
@@ -58,8 +59,27 @@ class ReorderAlertModel extends Model
             ->where('reorder_alert.status', 'Dismissed')
             ->where('reorder_alert.hidden_until_recovered', 1)
             ->where('products.is_active', 1)
-            ->orderBy('reorder_alert.alert_timestamp', 'DESC')
+            ->mostUrgentFirst()
             ->findAll();
+    }
+
+    /**
+     * Stock 0 first, then the lowest stock compared with its reorder point, then
+     * item name. Size and alert ID only keep the order the same between page loads.
+     * A size with no reorder point can't be compared, so it goes last. Needs the
+     * products join.
+     */
+    private function mostUrgentFirst(): static
+    {
+        $products = $this->db->prefixTable('products');
+
+        $this->orderBy("({$products}.current_stock <= 0)", 'DESC', false)
+            ->orderBy("COALESCE({$products}.current_stock * 1.0 / NULLIF({$products}.manual_rop_warning, 0), 999999)", 'ASC', false)
+            ->orderBy('products.item_name', 'ASC')
+            ->orderBy('products.size', 'ASC')
+            ->orderBy('reorder_alert.alert_id', 'ASC');
+
+        return $this;
     }
 
     /** Dismisses one pending alert; it stays hidden until its size recovers. */
@@ -71,10 +91,11 @@ class ReorderAlertModel extends Model
             ->update();
     }
 
-    /** "Dismiss All Pending": same rule as dismissing each one. */
+    /** "Dismiss All Pending": same rule as dismissing each one. Archived items keep their alerts. */
     public function dismissAllPending(): void
     {
         $this->whereIn('status', self::PENDING_STATUSES)
+            ->whereIn('item_id', static fn (BaseBuilder $builder) => $builder->select('item_id')->from('products')->where('is_active', 1))
             ->set(['status' => 'Dismissed', 'hidden_until_recovered' => 1])
             ->update();
     }
@@ -244,6 +265,7 @@ class ReorderAlertModel extends Model
         // on its own — never "Ordered" ones, even if stock happens to look
         // fine again before delivery, since markDelivered() still needs to
         // find them by status='Ordered' to mark them Fulfilled on arrival.
+        // Archived items keep their alerts too, so a restored item gets its alert back.
         $pendingByItem = array_column(
             $this->whereIn('status', self::PENDING_STATUSES)->findAll(),
             null,
@@ -252,7 +274,7 @@ class ReorderAlertModel extends Model
 
         $staleIds = [];
         foreach ($pendingByItem as $itemId => $alert) {
-            if (! isset($criticalByItem[$itemId])) {
+            if (isset($activeByItem[$itemId]) && ! isset($criticalByItem[$itemId])) {
                 $staleIds[] = $alert['alert_id'];
             }
         }

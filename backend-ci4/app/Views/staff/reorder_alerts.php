@@ -1,10 +1,6 @@
 
 <?= $this->extend('layouts/staff_layout') ?>
 
-<?= $this->section('header_actions') ?>
-<span class="text-white-50 small me-2">Last updated: <?= esc($lastUpdated ?? 'just now') ?></span>
-<?= $this->endSection() ?>
-
 <?= $this->section('content') ?>
 
 <?php $alerts = $alerts ?? []; $dss = $dss ?? []; ?>

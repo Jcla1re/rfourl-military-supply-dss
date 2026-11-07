@@ -96,7 +96,7 @@
                                     <button type="button"
                                             class="pr-order-btn open-order-modal"
                                             data-item-id="<?= esc($r['item_id']) ?>"
-                                            data-item-name="<?= esc($r['item_name']) ?>"
+                                            data-item-name="<?= esc($r['item_name'] . (! empty($r['size']) ? ' · Size ' . $r['size'] : '')) ?>"
                                             data-supplier-id="<?= esc($r['supplier_id'] ?? '') ?>"
                                             data-unit-cost="<?= esc($r['unit_cost'] ?? 0) ?>"
                                             data-recommended-eoq="<?= esc($r['eoq']) ?>">

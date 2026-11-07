@@ -55,7 +55,6 @@ class ReorderAlertController extends BaseController
             'products'        => $this->productModel->where('is_active', 1)->findAll(),
             'dss'             => $dss,
             'receivedCount'   => $this->reorderAlertModel->resolvedThisWeek(),
-            'lastUpdated'     => 'just now',
             'success'         => session()->getFlashdata('success'),
             'error'           => session()->getFlashdata('error'),
         ];
@@ -104,6 +103,7 @@ class ReorderAlertController extends BaseController
             $rows[] = [
                 'item_id'      => $p['item_id'],
                 'item_name'    => $p['item_name'],
+                'size'         => $p['size'] ?? null,
                 'abc_category' => $classByItem[$p['item_id']] ?? '—', // K-Means class (cluster_segments)
                 'stock'        => $p['current_stock'],
                 'rop'          => $p['manual_rop_warning'],

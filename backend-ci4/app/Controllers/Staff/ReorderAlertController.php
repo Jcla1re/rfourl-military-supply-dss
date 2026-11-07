@@ -52,7 +52,6 @@ class ReorderAlertController extends BaseController
             'counts'          => (new ProductModel())->reorderCounts(),
             'dss'             => $dss,
             'receivedCount'   => $this->reorderAlertModel->resolvedThisWeek(),
-            'lastUpdated'     => 'just now',
             'success'         => session()->getFlashdata('success'),
         ];
 

@@ -2,7 +2,6 @@
 <?= $this->extend('layouts/admin_layout') ?>
 
 <?= $this->section('header_actions') ?>
-<span class="text-white-50 small me-2">Last updated: <?= esc($lastUpdated ?? 'just now') ?></span>
 <a href="<?= site_url('admin/procurement-report') ?>" class="btn btn-success">Ordering Report</a>
 <?= $this->endSection() ?>
 
@@ -117,7 +116,7 @@ $dss = $dss ?? [];
                                 class="btn btn-success order-btn open-order-modal"
                                 data-alert-id="<?= esc($alert['alert_id']) ?>"
                                 data-item-id="<?= esc($alert['item_id']) ?>"
-                                data-item-name="<?= esc($alert['item_name'] ?? '') ?>"
+                                data-item-name="<?= esc(($alert['item_name'] ?? '') . (! empty($alert['size']) ? ' · Size ' . $alert['size'] : '')) ?>"
                                 data-supplier-id="<?= esc($alert['supplier_id'] ?? '') ?>"
                                 data-recommended-eoq="<?= esc($alert['recommended_eoq'] ?? 1) ?>">
                             Order
