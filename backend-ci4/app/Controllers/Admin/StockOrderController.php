@@ -314,6 +314,24 @@ class StockOrderController extends BaseController
             return redirect()->back()->with('toast', Toast::error("Couldn't create order", 'Add at least one item with a quantity greater than zero.'));
         }
 
+        // Orders placed from Reorder Alerts go back there (Ordered tab); any other value is ignored.
+        $fromReorderAlerts = $this->request->getPost('return_to') === '/admin/reorder-alerts';
+        if ($fromReorderAlerts) {
+            // A size is only ever ordered from its own supplier ("Order all sizes" groups by supplier).
+            foreach ($this->productModel->whereIn('item_id', array_column($lines, 'item_id'))->findAll() as $p) {
+                if (! empty($p['supplier_id']) && $p['supplier_id'] !== $supplierId) {
+                    return redirect()->to('/admin/reorder-alerts')->with('toast', Toast::error("Couldn't create order", ProductModel::nameWithSize($p) . ' comes from another supplier.'));
+                }
+            }
+        }
+
+        // The alert the order was opened from, read before the pending alerts below become
+        // Ordered. Only a pending one is linked: a dismissed (or already ordered) alert stays as it is.
+        $alert = $alertId ? $this->reorderAlertModel->find((int) $alertId) : null;
+        if ($alert && ! in_array($alert['status'], ReorderAlertModel::PENDING_STATUSES, true)) {
+            $alert = null;
+        }
+
         $soId = $this->stockOrderModel->generateNextId();
 
         $db = db_connect();
@@ -349,12 +367,10 @@ class StockOrderController extends BaseController
         // Staff "Owner notified" on those items is answered by this order.
         (new ReorderNoticeModel())->clear(array_column($lines, 'item_id'), 'ordered');
 
-        $alert   = null;
         $product = null;
-        if ($alertId) {
-            $alert   = $this->reorderAlertModel->find((int) $alertId);
-            $product = $alert ? $this->productModel->find($alert['item_id']) : null;
-            $this->reorderAlertModel->update((int) $alertId, ['status' => 'Ordered', 'so_id' => $soId]);
+        if ($alert) {
+            $product = $this->productModel->find($alert['item_id']);
+            $this->reorderAlertModel->update((int) $alert['alert_id'], ['status' => 'Ordered', 'so_id' => $soId]);
         }
 
         $db->transComplete();
@@ -363,7 +379,7 @@ class StockOrderController extends BaseController
             return redirect()->back()->with('toast', Toast::error("Couldn't create order", 'Something went wrong while saving. Please try again.'));
         }
 
-        if ($alertId && $alert) {
+        if ($alert) {
             // Closes the loop back to whoever flagged this item — staff share
             // a single portal login, so this broadcasts to all Staff rather
             // than one specific account.
@@ -395,6 +411,17 @@ class StockOrderController extends BaseController
             "New stock order {$soId}",
             "A new stock order {$soId} has been placed. Please log in to the supplier portal to review and accept it."
         );
+
+        if ($fromReorderAlerts) {
+            $sizes = count($lines);
+
+            return redirect()->to('/admin/reorder-alerts?tab=ordered')->with('toast', Toast::success(
+                'Order created',
+                'was sent to ' . $orderSupplier['company_name'] . ($sizes > 1 ? " ({$sizes} sizes)." : '.'),
+                $soId,
+                ['action' => ['label' => 'View order', 'url' => site_url('admin/orders/' . $soId)]]
+            ));
+        }
 
         return redirect()->to('/admin/orders')->with('toast', Toast::success('Order created', 'was sent to the supplier.', $soId));
     }

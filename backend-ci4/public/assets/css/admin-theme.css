@@ -447,8 +447,11 @@ body {
 }
 
 /* Fixed, not absolute: the nav scrolls (.sidebar-scroll), which would clip a tooltip sticking out
-   of the sidebar. assets/js/sidebar-tips.js sets --tip-x / --tip-y from the hovered link. */
-.sidebar.collapsed .nav-link::after {
+   of the sidebar. assets/js/sidebar-tips.js sets --tip-x / --tip-y from the hovered link.
+   The same tooltip names icon-only buttons elsewhere: data-tooltip + data-tooltip-pos="above"
+   (placed below). */
+.sidebar.collapsed .nav-link::after,
+[data-tooltip][data-tooltip-pos="above"]::after {
     content: attr(data-tooltip);
     position: fixed;
     left: var(--tip-x, -9999px);
@@ -470,6 +473,22 @@ body {
 }
 
 .sidebar.collapsed .nav-link:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Above an icon-only button (e.g. Reorder Alerts' "Dismiss until restocked"), right-aligned with
+   it so a button at the right edge can't push it off the page; on hover and keyboard focus. */
+[data-tooltip][data-tooltip-pos="above"] { position: relative; }
+[data-tooltip][data-tooltip-pos="above"]::after {
+    position: absolute;
+    left: auto;
+    right: 0;
+    top: auto;
+    bottom: calc(100% + 8px);
+    transform: none;
+}
+[data-tooltip][data-tooltip-pos="above"]:is(:hover, :focus-visible)::after {
     opacity: 1;
     visibility: visible;
 }
@@ -1116,7 +1135,7 @@ body {
 .danger-zone small { color: #6a5a5a; }
 
 /* ===== Filter toolbar: search box, dropdowns, "Clear all (n)" =====
-   Shared by the Owner's Inventory and Reorder Alerts pages. Focus rings and the
+   Shared by Inventory (Owner and Staff) and Reorder Alerts. Focus rings and the
    Clear-all hover and count badge are further up ("White outlined buttons"). */
 .inv-toolbar {
     display: flex;

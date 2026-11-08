@@ -50,6 +50,20 @@ $onHand = static fn (array $r): string => '<span class="ra-num">' . (int) $r['cu
 $rop = static fn (array $r): int => (int) ($r['manual_rop_warning'] ?? 0);
 // Shown under the name when the Reorder at and Status columns don't fit (narrow content).
 $narrowMeta = static fn (array $r): string => '<span class="ra-narrow">' . $statusPill($r) . '<span>Reorder at ' . $rop($r) . '</span></span>';
+// What the order dialog shows and posts for one size (assets/js/reorder-alerts.js).
+$orderLine = static fn (array $r): string => esc(json_encode([
+    'item_id'     => $r['item_id'],
+    'name'        => \App\Models\ProductModel::nameWithSize($r),
+    'rop'         => $rop($r),
+    'safety'      => isset($r['computation']['safety_stock']) ? (int) $r['computation']['safety_stock'] : null,
+    'eoq'         => ! empty($r['recommended_eoq']) ? (int) $r['recommended_eoq'] : null,
+    'cost'        => (float) ($r['unit_cost'] ?? 0),
+    'supplier_id' => (string) ($r['supplier_id'] ?? ''),
+    'supplier'    => $r['supplier_name'],
+    'lead'        => ! empty($r['lead_time_days']) ? (int) $r['lead_time_days'] : null,
+]), 'attr');
+$date = static fn (?string $d): string => $d ? date('M j, Y', strtotime($d)) : '—';
+$lateBadge = static fn (int $days): string => $days > 0 ? '<span class="status-pill red ra-late">Late &middot; ' . $days . ' day' . ($days === 1 ? '' : 's') . '</span>' : '';
 ?>
 
 <link href="/assets/css/reorder-alerts.css" rel="stylesheet">
@@ -129,24 +143,45 @@ $narrowMeta = static fn (array $r): string => '<span class="ra-narrow">' . $stat
             </div>
 
             <?php if ($key === 'ordered'): ?>
-            <div class="ra-list">
-            <?php foreach ($tabs['ordered'] as $alert): ?>
-                <?php // Ordered tab: replaced in Phase 4. ?>
-                <div class="ra-card ra-ordered-card"<?= $rowAttrs($alert) ?>>
-                    <div class="ra-card-head">
-                        <div>
-                            <h4><?= esc($alert['item_name'] ?? 'Unknown item') ?></h4>
-                            <span class="sub"><?= esc(implode(' · ', array_filter([! empty($alert['size']) ? 'Size ' . $alert['size'] : null, $alert['category'] ?? null, $alert['item_id']]))) ?></span>
-                        </div>
-                        <div class="ra-ordered-meta">
-                            <?php if (! empty($alert['so_id'])): ?><span>Order <?= esc($alert['so_id']) ?></span><?php endif; ?>
-                            <span>Expected <?= ! empty($alert['expected_date']) ? esc(date('M j, Y', strtotime($alert['expected_date']))) : '—' ?></span>
-                            <?php if ($alert['late_days'] > 0): ?><span class="status-pill red">Late &middot; <?= esc($plural((int) $alert['late_days'], 'day')) ?></span><?php endif; ?>
-                            <?php if (! empty($alert['so_id'])): ?><a class="inv-view-order btn btn-outline-secondary btn-sm" href="<?= site_url('admin/orders/' . $alert['so_id']) ?>">View order</a><?php endif; ?>
-                        </div>
-                    </div>
+            <?php // One card per stock order: the order's dates on its first row, a row per size ordered. ?>
+            <div class="ra-items ra-ordered" data-items<?= $tabs['ordered'] === [] ? ' hidden' : '' ?>>
+                <div class="ra-head ra-grid">
+                    <span class="ra-c-item">Item</span>
+                    <span class="ra-c-size">Size</span>
+                    <span class="ra-c-qty">Qty ordered</span>
+                    <span class="ra-c-expected">Expected arrival</span>
+                    <span class="ra-c-action">Action</span>
                 </div>
-            <?php endforeach; ?>
+                <?php foreach ($cards['ordered'] ?? [] as $order): ?>
+                    <article class="ra-item ra-order-card" data-ra-card>
+                        <div class="ra-row ra-grid ra-item-head">
+                            <div class="ra-c-item">
+                                <span class="ra-name"><?= $order['so_id'] ? 'Order ' . esc($order['so_id']) : 'Ordered' ?></span>
+                                <span class="ra-sub"><?= esc(implode(' · ', array_filter([$order['supplier_name'], $order['order_date'] ? 'ordered ' . $date($order['order_date']) : null]))) ?></span>
+                                <span class="ra-narrow">Expected <?= esc($date($order['expected_date'])) ?><?= $lateBadge($order['late_days']) ?></span>
+                            </div>
+                            <div class="ra-c-size"></div>
+                            <div class="ra-c-qty"></div>
+                            <div class="ra-c-expected"><span class="ra-expected"><?= esc($date($order['expected_date'])) ?></span><?= $lateBadge($order['late_days']) ?></div>
+                            <div class="ra-c-action ra-actions">
+                                <?php if ($order['so_id']): ?><a class="btn btn-outline-secondary btn-sm" href="<?= site_url('admin/orders/' . $order['so_id']) ?>" aria-label="View order <?= esc($order['so_id'], 'attr') ?>">View order</a><?php endif; ?>
+                            </div>
+                        </div>
+                        <?php foreach ($order['sizes'] as $r): ?>
+                            <?php $sizeText = trim((string) ($r['size'] ?? '')); ?>
+                            <div class="ra-row ra-grid ra-size-row"<?= $rowAttrs($r) ?>>
+                                <div class="ra-c-item">
+                                    <span class="ra-size-label"><?= esc($r['item_name']) ?></span>
+                                    <?php if ($sizeText !== ''): ?><span class="ra-sub ra-inline-size">Size <?= esc($sizeText) ?></span><?php endif; ?>
+                                </div>
+                                <div class="ra-c-size"><?= esc($sizeText !== '' ? $sizeText : '—') ?></div>
+                                <div class="ra-c-qty ra-num"><?= $r['ordered_qty'] !== null ? (int) $r['ordered_qty'] : '—' ?></div>
+                                <div class="ra-c-expected"></div>
+                                <div class="ra-c-action"></div>
+                            </div>
+                        <?php endforeach; ?>
+                    </article>
+                <?php endforeach; ?>
             </div>
             <?php else: ?>
             <?php // One card per item; the header row sticks under the page header while the list scrolls. ?>
@@ -183,8 +218,8 @@ $narrowMeta = static fn (array $r): string => '<span class="ra-narrow">' . $stat
                                 <div class="ra-c-status"></div>
                                 <div class="ra-c-action ra-actions">
                                     <?php if ($key === 'order'): ?>
-                                        <?php // Shown (by assets/js/reorder-alerts.js) when 2+ shown sizes share a supplier. Ordering them together comes in Phase 4. ?>
-                                        <button type="button" class="btn btn-outline-success btn-sm" data-order-all disabled<?= $sameSupplier < 2 ? ' hidden' : '' ?>>Order all sizes</button>
+                                        <?php // Shown (by assets/js/reorder-alerts.js) when 2+ shown sizes share the most urgent size's supplier; orders just those. ?>
+                                        <button type="button" class="btn btn-outline-success btn-sm" data-order-all<?= $sameSupplier < 2 ? ' hidden' : '' ?>>Order all sizes</button>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -213,15 +248,12 @@ $narrowMeta = static fn (array $r): string => '<span class="ra-narrow">' . $stat
                                                 class="btn btn-success btn-sm open-order-modal"
                                                 aria-label="Order <?= esc((string) ($r['recommended_eoq'] ?? ''), 'attr') ?>: <?= esc($name, 'attr') ?>"
                                                 data-alert-id="<?= esc((string) ($r['alert_id'] ?? ''), 'attr') ?>"
-                                                data-item-id="<?= esc($r['item_id'], 'attr') ?>"
-                                                data-item-name="<?= esc($name, 'attr') ?>"
-                                                data-supplier-id="<?= esc((string) ($r['supplier_id'] ?? ''), 'attr') ?>"
-                                                data-recommended-eoq="<?= esc((string) ($r['recommended_eoq'] ?? 1), 'attr') ?>">Order<?= ! empty($r['recommended_eoq']) ? ' ' . (int) $r['recommended_eoq'] : '' ?></button>
+                                                data-line="<?= $orderLine($r) ?>">Order<?= ! empty($r['recommended_eoq']) ? ' ' . (int) $r['recommended_eoq'] : '' ?></button>
                                         <?php if (! empty($r['alert_id'])): ?>
                                             <form method="post" action="<?= site_url('admin/reorder-alerts/dismiss/' . $r['alert_id']) ?>" data-keep-view>
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="return_query" value="">
-                                                <button type="submit" class="btn btn-outline-secondary btn-sm ra-icon-btn" title="Dismiss until restocked" aria-label="Dismiss until restocked"><i class="bi bi-bell-slash" aria-hidden="true"></i></button>
+                                                <button type="submit" class="btn btn-outline-secondary btn-sm ra-icon-btn" data-tooltip="Dismiss until restocked" data-tooltip-pos="above" aria-label="Dismiss until restocked"><i class="bi bi-bell-slash" aria-hidden="true"></i></button>
                                             </form>
                                         <?php endif; ?>
                                     <?php elseif (! empty($r['alert_id'])): ?>
@@ -244,99 +276,70 @@ $narrowMeta = static fn (array $r): string => '<span class="ra-narrow">' . $stat
 
 <script src="/assets/js/reorder-alerts.js" defer></script>
 
-<div class="order-modal" id="orderModal">
+<?php // Order dialog: one size, or "Order all sizes" (one stock order, a line per size). Filled by assets/js/reorder-alerts.js. ?>
+<div class="order-modal" id="orderModal" role="dialog" aria-modal="true" aria-labelledby="orderTitle">
     <div class="order-modal-card">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="mb-0">New Stock Order</h3>
-            <button type="button" class="btn-close close-order-modal"></button>
+        <div class="od-head">
+            <div>
+                <h3 id="orderTitle">New stock order</h3>
+                <p class="od-subtitle" id="orderSubtitle"></p>
+            </div>
+            <button type="button" class="btn-close close-order-modal" aria-label="Close"></button>
         </div>
 
-        <form method="post" action="<?= site_url('admin/orders/store') ?>">
+        <form method="post" action="<?= site_url('admin/orders/store') ?>" id="orderForm">
             <?= csrf_field() ?>
+            <input type="hidden" name="return_to" value="/admin/reorder-alerts">
+            <input type="hidden" name="priority" value="Order">
             <input type="hidden" name="alert_id" id="orderAlertId">
-            <input type="hidden" name="item_id[]" id="orderItemId">
 
-            <div class="order-form-grid">
-                <div class="order-field">
-                    <label>Item</label>
-                    <input id="orderItemName" readonly>
-                </div>
+            <div class="od-lines" id="orderLines"></div>
 
-                <div class="order-field">
-                    <label>Supplier</label>
-                    <select name="supplier_id" id="orderSupplierId" required>
-                        <option value="">Select Supplier...</option>
+            <div class="od-grid">
+                <div class="od-field">
+                    <span class="od-label" id="orderSupplierLabel">Supplier</span>
+                    <?php // A size is only ordered from its own supplier; the dropdown is only for sizes with none. ?>
+                    <div class="od-fixed" id="orderSupplierName"></div>
+                    <input type="hidden" name="supplier_id" id="orderSupplierId">
+                    <select name="supplier_id" id="orderSupplierPick" aria-labelledby="orderSupplierLabel" required hidden disabled>
+                        <option value="">Select supplier&hellip;</option>
                         <?php foreach ($suppliers as $s): ?>
-                            <option value="<?= esc($s['supplier_id']) ?>"><?= esc($s['company_name']) ?></option>
+                            <option value="<?= esc($s['supplier_id'], 'attr') ?>"><?= esc($s['company_name']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-
-                <div class="order-field">
-                    <label>Item Quantity</label>
-                    <input name="quantity[]" id="orderQuantity" type="number" min="1" value="1" required>
-                </div>
-
-                <div class="order-field">
-                    <label>Price Per Item (₱)</label>
-                    <input name="unit_price[]" id="orderUnitPrice" type="number" min="0" step="0.01" value="0" required>
-                </div>
-
-                <div class="order-field">
-                    <label>Priority</label>
-                    <select name="priority">
-                        <option value="Urgent">Urgent</option>
-                        <option value="Order" selected>Order</option>
-                        <option value="Planned">Planned</option>
-                    </select>
-                </div>
-
-                <div class="order-field">
-                    <label>Expected Delivery Date</label>
-                    <input name="expected_delivery_date" type="date">
-                </div>
+                <label class="od-field">
+                    <span class="od-label">Expected delivery</span>
+                    <input type="date" name="expected_delivery_date" id="orderExpected">
+                </label>
             </div>
 
-            <div class="d-flex justify-content-end gap-2 mt-4">
-                <button type="button" class="btn btn-secondary close-order-modal">Cancel</button>
-                <button type="submit" class="btn btn-success">Submit</button>
+            <div class="od-foot">
+                <div class="od-total">Total <strong id="orderTotal">₱0.00</strong></div>
+                <div class="od-actions">
+                    <button type="button" class="btn btn-outline-secondary close-order-modal">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="orderSubmit">Place order</button>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
-<style>
-.order-modal {
-    position: fixed; inset: 0; z-index: 1000; display: none;
-    align-items: center; justify-content: center; background: rgba(0,0,0,.4);
-}
-.order-modal.show { display: flex; }
-.order-modal-card { width: min(760px, 92vw); max-height: 90vh; overflow-y: auto; padding: 26px; border-radius: var(--radius-card); background: #fff; }
-.order-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.order-field { display: flex; flex-direction: column; gap: 6px; }
-.order-field input, .order-field select { padding: 12px; border: 1px solid #ccc; border-radius: var(--radius-control); }
-@media (max-width: 700px) { .order-form-grid { grid-template-columns: 1fr; } }
-</style>
-
-<script>
-const orderModal = document.getElementById('orderModal');
-const productUnitCost = <?= json_encode(array_column($products ?? [], 'unit_cost', 'item_id')) ?>;
-
-document.querySelectorAll('.open-order-modal').forEach(button => {
-    button.addEventListener('click', () => {
-        document.getElementById('orderAlertId').value = button.dataset.alertId || '';
-        document.getElementById('orderItemId').value = button.dataset.itemId || '';
-        document.getElementById('orderItemName').value = button.dataset.itemName || '';
-        document.getElementById('orderSupplierId').value = button.dataset.supplierId || '';
-        document.getElementById('orderQuantity').value = button.dataset.recommendedEoq || 1;
-        document.getElementById('orderUnitPrice').value = productUnitCost[button.dataset.itemId] || 0;
-        orderModal.classList.add('show');
-    });
-});
-
-document.querySelectorAll('.close-order-modal').forEach(button => {
-    button.addEventListener('click', () => orderModal.classList.remove('show'));
-});
-</script>
+<template id="orderLineTemplate">
+    <div class="od-line">
+        <input type="hidden" name="item_id[]">
+        <input type="hidden" name="unit_price[]">
+        <div class="od-line-text">
+            <strong class="od-line-name"></strong>
+            <span class="od-line-meta"></span>
+        </div>
+        <div class="od-qty">
+            <button type="button" class="od-step" data-step="-1">&minus;</button>
+            <input type="number" name="quantity[]" min="1" step="1" inputmode="numeric" required>
+            <button type="button" class="od-step" data-step="1">+</button>
+        </div>
+        <span class="od-line-total"></span>
+    </div>
+</template>
 
 <?= $this->endSection() ?>

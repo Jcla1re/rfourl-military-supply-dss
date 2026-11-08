@@ -136,8 +136,12 @@ final class ReorderAlertFixesTest extends CIUnitTestCase
 
         $html = $this->asOwner()->get('admin/reorder-alerts')->getBody();
 
-        $this->assertMatchesRegularExpression('/data-item-id="P-S"\s+data-item-name="Olive Green \(OG\) Cotton &middot; Size S"/', $html);
-        $this->assertMatchesRegularExpression('/data-item-id="P-N"\s+data-item-name="Whistle"/', $html);
+        // Each Order button carries its size's dialog data as JSON (data-line; the page output
+        // filter writes that attribute in single quotes).
+        preg_match_all('/data-line=(["\'])(.*?)\1/', $html, $m);
+        $names = array_column(array_map(static fn ($a) => json_decode(html_entity_decode($a, ENT_QUOTES), true), $m[2]), 'name', 'item_id');
+        $this->assertSame('Olive Green (OG) Cotton · Size S', $names['P-S']);
+        $this->assertSame('Whistle', $names['P-N']);
     }
 
     public function testReportOrderButtonNamesTheSize(): void

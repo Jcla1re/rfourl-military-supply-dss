@@ -277,7 +277,7 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
         $this->assertStringContainsString('<span class="ra-name">Pants</span>', $card);
         $this->assertStringContainsString('<span class="ra-sub">Clothes &middot; 0111 &middot; Tactical Gear Inc &middot; 5-day delivery</span>', $card);
         $this->assertStringContainsString('<div class="ra-c-size" data-size-count>2 sizes</div>', $card);
-        $this->assertMatchesRegularExpression('/<button type="button" class="btn btn-outline-success btn-sm" data-order-all disabled>Order all sizes<\/button>/', $card);
+        $this->assertMatchesRegularExpression('/<button type="button" class="btn btn-outline-success btn-sm" data-order-all>Order all sizes<\/button>/', $card);
         $this->assertStringNotContainsString('P-L', $card);
         // Each size once in the Size column (and once for narrow widths); NEW next to the size, not the name.
         $this->assertStringContainsString('<div class="ra-c-size">S</div>', $card);
@@ -297,7 +297,7 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
 
         $order = $this->cardOf($html, 'P-S');
         $this->assertStringContainsString('<div class="ra-c-size" data-size-count>1 of 2 sizes</div>', $order);
-        $this->assertMatchesRegularExpression('/data-order-all disabled hidden>Order all sizes/', $order, 'Only one size can be ordered.');
+        $this->assertMatchesRegularExpression('/data-order-all hidden>Order all sizes/', $order, 'Only one size can be ordered.');
         $this->assertStringContainsString('<div class="ra-c-size" data-size-count>1 of 2 sizes</div>', $this->cardOf($html, 'P-M'));
     }
 
@@ -309,7 +309,7 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
         $this->alertFor('P-M');
         $card = $this->cardOf($this->page(), 'P-S');
 
-        $this->assertMatchesRegularExpression('/data-order-all disabled hidden>Order all sizes/', $card, 'Different suppliers: each size keeps its own Order button.');
+        $this->assertMatchesRegularExpression('/data-order-all hidden>Order all sizes/', $card, 'Different suppliers: each size keeps its own Order button.');
         $this->assertSame(2, substr_count($card, 'open-order-modal'));
         $this->assertStringContainsString('Several suppliers', $card);
     }
@@ -352,7 +352,7 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
 
         $order = $this->cardOf($html, 'P-1');
         $this->assertStringContainsString('action="' . site_url('admin/reorder-alerts/dismiss/' . $id) . '" data-keep-view>', $order);
-        $this->assertStringContainsString('<button type="submit" class="btn btn-outline-secondary btn-sm ra-icon-btn" title="Dismiss until restocked" aria-label="Dismiss until restocked"><i class="bi bi-bell-slash" aria-hidden="true"></i></button>', $order);
+        $this->assertStringContainsString('<button type="submit" class="btn btn-outline-secondary btn-sm ra-icon-btn" data-tooltip="Dismiss until restocked" data-tooltip-pos="above" aria-label="Dismiss until restocked"><i class="bi bi-bell-slash" aria-hidden="true"></i></button>', $order);
         $this->assertStringContainsString('aria-label="Order 12: Whistle &middot; Size L"', $order);
         $this->assertStringNotContainsString('data-confirm', $html, 'No confirmation dialog.');
 
@@ -364,8 +364,10 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
 
         // No info-icon tooltips; the only title on the page's cards is the icon button's name.
         $this->assertStringNotContainsString('class="info-tip help-tip"', $html); // help_tip() / Glossary tips (the layout still loads help-tip.js)
+        // The icon button is named by the shared tooltip (data-tooltip), not the browser's title.
         preg_match('/<div class="ra-items".*<\/section>/s', $html, $list);
-        $this->assertSame(['Dismiss until restocked'], array_values(array_unique(preg_match_all('/title="([^"]*)"/', $list[0], $m) ? $m[1] : [])));
+        $this->assertSame(0, preg_match_all('/\stitle="/', $list[0]), 'No browser title tooltips.');
+        $this->assertSame(['Dismiss until restocked'], array_values(array_unique(preg_match_all('/data-tooltip="([^"]*)"/', $list[0], $m) ? $m[1] : [])));
     }
 
     // ------------------------------------------------------------ Phase 3: Dismiss and Restore

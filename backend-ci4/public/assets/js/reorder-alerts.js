@@ -141,6 +141,123 @@
         apply();
     }));
 
+    // ---- Order dialog: one size ("Order 12") or "Order all sizes" (one stock order, a line
+    // per size). Each Order button carries its size's data (data-line). Sizes are only ever
+    // ordered from their own supplier: the supplier is fixed, and the dropdown only appears
+    // for sizes that have none.
+    const modal     = document.getElementById('orderModal');
+    const form      = document.getElementById('orderForm');
+    const linesBox  = document.getElementById('orderLines');
+    const lineTpl   = document.getElementById('orderLineTemplate');
+    const supName   = document.getElementById('orderSupplierName');
+    const supId     = document.getElementById('orderSupplierId');
+    const supPick   = document.getElementById('orderSupplierPick');
+    const expected  = document.getElementById('orderExpected');
+    const totalBox  = document.getElementById('orderTotal');
+    const peso      = n => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const localDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    let opener = null;
+
+    function updateTotal() {
+        let total = 0;
+        linesBox.querySelectorAll('.od-line').forEach(line => {
+            const input = line.querySelector('input[name="quantity[]"]');
+            const qty = Math.max(1, parseInt(input.value, 10) || 0);
+            const sub = qty * Number(line.dataset.cost);
+            line.querySelector('.od-line-total').textContent = peso(sub);
+            line.querySelector('[data-step="-1"]').disabled = qty <= 1;
+            total += sub;
+        });
+        totalBox.textContent = peso(total);
+    }
+
+    function openOrder(lines, alertId, title, button) {
+        opener = button;
+        linesBox.replaceChildren();
+        lines.forEach(l => {
+            const line = lineTpl.content.firstElementChild.cloneNode(true);
+            line.dataset.cost = l.cost;
+            line.querySelector('input[name="item_id[]"]').value = l.item_id;
+            line.querySelector('input[name="unit_price[]"]').value = l.cost;
+            line.querySelector('.od-line-name').textContent = l.name;
+            line.querySelector('.od-line-meta').textContent = [
+                `Reorder at ${l.rop}`,
+                `Safety stock ${l.safety ?? '—'}`,
+                `Suggested ${l.eoq ?? '—'} (EOQ)`,
+                `${peso(l.cost)} each`,
+            ].join(' · ');
+            const qty = line.querySelector('input[name="quantity[]"]');
+            qty.value = l.eoq || 1;
+            qty.setAttribute('aria-label', `Quantity: ${l.name}`);
+            line.querySelector('[data-step="-1"]').setAttribute('aria-label', `One less: ${l.name}`);
+            line.querySelector('[data-step="1"]').setAttribute('aria-label', `One more: ${l.name}`);
+            linesBox.appendChild(line);
+        });
+
+        // All lines share one supplier (Order all sizes only groups a supplier's sizes).
+        const first = lines[0];
+        const fixed = first.supplier_id !== '';
+        supName.hidden = !fixed;
+        supName.textContent = fixed ? first.supplier : '';
+        supId.disabled = !fixed;
+        supId.value = first.supplier_id;
+        supPick.hidden = fixed;
+        supPick.disabled = fixed;
+        supPick.value = '';
+
+        // Expected delivery: today + the longest delivery time among the lines.
+        const lead = Math.max(0, ...lines.map(l => l.lead || 0));
+        const today = new Date();
+        expected.min = localDate(today);
+        expected.value = lead ? localDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + lead)) : '';
+
+        document.getElementById('orderAlertId').value = alertId || '';
+        document.getElementById('orderSubtitle').textContent = title;
+        document.getElementById('orderSubmit').disabled = false;
+        updateTotal();
+        modal.classList.add('show');
+        linesBox.querySelector('input[name="quantity[]"]').focus();
+    }
+
+    function closeOrder() {
+        modal.classList.remove('show');
+        opener?.focus();
+    }
+
+    const lineOf = button => JSON.parse(button.dataset.line);
+    board.querySelectorAll('.open-order-modal').forEach(button => button.addEventListener('click', () => {
+        const line = lineOf(button);
+        openOrder([line], button.dataset.alertId, line.name, button);
+    }));
+    // The same sizes the button counts (see updateCard): shown, same supplier as the most urgent.
+    board.querySelectorAll('[data-order-all]').forEach(button => button.addEventListener('click', () => {
+        const card = button.closest('[data-ra-card]');
+        const shownRows = [...card.querySelectorAll('[data-ra-row]')].filter(row => !row.hidden);
+        const supplier = shownRows[0]?.dataset.supplier;
+        const lines = shownRows.filter(row => row.dataset.supplier === supplier).map(row => lineOf(row.querySelector('.open-order-modal')));
+        const name = card.querySelector('.ra-item-head .ra-name').textContent.trim();
+        openOrder(lines, '', `${name} · ${lines.length} sizes`, button);
+    }));
+
+    linesBox.addEventListener('click', e => {
+        const step = e.target.closest('.od-step');
+        if (!step) return;
+        const input = step.closest('.od-qty').querySelector('input');
+        input.value = Math.max(1, (parseInt(input.value, 10) || 0) + Number(step.dataset.step));
+        updateTotal();
+    });
+    linesBox.addEventListener('input', updateTotal);
+    linesBox.addEventListener('change', e => {
+        if (e.target.name === 'quantity[]') e.target.value = Math.max(1, parseInt(e.target.value, 10) || 1);
+        updateTotal();
+    });
+    modal.querySelectorAll('.close-order-modal').forEach(b => b.addEventListener('click', closeOrder));
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && modal.classList.contains('show')) closeOrder();
+    });
+    // One order per click: the button stays disabled while the page posts.
+    form.addEventListener('submit', () => { document.getElementById('orderSubmit').disabled = true; });
+
     // Dismiss / Restore post the current tab and filters, so the page comes back to the same view.
     board.querySelectorAll('form[data-keep-view]').forEach(form => form.addEventListener('submit', () => {
         form.querySelector('input[name="return_query"]').value = location.search;

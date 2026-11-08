@@ -10,6 +10,7 @@ use App\Models\DssParameterModel;
 use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
 use App\Models\ReorderAlertModel;
+use App\Models\SoItemModel;
 use App\Models\StockOrderModel;
 use App\Models\SupplierModel;
 
@@ -47,8 +48,12 @@ class ReorderAlertController extends BaseController
         // Order numbers → their expected delivery date, for "late" on the Ordered tab.
         $orders = [];
         $soIds  = array_values(array_unique(array_filter(array_column($board, 'so_id'))));
+        $orderedQty = []; // so_id => item_id => quantity ordered
         if ($soIds !== []) {
             $orders = array_column((new StockOrderModel())->whereIn('so_id', $soIds)->findAll(), null, 'so_id');
+            foreach ((new SoItemModel())->whereIn('so_id', $soIds)->findAll() as $line) {
+                $orderedQty[$line['so_id']][$line['item_id']] = ($orderedQty[$line['so_id']][$line['item_id']] ?? 0) + (int) $line['order_quantity'];
+            }
         }
         $today = new \DateTimeImmutable('today');
 
@@ -66,6 +71,8 @@ class ReorderAlertController extends BaseController
             $order                 = $orders[$size['so_id'] ?? ''] ?? null;
             $row['order_date']     = $order['order_date'] ?? null;
             $row['expected_date']  = $order['expected_delivery_date'] ?? null;
+            $row['ordered_qty']    = $orderedQty[$size['so_id'] ?? ''][$size['item_id']] ?? null;
+            $row['order_supplier'] = $suppliers[$order['supplier_id'] ?? '']['company_name'] ?? null;
             $row['late_days']      = 0;
             if ($size['tab'] === 'ordered' && $row['expected_date']) {
                 $expected         = new \DateTimeImmutable(date('Y-m-d', strtotime($row['expected_date'])));
@@ -109,6 +116,8 @@ class ReorderAlertController extends BaseController
             'cards'           => [
                 'order'     => self::itemCards($toOrder, $rows),
                 'dismissed' => self::itemCards($dismissed, $rows),
+                // Ordered: one card per stock order, late first, then by expected arrival.
+                'ordered'   => self::orderCards($ordered),
             ],
             'activeTab'       => in_array($tab, ['order', 'ordered', 'dismissed'], true) ? $tab : 'order',
             'counts'          => $this->productModel->reorderCounts(),
@@ -123,7 +132,6 @@ class ReorderAlertController extends BaseController
                 'only' => array_values(array_intersect(explode(',', (string) $this->request->getGet('only')), ['out', 'new'])),
             ],
             'suppliers'       => $this->supplierModel->where('is_active', 1)->findAll(),
-            'products'        => $this->productModel->where('is_active', 1)->findAll(),
             'dss'             => $dss,
             'success'         => session()->getFlashdata('success'),
             'error'           => session()->getFlashdata('error'),
@@ -166,6 +174,30 @@ class ReorderAlertController extends BaseController
             $cards[$key($r)] ??= ['item_name' => (string) $r['item_name'], 'category' => (string) $r['category'], 'total' => $totals[$key($r)], 'sizes' => []];
             $cards[$key($r)]['sizes'][] = $r;
         }
+
+        return array_values($cards);
+    }
+
+    /**
+     * Ordered tab: one card per stock order (an "Order all sizes" order is one card with
+     * a row per size). $rows is sorted by arrival and every size of an order shares its
+     * dates, so the cards keep that order. A size whose alert is Ordered without an order
+     * number gets a card of its own.
+     *
+     * @return list<array{so_id: string|null, supplier_name: string|null, order_date: string|null, expected_date: string|null, late_days: int, sizes: list<array>}>
+     */
+    private static function orderCards(array $rows): array
+    {
+        $cards = [];
+        foreach ($rows as $r) {
+            $key = $r['so_id'] ?: 'item:' . $r['item_id'];
+            $cards[$key] ??= ['so_id' => $r['so_id'] ?: null, 'supplier_name' => $r['order_supplier'] ?? $r['supplier_name'], 'order_date' => $r['order_date'], 'expected_date' => $r['expected_date'], 'late_days' => (int) $r['late_days'], 'sizes' => []];
+            $cards[$key]['sizes'][] = $r;
+        }
+        foreach ($cards as &$card) {
+            usort($card['sizes'], static fn ($a, $b) => [(string) $a['item_name'], (string) ($a['size'] ?? '')] <=> [(string) $b['item_name'], (string) ($b['size'] ?? '')]);
+        }
+        unset($card);
 
         return array_values($cards);
     }
