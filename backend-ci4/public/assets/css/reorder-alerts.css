@@ -1,7 +1,7 @@
 /* Owner: Reorder Alerts (app/Views/admin/reorder_alerts.php, assets/js/reorder-alerts.js).
-   Shared pieces come from admin-theme.css: .stat-pill, .underline-tabs, .pill-tabs,
-   .status-pill, outlined-button hovers and the Clear-all count badge. The toolbar,
-   search box and Clear-all base rules below are the same as Inventory's (inline there). */
+   Shared pieces come from admin-theme.css: the filter toolbar (search box, dropdowns,
+   Clear all, same as Inventory's), .stat-pill, .underline-tabs, .pill-tabs, .status-pill,
+   .stock-bar and the outlined-button hovers. */
 
 /* ---- Top row: headline pill + "Reorder levels calculated", Ordering Report on the right ---- */
 /* Layout follows the content width (sidebar open or collapsed), not the window. */
@@ -18,67 +18,9 @@
 .ra-calc { color: #6B6E60; font-size: 14px; }
 .ra-report-btn { white-space: nowrap; }
 
-/* ---- Filters (same as Inventory's toolbar) ---- */
-.inv-toolbar {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin: 18px 0;
-}
-.inv-toolbar select {
-    min-height: 46px;
-    padding: 8px 34px 8px 14px;
-    border: 1px solid #d8d5cd;
-    border-radius: var(--radius-control);
-    background: #fff;
-    min-width: 150px;
-    max-width: 260px;
-    font-family: 'Poppins', sans-serif;
-    color: #888;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23888888' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    text-overflow: ellipsis;
-}
-.inv-toolbar select.has-value { color: var(--text-dark); }
-.inv-search {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 46px;
-    padding: 8px 14px;
-    border: 1px solid #D6D2C6;
-    border-radius: var(--radius-control);
-    background: #fff;
-}
-.inv-search i { color: #888; font-size: 16px; flex-shrink: 0; }
-.inv-search input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; padding: 0; }
-.inv-search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
-.inv-search-clear {
-    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-    width: 26px; height: 26px; margin-right: -6px; padding: 0;
-    border: 0; border-radius: 50%; background: transparent; color: #5C6152; font-size: 13px; cursor: pointer;
-}
-.inv-search-clear[hidden] { display: none; }
-.inv-search-clear:hover { background: #F2F0EA; color: #1F2617; }
-.inv-search-clear:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 1px; }
-.clear-filters {
-    align-self: stretch; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
-    min-height: 46px; padding: 0 16px; border: 1px solid #D6D2C6; border-radius: 10px; background: #fff;
-    color: #1C1C1C; font-size: 16px; font-weight: 400; line-height: 1;
-    text-decoration: none; white-space: nowrap; cursor: pointer;
-    transition: background-color .15s ease, border-color .15s ease;
-}
-.clear-filters[hidden] { display: none; }
-.clear-filters:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
-.clear-filters-count { border-radius: 999px; background: #EFECE4; color: #3A4030; font-size: 12px; font-weight: 600; }
-/* Clear all is a <button> here (filters run in the page): same white-to-green hover as Inventory's link. */
-.clear-filters:is(:hover, :focus-visible) { background: #EAF1E3; border-color: #A9C79C; color: #2F5A27; }
-.clear-filters:is(:hover, :focus-visible) .clear-filters-count { background: #fff; color: #2F5A27; }
+/* ---- Filters: this page's additions to the shared toolbar ---- */
+.ra-toolbar select { max-width: 260px; text-overflow: ellipsis; }
+.ra-toolbar .clear-filters { min-height: 46px; } /* keeps its height when it wraps onto a row of its own */
 
 /* Narrow content: search on its own row, the two dropdowns share the next one. */
 @container ra (max-width: 720px) {
@@ -105,4 +47,109 @@
     text-align: center; color: #555; font-size: 16px; background: #fff;
 }
 .ra-empty[hidden] { display: none; }
+
+/* ---- Item cards (To order, Dismissed) ----
+   The column header and every card row share one grid, so the columns line up across
+   cards: Item | Size | On hand | Reorder at | Status | Action. */
+.ra-items { --ra-cols: minmax(0, 1fr) 88px 96px 84px 120px 152px; margin-top: 8px; }
+.ra-items[hidden] { display: none; }
+.ra-grid {
+    display: grid;
+    grid-template-columns: var(--ra-cols);
+    column-gap: 16px;
+    align-items: center;
+}
+.ra-c-size { text-align: center; }
+.ra-c-onhand, .ra-c-rop { text-align: right; }
+.ra-c-action { text-align: right; }
+
+/* Column header: sticks under the green page header while the cards scroll (only .main-scroll
+   scrolls; --sticky-top is 0 here). Same text style as the tables' header row. */
+.ra-head {
+    position: sticky;
+    top: var(--sticky-top, 0px);
+    z-index: 10;
+    padding: 12px 21px 10px;
+    background: var(--content-bg);
+    border-bottom: 2px solid #E3E0D7;
+    /* fills the page's 24px side padding, so cards scrolling past can't show beside it */
+    box-shadow: -24px 0 0 var(--content-bg), 24px 0 0 var(--content-bg);
+    font-size: 12px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: #5C6152;
+}
+
+.ra-item {
+    margin-top: 8px;
+    background: var(--card-bg, #fff);
+    border: 1px solid #e4e1d9;
+    border-radius: var(--radius-control);
+}
+.ra-item[hidden], .ra-row[hidden] { display: none; }
+.ra-row { min-height: 64px; padding: 12px 20px; }
+.ra-row + .ra-row { border-top: 1px solid #EFECE4; }
+.ra-size-row { min-height: 56px; padding-top: 8px; padding-bottom: 8px; }
+
+.ra-c-item { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ra-name { font-weight: 600; color: #1F2617; overflow-wrap: anywhere; }
+.ra-sub { color: #6B6E60; font-size: 13px; overflow-wrap: anywhere; }
+.ra-size-label { font-weight: 600; color: #1F2617; }
+.ra-num { font-variant-numeric: tabular-nums; }
+.ra-c-size { font-weight: 600; color: #1F2617; }
+.ra-item-head .ra-c-size { font-weight: 400; color: #5C6152; font-size: 14px; }
+
+/* NEW: the alert was raised after the Owner's previous login (same tag as Notifications). */
+.ra-new {
+    display: inline-block; margin-left: 8px; padding: 2px 8px; vertical-align: 1px;
+    border-radius: var(--radius-pill); background: var(--green-bg); color: var(--green-text);
+    font-size: 11px; font-weight: 700; line-height: 1.4; letter-spacing: .02em;
+}
+
+/* On hand: the number, and under it a thin bar (on hand ÷ (Reorder at + order qty)) with a
+   2px dark tick where Reorder at sits. Red for alerts, gray for dismissed (.stock-bar). */
+.ra-c-onhand { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.ra-bar { position: relative; display: block; width: 80px; max-width: 100%; }
+.ra-bar .stock-bar { display: block; width: 100%; }
+.ra-tick {
+    position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px;
+    border-radius: 1px; background: #1F2617;
+}
+
+/* Status: Reorder Now = the red pill (as on Inventory), Out of stock = solid red. */
+.ra-c-status .status-pill, .ra-narrow .status-pill { white-space: nowrap; }
+.status-pill.ra-pill-out { color: #fff; background: var(--red-text); }
+
+/* Action: "Order {qty}" + the icon-only "Dismiss until restocked" (or Restore). */
+.ra-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.ra-actions form { margin: 0; }
+.ra-actions .btn { min-height: 36px; white-space: nowrap; }
+.ra-icon-btn { width: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; }
+.ra-actions [hidden] { display: none; }
+
+/* Only shown when the columns they stand in for are hidden (below). */
+.ra-inline-size, .ra-narrow { display: none; }
+.ra-narrow { align-items: center; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; color: #5C6152; font-size: 13px; }
+.ra-narrow .status-pill { padding: 4px 10px; font-size: 11px; }
+
+/* Narrower content: the Size column goes; the size moves under the name. */
+@container ra (max-width: 980px) {
+    .ra-items { --ra-cols: minmax(0, 1fr) 84px 76px 112px 140px; }
+    .ra-grid { column-gap: 12px; }
+    .ra-c-size { display: none; }
+    .ra-inline-size { display: block; }
+}
+/* Narrowest: Reorder at and Status go too; the status pill and "Reorder at N" move under the
+   name and bar. */
+@container ra (max-width: 700px) {
+    .ra-items { --ra-cols: minmax(0, 1fr) 84px 140px; }
+    .ra-c-rop, .ra-c-status { display: none; }
+    .ra-narrow { display: flex; }
+    .ra-row, .ra-head { padding-left: 16px; padding-right: 16px; }
+}
+
+/* ---- Ordered tab (replaced in Phase 4) ---- */
+.ra-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); margin-top: 16px; overflow: hidden; }
 .ra-card[hidden] { display: none; }
+.ra-card-head { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #eee; }
+.ra-card-head h4 { margin: 0; font-weight: 800; font-size: 19px; }
+.ra-card-head span.sub { display: block; color: #555; font-size: 14px; }
+.ra-ordered-card .ra-card-head { border-bottom: 0; flex-wrap: wrap; }
+.ra-ordered-meta { margin-left: auto; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; font-size: 14px; color: #3A4030; }

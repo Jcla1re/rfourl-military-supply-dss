@@ -52,9 +52,9 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
     private function cardsIn(string $html, string $tab): array
     {
         preg_match('/<section class="ra-panel" data-panel="' . $tab . '".*?<\/section>/s', $html, $panel);
-        preg_match_all('/data-ra-row data-tab="' . $tab . '".*?data-item-id="([^"]+)"|data-ra-row data-tab="' . $tab . '"[^>]*>.*?<span class="sub">[^<]*?(P-[\w-]+)<\/span>/s', $panel[0] ?? '', $m);
+        preg_match_all('/data-ra-row data-tab="' . $tab . '" data-item-id="([^"]+)"/', $panel[0] ?? '', $m);
 
-        return array_values(array_filter(array_map(static fn ($a, $b) => $a ?: $b, $m[1], $m[2])));
+        return $m[1];
     }
 
     // ------------------------------------------------------------ tabs and headline
@@ -85,7 +85,8 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
 
         $this->assertSame(['order' => 3, 'ordered' => 2, 'dismissed' => 1], $this->tabCounts($html));
         $this->assertStringContainsString('Reorder Now: 5 items &middot; 6 sizes', strip_tags($html));
-        $this->assertSame(['P-S', 'P-1', 'P-M'], $this->cardsIn($html, 'order'), 'Out of stock first, then lowest compared to Reorder at.');
+        // One card per item, following its most urgent size: Pants (S is out of stock, then M), then Whistle.
+        $this->assertSame(['P-S', 'P-M', 'P-1'], $this->cardsIn($html, 'order'), 'Out of stock first, then lowest compared to Reorder at.');
         $this->assertStringNotContainsString('Recovered', $html);
         $this->assertStringNotContainsString('>Archived<', $html);
     }
@@ -219,5 +220,218 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
         $this->openOrder('SO-1', ['P-1'], date('Y-m-d', strtotime('+2 days')));
 
         $this->assertMatchesRegularExpression('/<span class="ra-tab-late" data-late-count hidden>/', $this->page());
+    }
+
+    // ------------------------------------------------------------ Phase 3: item cards
+
+    /** The markup of the one card (article) that holds this size. */
+    private function cardOf(string $html, string $itemId): string
+    {
+        foreach (preg_split('/(?=<article class="ra-item")/', $html) as $chunk) {
+            if (str_starts_with($chunk, '<article') && str_contains($chunk, 'data-item-id="' . $itemId . '"')) {
+                return substr($chunk, 0, strpos($chunk, '</article>'));
+            }
+        }
+        $this->fail("No card holds {$itemId}.");
+    }
+
+    public function testColumnHeaderRow(): void
+    {
+        $this->addSize('P-1', 'Whistle', null, 1, 3);
+        $this->alertFor('P-1');
+        $html = $this->page();
+
+        preg_match('/<div class="ra-head ra-grid">(.*?)<\/div>/s', $html, $head);
+        $this->assertSame(['Item', 'Size', 'On hand', 'Reorder at', 'Status', 'Action'], array_values(array_filter(array_map('trim', explode("\n", strip_tags($head[1]))))));
+    }
+
+    public function testSingleSizeCard(): void
+    {
+        $this->addSize('P-1', 'Whistle', 'L', 1, 3, ['category' => 'Accessories', 'supplier_id' => 'SUP-002']);
+        $this->alertFor('P-1', 'Active', ['alert_timestamp' => '2026-11-05 08:00:00']);
+        $card = $this->cardOf($this->page('', ['previous_login' => '2026-11-03 09:00:00']), 'P-1');
+
+        $this->assertStringNotContainsString('data-multi', $card);
+        $this->assertStringNotContainsString('ra-item-head', $card, 'One row, no card header.');
+        $this->assertStringContainsString('<span class="ra-name">Whistle<span class="ra-new">NEW</span></span>', $card, 'NEW next to the name.');
+        $this->assertStringContainsString('<span class="ra-sub">Accessories &middot; P-1</span>', $card);
+        $this->assertStringContainsString('<span class="ra-sub">Quiapo Patches Co &middot; 5-day delivery</span>', $card);
+        $this->assertStringContainsString('<div class="ra-c-size">L</div>', $card);
+        $this->assertStringContainsString('<span class="ra-sub ra-inline-size">Size L</span>', $card, 'Under the name on narrow widths.');
+        $this->assertStringContainsString('<span class="status-pill red">Reorder Now</span>', $card);
+        $this->assertStringContainsString('<div class="ra-c-rop ra-num">3</div>', $card);
+        $this->assertMatchesRegularExpression('/open-order-modal"[^>]*>Order 12<\/button>/s', $card);
+        $this->assertStringNotContainsString('Order all sizes', $card);
+    }
+
+    public function testMultiSizeCardWithOrderAllSizes(): void
+    {
+        $this->addSize('P-S', 'Pants', 'S', 0, 3, ['product_code' => '0111']);
+        $this->addSize('P-M', 'Pants', 'M', 2, 3, ['product_code' => '0111']);
+        $this->addSize('P-L', 'Pants', 'L', 9, 3, ['product_code' => '0111']); // In Stock: not on the page
+        $this->alertFor('P-S');
+        $this->alertFor('P-M', 'Active', ['alert_timestamp' => '2026-11-05 08:00:00']);
+        $card = $this->cardOf($this->page('', ['previous_login' => '2026-11-03 09:00:00']), 'P-S');
+
+        $this->assertStringContainsString('data-total="2" data-multi', $card);
+        $this->assertStringContainsString('<span class="ra-name">Pants</span>', $card);
+        $this->assertStringContainsString('<span class="ra-sub">Clothes &middot; 0111 &middot; Tactical Gear Inc &middot; 5-day delivery</span>', $card);
+        $this->assertStringContainsString('<div class="ra-c-size" data-size-count>2 sizes</div>', $card);
+        $this->assertMatchesRegularExpression('/<button type="button" class="btn btn-outline-success btn-sm" data-order-all disabled>Order all sizes<\/button>/', $card);
+        $this->assertStringNotContainsString('P-L', $card);
+        // Each size once in the Size column (and once for narrow widths); NEW next to the size, not the name.
+        $this->assertStringContainsString('<div class="ra-c-size">S</div>', $card);
+        $this->assertStringContainsString('<div class="ra-c-size">M<span class="ra-new">NEW</span></div>', $card);
+        $this->assertSame(1, substr_count($card, 'ra-new">NEW</span></div>'));
+        $this->assertStringContainsString('<span class="status-pill ra-pill-out">Out of stock</span>', $card);
+        $this->assertLessThan(strpos($card, 'data-item-id="P-M"'), strpos($card, 'data-item-id="P-S"'), 'Most urgent size first.');
+    }
+
+    public function testOneOfTwoSizesWhenTheOtherSizeIsOnAnotherTab(): void
+    {
+        $this->addSize('P-S', 'Pants', 'S', 0, 3);
+        $this->addSize('P-M', 'Pants', 'M', 2, 3);
+        $this->alertFor('P-S');
+        $this->alertFor('P-M', 'Dismissed', ['hidden_until_recovered' => 1]);
+        $html = $this->page();
+
+        $order = $this->cardOf($html, 'P-S');
+        $this->assertStringContainsString('<div class="ra-c-size" data-size-count>1 of 2 sizes</div>', $order);
+        $this->assertMatchesRegularExpression('/data-order-all disabled hidden>Order all sizes/', $order, 'Only one size can be ordered.');
+        $this->assertStringContainsString('<div class="ra-c-size" data-size-count>1 of 2 sizes</div>', $this->cardOf($html, 'P-M'));
+    }
+
+    public function testOrderAllSizesOnlyCountsTheSameSupplier(): void
+    {
+        $this->addSize('P-S', 'Pants', 'S', 0, 3);
+        $this->addSize('P-M', 'Pants', 'M', 2, 3, ['supplier_id' => 'SUP-002']);
+        $this->alertFor('P-S');
+        $this->alertFor('P-M');
+        $card = $this->cardOf($this->page(), 'P-S');
+
+        $this->assertMatchesRegularExpression('/data-order-all disabled hidden>Order all sizes/', $card, 'Different suppliers: each size keeps its own Order button.');
+        $this->assertSame(2, substr_count($card, 'open-order-modal'));
+        $this->assertStringContainsString('Several suppliers', $card);
+    }
+
+    public function testSameNameInAnotherCategoryIsAnotherCard(): void
+    {
+        $this->addSize('P-1', 'Cap', 'S', 1, 3, ['category' => 'Accessories']);
+        $this->addSize('P-2', 'Cap', 'M', 1, 3, ['category' => 'Clothes']);
+        $this->alertFor('P-1');
+        $this->alertFor('P-2');
+        $html = $this->page();
+
+        $this->assertSame(2, substr_count($html, '<article class="ra-item"'));
+        $this->assertStringNotContainsString('data-multi', $html);
+    }
+
+    public function testOnHandBarAndReorderAtTick(): void
+    {
+        $this->addSize('P-1', 'Whistle', null, 1, 3); // Reorder at 3 + order qty 12 = 15
+        $this->alertFor('P-1');
+        $this->addSize('P-2', 'Cap', null, 2, 3);
+        $this->alertFor('P-2', 'Dismissed', ['hidden_until_recovered' => 1]);
+        $html = $this->page();
+
+        $this->assertStringContainsString('<span class="ra-num">1</span><span class="ra-bar"><span class="stock-bar red"><span style="width: 7%"></span></span><span class="ra-tick" style="left: 20%" data-tick></span></span>', $this->cardOf($html, 'P-1'));
+        $this->assertStringContainsString('<span class="stock-bar gray"><span style="width: 13%"></span></span>', $this->cardOf($html, 'P-2'), 'Gray for dismissed.');
+
+        $bar = new \ReflectionMethod(\App\Controllers\Admin\ReorderAlertController::class, 'stockBar');
+        $this->assertSame(['pct' => 0, 'tick' => null], $bar->invoke(null, ['current_stock' => 0, 'manual_rop_warning' => 0, 'recommended_eoq' => 12]), 'No tick when Reorder at is 0.');
+        $this->assertSame(['pct' => 100, 'tick' => 50.0], $bar->invoke(null, ['current_stock' => 40, 'manual_rop_warning' => 10, 'recommended_eoq' => 10]), 'Capped at 100%.');
+    }
+
+    public function testActionButtonsAndTheOnlyTooltip(): void
+    {
+        $this->addSize('P-1', 'Whistle', 'L', 1, 3);
+        $id = $this->alertFor('P-1');
+        $this->addSize('P-2', 'Cap', null, 1, 3);
+        $dismissedId = $this->alertFor('P-2', 'Dismissed', ['hidden_until_recovered' => 1]);
+        $html = $this->page();
+
+        $order = $this->cardOf($html, 'P-1');
+        $this->assertStringContainsString('action="' . site_url('admin/reorder-alerts/dismiss/' . $id) . '" data-keep-view>', $order);
+        $this->assertStringContainsString('<button type="submit" class="btn btn-outline-secondary btn-sm ra-icon-btn" title="Dismiss until restocked" aria-label="Dismiss until restocked"><i class="bi bi-bell-slash" aria-hidden="true"></i></button>', $order);
+        $this->assertStringContainsString('aria-label="Order 12: Whistle &middot; Size L"', $order);
+        $this->assertStringNotContainsString('data-confirm', $html, 'No confirmation dialog.');
+
+        $dismissed = $this->cardOf($html, 'P-2');
+        $this->assertStringContainsString('action="' . site_url('admin/reorder-alerts/restore/' . $dismissedId) . '" data-keep-view>', $dismissed);
+        $this->assertStringContainsString('>Restore</button>', $dismissed);
+        $this->assertStringContainsString('<span class="status-pill gray">Dismissed</span>', $dismissed);
+        $this->assertStringNotContainsString('open-order-modal', $dismissed);
+
+        // No info-icon tooltips; the only title on the page's cards is the icon button's name.
+        $this->assertStringNotContainsString('class="info-tip help-tip"', $html); // help_tip() / Glossary tips (the layout still loads help-tip.js)
+        preg_match('/<div class="ra-items".*<\/section>/s', $html, $list);
+        $this->assertSame(['Dismiss until restocked'], array_values(array_unique(preg_match_all('/title="([^"]*)"/', $list[0], $m) ? $m[1] : [])));
+    }
+
+    // ------------------------------------------------------------ Phase 3: Dismiss and Restore
+
+    public function testDismissMovesTheSizeToDismissedWithAnUndoToast(): void
+    {
+        $this->addSize('P-S', 'Pants', 'S', 1, 3);
+        $id = $this->alertFor('P-S', 'Acknowledged');
+
+        $response = $this->asOwner()->post('admin/reorder-alerts/dismiss/' . $id, ['return_query' => '?q=pan&cat=Clothes&only=out&evil=1']);
+
+        $this->assertSame(site_url('admin/reorder-alerts?q=pan&cat=Clothes&only=out'), $response->getRedirectUrl(), 'Back to the same tab and filters.');
+        $row = $this->db->table('reorder_alert')->where('alert_id', $id)->get()->getRowArray();
+        $this->assertSame(['Dismissed', 1], [$row['status'], (int) $row['hidden_until_recovered']]);
+        $toast = $_SESSION['toast'];
+        $this->assertSame(['success', 'Alert dismissed', 'Pants · Size S', 'moved to Dismissed.', site_url('admin/reorder-alerts/restore/' . $id)], [$toast['type'], $toast['title'], $toast['name'], $toast['message'], $toast['undo']]);
+
+        $html = $this->page();
+        $this->assertSame([], $this->cardsIn($html, 'order'));
+        $this->assertSame(['P-S'], $this->cardsIn($html, 'dismissed'));
+    }
+
+    public function testRestoreMovesTheSizeBackWithAnUndoToast(): void
+    {
+        $this->addSize('P-S', 'Pants', 'S', 1, 3);
+        $id = $this->alertFor('P-S', 'Dismissed', ['hidden_until_recovered' => 1]);
+
+        $response = $this->asOwner()->post('admin/reorder-alerts/restore/' . $id, ['return_query' => '?tab=dismissed']);
+
+        $this->assertSame(site_url('admin/reorder-alerts?tab=dismissed'), $response->getRedirectUrl());
+        $row = $this->db->table('reorder_alert')->where('alert_id', $id)->get()->getRowArray();
+        $this->assertSame(['Active', 0], [$row['status'], (int) $row['hidden_until_recovered']]);
+        $toast = $_SESSION['toast'];
+        $this->assertSame(['Alert restored', 'Pants · Size S', 'is back in To order.', site_url('admin/reorder-alerts/dismiss/' . $id)], [$toast['title'], $toast['name'], $toast['message'], $toast['undo']]);
+        $this->assertSame(['P-S'], $this->cardsIn($this->page(), 'order'));
+
+        // Undo (the toast's Dismiss) works on the restored alert.
+        $this->asOwner()->post('admin/reorder-alerts/dismiss/' . $id, ['return_query' => '?tab=dismissed']);
+        $this->assertSame('Dismissed', $this->db->table('reorder_alert')->where('alert_id', $id)->get()->getRow()->status);
+    }
+
+    public function testRestoreOnlyWorksOnAnAlertDismissedUntilRecovery(): void
+    {
+        $this->addSize('P-1', 'Whistle', null, 1, 3);
+        $active   = $this->alertFor('P-1');
+        $this->addSize('P-2', 'Cap', null, 1, 3);
+        $notHidden = $this->alertFor('P-2', 'Dismissed', ['hidden_until_recovered' => 0]); // closed by the sync, not by the Owner
+
+        foreach ([$active => 'Active', $notHidden => 'Dismissed', 9999 => null] as $id => $status) {
+            $response = $this->asOwner()->post('admin/reorder-alerts/restore/' . $id);
+            $this->assertSame(site_url('admin/reorder-alerts'), $response->getRedirectUrl());
+            $this->assertSame(['error', "Couldn't restore this alert"], [$_SESSION['toast']['type'], $_SESSION['toast']['title']]);
+            if ($status !== null) {
+                $this->assertSame($status, $this->db->table('reorder_alert')->where('alert_id', $id)->get()->getRow()->status);
+            }
+        }
+    }
+
+    public function testDismissRefusesAnAlertThatIsNotPending(): void
+    {
+        $this->addSize('P-1', 'Whistle', null, 1, 3);
+        $id = $this->alertFor('P-1', 'Ordered', ['so_id' => 'SO-1']);
+
+        $this->asOwner()->post('admin/reorder-alerts/dismiss/' . $id);
+
+        $this->assertSame(['error', "Couldn't dismiss this alert"], [$_SESSION['toast']['type'], $_SESSION['toast']['title']]);
+        $this->assertSame('Ordered', $this->db->table('reorder_alert')->where('alert_id', $id)->get()->getRow()->status);
     }
 }

@@ -76,12 +76,15 @@ class ReorderAlertController extends BaseController
         $rows = $this->withDetails($rows, $dss);
         foreach ($rows as &$row) {
             $row['recommended_eoq'] ??= $row['computation']['eoq_value'] ?? null;
+            $row['bar']               = self::stockBar($row);
         }
         unset($row);
 
         usort($rows, self::byUrgency(...));
         $ordered = array_values(array_filter($rows, static fn ($r) => $r['tab'] === 'ordered'));
         usort($ordered, self::byArrival(...));
+        $toOrder   = array_values(array_filter($rows, static fn ($r) => $r['tab'] === 'order'));
+        $dismissed = array_values(array_filter($rows, static fn ($r) => $r['tab'] === 'dismissed'));
 
         $tab = $this->request->getGet('tab');
         if ($this->request->getGet('dismissed') === '1') {
@@ -101,10 +104,11 @@ class ReorderAlertController extends BaseController
         $data = [
             'title'           => 'Reorder Alerts',
             'active'          => 'reorder_alerts',
-            'tabs'            => [
-                'order'     => array_values(array_filter($rows, static fn ($r) => $r['tab'] === 'order')),
-                'ordered'   => $ordered,
-                'dismissed' => array_values(array_filter($rows, static fn ($r) => $r['tab'] === 'dismissed')),
+            'tabs'            => ['order' => $toOrder, 'ordered' => $ordered, 'dismissed' => $dismissed],
+            // To order and Dismissed: one card per item (same item name and category).
+            'cards'           => [
+                'order'     => self::itemCards($toOrder, $rows),
+                'dismissed' => self::itemCards($dismissed, $rows),
             ],
             'activeTab'       => in_array($tab, ['order', 'ordered', 'dismissed'], true) ? $tab : 'order',
             'counts'          => $this->productModel->reorderCounts(),
@@ -142,6 +146,46 @@ class ReorderAlertController extends BaseController
         };
 
         return $key($a) <=> $key($b);
+    }
+
+    /**
+     * One card per item, grouped like Inventory and reorderCounts (item name +
+     * category). $rows is already most urgent first, so each card's sizes are too
+     * and the cards follow their most urgent size. 'total' is how many of the
+     * item's sizes are at Reorder Now on any tab ($all), for "1 of 2 sizes".
+     *
+     * @return list<array{item_name: string, category: string, total: int, sizes: list<array>}>
+     */
+    private static function itemCards(array $rows, array $all): array
+    {
+        $key    = static fn (array $r): string => $r['item_name'] . '|' . $r['category'];
+        $totals = array_count_values(array_map($key, $all));
+
+        $cards = [];
+        foreach ($rows as $r) {
+            $cards[$key($r)] ??= ['item_name' => (string) $r['item_name'], 'category' => (string) $r['category'], 'total' => $totals[$key($r)], 'sizes' => []];
+            $cards[$key($r)]['sizes'][] = $r;
+        }
+
+        return array_values($cards);
+    }
+
+    /**
+     * The On hand bar: on hand ÷ (Reorder at + order quantity), capped at 100%,
+     * and where Reorder at sits on the same scale (null when Reorder at is 0).
+     *
+     * @return array{pct: int, tick: float|null}
+     */
+    private static function stockBar(array $r): array
+    {
+        $stock  = (int) $r['current_stock'];
+        $rop    = (int) ($r['manual_rop_warning'] ?? 0);
+        $target = $rop + (int) ($r['recommended_eoq'] ?? 0);
+
+        return [
+            'pct'  => $stock <= 0 ? 0 : ($target > 0 ? (int) min(100, round($stock / $target * 100)) : 100),
+            'tick' => $rop > 0 && $target > 0 ? round($rop / $target * 100, 1) : null,
+        ];
     }
 
     /** "Ordered": late deliveries first (most days late first), then by expected arrival; no date last. */
@@ -233,13 +277,52 @@ class ReorderAlertController extends BaseController
      * Closes a single alert without ordering (false positive, stock
      * corrected manually, etc.) — distinct from Fulfilled, which only
      * happens when a linked stock order is actually delivered. It stays
-     * hidden until its size recovers.
+     * in the Dismissed tab until its size recovers. No confirmation:
+     * the toast offers Undo (which restores it).
      */
     public function dismiss(int|string $alertId)
     {
-        $this->reorderAlertModel->dismissPending((int) $alertId);
-        session()->setFlashdata('success', 'Alert dismissed.');
-        return redirect()->to('/admin/reorder-alerts');
+        $alert = $this->reorderAlertModel->find((int) $alertId);
+        if (! $alert || ! $this->reorderAlertModel->dismissPending((int) $alertId)) {
+            return redirect()->to($this->boardUrl())->with('toast', Toast::error("Couldn't dismiss this alert", 'It is no longer waiting to be ordered.'));
+        }
+
+        return redirect()->to($this->boardUrl())->with('toast', Toast::success(
+            'Alert dismissed', 'moved to Dismissed.', $this->sizeName($alert['item_id']),
+            ['undo' => site_url('admin/reorder-alerts/restore/' . $alert['alert_id'])]
+        ));
+    }
+
+    /** Undoes a dismissal: the size is back in "To order". The toast's Undo dismisses it again. */
+    public function restore(int|string $alertId)
+    {
+        $alert = $this->reorderAlertModel->find((int) $alertId);
+        if (! $alert || ! $this->reorderAlertModel->restoreDismissed((int) $alertId)) {
+            return redirect()->to($this->boardUrl())->with('toast', Toast::error("Couldn't restore this alert", 'It is no longer dismissed.'));
+        }
+
+        return redirect()->to($this->boardUrl())->with('toast', Toast::success(
+            'Alert restored', 'is back in To order.', $this->sizeName($alert['item_id']),
+            ['undo' => site_url('admin/reorder-alerts/dismiss/' . $alert['alert_id'])]
+        ));
+    }
+
+    /** "Tactical Pants · Size L" for a toast. */
+    private function sizeName(string $itemId): string
+    {
+        return ProductModel::nameWithSize($this->productModel->find($itemId) ?? ['item_id' => $itemId]);
+    }
+
+    /**
+     * Back to the tab and filters the Owner was on: the page (or the toast's Undo)
+     * posts them as return_query. Only this page's own parameters are kept.
+     */
+    private function boardUrl(): string
+    {
+        parse_str(ltrim((string) $this->request->getPost('return_query'), '?'), $params);
+        $params = array_filter(array_intersect_key($params, array_flip(['tab', 'q', 'cat', 'sup', 'only'])), static fn ($v) => is_string($v) && $v !== '');
+
+        return '/admin/reorder-alerts' . ($params ? '?' . http_build_query($params) : '');
     }
 
     /**

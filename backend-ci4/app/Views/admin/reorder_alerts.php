@@ -26,45 +26,34 @@ $emptyTexts    = [
     'dismissed' => 'No dismissed alerts.',
 ];
 // Data the filters read (search, category, supplier, Show only chips, late).
-$rowAttrs = static fn (array $r): string => ' data-ra-row data-tab="' . esc($r['tab'], 'attr') . '"'
+$rowAttrs = static fn (array $r): string => ' data-ra-row data-tab="' . esc($r['tab'], 'attr') . '" data-item-id="' . esc($r['item_id'], 'attr') . '"'
     . ' data-search="' . esc($searchText($r), 'attr') . '"'
     . ' data-category="' . esc($r['category'] ?? '', 'attr') . '"'
     . ' data-supplier="' . esc($r['supplier_id'] ?: 'none', 'attr') . '"'
     . ' data-out="' . ($r['out'] ? 1 : 0) . '" data-new="' . ($r['is_new'] ? 1 : 0) . '" data-late="' . ($r['late_days'] > 0 ? 1 : 0) . '"';
+
+// Item cards (To order, Dismissed).
+$cards     = $cards ?? ['order' => [], 'dismissed' => []];
+$newTag    = '<span class="ra-new">NEW</span>';
+$sizeCount = static fn (int $shown, int $total): string => $shown === $total ? $total . ' sizes' : $shown . ' of ' . $total . ' sizes';
+// "Tactical Gear Inc · 5-day delivery"
+$supplierLine = static fn (array $r): string => implode(' · ', array_filter([$r['supplier_name'], ! empty($r['lead_time_days']) ? (int) $r['lead_time_days'] . '-day delivery' : null]));
+$statusPill   = static fn (array $r): string => match (true) {
+    $r['tab'] === 'dismissed' => '<span class="status-pill gray">Dismissed</span>',
+    $r['out']                 => '<span class="status-pill ra-pill-out">Out of stock</span>',
+    default                   => '<span class="status-pill red">Reorder Now</span>',
+};
+// On hand: the number, then a bar (on hand ÷ (Reorder at + order qty)) with a tick at Reorder at.
+$onHand = static fn (array $r): string => '<span class="ra-num">' . (int) $r['current_stock'] . '</span>'
+    . '<span class="ra-bar"><span class="stock-bar ' . ($r['tab'] === 'dismissed' ? 'gray' : 'red') . ($r['out'] ? ' is-empty' : '') . '"><span style="width: ' . $r['bar']['pct'] . '%"></span></span>'
+    . ($r['bar']['tick'] !== null ? '<span class="ra-tick" style="left: ' . $r['bar']['tick'] . '%" data-tick></span>' : '') . '</span>';
+$rop = static fn (array $r): int => (int) ($r['manual_rop_warning'] ?? 0);
+// Shown under the name when the Reorder at and Status columns don't fit (narrow content).
+$narrowMeta = static fn (array $r): string => '<span class="ra-narrow">' . $statusPill($r) . '<span>Reorder at ' . $rop($r) . '</span></span>';
 ?>
 
 <link href="/assets/css/reorder-alerts.css" rel="stylesheet">
 
-<style>
-/* Item cards: replaced in Phase 3 (To order, Dismissed) and Phase 4 (Ordered). */
-.ra-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); margin-top: 16px; overflow: hidden; }
-.ra-card-head { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-bottom: 1px solid #eee; }
-.ra-card-head .icon { font-size: 26px; }
-.ra-card-head.critical .icon { color: var(--accent-maroon); }
-.ra-card-head h4 { margin: 0; font-weight: 800; font-size: 19px; }
-.ra-card-head span.sub { display: block; color: #555; font-size: 14px; }
-.ra-card-head .order-btn { margin-left: auto; }
-
-.ra-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 18px 20px 0; }
-.ra-stat-box { border: 1px solid #e2e2e2; border-radius: var(--radius-control); padding: 14px; text-align: center; }
-.ra-stat-box span { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #777; }
-.ra-stat-box strong { display: block; font-size: 26px; margin-top: 4px; }
-.ra-stat-box small { color: #888; font-size: 12px; }
-.ra-stat-box.stock strong { color: var(--accent-maroon); }
-.ra-stat-box.eoq strong { color: #a08217; }
-
-.ra-basis { margin: 18px 20px 20px; border: 1px solid #e2e2e2; border-radius: var(--radius-control); padding: 16px 18px; }
-.ra-basis strong.title { display: block; margin-bottom: 10px; }
-.ra-basis-grid { display: flex; flex-wrap: wrap; gap: 24px; font-size: 14px; }
-.ra-basis-grid b { margin-left: 6px; }
-
-.ra-card-actions { display: flex; gap: 8px; padding: 12px 20px 0; }
-.ra-card-actions form { margin: 0; }
-.ra-status-badge { display: inline-flex; align-items: center; background: #eef3ee; color: #3d5230; border-radius: var(--radius-pill); padding: 4px 10px; font-size: 12px; font-weight: 700; }
-
-.ra-ordered-card .ra-card-head { border-bottom: 0; flex-wrap: wrap; }
-.ra-ordered-meta { margin-left: auto; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; font-size: 14px; color: #3A4030; }
-</style>
 
 <div class="page-wrap ra-page" id="raBoard" data-active-tab="<?= esc($activeTab, 'attr') ?>">
     <?php if (!empty($success)): ?><div class="alert alert-success"><?= esc($success) ?></div><?php endif; ?>
@@ -139,90 +128,116 @@ $rowAttrs = static fn (array $r): string => ' data-ra-row data-tab="' . esc($r['
                 <button type="button" class="btn btn-outline-secondary" data-clear-all>Clear all</button>
             </div>
 
+            <?php if ($key === 'ordered'): ?>
             <div class="ra-list">
-            <?php foreach ($tabs[$key] as $alert): ?>
-                <?php if ($key === 'ordered'): ?>
-                    <div class="ra-card ra-ordered-card"<?= $rowAttrs($alert) ?>>
-                        <div class="ra-card-head">
-                            <div>
-                                <h4><?= esc($alert['item_name'] ?? 'Unknown item') ?></h4>
-                                <span class="sub"><?= esc(implode(' · ', array_filter([! empty($alert['size']) ? 'Size ' . $alert['size'] : null, $alert['category'] ?? null, $alert['item_id']]))) ?></span>
-                            </div>
-                            <div class="ra-ordered-meta">
-                                <?php if (! empty($alert['so_id'])): ?><span>Order <?= esc($alert['so_id']) ?></span><?php endif; ?>
-                                <span>Expected <?= ! empty($alert['expected_date']) ? esc(date('M j, Y', strtotime($alert['expected_date']))) : '—' ?></span>
-                                <?php if ($alert['late_days'] > 0): ?><span class="status-pill red">Late &middot; <?= esc($plural((int) $alert['late_days'], 'day')) ?></span><?php endif; ?>
-                                <?php if (! empty($alert['so_id'])): ?><a class="inv-view-order btn btn-outline-secondary btn-sm" href="<?= site_url('admin/orders/' . $alert['so_id']) ?>">View order</a><?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-                    <?php continue; ?>
-                <?php endif; ?>
-                <?php $computation = $alert['computation'] ?? null; ?>
-                <div class="ra-card"<?= $rowAttrs($alert) ?>>
-                    <div class="ra-card-head critical">
-                        <span class="icon"><i class="bi bi-exclamation-triangle"></i></span>
+            <?php foreach ($tabs['ordered'] as $alert): ?>
+                <?php // Ordered tab: replaced in Phase 4. ?>
+                <div class="ra-card ra-ordered-card"<?= $rowAttrs($alert) ?>>
+                    <div class="ra-card-head">
                         <div>
-                            <h4>Reorder Now — order now</h4>
-                            <span class="sub"><?= esc($alert['item_name'] ?? 'Unknown item') ?><?= !empty($alert['size']) ? ' - Size ' . esc($alert['size']) : '' ?></span>
+                            <h4><?= esc($alert['item_name'] ?? 'Unknown item') ?></h4>
+                            <span class="sub"><?= esc(implode(' · ', array_filter([! empty($alert['size']) ? 'Size ' . $alert['size'] : null, $alert['category'] ?? null, $alert['item_id']]))) ?></span>
                         </div>
-                        <button type="button"
-                                class="btn btn-success order-btn open-order-modal"
-                                data-alert-id="<?= esc($alert['alert_id'] ?? '') ?>"
-                                data-item-id="<?= esc($alert['item_id']) ?>"
-                                data-item-name="<?= esc(($alert['item_name'] ?? '') . (! empty($alert['size']) ? ' · Size ' . $alert['size'] : '')) ?>"
-                                data-supplier-id="<?= esc($alert['supplier_id'] ?? '') ?>"
-                                data-recommended-eoq="<?= esc($alert['recommended_eoq'] ?? 1) ?>">
-                            Order
-                        </button>
-                    </div>
-
-                    <div class="ra-card-actions">
-                        <?php if ($key === 'dismissed'): ?>
-                            <span class="ra-status-badge">Dismissed</span>
-                        <?php elseif (! empty($alert['alert_id'])): ?>
-                        <form method="post" action="<?= site_url('admin/reorder-alerts/dismiss/' . $alert['alert_id']) ?>" data-confirm="This alert will be dismissed without creating an order. It stays hidden until its stock recovers."
-                              data-confirm-title="Dismiss <?= esc($alert['item_name'] ?? 'this item', 'attr') ?> alert?"
-                              data-confirm-ok="Dismiss" data-confirm-variant="primary">
-                            <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-sm btn-outline-dark">Dismiss</button>
-                        </form>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="ra-stats">
-                        <div class="ra-stat-box stock">
-                            <span>Current Stock</span>
-                            <strong><?= esc($alert['current_stock'] ?? 0) ?></strong>
-                            <small>units</small>
-                        </div>
-                        <div class="ra-stat-box eoq">
-                            <span><?= \App\Libraries\Glossary::labelWithTip('order_qty') ?></span>
-                            <strong><?= esc($alert['recommended_eoq'] ?? '—') ?></strong>
-                            <small>units to order</small>
-                        </div>
-                        <div class="ra-stat-box">
-                            <span>Delivery time</span>
-                            <strong><?= esc($alert['lead_time_days'] ?? '—') ?></strong>
-                            <small>days (<?= esc($alert['supplier_name'] ?? 'Unassigned') ?>)</small>
-                        </div>
-                    </div>
-
-                    <div class="ra-basis">
-                        <strong class="title">How this was worked out <?= help_tip('How this was worked out', [
-                                'Daily sales: the average number sold each day.',
-                                'Availability target: how often you want it in stock.',
-                                'Safety Stock: extra units kept for busy days.',
-                            ]) ?></strong>
-                        <div class="ra-basis-grid">
-                            <span>Daily sales:<b><?= esc($computation['avg_daily_demand'] ?? '—') ?></b></span>
-                            <span>Availability target:<b><?= esc($alert['service_level'] ?? $dss['service_level_target'] ?? '—') ?>%<?= $alert['abc_class'] ? ' (' . esc($alert['abc_class']) . ' – ' . esc(['A' => 'Best seller', 'B' => 'Steady', 'C' => 'Slow'][$alert['abc_class']] ?? '') . ')' : '' ?></b></span>
-                            <span>Safety Stock <?= \App\Libraries\Glossary::tip('safety_stock') ?>:<b><?= esc($computation['safety_stock'] ?? '—') ?></b></span>
+                        <div class="ra-ordered-meta">
+                            <?php if (! empty($alert['so_id'])): ?><span>Order <?= esc($alert['so_id']) ?></span><?php endif; ?>
+                            <span>Expected <?= ! empty($alert['expected_date']) ? esc(date('M j, Y', strtotime($alert['expected_date']))) : '—' ?></span>
+                            <?php if ($alert['late_days'] > 0): ?><span class="status-pill red">Late &middot; <?= esc($plural((int) $alert['late_days'], 'day')) ?></span><?php endif; ?>
+                            <?php if (! empty($alert['so_id'])): ?><a class="inv-view-order btn btn-outline-secondary btn-sm" href="<?= site_url('admin/orders/' . $alert['so_id']) ?>">View order</a><?php endif; ?>
                         </div>
                     </div>
                 </div>
             <?php endforeach; ?>
             </div>
+            <?php else: ?>
+            <?php // One card per item; the header row sticks under the page header while the list scrolls. ?>
+            <div class="ra-items" data-items<?= $tabs[$key] === [] ? ' hidden' : '' ?>>
+                <div class="ra-head ra-grid">
+                    <span class="ra-c-item">Item</span>
+                    <span class="ra-c-size">Size</span>
+                    <span class="ra-c-onhand">On hand</span>
+                    <span class="ra-c-rop">Reorder at</span>
+                    <span class="ra-c-status">Status</span>
+                    <span class="ra-c-action">Action</span>
+                </div>
+                <?php foreach ($cards[$key] as $card): ?>
+                    <?php
+                    $sizesHere   = $card['sizes'];
+                    $first       = $sizesHere[0];
+                    $multi       = $card['total'] > 1;
+                    $supplierIds = array_map(static fn ($r) => $r['supplier_id'] ?: 'none', $sizesHere);
+                    $oneSupplier = count(array_unique($supplierIds)) === 1;
+                    // Sizes "Order all sizes" would include: the most urgent size's supplier only.
+                    $sameSupplier = count(array_keys($supplierIds, $supplierIds[0], true));
+                    ?>
+                    <article class="ra-item" data-ra-card data-total="<?= $card['total'] ?>"<?= $multi ? ' data-multi' : '' ?>>
+                        <?php if ($multi): ?>
+                            <div class="ra-row ra-grid ra-item-head">
+                                <div class="ra-c-item">
+                                    <span class="ra-name"><?= esc($card['item_name']) ?></span>
+                                    <span class="ra-sub"><?= esc(implode(' · ', array_filter([$card['category'], ($first['product_code'] ?? '') ?: $first['item_id'], $oneSupplier ? $supplierLine($first) : 'Several suppliers']))) ?></span>
+                                    <span class="ra-sub ra-inline-size" data-size-count><?= esc($sizeCount(count($sizesHere), $card['total'])) ?></span>
+                                </div>
+                                <div class="ra-c-size" data-size-count><?= esc($sizeCount(count($sizesHere), $card['total'])) ?></div>
+                                <div class="ra-c-onhand"></div>
+                                <div class="ra-c-rop"></div>
+                                <div class="ra-c-status"></div>
+                                <div class="ra-c-action ra-actions">
+                                    <?php if ($key === 'order'): ?>
+                                        <?php // Shown (by assets/js/reorder-alerts.js) when 2+ shown sizes share a supplier. Ordering them together comes in Phase 4. ?>
+                                        <button type="button" class="btn btn-outline-success btn-sm" data-order-all disabled<?= $sameSupplier < 2 ? ' hidden' : '' ?>>Order all sizes</button>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                        <?php foreach ($sizesHere as $r): ?>
+                            <?php $sizeText = trim((string) ($r['size'] ?? '')); $name = \App\Models\ProductModel::nameWithSize($r); ?>
+                            <div class="ra-row ra-grid<?= $multi ? ' ra-size-row' : '' ?>"<?= $rowAttrs($r) ?>>
+                                <div class="ra-c-item">
+                                    <?php if ($multi): ?>
+                                        <span class="ra-inline-size ra-size-label"><?= esc($sizeText !== '' ? 'Size ' . $sizeText : 'No size') ?><?= $r['is_new'] ? $newTag : '' ?></span>
+                                    <?php else: ?>
+                                        <span class="ra-name"><?= esc($r['item_name']) ?><?= $r['is_new'] ? $newTag : '' ?></span>
+                                        <?php if ($sizeText !== ''): ?><span class="ra-sub ra-inline-size">Size <?= esc($sizeText) ?></span><?php endif; ?>
+                                        <span class="ra-sub"><?= esc(implode(' · ', array_filter([$r['category'] ?? null, $r['item_id']]))) ?></span>
+                                        <span class="ra-sub"><?= esc($supplierLine($r)) ?></span>
+                                    <?php endif; ?>
+                                    <?= $narrowMeta($r) ?>
+                                </div>
+                                <div class="ra-c-size"><?= esc($sizeText !== '' ? $sizeText : '—') ?><?= $multi && $r['is_new'] ? $newTag : '' ?></div>
+                                <div class="ra-c-onhand"><?= $onHand($r) ?></div>
+                                <div class="ra-c-rop ra-num"><?= $rop($r) ?></div>
+                                <div class="ra-c-status"><?= $statusPill($r) ?></div>
+                                <div class="ra-c-action ra-actions">
+                                    <?php if ($key === 'order'): ?>
+                                        <button type="button"
+                                                class="btn btn-success btn-sm open-order-modal"
+                                                aria-label="Order <?= esc((string) ($r['recommended_eoq'] ?? ''), 'attr') ?>: <?= esc($name, 'attr') ?>"
+                                                data-alert-id="<?= esc((string) ($r['alert_id'] ?? ''), 'attr') ?>"
+                                                data-item-id="<?= esc($r['item_id'], 'attr') ?>"
+                                                data-item-name="<?= esc($name, 'attr') ?>"
+                                                data-supplier-id="<?= esc((string) ($r['supplier_id'] ?? ''), 'attr') ?>"
+                                                data-recommended-eoq="<?= esc((string) ($r['recommended_eoq'] ?? 1), 'attr') ?>">Order<?= ! empty($r['recommended_eoq']) ? ' ' . (int) $r['recommended_eoq'] : '' ?></button>
+                                        <?php if (! empty($r['alert_id'])): ?>
+                                            <form method="post" action="<?= site_url('admin/reorder-alerts/dismiss/' . $r['alert_id']) ?>" data-keep-view>
+                                                <?= csrf_field() ?>
+                                                <input type="hidden" name="return_query" value="">
+                                                <button type="submit" class="btn btn-outline-secondary btn-sm ra-icon-btn" title="Dismiss until restocked" aria-label="Dismiss until restocked"><i class="bi bi-bell-slash" aria-hidden="true"></i></button>
+                                            </form>
+                                        <?php endif; ?>
+                                    <?php elseif (! empty($r['alert_id'])): ?>
+                                        <form method="post" action="<?= site_url('admin/reorder-alerts/restore/' . $r['alert_id']) ?>" data-keep-view>
+                                            <?= csrf_field() ?>
+                                            <input type="hidden" name="return_query" value="">
+                                            <button type="submit" class="btn btn-outline-secondary btn-sm" aria-label="Restore: <?= esc($name, 'attr') ?>">Restore</button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
         </section>
     <?php endforeach; ?>
 </div>

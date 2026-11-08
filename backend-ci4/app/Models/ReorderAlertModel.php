@@ -141,13 +141,33 @@ class ReorderAlertModel extends Model
         return $this;
     }
 
-    /** Dismisses one pending alert; it stays hidden until its size recovers. */
-    public function dismissPending(int $alertId): void
+    /**
+     * Dismisses one pending alert; it stays hidden until its size recovers.
+     * False when the alert isn't pending (already ordered, dismissed or gone).
+     */
+    public function dismissPending(int $alertId): bool
     {
         $this->where('alert_id', $alertId)
             ->whereIn('status', self::PENDING_STATUSES)
             ->set(['status' => 'Dismissed', 'hidden_until_recovered' => 1])
             ->update();
+
+        return $this->db->affectedRows() > 0;
+    }
+
+    /**
+     * Undoes a dismissal: the alert is pending (Active) again and back in "To order".
+     * Only an alert dismissed until recovery can be restored; false otherwise.
+     */
+    public function restoreDismissed(int $alertId): bool
+    {
+        $this->where('alert_id', $alertId)
+            ->where('status', 'Dismissed')
+            ->where('hidden_until_recovered', 1)
+            ->set(['status' => 'Active', 'hidden_until_recovered' => 0])
+            ->update();
+
+        return $this->db->affectedRows() > 0;
     }
 
     /**

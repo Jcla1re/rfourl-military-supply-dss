@@ -30,61 +30,7 @@ $products ??= [];
 
 .page-wrap, .order-modal { font-family: 'Poppins', sans-serif; }
 
-.inv-toolbar {
-    display: flex;
-    align-items: flex-start; /* the search error message mustn't stretch the filters */
-    gap: 12px;
-    flex-wrap: wrap;
-    margin: 18px 0;
-}
-.inv-toolbar select {
-    min-height: 46px;
-    padding: 8px 34px 8px 14px;
-    border: 1px solid #d8d5cd;
-    border-radius: var(--radius-control);
-    background: #fff;
-    min-width: 150px;
-    font-family: 'Poppins', sans-serif;
-    color: #888;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23888888' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-}
-.inv-toolbar select.has-value {
-    color: var(--text-dark);
-}
-.inv-search {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 46px;
-    padding: 8px 14px;
-    border: 1px solid #D6D2C6;
-    border-radius: var(--radius-control);
-    background: #fff;
-}
-.inv-search i { color: #888; font-size: 16px; flex-shrink: 0; }
-.inv-search input {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    outline: none;
-    background: transparent;
-    padding: 0;
-}
-/* Our own clear button instead of the browser's, which only shows on hover / focus. */
-.inv-search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
-.inv-search-clear {
-    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-    width: 26px; height: 26px; margin-right: -6px; padding: 0;
-    border: 0; border-radius: 50%; background: transparent; color: #5C6152; font-size: 13px; cursor: pointer;
-}
-.inv-search-clear[hidden] { display: none; }
-.inv-search-clear:hover { background: #F2F0EA; color: #1F2617; }
-.inv-search-clear:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 1px; }
+/* Filter toolbar, search box and "Clear all": shared rules in admin-theme.css. */
 
 /* ===== Search results (owner): archived items are searched too ===== */
 /* Bar on top of the table while a search has active results. */
@@ -485,20 +431,6 @@ a.stat-pill.is-active { box-shadow: inset 0 0 0 2px currentColor; }
 
 /* Summary cards are toggles; "Clear filters" sits after the filters. */
 a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColor, 0 2px 8px rgba(31, 38, 23, .08); }
-/* "Clear all [n]": outlined button as tall as the dropdowns beside it. */
-.clear-filters {
-    align-self: stretch; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
-    padding: 0 16px; border: 1px solid #D6D2C6; border-radius: 10px; background: #fff;
-    color: #1C1C1C; font-size: 16px; font-weight: 400; line-height: 1; /* same text as the dropdowns beside it */
-    text-decoration: none; white-space: nowrap;
-    transition: background-color .15s ease, border-color .15s ease;
-}
-.clear-filters[hidden] { display: none; }
-.clear-filters:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
-.clear-filters-count {
-    border-radius: 999px; background: #EFECE4; color: #3A4030; font-size: 12px; font-weight: 600;
-}
-/* Centring, and white-with-green on button hover: shared badge rules in admin-theme.css. */
 
 /* Size filter: disabled ("No sizes") for categories without sized items. */
 .size-filter-wrap { display: inline-flex; }

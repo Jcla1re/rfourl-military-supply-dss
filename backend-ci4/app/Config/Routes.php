@@ -61,6 +61,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->get('procurement-report', 'ReorderAlertController::report');
     $routes->post('reorder-alerts/order', 'ReorderAlertController::createOrder');
     $routes->post('reorder-alerts/dismiss/(:segment)', 'ReorderAlertController::dismiss/$1');
+    $routes->post('reorder-alerts/restore/(:segment)', 'ReorderAlertController::restore/$1');
 
     $routes->get('trend-analysis', 'TrendAnalysisController::index');
     $routes->get('trend-analysis/pdf', 'TrendAnalysisController::pdf');

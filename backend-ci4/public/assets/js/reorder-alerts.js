@@ -29,6 +29,25 @@
     };
     const matchesChips = row => [...state.only].every(key => row.dataset[key] === '1');
 
+    // Item cards (To order, Dismissed): hidden when none of its sizes is shown; a multi-size
+    // card says "2 sizes" or "1 of 2 sizes" (the item's other sizes are on another tab or
+    // filtered out). "Order all sizes" needs 2+ shown sizes from the same supplier as the
+    // most urgent one: a size is never ordered from a supplier that isn't its own.
+    const cards = [...board.querySelectorAll('[data-ra-card]')];
+    function updateCard(card) {
+        const shownRows = [...card.querySelectorAll('[data-ra-row]')].filter(row => !row.hidden);
+        card.hidden = shownRows.length === 0;
+        if (!('multi' in card.dataset)) return;
+        const totalSizes = Number(card.dataset.total);
+        const text = shownRows.length === totalSizes ? `${totalSizes} sizes` : `${shownRows.length} of ${totalSizes} sizes`;
+        card.querySelectorAll('[data-size-count]').forEach(el => { el.textContent = text; });
+        const orderAll = card.querySelector('[data-order-all]');
+        if (orderAll) {
+            const supplier = shownRows[0]?.dataset.supplier;
+            orderAll.hidden = shownRows.filter(row => row.dataset.supplier === supplier).length < 2;
+        }
+    }
+
     function apply() {
         const counts = { order: 0, ordered: 0, dismissed: 0 };
         const chipCounts = { out: 0, new: 0 };
@@ -53,12 +72,16 @@
             if (visible) shown[tab]++;
         });
 
+        cards.forEach(updateCard);
+
         TABS.forEach(tab => {
             board.querySelector(`[data-tab-count="${tab}"]`).textContent = counts[tab];
             const panel = board.querySelector(`[data-panel="${tab}"]`);
             panel.hidden = tab !== state.tab;
             panel.querySelector('[data-tab-empty]').hidden = total[tab] !== 0;
             panel.querySelector('[data-no-results]').hidden = total[tab] === 0 || shown[tab] !== 0;
+            const items = panel.querySelector('[data-items]'); // column header + cards
+            if (items) items.hidden = shown[tab] === 0;
         });
         tabLinks.forEach(link => {
             const on = link.dataset.tabLink === state.tab;
@@ -116,6 +139,11 @@
         supplier.value = '';
         state.only.clear();
         apply();
+    }));
+
+    // Dismiss / Restore post the current tab and filters, so the page comes back to the same view.
+    board.querySelectorAll('form[data-keep-view]').forEach(form => form.addEventListener('submit', () => {
+        form.querySelector('input[name="return_query"]').value = location.search;
     }));
 
     apply();
