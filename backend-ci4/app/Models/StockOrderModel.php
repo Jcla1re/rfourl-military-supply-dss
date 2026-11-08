@@ -38,6 +38,19 @@ class StockOrderModel extends Model
     public const STATUSES = ['Order Confirmed', 'Preparing', 'Shipped', 'Delivered', 'Cancelled'];
     public const PRIORITIES = ['Urgent', 'Order', 'Planned'];
 
+    /**
+     * What a priority is called on screen. 'Order' (the default) and NULL read as "Normal";
+     * the stored values stay enum('Urgent', 'Order', 'Planned').
+     */
+    public static function priorityLabel(?string $priority): string
+    {
+        return match ($priority) {
+            'Urgent'  => 'Urgent',
+            'Planned' => 'Planned',
+            default   => 'Normal',
+        };
+    }
+
     /** Only these can be cancelled by the owner. Shipped goods are already on the way. */
     public const CANCELLABLE = ['Order Confirmed', 'Preparing'];
 

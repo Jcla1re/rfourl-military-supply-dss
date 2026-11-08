@@ -30,6 +30,7 @@
 .sd-notif-card { border: 1px solid #eee; border-radius: var(--radius-card); padding: 14px; margin-bottom: 12px; }
 .sd-notif-card .icon-badge { width: 34px; height: 34px; border-radius: var(--radius-icon); background: var(--red-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .sd-notif-card .title { font-weight: 700; }
+.sd-notif-card .prio-pill { display: inline-block; margin-left: 6px; padding: 2px 10px; border-radius: var(--radius-pill); background: #E6ECE1; color: #3D5230; font-size: 11px; font-weight: 700; vertical-align: 1px; }
 .sd-notif-card .meta { color: #888; font-size: 12px; margin-top: 6px; }
 
 .sd-schedule-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
@@ -91,7 +92,7 @@
                         <div class="sd-notif-card d-flex gap-3">
                             <span class="icon-badge"><i class="bi bi-exclamation-lg text-danger"></i></span>
                             <div class="flex-grow-1">
-                                <div class="title">New <?= $o['priority'] === 'Urgent' ? 'Urgent ' : '' ?>Order &mdash; #<?= esc($o['so_id']) ?></div>
+                                <div class="title">New <?= $o['priority'] === 'Urgent' ? 'Urgent ' : '' ?>Order &mdash; #<?= esc($o['so_id']) ?><?php if ($o['priority'] === 'Planned'): ?> <span class="prio-pill">Planned</span><?php endif; ?></div>
                                 <div class="small">RfourL Military Apparel has placed a new stock order.</div>
                                 <div class="small"><strong>Items:</strong> <?php foreach ($o['lines'] as $l): ?><?= esc($l['item_name'] ?? $l['item_id']) ?> &times;<?= esc($l['order_quantity']) ?> <?php endforeach; ?></div>
                                 <div class="small"><strong>Requested delivery:</strong> <?= !empty($o['expected_delivery_date']) ? esc(date('M j, Y', strtotime($o['expected_delivery_date']))) : '—' ?></div>

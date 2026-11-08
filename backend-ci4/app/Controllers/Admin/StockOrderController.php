@@ -4,9 +4,11 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\EmailNotifier;
+use App\Libraries\PurchaseOrderLine;
 use App\Libraries\Toast;
 use App\Models\SecurityLogModel;
 use App\Models\NotificationModel;
+use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
 use App\Models\ReorderAlertModel;
 use App\Models\ReorderNoticeModel;
@@ -114,24 +116,20 @@ class StockOrderController extends BaseController
             }
         }
 
-        // "Reorder" on a cancelled order opens the new-order form pre-filled with the same
-        // supplier, items and quantities. Nothing is created until the owner submits it.
+        // The shared purchase order dialog in "empty start" mode: the owner picks a supplier,
+        // then adds that supplier's items. Each item's line is built like on Inventory and
+        // Reorder Alerts (App\Libraries\PurchaseOrderLine), grouped by supplier_id.
+        $suppliers = $this->supplierModel->where('is_active', 1)->findAll();
+        $catalog   = $this->orderCatalog();
+
+        // "Reorder" on a cancelled order opens that dialog with the same supplier, items,
+        // quantities, unit prices and priority. Nothing is created until the owner submits it.
         $reorderPrefill = null;
         $reorderFrom    = trim((string) ($this->request->getGet('reorder') ?? ''));
         if ($reorderFrom !== '') {
             $source = $this->stockOrderModel->find($reorderFrom);
             if ($source && $source['status'] === 'Cancelled') {
-                $reorderPrefill = [
-                    'supplier_id' => $source['supplier_id'],
-                    'priority'    => $source['priority'],
-                    'from'        => $source['so_id'],
-                    'lines'       => array_map(fn ($l) => [
-                        'item_id' => $l['item_id'],
-                        'label'   => ($l['item_name'] ?? $l['item_id']) . (! empty($l['size']) ? ' — ' . $l['size'] : ''),
-                        'qty'     => (int) $l['order_quantity'],
-                        'price'   => (float) $l['unit_price'],
-                    ], $this->soItemModel->forOrder($source['so_id'])),
-                ];
+                $reorderPrefill = $this->reorderPrefill($source, $catalog, array_column($suppliers, null, 'supplier_id'));
             }
         }
 
@@ -145,10 +143,10 @@ class StockOrderController extends BaseController
             'historySearch'   => $historySearch,
             'historyDateFrom' => $historyDateFrom,
             'historyDateTo'   => $historyDateTo,
-            'suppliers'      => $this->supplierModel->where('is_active', 1)->findAll(),
-            'productGroups'  => $this->productModel->groupedActive(),
-            'statuses'       => StockOrderModel::STATUSES,
-            'priorities'     => StockOrderModel::PRIORITIES,
+            'suppliers'       => $suppliers,
+            'orderCatalog'    => $catalog,
+            'followedUpToday' => $this->followedUpToday(),
+            'statuses'        => StockOrderModel::STATUSES,
             'counts'         => $counts,
             'calMonth'       => $month,
             'calYear'        => $year,
@@ -160,36 +158,153 @@ class StockOrderController extends BaseController
         return view('admin/orders', $data);
     }
 
-    public function flagDelayed($soId)
+    /**
+     * supplier_id => the purchase order lines of that supplier's active items, for the
+     * Orders page dialog's item picker. Same numbers as Inventory (latest DSS run).
+     *
+     * @return array<string, list<array>>
+     */
+    private function orderCatalog(): array
     {
-        $order = $this->stockOrderModel->find($soId);
+        $dss = [];
+        foreach ((new PdssComputationModel())->latestPerItem() as $c) {
+            $dss[$c['item_id']] = ['eoq_value' => $c['eoq_value'], 'safety_stock' => $c['safety_stock'], 'lead_time_days' => $c['lead_time_days']];
+        }
+        $supplierMap = array_column($this->supplierModel->findAll(), null, 'supplier_id');
 
-        if (! $order) {
-            return redirect()->to('/admin/orders')->with('error', 'Order not found.');
+        $products = $this->productModel->where('is_active', 1)->where('supplier_id IS NOT NULL')->where('supplier_id !=', '')->findAll();
+        // By name, then sizes in their usual order (S, M, L, ...).
+        $rank = array_flip(ProductModel::sortSizes(array_values(array_unique(array_map(static fn ($p) => (string) ($p['size'] ?? ''), $products)))));
+        usort($products, static fn ($a, $b) => [strtolower((string) $a['item_name']), $rank[(string) ($a['size'] ?? '')] ?? 0]
+            <=> [strtolower((string) $b['item_name']), $rank[(string) ($b['size'] ?? '')] ?? 0]);
+
+        $catalog = [];
+        foreach ($products as $p) {
+            $catalog[$p['supplier_id']][] = PurchaseOrderLine::build($p + ($dss[$p['item_id']] ?? []), $supplierMap);
         }
 
-        // "Follow up"/"Delayed" is the admin asking the SUPPLIER for a status
-        // update — the admin already knows they just clicked this, so the
-        // notification belongs in the supplier's inbox, not the admin's own.
+        return $catalog;
+    }
+
+    /**
+     * The dialog's data for "Reorder" on a cancelled order: its supplier, its lines with the
+     * original quantity and unit price on top of today's numbers, its priority, and one
+     * warning naming the items left out (archived, or now from another supplier).
+     */
+    private function reorderPrefill(array $source, array $catalog, array $activeSuppliers): array
+    {
+        $supplierId = (string) $source['supplier_id'];
+        $byItem     = array_column($catalog[$supplierId] ?? [], null, 'item_id');
+        $lines      = [];
+        $leftOut    = [];
+
+        foreach ($this->soItemModel->forOrder($source['so_id']) as $l) {
+            if (isset($byItem[$l['item_id']])) {
+                $lines[] = $byItem[$l['item_id']] + ['qty' => (int) $l['order_quantity'], 'price' => round((float) $l['unit_price'], 2)];
+                continue;
+            }
+            $product   = $this->productModel->find($l['item_id']);
+            $name      = $product ? ProductModel::nameWithSize($product) : ($l['item_name'] ?? $l['item_id']);
+            $leftOut[] = $name . (! $product || ! $product['is_active'] ? ' (archived)' : ' (now from another supplier)');
+        }
+
+        $warning = null;
+        if (! isset($activeSuppliers[$supplierId])) {
+            $warning    = "The supplier of {$source['so_id']} is archived, so its items weren't added. Choose a supplier to start.";
+            $lines      = [];
+            $supplierId = '';
+        } elseif ($leftOut) {
+            $warning = 'Left out of this reorder: ' . implode(', ', $leftOut) . '.';
+        }
+
+        return [
+            'from'        => $source['so_id'],
+            'supplier_id' => $supplierId,
+            'priority'    => in_array($source['priority'], StockOrderModel::PRIORITIES, true) ? $source['priority'] : 'Order',
+            'lines'       => $lines,
+            'warning'     => $warning,
+        ];
+    }
+
+    /** The title of a follow-up notification; also how a second one on the same day is spotted. */
+    public static function followUpTitle(string $soId): string
+    {
+        return "Follow-up on {$soId}";
+    }
+
+    /** so_id => true for the orders the owner already followed up on today. */
+    private function followedUpToday(): array
+    {
+        $prefix = self::followUpTitle('');
+        $rows   = $this->notificationModel
+            ->select('title')
+            ->where('recipient_role', 'Supplier')
+            ->like('title', $prefix, 'after')
+            ->where('created_at >=', date('Y-m-d 00:00:00'))
+            ->findAll();
+
+        $ids = [];
+        foreach ($rows as $r) {
+            $ids[substr($r['title'], strlen($prefix))] = true;
+        }
+
+        return $ids;
+    }
+
+    /**
+     * The follow-up text, the same in the bell and the email. Before or on the due date it
+     * asks for an update; after it, it says the order hasn't arrived.
+     */
+    public static function followUpMessage(array $order, ?string $today = null): string
+    {
+        $soId = $order['so_id'];
+        $due  = $order['expected_delivery_date'] ?? null;
+        if (empty($due)) {
+            return "RfourL is asking for an update on {$soId}.";
+        }
+        $label = date('M j', strtotime($due));
+
+        return date('Y-m-d', strtotime($due)) < ($today ?? date('Y-m-d'))
+            ? "{$soId} was due {$label} and hasn't arrived. Please give an update."
+            : "RfourL is asking for an update on {$soId} (due {$label}).";
+    }
+
+    /**
+     * "Follow up": asks the supplier for an update on an open order. Nothing on the order
+     * changes. At most once per order per day (spotted from today's notifications).
+     */
+    public function flagDelayed($soId)
+    {
+        $order = $this->stockOrderModel->findWithDetails((string) $soId);
+
+        if (! $order) {
+            return redirect()->to('/admin/orders')->with('toast', Toast::error("Couldn't follow up", 'Order not found.'));
+        }
+        if (in_array($order['status'], ['Delivered', 'Cancelled'], true)) {
+            return redirect()->to('/admin/orders')->with('toast', Toast::error("Couldn't follow up", "Order {$soId} is already {$order['status']}."));
+        }
+        if (isset($this->followedUpToday()[$soId])) {
+            return redirect()->to('/admin/orders')->with('toast', Toast::info("You already followed up on {$soId} today."));
+        }
+
+        $title        = self::followUpTitle($soId);
+        $message      = self::followUpMessage($order);
         $supplierUser = $this->supplierUser($order['supplier_id']);
 
-        $this->notificationModel->push(
-            'Supplier',
-            'Order Status',
-            "Order {$soId} needs a status update",
-            "The expected delivery for {$soId} has passed. Please follow up and provide an update.",
-            $supplierUser['user_id'] ?? null,
-            'order_status',
-            '/supplier/deliveries'
-        );
+        $this->notificationModel->insert([
+            'recipient_role' => 'Supplier',
+            'recipient_id'   => $supplierUser['user_id'] ?? null,
+            'type'           => 'Order Status',
+            'category'       => 'order_status',
+            'title'          => $title,
+            'message'        => $message,
+            'link_url'       => '/supplier/deliveries',
+            'is_read'        => 0,
+            'created_at'     => date('Y-m-d H:i:s'), // "today" in the app's time zone
+        ]);
+        $this->emailNotifier->toUser($supplierUser, $title, $message);
 
-        $this->emailNotifier->toUser(
-            $supplierUser,
-            "Order {$soId} needs a status update",
-            "The expected delivery date for order {$soId} has passed. Please log in to the supplier portal and provide a status update."
-        );
-
-        return redirect()->to('/admin/orders')->with('success', "Order {$soId} marked delayed. Supplier notified.");
+        return redirect()->to('/admin/orders')->with('toast', Toast::success('Follow-up sent to ' . ($order['company_name'] ?? 'the supplier') . '.'));
     }
 
     /**
@@ -285,14 +400,22 @@ class StockOrderController extends BaseController
         $quantities = $this->request->getPost('quantity') ?? [];
         $prices     = $this->request->getPost('unit_price') ?? [];
         $alertId    = $this->request->getPost('alert_id');
+        // The shared purchase order dialog says where to go back to: Inventory and Reorder
+        // Alerts (pre-filled, automatic priority) or Orders (empty start, Priority chosen there).
+        // Any other return_to is ignored and the order lands on Orders as before.
+        $returnTo   = $this->request->getPost('return_to');
+        $fromDialog = in_array($returnTo, ['/admin/reorder-alerts', '/admin/inventory'], true);
+        $fromOrders = $returnTo === '/admin/orders';
+        $fail       = fn (string $why) => ($fromOrders ? redirect()->to('/admin/orders') : redirect()->back())
+            ->with('toast', Toast::error("Couldn't create order", $why));
 
         if (! $supplierId) {
-            return redirect()->back()->with('toast', Toast::error("Couldn't create order", 'Please select a supplier.'));
+            return $fail('Please select a supplier.');
         }
 
         $orderSupplier = $this->supplierModel->find($supplierId);
         if (! $orderSupplier || ! $orderSupplier['is_active']) {
-            return redirect()->back()->with('toast', Toast::error("Couldn't create order", 'This supplier is archived. Restore it before sending an order.'));
+            return $fail('This supplier is archived. Restore it before sending an order.');
         }
 
         $lines = [];
@@ -310,15 +433,22 @@ class StockOrderController extends BaseController
             $lines[] = ['item_id' => $itemId, 'qty' => $qty, 'price' => $price];
         }
 
+        $priority = $this->request->getPost('priority') ?: 'Order';
+
+        if ($fromOrders) {
+            $error = $this->ordersPageError((string) $supplierId, $itemIds, $quantities, $prices);
+            if ($error !== null) {
+                return $fail($error);
+            }
+            if (! in_array($priority, StockOrderModel::PRIORITIES, true)) {
+                $priority = 'Order';
+            }
+        }
+
         if (empty($lines)) {
             return redirect()->back()->with('toast', Toast::error("Couldn't create order", 'Add at least one item with a quantity greater than zero.'));
         }
 
-        // The shared purchase order dialog (Inventory, Reorder Alerts) says where to go back to;
-        // any other return_to is ignored and the order lands on Orders as before.
-        $returnTo   = $this->request->getPost('return_to');
-        $fromDialog = in_array($returnTo, ['/admin/reorder-alerts', '/admin/inventory'], true);
-        $priority   = $this->request->getPost('priority') ?: 'Order'; // Orders page: its own Priority dropdown
         if ($fromDialog) {
             $back = $returnTo === '/admin/inventory' ? $this->inventoryUrl() : '/admin/reorder-alerts';
             // Every size needs a quantity of 1 or more and a unit cost above ₱0 (the dialog checks this too).
@@ -362,7 +492,7 @@ class StockOrderController extends BaseController
             'status'                  => 'Order Confirmed',
             'order_date'              => date('Y-m-d'),
             'expected_delivery_date'  => $this->request->getPost('expected_delivery_date') ?: null,
-            'tracking_no'             => $this->request->getPost('tracking_no') ?: null,
+            'tracking_no'             => null, // the supplier enters it when shipping (Supplier → Deliveries)
         ]);
 
         foreach ($lines as $line) {
@@ -442,7 +572,53 @@ class StockOrderController extends BaseController
             ));
         }
 
+        if ($fromOrders) {
+            return redirect()->to('/admin/orders')->with('toast', Toast::success(
+                'Order created',
+                'was sent to ' . $orderSupplier['company_name'] . '.',
+                $soId,
+                ['action' => ['label' => 'View order', 'url' => site_url('admin/orders/' . $soId)]]
+            ));
+        }
+
         return redirect()->to('/admin/orders')->with('toast', Toast::success('Order created', 'was sent to the supplier.', $soId));
+    }
+
+    /**
+     * What's wrong with an order from the Orders page dialog, or null: at least one line,
+     * every quantity 1 or more, every unit cost above ₱0, and every item active and from the
+     * chosen supplier. (The supplier itself is checked above for every order.)
+     */
+    private function ordersPageError(string $supplierId, array $itemIds, array $quantities, array $prices): ?string
+    {
+        $ids = array_values(array_filter(array_map('strval', $itemIds), static fn ($id) => $id !== ''));
+        if ($ids === []) {
+            return 'Add at least 1 item.';
+        }
+        foreach ($itemIds as $i => $id) {
+            if ((string) $id === '') {
+                continue;
+            }
+            $qty = trim((string) ($quantities[$i] ?? ''));
+            if (! ctype_digit($qty) || (int) $qty < 1) {
+                return 'Enter a quantity of 1 or more for every item.';
+            }
+            if (! is_numeric($prices[$i] ?? null) || ! ((float) $prices[$i] > 0)) {
+                return 'Enter a unit cost above ₱0 for every item.';
+            }
+        }
+        $products = array_column($this->productModel->whereIn('item_id', $ids)->findAll(), null, 'item_id');
+        foreach ($ids as $id) {
+            $p = $products[$id] ?? null;
+            if (! $p || ! $p['is_active']) {
+                return ($p ? ProductModel::nameWithSize($p) : $id) . ' is archived. Remove it from the order.';
+            }
+            if ((string) $p['supplier_id'] !== $supplierId) {
+                return ProductModel::nameWithSize($p) . " isn't from this supplier.";
+            }
+        }
+
+        return null;
     }
 
     /**

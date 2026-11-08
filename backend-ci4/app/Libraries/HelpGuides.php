@@ -86,11 +86,11 @@ class HelpGuides
             [
                 'title' => 'Create a stock order',
                 'steps' => [
-                    'Open Reorder Alerts and click Order on an item, or open Orders and click Add New Order.',
-                    'Choose the item and the supplier.',
-                    'Type the quantity and the price per item.',
-                    'Choose Urgent or Planned, then pick the expected delivery date.',
-                    'Click Submit. The supplier is told about the order.',
+                    'Open Reorder Alerts or Inventory and click Order on an item, or open Orders and click Add New Order.',
+                    'On Orders, choose the supplier first. Then click + Add item and choose their items.',
+                    'Check the quantity and the unit cost of each item.',
+                    'An order with an item out of stock is Urgent. On Orders you can change it to Normal or Planned.',
+                    'Check the expected delivery date, then click Create order. The supplier is told about the order.',
                 ],
             ],
         ];

@@ -181,7 +181,7 @@ html:root select:not(.inv-size-select):not(:disabled):focus:hover {
     box-shadow: inset 0 0 0 2px currentColor, 0 0 0 3px rgba(74, 103, 65, .18);
 }
 /* Search boxes whose input has no border of its own: the box shows the ring. */
-:root :is(.inv-search, .ord-search) input:focus-visible:not(#focus-boost) { box-shadow: none; }
+:root :is(.inv-search, .ord-search, .po-picker-search) input:focus-visible:not(#focus-boost) { box-shadow: none; }
 :is(.inv-search, .ord-search):has(input:focus-visible) {
     border-color: #4A6741;
     box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);

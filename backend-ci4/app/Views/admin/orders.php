@@ -19,7 +19,9 @@ $tab = $tab ?? 'status';
 $calMonth = $calMonth ?? (int) date('n');
 $calYear = $calYear ?? (int) date('Y');
 $restockDates = $restockDates ?? [];
+$followedUpToday = $followedUpToday ?? [];
 ?>
+<link href="/assets/css/item-modal.css" rel="stylesheet">
 
 <style>
 
@@ -71,7 +73,9 @@ $restockDates = $restockDates ?? [];
 .ord-card-top .meta { color: #555; font-size: 13px; }
 .ord-card-top .title { font-weight: 600; font-size: 16px; margin: 2px 0; }
 .ord-card-top .sub { color: #777; font-size: 13px; }
-.priority-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 700; color: #4a4a4a; }
+.ord-pills { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.priority-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 700; color: #4a4a4a; white-space: nowrap; }
+.priority-pill.overdue { background: var(--red-bg); color: var(--red-text); }
 
 .ord-stepper { display: flex; align-items: center; margin: 22px 6px 6px; }
 .ord-step { flex: 1; text-align: center; position: relative; }
@@ -98,6 +102,10 @@ $restockDates = $restockDates ?? [];
 .ord-actions form { flex: 1; }
 .ord-actions button { width: 100%; padding: 12px; border-radius: var(--radius-control); border: 1px solid #333; background: #fff; font-weight: 700; cursor: pointer; }
 .ord-actions button.cancel-order { width: auto; padding: 12px 18px; border-color: #A1261B; color: #A1261B; }
+.ord-actions button { white-space: nowrap; }
+.ord-actions .ord-follow { display: flex; flex-direction: column; gap: 4px; min-width: 132px; }
+.ord-actions button:disabled { opacity: .55; cursor: not-allowed; }
+.ord-followed { font-size: 12px; color: #5C6152; text-align: center; }
 .ord-note { margin: 10px 0 0; font-size: 13px; color: #777; }
 .hist-note { display: block; font-size: 12px; color: #777; margin-top: 4px; }
 
@@ -122,10 +130,6 @@ $restockDates = $restockDates ?? [];
 .ord-search input { flex: 1; min-width: 0; border: none; outline: none; font-size: 14px; }
 .ord-filter-bar input[type="date"] { border: 1px solid #ddd; border-radius: var(--radius-control); padding: 9px 12px; font-size: 14px; }
 .ord-filter-bar .sep { color: #888; font-size: 13px; }
-/* Item picker search, the picker's Qty / Unit cost fields and the order line Qty / Unit price fields:
-   border here (not inline), so the shared focus styles can turn it green. */
-#pickerSearch, .picker-qty, .picker-cost, #lineItemsBody input:not([type="hidden"]) { border: 1px solid #D6D2C6; }
-
 </style>
 
 <div class="page-wrap">
@@ -148,10 +152,9 @@ $restockDates = $restockDates ?? [];
                     <?php foreach ($orders as $o): ?>
                         <?php
                         $stepIndex = array_search($o['status'], ['Order Confirmed', 'Preparing', 'Shipped', 'Delivered'], true);
-                        $priorityLabel = match ($o['priority']) {
-                            'Urgent' => 'Urgent', 'Planned' => 'Planned', default => 'Upcoming',
-                        };
+                        $priorityLabel = \App\Models\StockOrderModel::priorityLabel($o['priority'] ?? null);
                         $isOverdue = !empty($o['expected_delivery_date']) && strtotime($o['expected_delivery_date']) < strtotime('today') && $o['status'] !== 'Delivered';
+                        $followedUp = isset($followedUpToday[$o['so_id']]);
                         ?>
                         <div class="ord-card">
                             <div class="ord-card-top">
@@ -160,7 +163,10 @@ $restockDates = $restockDates ?? [];
                                     <div class="title"><?= esc($o['primary_item'] ?? 'Stock Order') ?></div>
                                     <div class="sub"><?= esc($o['total_units'] ?? 0) ?> units &middot; PEst: ₱<?= number_format($o['estimated'] ?? 0) ?></div>
                                 </div>
-                                <span class="priority-pill"><?= esc($priorityLabel) ?></span>
+                                <div class="ord-pills">
+                                    <?php if ($isOverdue): ?><span class="priority-pill overdue">Overdue</span><?php endif; ?>
+                                    <span class="priority-pill"><?= esc($priorityLabel) ?></span>
+                                </div>
                             </div>
 
                             <div class="ord-stepper">
@@ -193,9 +199,11 @@ $restockDates = $restockDates ?? [];
                                 <?php else: ?>
                                     <button type="button" disabled title="Available once the supplier ships this order">Mark as Done</button>
                                 <?php endif; ?>
-                                <form method="post" action="<?= site_url('admin/orders/flag-delayed/' . $o['so_id']) ?>">
+                                <?php // Asks the supplier for an update; once per order per day (StockOrderController::flagDelayed). ?>
+                                <form method="post" class="ord-follow" action="<?= site_url('admin/orders/flag-delayed/' . $o['so_id']) ?>">
                                     <?= csrf_field() ?>
-                                    <button type="submit"><?= $isOverdue ? 'Delayed' : 'Follow up' ?></button>
+                                    <button type="submit"<?= $followedUp ? ' disabled aria-describedby="followed-' . esc($o['so_id'], 'attr') . '"' : '' ?>>Follow up</button>
+                                    <?php if ($followedUp): ?><span class="ord-followed" id="followed-<?= esc($o['so_id'], 'attr') ?>">Followed up today</span><?php endif; ?>
                                 </form>
                                 <?php if (\App\Models\StockOrderModel::canCancel($o)): ?>
                                     <button type="button" class="cancel-order" data-cancel-order
@@ -340,246 +348,29 @@ $restockDates = $restockDates ?? [];
     <?php endif; ?>
 </div>
 
-<div class="inv-modal" id="itemModal">
-    <div class="inv-modal-card" style="max-width: 760px;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0">New Stock Order</h3>
-            <button type="button" class="btn-close" id="closeItemModal"></button>
-        </div>
-
-        <form method="post" action="<?= site_url('admin/orders/store') ?>">
-            <?= csrf_field() ?>
-            <div class="inv-form-grid">
-                <div class="inv-form-field">
-                    <label>Supplier</label>
-                    <select name="supplier_id" required>
-                        <option value="">Select supplier…</option>
-                        <?php foreach ($suppliers as $s): ?>
-                            <option value="<?= esc($s['supplier_id']) ?>"><?= esc($s['company_name']) ?> (<?= esc($s['lead_time_days']) ?>d delivery)</option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="inv-form-field">
-                    <label>Priority</label>
-                    <select name="priority">
-                        <?php foreach (($priorities ?? []) as $p): ?><option value="<?= esc($p) ?>"><?= esc($p) ?></option><?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="inv-form-field">
-                    <label>Expected Delivery Date</label>
-                    <input name="expected_delivery_date" type="date">
-                </div>
-                <div class="inv-form-field">
-                    <label>Tracking Number (optional)</label>
-                    <input name="tracking_no" placeholder="e.g. TRK-2026-0001">
-                </div>
-            </div>
-
-            <div class="mt-3">
-                <label class="fw-bold">Items</label>
-                <table class="line-items-table" id="lineItemsTable" style="width:100%; border-collapse: collapse; margin-top: 8px;">
-                    <thead>
-                        <tr>
-                            <th style="width:45%; text-align:left; font-size:11px; text-transform:uppercase; color:#666;">Item</th>
-                            <th style="width:20%; text-align:left; font-size:11px; text-transform:uppercase; color:#666;">Quantity</th>
-                            <th style="width:25%; text-align:left; font-size:11px; text-transform:uppercase; color:#666;">Unit Price (₱)</th>
-                            <th style="width:10%"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="lineItemsBody"></tbody>
-                </table>
-                <button type="button" style="border: 1px dashed #999; background: transparent; border-radius: var(--radius-control); padding: 8px 14px; margin-top: 8px; cursor:pointer;" id="addLineBtn">+ Add item</button>
-            </div>
-
-            <div class="inv-modal-actions">
-                <button type="button" class="btn btn-secondary" id="cancelItemModal">Cancel</button>
-                <button type="submit" class="btn btn-success">Create Order</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="inv-modal" id="itemPickerModal">
-    <div class="inv-modal-card" style="max-width:480px;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0" id="pickerTitle">Select Item</h3>
-            <button type="button" class="btn-close" id="closeItemPicker"></button>
-        </div>
-        <div id="pickerStep1">
-            <input type="search" id="pickerSearch" placeholder="Search items..." style="width:100%; padding:10px 14px; border-radius: var(--radius-control); margin-bottom:12px;">
-            <div id="pickerGroupList" style="max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
-        </div>
-        <div id="pickerStep2" style="display:none;">
-            <button type="button" id="pickerBackBtn" style="border:none; background:none; color:#666; padding:0; margin-bottom:12px; cursor:pointer; font-weight:600;">&larr; Back</button>
-            <table style="width:100%; border-collapse:collapse;">
-                <thead>
-                    <tr>
-                        <th style="text-align:left; font-size:11px; text-transform:uppercase; color:#888; padding-bottom:6px;">Size</th>
-                        <th style="text-align:left; font-size:11px; text-transform:uppercase; color:#888; padding-bottom:6px;">Qty to Order</th>
-                        <th style="text-align:left; font-size:11px; text-transform:uppercase; color:#888; padding-bottom:6px;">Unit Cost (₱)</th>
-                    </tr>
-                </thead>
-                <tbody id="pickerVariantBody"></tbody>
-            </table>
-            <button type="button" class="btn btn-success mt-3" id="pickerAddBtn" style="width:100%;">Add to Order</button>
-        </div>
-    </div>
-</div>
-
-<style>
-.picker-group-btn {
-    display: flex; justify-content: space-between; align-items: center; width: 100%;
-    padding: 12px 14px; border: 1px solid #e2e2e2; border-radius: var(--radius-control); background: #fff;
-    cursor: pointer; text-align: left; font-size: 14px;
-}
-.picker-group-btn:hover { border-color: #3d5230; background: #f7f9f5; }
-.picker-group-btn .muted { color: #888; font-size: 12px; }
-</style>
-
+<?php // "Add New Order" and "Reorder": the shared purchase order dialog, empty start (supplier first, then its items). ?>
+<?= view('partials/_purchase_order_dialog', ['suppliers' => $suppliers]) ?>
+<script type="application/json" id="orderCatalog"><?= json_encode((object) ($orderCatalog ?? []), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 <script>
-// Grouped by item_name+category — e.g. "Goa Pants" size S, M, and L are
-// three fully independent product rows (own item_id, stock, ROP), but the
-// picker shows them as one entry with a size step underneath. An item with
-// only one size skips straight past that step.
-const productGroups = <?= json_encode(array_map(fn ($g) => [
-    'item_name' => $g['item_name'],
-    'variants'  => array_map(fn ($v) => [
-        'item_id'   => $v['item_id'],
-        'size'      => $v['size'] ?? '',
-        'unit_cost' => (float) $v['unit_cost'],
-    ], $g['variants']),
-], $productGroups ?? [])) ?>;
+(function () {
+    const catalog = JSON.parse(document.getElementById('orderCatalog').textContent);
+    const openOrder = (lines, extra = {}) => window.PurchaseOrderDialog && window.PurchaseOrderDialog.open(lines, Object.assign({
+        mode: 'empty', showPriority: true, returnTo: '/admin/orders', catalog,
+    }, extra));
 
-const itemModal = document.getElementById('itemModal');
-const lineItemsBody = document.getElementById('lineItemsBody');
-const itemPickerModal = document.getElementById('itemPickerModal');
-const pickerStep1 = document.getElementById('pickerStep1');
-const pickerStep2 = document.getElementById('pickerStep2');
-const pickerGroupList = document.getElementById('pickerGroupList');
-const pickerVariantBody = document.getElementById('pickerVariantBody');
-let activeGroup = null;
+    document.getElementById('openAddModal').addEventListener('click', e => openOrder([], { opener: e.currentTarget }));
 
-// Item names/sizes are inserted via innerHTML, so escape them first.
-function escapeHtml(value) {
-    const d = document.createElement('div');
-    d.textContent = value == null ? '' : String(value);
-    return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-function renderGroupList(filterText) {
-    const term = (filterText || '').toLowerCase();
-    const matches = productGroups.filter(g => g.item_name.toLowerCase().includes(term));
-    pickerGroupList.innerHTML = matches.length
-        ? matches.map(g => `
-            <button type="button" class="picker-group-btn" data-name="${escapeHtml(g.item_name)}">
-                <span>${escapeHtml(g.item_name)}</span>
-                <span class="muted">${g.variants.length > 1 ? g.variants.length + ' sizes' : ''}</span>
-            </button>
-        `).join('')
-        : '<div class="text-muted small p-2">No items found.</div>';
-
-    pickerGroupList.querySelectorAll('.picker-group-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            activeGroup = productGroups.find(g => g.item_name === btn.dataset.name);
-            if (activeGroup) openSizeStep(activeGroup);
-        });
-    });
-}
-
-function openSizeStep(group) {
-    document.getElementById('pickerTitle').textContent = group.item_name;
-
-    pickerVariantBody.innerHTML = group.variants.map((v, i) => `
-        <tr>
-            <td style="padding:6px 8px;">${escapeHtml(v.size || '—')}</td>
-            <td style="padding:6px 8px;"><input type="number" min="0" value="0" data-idx="${i}" class="picker-qty" style="width:90px; padding:6px 8px; border-radius: var(--radius-control);"></td>
-            <td style="padding:6px 8px;"><input type="number" min="0" step="0.01" value="${v.unit_cost}" data-idx="${i}" class="picker-cost" style="width:100px; padding:6px 8px; border-radius: var(--radius-control);"></td>
-        </tr>
-    `).join('');
-
-    pickerStep1.style.display = 'none';
-    pickerStep2.style.display = '';
-}
-
-function resetPickerToList() {
-    pickerStep2.style.display = 'none';
-    pickerStep1.style.display = '';
-    document.getElementById('pickerSearch').value = '';
-    renderGroupList();
-}
-
-document.getElementById('pickerBackBtn').addEventListener('click', resetPickerToList);
-document.getElementById('pickerSearch').addEventListener('input', e => renderGroupList(e.target.value));
-
-document.getElementById('pickerAddBtn').addEventListener('click', () => {
-    if (!activeGroup) return;
-
-    const qtyInputs  = pickerVariantBody.querySelectorAll('.picker-qty');
-    const costInputs = pickerVariantBody.querySelectorAll('.picker-cost');
-
-    qtyInputs.forEach((qtyInput, i) => {
-        const qty = parseInt(qtyInput.value, 10) || 0;
-        if (qty <= 0) return;
-
-        const v    = activeGroup.variants[i];
-        const cost = parseFloat(costInputs[i].value) || 0;
-        const label = activeGroup.item_name + (v.size ? ' — ' + v.size : '');
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td style="padding:8px;">
-                <input type="hidden" name="item_id[]" value="${escapeHtml(v.item_id)}">
-                ${escapeHtml(label)}
-            </td>
-            <td><input type="number" name="quantity[]" min="1" value="${qty}" style="width:100%; padding:8px; border-radius: var(--radius-control);"></td>
-            <td><input type="number" name="unit_price[]" min="0" step="0.01" value="${cost}" style="width:100%; padding:8px; border-radius: var(--radius-control);"></td>
-            <td><button type="button" class="btn-close remove-line"></button></td>
-        `;
-        lineItemsBody.appendChild(row);
-        row.querySelector('.remove-line').addEventListener('click', () => row.remove());
-    });
-
-    itemPickerModal.classList.remove('show');
-    itemModal.classList.add('show');
-    resetPickerToList();
-});
-
-document.getElementById('closeItemPicker').addEventListener('click', () => {
-    itemPickerModal.classList.remove('show');
-    itemModal.classList.add('show');
-});
-
-document.getElementById('addLineBtn').addEventListener('click', () => {
-    itemModal.classList.remove('show');
-    resetPickerToList();
-    itemPickerModal.classList.add('show');
-});
-
-document.getElementById('openAddModal').addEventListener('click', () => {
-    lineItemsBody.innerHTML = '';
-    itemModal.classList.add('show');
-});
-document.getElementById('closeItemModal').addEventListener('click', () => itemModal.classList.remove('show'));
-
-// "Reorder" from a cancelled order: same supplier, items and quantities. Nothing is created until the owner submits.
-const reorderPrefill = <?= json_encode($reorderPrefill ?? null) ?>;
-if (reorderPrefill) {
-    lineItemsBody.innerHTML = '';
-    document.querySelector('#itemModal select[name="supplier_id"]').value = reorderPrefill.supplier_id;
-    document.querySelector('#itemModal select[name="priority"]').value = reorderPrefill.priority;
-    reorderPrefill.lines.forEach(l => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td style="padding:8px;"><input type="hidden" name="item_id[]" value="${escapeHtml(l.item_id)}">${escapeHtml(l.label)}</td>
-            <td><input type="number" name="quantity[]" min="1" value="${l.qty}" style="width:100%; padding:8px; border-radius: var(--radius-control);"></td>
-            <td><input type="number" name="unit_price[]" min="0" step="0.01" value="${l.price}" style="width:100%; padding:8px; border-radius: var(--radius-control);"></td>
-            <td><button type="button" class="btn-close remove-line"></button></td>`;
-        lineItemsBody.appendChild(row);
-        row.querySelector('.remove-line').addEventListener('click', () => row.remove());
-    });
-    itemModal.classList.add('show');
-}
-document.getElementById('cancelItemModal').addEventListener('click', () => itemModal.classList.remove('show'));
+    // "Reorder" from a cancelled order: same supplier, items, quantities, unit prices and priority.
+    // Nothing is created until the owner submits.
+    const reorderPrefill = <?= json_encode($reorderPrefill ?? null, JSON_HEX_TAG | JSON_HEX_AMP) ?>;
+    if (reorderPrefill) {
+        window.addEventListener('DOMContentLoaded', () => openOrder(reorderPrefill.lines, {
+            supplierId: reorderPrefill.supplier_id,
+            priority: reorderPrefill.priority,
+            warning: reorderPrefill.warning,
+        }));
+    }
+})();
 </script>
 
 <?= view('admin/_cancel_order_modal') ?>

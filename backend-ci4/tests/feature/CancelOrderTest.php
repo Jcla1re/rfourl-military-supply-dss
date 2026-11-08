@@ -33,7 +33,7 @@ final class CancelOrderTest extends CIUnitTestCase
         $filters->globals['before'] = array_values(array_diff($filters->globals['before'], ['csrf']));
 
         $forge = \Config\Database::forge();
-        foreach (['users', 'suppliers', 'products', 'stock_order', 'so_item', 'reorder_alert', 'notifications', 'security_log'] as $t) {
+        foreach (['users', 'suppliers', 'products', 'stock_order', 'so_item', 'reorder_alert', 'notifications', 'security_log', 'pdss_computation'] as $t) {
             $forge->dropTable($t, true);
         }
         $table = function (string $name, array $fields, string $key) use ($forge) {
@@ -56,6 +56,7 @@ final class CancelOrderTest extends CIUnitTestCase
         ], 'supplier_id');
         $table('products', [
             'item_id' => ['type' => 'VARCHAR', 'constraint' => 15], 'item_name' => ['type' => 'VARCHAR', 'constraint' => 100],
+            'supplier_id' => ['type' => 'VARCHAR', 'constraint' => 10, 'null' => true],
             'category' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true], 'size' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true],
             'unit_cost' => ['type' => 'REAL', 'default' => 0], 'current_stock' => ['type' => 'INTEGER', 'default' => 0],
             'manual_rop_warning' => ['type' => 'INTEGER', 'default' => 0], 'is_active' => ['type' => 'INTEGER', 'default' => 1],
@@ -88,11 +89,18 @@ final class CancelOrderTest extends CIUnitTestCase
             'role' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true], 'event' => ['type' => 'VARCHAR', 'constraint' => 50], 'detail' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'ip_address' => ['type' => 'VARCHAR', 'constraint' => 45, 'null' => true], 'created_at' => ['type' => 'DATETIME', 'null' => true],
         ], 'log_id');
+        // Read by the Orders page's purchase order dialog (the latest DSS numbers per item).
+        $table('pdss_computation', [
+            'computation_id' => ['type' => 'INTEGER', 'auto_increment' => true], 'item_id' => ['type' => 'VARCHAR', 'constraint' => 15],
+            'computed_at' => ['type' => 'DATETIME', 'null' => true], 'safety_stock' => ['type' => 'INTEGER', 'null' => true],
+            'reorder_point' => ['type' => 'INTEGER', 'null' => true], 'eoq_value' => ['type' => 'INTEGER', 'null' => true],
+            'lead_time_days' => ['type' => 'INTEGER', 'null' => true],
+        ], 'computation_id');
 
         $this->db->table('suppliers')->insert(['supplier_id' => 'SUP-001', 'company_name' => 'Tactical Gear Inc', 'contact_person' => 'Ana']);
         $this->adminId        = $this->makeUser('owner1', 'Owner One', 'Admin', null, 'owner@example.test');
         $this->supplierUserId = $this->makeUser('tgi', 'Tactical Gear', 'Supplier', 'SUP-001', 'supplier@example.test');
-        $this->db->table('products')->insert(['item_id' => 'P-1', 'item_name' => 'Tactical Pants', 'size' => 'M', 'unit_cost' => 100, 'current_stock' => 12]);
+        $this->db->table('products')->insert(['item_id' => 'P-1', 'item_name' => 'Tactical Pants', 'supplier_id' => 'SUP-001', 'size' => 'M', 'unit_cost' => 100, 'current_stock' => 12]);
 
         $this->mailer = new class () {
             public array $sent = [];
@@ -117,7 +125,7 @@ final class CancelOrderTest extends CIUnitTestCase
     protected function tearDown(): void
     {
         Services::resetSingle('email');
-        foreach (['users', 'suppliers', 'products', 'stock_order', 'so_item', 'reorder_alert', 'notifications', 'security_log'] as $t) {
+        foreach (['users', 'suppliers', 'products', 'stock_order', 'so_item', 'reorder_alert', 'notifications', 'security_log', 'pdss_computation'] as $t) {
             \Config\Database::forge()->dropTable($t, true);
         }
         parent::tearDown();

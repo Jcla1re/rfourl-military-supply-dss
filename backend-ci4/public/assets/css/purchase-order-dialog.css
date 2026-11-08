@@ -54,6 +54,64 @@
 .po-urgent-note { margin: 8px 0 0; }
 .po-urgent-note[hidden] { display: none; }
 
+/* ---- Empty start (Orders page): supplier first, "+ Add item", the item picker, ✕, Priority ---- */
+.po-dialog [hidden] { display: none !important; }
+.po-choose-warn { margin-top: 2px; }
+.po-empty {
+    padding: 18px 16px; border: 1px dashed #D6D2C6; border-radius: var(--radius-control);
+    background: #FAF9F5; color: #5C6152; font-size: 14px; text-align: center;
+}
+.po-lines:empty { display: none; }
+.po-add { margin-top: 12px; }
+.po-add-btn {
+    width: 100%; min-height: 44px; padding: 10px 14px; border: 1px dashed #71AA60; border-radius: var(--radius-control);
+    background: #fff; color: #4A6741; font: 500 14px/1.3 inherit; font-family: inherit; cursor: pointer;
+}
+.po-add-btn:hover:not(:disabled) { background: #EAF1E3; border-color: #5F9850; }
+.po-add-btn:disabled { border-color: #D6D2C6; color: #8A8D80; background: #FAF9F5; cursor: not-allowed; }
+.po-add-btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
+.po-picker { margin-top: 8px; border: 1px solid #D6D2C6; border-radius: var(--radius-control); background: #fff; overflow: hidden; }
+.po-picker-search { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid #E8E5DC; }
+.po-picker-search i { color: #8A8D80; }
+.im-field .po-picker-search input, .po-picker-search input {
+    flex: 1; min-width: 0; height: 44px; padding: 0; border: 0; outline: 0; box-shadow: none; background: transparent;
+    font: inherit; font-size: 14px; color: #1F2617;
+}
+.po-picker-search:focus-within { box-shadow: inset 0 0 0 2px #4A6741; border-radius: var(--radius-control) var(--radius-control) 0 0; }
+.po-picker-list { max-height: 300px; overflow-y: auto; overflow-x: hidden; padding: 4px 0 6px; }
+.po-pick-group { padding: 10px 14px 4px; color: #5C6152; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.po-pick {
+    display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; padding: 9px 14px;
+    border: 0; background: transparent; text-align: left; font-family: inherit; cursor: pointer;
+}
+.po-pick:hover, .po-pick:focus-visible { background: #EAF1E3; }
+.po-pick:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: -3px; }
+.po-pick-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.po-pick-name { color: #1F2617; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.po-pick-meta { color: #5C6152; font-size: 12px; overflow-wrap: anywhere; }
+.po-pick .status-pill { flex-shrink: 0; white-space: nowrap; }
+.po-pick-none { margin: 0; padding: 14px; color: #5C6152; font-size: 13px; }
+
+.po-line-remove {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 36px; height: 36px; border: 0; border-radius: var(--radius-icon); background: transparent; color: #5C6152; cursor: pointer;
+}
+.po-line-remove:hover { background: #F8E3E0; color: #A1261B; }
+.po-line-remove:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 1px; }
+
+/* Priority: Urgent / Normal / Planned. */
+.po-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); height: 44px; border: 1px solid #D6D2C6; border-radius: var(--radius-control); overflow: hidden; background: #fff; }
+.po-seg button {
+    min-width: 0; border: 0; border-left: 1px solid #D6D2C6; background: #fff; color: #2C3A1E;
+    font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap;
+}
+.po-seg button:first-child { border-left: 0; }
+.po-seg button:hover:not([aria-checked="true"]) { background: #EAF1E3; }
+.po-seg button[aria-checked="true"] { background: #4A6741; color: #fff; }
+.po-seg button[data-priority="Urgent"][aria-checked="true"] { background: #A1261B; }
+.po-seg button:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: -3px; }
+
 @media (max-width: 600px) {
     .po-line-row { grid-template-columns: auto minmax(0, 1fr); }
     .po-line-total-box { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; }

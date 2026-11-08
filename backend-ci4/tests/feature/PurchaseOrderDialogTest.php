@@ -207,8 +207,8 @@ final class PurchaseOrderDialogTest extends CIUnitTestCase
         $this->addSize('P-1', 'Whistle', null, 0, 3); // out of stock, but the Orders page form decides
         $this->addSize('P-2', 'Cap', null, 5, 3);
 
-        $this->asOwner()->post('admin/orders/store', ['supplier_id' => 'SUP-001', 'item_id' => ['P-1'], 'quantity' => [5], 'unit_price' => [50], 'priority' => 'Planned']);
-        $this->asOwner()->post('admin/orders/store', ['supplier_id' => 'SUP-001', 'item_id' => ['P-2'], 'quantity' => [5], 'unit_price' => [50], 'priority' => 'Urgent']);
+        $this->asOwner()->post('admin/orders/store', ['supplier_id' => 'SUP-001', 'item_id' => ['P-1'], 'quantity' => [5], 'unit_price' => [50], 'priority' => 'Planned', 'return_to' => '/admin/orders']);
+        $this->asOwner()->post('admin/orders/store', ['supplier_id' => 'SUP-001', 'item_id' => ['P-2'], 'quantity' => [5], 'unit_price' => [50], 'priority' => 'Urgent', 'return_to' => '/admin/orders']);
 
         $this->assertSame(['Planned', 'Urgent'], array_column($this->db->table('stock_order')->orderBy('so_id')->get()->getResultArray(), 'priority'));
     }

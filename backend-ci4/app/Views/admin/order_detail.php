@@ -63,7 +63,7 @@ $pillClass = match ($order['status'] ?? '') {
             </div>
             <div class="detail-field">
                 <span>Priority</span>
-                <strong><?= esc($order['priority'] ?? '—') ?></strong>
+                <strong><?= esc(\App\Models\StockOrderModel::priorityLabel($order['priority'] ?? null)) ?></strong>
             </div>
             <div class="detail-field">
                 <span>Contact Person</span>

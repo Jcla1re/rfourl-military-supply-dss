@@ -25,6 +25,7 @@ class NotificationModel extends Model
         'action_token',
         'action_user_id',
         'action_expires_at',
+        'created_at', // set by the database; a follow-up sets it itself (StockOrderController::flagDelayed)
     ];
 
     public const CATEGORIES = ['order_status', 'staff_activity', 'access_request', 'sales_records', 'security'];

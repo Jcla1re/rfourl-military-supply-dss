@@ -14,6 +14,7 @@
 .no-card-head { display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: #f4f2ec; }
 .no-card-head .badge-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 700; }
 .no-card-head .badge-pill.urgent { background: var(--red-bg); color: var(--red-text); }
+.no-card-head .badge-pill.planned { background: #E6ECE1; color: #3D5230; }
 .no-card-body { padding: 18px 20px; }
 .no-card-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 0 20px 18px; }
 
@@ -43,7 +44,7 @@
         <?php foreach ($orders as $o): ?>
             <div class="no-card">
                 <div class="no-card-head">
-                    <?php if ($o['priority'] === 'Urgent'): ?><span class="badge-pill urgent">Urgent</span><?php endif; ?>
+                    <?php if ($o['priority'] === 'Urgent'): ?><span class="badge-pill urgent">Urgent</span><?php elseif ($o['priority'] === 'Planned'): ?><span class="badge-pill planned">Planned</span><?php endif; ?>
                     <span class="fw-bold">#<?= esc($o['so_id']) ?></span>
                     <span class="badge-pill">Awaiting Confirmation</span>
                 </div>
@@ -69,7 +70,7 @@
                     <div class="mt-1">
                         <strong>Requested delivery:</strong> <?= !empty($o['expected_delivery_date']) ? esc(date('M j, Y', strtotime($o['expected_delivery_date']))) : '—' ?>
                         &nbsp;<strong>Total items:</strong> <?= esc($o['total_units']) ?>
-                        &nbsp;<strong>Priority:</strong> <?= esc($o['priority']) ?>
+                        &nbsp;<strong>Priority:</strong> <?= esc(\App\Models\StockOrderModel::priorityLabel($o['priority'] ?? null)) ?>
                     </div>
                 </div>
                 <div class="no-card-actions">
