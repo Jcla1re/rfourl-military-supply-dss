@@ -13,8 +13,9 @@ use App\Models\UserModel;
  *   FORGOT  The staff member asks (Forgot password). A temporary password is emailed to them and
  *           waits beside their current password, which keeps working until the temporary one is
  *           actually used (promoteTemp()). Valid 2 hours. No owner approval.
- *   RESET   The owner types a new password in Manage Accounts (ownerReset()). The staff member
- *           gets an email WITHOUT the password and must ask the owner for it. Valid 2 hours.
+ *   RESET   The owner types a new password in Manage Accounts (ownerReset()). It replaces the old
+ *           password at once. The staff member gets an email WITHOUT the password and must ask the
+ *           owner for it. Valid 24 hours, so a reset done in the evening still works next morning.
  *   INVITE  A new account (or a resent invite): a temporary password is emailed. Valid 48 hours.
  *
  * Whichever way, the first sign-in forces "Create new password" (complete()), and then the owner
@@ -27,8 +28,9 @@ class StaffPasswordReset
     public const KIND_RESET  = 'reset';
     public const KIND_INVITE = 'invite';
 
-    public const RESET_TTL  = 7200;   // 2 hours (forgot and owner reset)
-    public const INVITE_TTL = 172800; // 48 hours
+    public const FORGOT_TTL      = 7200;   // 2 hours (the emailed Forgot-password temporary password)
+    public const OWNER_RESET_TTL = 86400;  // 24 hours (the password the owner types in Manage Accounts)
+    public const INVITE_TTL      = 172800; // 48 hours (a new account)
 
     /** At most this many Forgot-password requests per account per hour. */
     public const FORGOT_PER_HOUR = 3;
@@ -48,7 +50,11 @@ class StaffPasswordReset
 
     public static function ttlFor(string $kind): int
     {
-        return $kind === self::KIND_INVITE ? self::INVITE_TTL : self::RESET_TTL;
+        return match ($kind) {
+            self::KIND_INVITE => self::INVITE_TTL,
+            self::KIND_RESET  => self::OWNER_RESET_TTL,
+            default           => self::FORGOT_TTL,
+        };
     }
 
     /** 12 characters, easy to read out (no 0/O, 1/l/I), always with letters and digits. */
@@ -137,7 +143,7 @@ class StaffPasswordReset
         $this->users->update((int) $staff['user_id'], [
             'temp_password_hash'       => password_hash($password, PASSWORD_DEFAULT),
             'temp_password_kind'       => self::KIND_FORGOT,
-            'temp_password_expires_at' => date('Y-m-d H:i:s', time() + self::RESET_TTL),
+            'temp_password_expires_at' => date('Y-m-d H:i:s', time() + self::FORGOT_TTL),
         ]);
 
         if (! $this->emailPassword($staff, $password, self::KIND_FORGOT)) {
@@ -178,8 +184,10 @@ class StaffPasswordReset
     // ------------------------------------------------------------------ Flow 2: the owner resets it
 
     /**
-     * The owner sets a new password for the staff member (also unlocking a locked account). It works
-     * for 2 hours, only to get to "Create new password": the staff member must replace it, so the
+     * The owner sets a new password for the staff member (also unlocking a locked account). The OLD
+     * password stops working at that very moment (the owner may be resetting a compromised account),
+     * unlike Forgot password, where the old one keeps working beside the emailed temporary one. It works
+     * for 24 hours, only to get to "Create new password": the staff member must replace it, so the
      * owner doesn't keep knowing their password. The password the person chose before is remembered.
      */
     public function ownerReset(array $staff, string $newPassword): void
@@ -194,7 +202,7 @@ class StaffPasswordReset
             'password_hash'            => password_hash($newPassword, PASSWORD_DEFAULT),
             'must_change_password'     => 1,
             'temp_password_kind'       => self::KIND_RESET,
-            'temp_password_expires_at' => date('Y-m-d H:i:s', time() + self::RESET_TTL),
+            'temp_password_expires_at' => date('Y-m-d H:i:s', time() + self::OWNER_RESET_TTL),
             'is_active'                => 1,
         ];
         if (! empty($staff['temp_password_hash'])) {

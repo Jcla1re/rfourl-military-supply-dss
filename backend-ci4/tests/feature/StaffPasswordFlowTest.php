@@ -682,13 +682,47 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->assertTrue(password_verify('OwnerChose123', $row->password_hash));
         $this->assertSame('1', (string) $row->must_change_password);
         $this->assertSame('reset', $row->temp_password_kind);
-        $this->assertEqualsWithDelta(time() + 7200, strtotime($row->temp_password_expires_at), 10);
+        $this->assertEqualsWithDelta(time() + 86400, strtotime($row->temp_password_expires_at), 10); // 24 hours, not 2
         $this->assertSame(1, $this->db->table('security_log')->where('event', 'password_reset')->countAllResults());
         $this->assertStringNotContainsString('OwnerChose123', json_encode($this->db->table('security_log')->get()->getResultArray()));
 
         // The staff member signs in with it and is sent to create their own.
         $this->post('login/staff', ['password' => 'OwnerChose123'])->assertRedirectTo(site_url('/staff/set-password'));
         $this->asStaff()->get('staff/dashboard')->assertRedirectTo(site_url('/staff/set-password'));
+    }
+
+    public function testOwnerResetStopsTheOldPasswordAtOnce(): void
+    {
+        // Unlike Forgot password (where the old password keeps working beside the emailed one), an owner
+        // reset may be for a compromised account: the old password must be dead the moment it is reset.
+        $this->post('login/staff', ['password' => 'Cashier1Pass1'])->assertRedirectTo(site_url('/staff/dashboard'));
+        (new LoginLockout())->reset('staff');
+
+        $this->ownerReset();
+
+        $row = $this->user($this->staffId);
+        $this->assertFalse(password_verify('Cashier1Pass1', $row->password_hash), 'the old password is gone from the account');
+        $this->assertNull($row->temp_password_hash ?? null, 'and nothing keeps it alive beside the new one');
+
+        $this->post('login/staff', ['password' => 'Cashier1Pass1'])->assertSessionHas('error', 'Incorrect password. Please try again');
+        (new LoginLockout())->reset('staff');
+
+        // A session that was already open is confined to "Create new password" too.
+        $this->asStaff()->get('staff/dashboard')->assertRedirectTo(site_url('/staff/set-password'));
+        $this->asStaff()->get('staff/account')->assertRedirectTo(site_url('/staff/set-password'));
+
+        // Only the owner's password gets in, and it leads straight to Create new password.
+        $this->post('login/staff', ['password' => 'OwnerChose123'])->assertRedirectTo(site_url('/staff/set-password'));
+    }
+
+    public function testOwnerResetOfALockedAccountStillKillsTheOldPassword(): void
+    {
+        $this->db->table('users')->where('user_id', $this->staffId)->update(['is_active' => 0]);
+
+        $this->ownerReset();
+
+        $this->assertSame(1, (int) $this->user($this->staffId)->is_active);
+        $this->post('login/staff', ['password' => 'Cashier1Pass1'])->assertSessionHas('error', 'Incorrect password. Please try again');
     }
 
     public function testOwnerResetEmailsTheStaffMemberWithoutThePassword(): void

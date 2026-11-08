@@ -136,7 +136,7 @@ class AuthController extends BaseController
             $user = (new StaffPasswordReset())->promoteTemp($user);
         }
 
-        // A temporary password stops working after its time is up (2 hours for a reset, 48 for a new account).
+        // A temporary password stops working after its time is up (2 hours for Forgot password, 24 for an owner reset, 48 for a new account).
         if (\App\Libraries\StaffPasswordReset::isExpired($user)) {
             SecurityLogModel::log('login_blocked_temp_expired', $user);
 

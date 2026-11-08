@@ -29,6 +29,8 @@ ml-service/*.log
 # Database
 # ==============================
 database/*.sql.bak
+# database dumps and backups (files already tracked stay tracked)
+*.sql
 *.sqlite3
 # one-off reseed backups (dss:seed-dataset)
 data-cleaning/backup/rfourl_dss_before_reseed_*.sql
