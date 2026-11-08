@@ -99,6 +99,8 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                             'status_label'       => $v['status']['label'] ?? 'In Stock',
                             'open_so'            => $v['open_so'] ?? null,
                             'updated_at_display'=> date('M j, Y', strtotime($v['updated_at'] ?? 'now')),
+                            // This size's line in the shared purchase order dialog (App\Libraries\PurchaseOrderLine).
+                            'po'                 => \App\Libraries\PurchaseOrderLine::build($v, $supplierMap ?? []),
                         ], $variants);
                         ?>
                         <tr class="<?= ! empty($showArchived) ? 'is-archived' : '' ?>" data-row-status="<?= esc($itemStatus) ?>" data-worst-index="<?= $worstIndex ?>" data-category="<?= esc($group['category'] ?? '') ?>" data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
@@ -152,10 +154,7 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                                         class="inv-action-btn open-order-modal"
                                         style="<?= $itemStatus === 'Reorder Now' ? '' : 'display:none;' ?>"
                                         data-item-id="<?= esc($default['item_id']) ?>"
-                                        data-item-name="<?= esc(($default['item_name'] ?? '') . (! empty($default['size']) ? ' · Size ' . $default['size'] : '')) ?>"
-                                        data-supplier-id="<?= esc($default['supplier_id'] ?? '') ?>"
-                                        data-unit-cost="<?= esc($default['unit_cost'] ?? 0) ?>"
-                                        data-recommended-eoq="<?= esc($default['eoq_value'] ?? 1) ?>"
+                                        data-line="<?= esc(json_encode($variantsPayload[$worstIndex]['po']), 'attr') ?>"
                                         <?= ! empty($default['size']) ? 'title="Orders size ' . esc($default['size'], 'attr') . '"' : '' ?>>
                                     Order
                                 </button>

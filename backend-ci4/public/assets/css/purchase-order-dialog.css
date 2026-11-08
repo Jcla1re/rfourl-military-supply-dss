@@ -1,0 +1,61 @@
+/* public/assets/css/purchase-order-dialog.css
+   The shared "New purchase order" dialog (app/Views/partials/_purchase_order_dialog.php).
+   Header, sections, fields, errors and footer come from item-modal.css (same as Add item);
+   this file only adds the line cards, the − / + control and the totals box. */
+
+.po-dialog { width: min(700px, 94vw); }
+
+/* ---- One card per size ---- */
+.po-lines { display: flex; flex-direction: column; gap: 12px; }
+.po-line { min-width: 0; padding: 14px 16px; border: 1px solid #E8E5DC; border-radius: var(--radius-control); background: #fff; }
+.po-line-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.po-line-icon {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 40px; height: 40px; border-radius: var(--radius-icon); background: #EAF1E3; color: #3B5434; font-size: 18px;
+}
+.po-line-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.po-line-name { color: #1F2617; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.po-line-meta { color: #5C6152; font-size: 13px; }
+.po-line-status { flex-shrink: 0; white-space: nowrap; }
+.po-line-numbers { margin: 10px 0 12px; color: #5C6152; font-size: 13px; }
+
+/* Quantity | Unit cost | Line total, on one row. */
+.po-line-row { display: grid; grid-template-columns: auto minmax(0, 170px) minmax(0, 1fr); align-items: start; gap: 6px 16px; }
+.po-line-row .im-field-error { white-space: normal; }
+.po-qty { display: inline-flex; align-items: stretch; height: 44px; border: 1px solid #E8E5DC; border-radius: var(--radius-control); overflow: hidden; background: #fff; }
+.im-field .po-qty input {
+    width: 64px; height: auto; padding: 0 6px; border: 0; border-inline: 1px solid #E8E5DC; border-radius: 0;
+    text-align: center; font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield; appearance: textfield;
+}
+.im-field .po-qty input:focus { box-shadow: inset 0 0 0 2px #4A6741; }
+.im-field .po-qty input.is-invalid { box-shadow: inset 0 0 0 2px #A1261B; }
+.po-qty input::-webkit-outer-spin-button, .po-qty input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.po-step { width: 40px; border: 0; background: #fff; color: #2C3A1E; font-size: 18px; line-height: 1; cursor: pointer; font-family: inherit; }
+.po-step:hover:not(:disabled) { background: #EAF1E3; color: #2F5A27; }
+.po-step:disabled { color: #B9B6AC; cursor: not-allowed; }
+.po-step:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: -3px; }
+.im-field .im-prefix input[name="unit_price[]"] { font-variant-numeric: tabular-nums; }
+.po-line-total-box { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 0; }
+.po-line-total { display: flex; align-items: center; height: 44px; color: #1F2617; font-size: 16px; font-variant-numeric: tabular-nums; }
+.po-after { display: block; margin-top: 6px; }
+
+/* ---- Order details ---- */
+.po-supplier-fixed { overflow: hidden; text-overflow: ellipsis; }
+.im-help.is-warning { color: #8A5A00; }
+
+/* Totals: a row per line, then the order total. */
+.po-totals { margin-top: 16px; padding: 12px 16px; border-radius: var(--radius-control); background: #F5F3EE; font-size: 14px; color: #2C3A1E; }
+.po-total-row { display: flex; justify-content: space-between; gap: 16px; padding: 3px 0; font-variant-numeric: tabular-nums; }
+.po-total-row > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.po-total-row > span:last-child { white-space: nowrap; }
+.po-total-row.is-grand { margin-top: 6px; padding-top: 9px; border-top: 1px solid #E3E0D7; font-weight: 600; }
+.po-total-row.is-grand strong { font-size: 17px; }
+.po-urgent-note { margin: 8px 0 0; }
+.po-urgent-note[hidden] { display: none; }
+
+@media (max-width: 600px) {
+    .po-line-row { grid-template-columns: auto minmax(0, 1fr); }
+    .po-line-total-box { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; }
+    .po-line-total { height: auto; }
+}

@@ -314,15 +314,32 @@ class StockOrderController extends BaseController
             return redirect()->back()->with('toast', Toast::error("Couldn't create order", 'Add at least one item with a quantity greater than zero.'));
         }
 
-        // Orders placed from Reorder Alerts go back there (Ordered tab); any other value is ignored.
-        $fromReorderAlerts = $this->request->getPost('return_to') === '/admin/reorder-alerts';
-        if ($fromReorderAlerts) {
-            // A size is only ever ordered from its own supplier ("Order all sizes" groups by supplier).
-            foreach ($this->productModel->whereIn('item_id', array_column($lines, 'item_id'))->findAll() as $p) {
-                if (! empty($p['supplier_id']) && $p['supplier_id'] !== $supplierId) {
-                    return redirect()->to('/admin/reorder-alerts')->with('toast', Toast::error("Couldn't create order", ProductModel::nameWithSize($p) . ' comes from another supplier.'));
+        // The shared purchase order dialog (Inventory, Reorder Alerts) says where to go back to;
+        // any other return_to is ignored and the order lands on Orders as before.
+        $returnTo   = $this->request->getPost('return_to');
+        $fromDialog = in_array($returnTo, ['/admin/reorder-alerts', '/admin/inventory'], true);
+        $priority   = $this->request->getPost('priority') ?: 'Order'; // Orders page: its own Priority dropdown
+        if ($fromDialog) {
+            $back = $returnTo === '/admin/inventory' ? $this->inventoryUrl() : '/admin/reorder-alerts';
+            // Every size needs a quantity of 1 or more and a unit cost above ₱0 (the dialog checks this too).
+            if (count(array_filter($itemIds)) !== count($lines)) {
+                return redirect()->to($back)->with('toast', Toast::error("Couldn't create order", 'Enter a quantity of 1 or more for every size.'));
+            }
+            foreach ($lines as $line) {
+                if (! ($line['price'] > 0)) {
+                    return redirect()->to($back)->with('toast', Toast::error("Couldn't create order", 'Enter a unit cost above ₱0 for every size.'));
                 }
             }
+            $ordered = $this->productModel->whereIn('item_id', array_column($lines, 'item_id'))->findAll();
+            // A size is only ever ordered from its own supplier ("Order all sizes" groups by supplier).
+            foreach ($ordered as $p) {
+                if (! empty($p['supplier_id']) && $p['supplier_id'] !== $supplierId) {
+                    return redirect()->to($back)->with('toast', Toast::error("Couldn't create order", ProductModel::nameWithSize($p) . ' comes from another supplier.'));
+                }
+            }
+            // The dialog has no Priority field: Urgent when any ordered size has nothing on hand
+            // right now (read here, not from the page), otherwise the default. A posted value is ignored.
+            $priority = self::dialogPriority($ordered);
         }
 
         // The alert the order was opened from, read before the pending alerts below become
@@ -341,7 +358,7 @@ class StockOrderController extends BaseController
             'so_id'                   => $soId,
             'supplier_id'             => $supplierId,
             'user_id'                 => session()->get('user_id'),
-            'priority'                => $this->request->getPost('priority') ?: 'Order',
+            'priority'                => $priority,
             'status'                  => 'Order Confirmed',
             'order_date'              => date('Y-m-d'),
             'expected_delivery_date'  => $this->request->getPost('expected_delivery_date') ?: null,
@@ -412,10 +429,12 @@ class StockOrderController extends BaseController
             "A new stock order {$soId} has been placed. Please log in to the supplier portal to review and accept it."
         );
 
-        if ($fromReorderAlerts) {
+        if ($fromDialog) {
             $sizes = count($lines);
+            // Reorder Alerts: its Ordered tab. Inventory: the same page, filters and search.
+            $url = $returnTo === '/admin/inventory' ? $this->inventoryUrl() : '/admin/reorder-alerts?tab=ordered';
 
-            return redirect()->to('/admin/reorder-alerts?tab=ordered')->with('toast', Toast::success(
+            return redirect()->to($url)->with('toast', Toast::success(
                 'Order created',
                 'was sent to ' . $orderSupplier['company_name'] . ($sizes > 1 ? " ({$sizes} sizes)." : '.'),
                 $soId,
@@ -424,6 +443,37 @@ class StockOrderController extends BaseController
         }
 
         return redirect()->to('/admin/orders')->with('toast', Toast::success('Order created', 'was sent to the supplier.', $soId));
+    }
+
+    /**
+     * Priority for an order from the purchase order dialog (stock_order.priority is
+     * enum('Urgent', 'Order', 'Planned')): 'Urgent' if any ordered size has 0 on hand,
+     * otherwise the default 'Order'.
+     *
+     * @param list<array> $products the ordered sizes' products rows, as stored now
+     */
+    public static function dialogPriority(array $products): string
+    {
+        foreach ($products as $p) {
+            if ((int) $p['current_stock'] <= 0) {
+                return 'Urgent';
+            }
+        }
+
+        return 'Order';
+    }
+
+    /**
+     * The Inventory list the order was placed from (category, search, size, status, page,
+     * rows per page), rebuilt from the return_query the dialog posts. Only those parameters
+     * are kept, as in InventoryController::listUrl().
+     */
+    private function inventoryUrl(): string
+    {
+        parse_str(ltrim((string) $this->request->getPost('return_query'), '?'), $params);
+        $params = array_filter(array_intersect_key($params, array_flip(['category', 'search', 'size', 'status', 'page', 'per_page'])), static fn ($v) => is_string($v) && $v !== '');
+
+        return '/admin/inventory' . ($params ? '?' . http_build_query($params) : '');
     }
 
     public function updateStatus($soId)

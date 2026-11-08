@@ -50,22 +50,13 @@ $onHand = static fn (array $r): string => '<span class="ra-num">' . (int) $r['cu
 $rop = static fn (array $r): int => (int) ($r['manual_rop_warning'] ?? 0);
 // Shown under the name when the Reorder at and Status columns don't fit (narrow content).
 $narrowMeta = static fn (array $r): string => '<span class="ra-narrow">' . $statusPill($r) . '<span>Reorder at ' . $rop($r) . '</span></span>';
-// What the order dialog shows and posts for one size (assets/js/reorder-alerts.js).
-$orderLine = static fn (array $r): string => esc(json_encode([
-    'item_id'     => $r['item_id'],
-    'name'        => \App\Models\ProductModel::nameWithSize($r),
-    'rop'         => $rop($r),
-    'safety'      => isset($r['computation']['safety_stock']) ? (int) $r['computation']['safety_stock'] : null,
-    'eoq'         => ! empty($r['recommended_eoq']) ? (int) $r['recommended_eoq'] : null,
-    'cost'        => (float) ($r['unit_cost'] ?? 0),
-    'supplier_id' => (string) ($r['supplier_id'] ?? ''),
-    'supplier'    => $r['supplier_name'],
-    'lead'        => ! empty($r['lead_time_days']) ? (int) $r['lead_time_days'] : null,
-]), 'attr');
+// The shared purchase order dialog's data for one size (App\Libraries\PurchaseOrderLine).
+$orderLine = static fn (array $r): string => esc(json_encode(\App\Libraries\PurchaseOrderLine::build($r, $supplierMap ?? [])), 'attr');
 $date = static fn (?string $d): string => $d ? date('M j, Y', strtotime($d)) : '—';
 $lateBadge = static fn (int $days): string => $days > 0 ? '<span class="status-pill red ra-late">Late &middot; ' . $days . ' day' . ($days === 1 ? '' : 's') . '</span>' : '';
 ?>
 
+<link href="/assets/css/item-modal.css" rel="stylesheet">
 <link href="/assets/css/reorder-alerts.css" rel="stylesheet">
 
 
@@ -276,70 +267,7 @@ $lateBadge = static fn (int $days): string => $days > 0 ? '<span class="status-p
 
 <script src="/assets/js/reorder-alerts.js" defer></script>
 
-<?php // Order dialog: one size, or "Order all sizes" (one stock order, a line per size). Filled by assets/js/reorder-alerts.js. ?>
-<div class="order-modal" id="orderModal" role="dialog" aria-modal="true" aria-labelledby="orderTitle">
-    <div class="order-modal-card">
-        <div class="od-head">
-            <div>
-                <h3 id="orderTitle">New stock order</h3>
-                <p class="od-subtitle" id="orderSubtitle"></p>
-            </div>
-            <button type="button" class="btn-close close-order-modal" aria-label="Close"></button>
-        </div>
-
-        <form method="post" action="<?= site_url('admin/orders/store') ?>" id="orderForm">
-            <?= csrf_field() ?>
-            <input type="hidden" name="return_to" value="/admin/reorder-alerts">
-            <input type="hidden" name="priority" value="Order">
-            <input type="hidden" name="alert_id" id="orderAlertId">
-
-            <div class="od-lines" id="orderLines"></div>
-
-            <div class="od-grid">
-                <div class="od-field">
-                    <span class="od-label" id="orderSupplierLabel">Supplier</span>
-                    <?php // A size is only ordered from its own supplier; the dropdown is only for sizes with none. ?>
-                    <div class="od-fixed" id="orderSupplierName"></div>
-                    <input type="hidden" name="supplier_id" id="orderSupplierId">
-                    <select name="supplier_id" id="orderSupplierPick" aria-labelledby="orderSupplierLabel" required hidden disabled>
-                        <option value="">Select supplier&hellip;</option>
-                        <?php foreach ($suppliers as $s): ?>
-                            <option value="<?= esc($s['supplier_id'], 'attr') ?>"><?= esc($s['company_name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <label class="od-field">
-                    <span class="od-label">Expected delivery</span>
-                    <input type="date" name="expected_delivery_date" id="orderExpected">
-                </label>
-            </div>
-
-            <div class="od-foot">
-                <div class="od-total">Total <strong id="orderTotal">₱0.00</strong></div>
-                <div class="od-actions">
-                    <button type="button" class="btn btn-outline-secondary close-order-modal">Cancel</button>
-                    <button type="submit" class="btn btn-success" id="orderSubmit">Place order</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<template id="orderLineTemplate">
-    <div class="od-line">
-        <input type="hidden" name="item_id[]">
-        <input type="hidden" name="unit_price[]">
-        <div class="od-line-text">
-            <strong class="od-line-name"></strong>
-            <span class="od-line-meta"></span>
-        </div>
-        <div class="od-qty">
-            <button type="button" class="od-step" data-step="-1">&minus;</button>
-            <input type="number" name="quantity[]" min="1" step="1" inputmode="numeric" required>
-            <button type="button" class="od-step" data-step="1">+</button>
-        </div>
-        <span class="od-line-total"></span>
-    </div>
-</template>
+<?php // "Order {qty}" and "Order all sizes" open the shared purchase order dialog (also used by Inventory). ?>
+<?= view('partials/_purchase_order_dialog', ['suppliers' => $suppliers]) ?>
 
 <?= $this->endSection() ?>

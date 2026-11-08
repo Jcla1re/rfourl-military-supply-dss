@@ -132,6 +132,7 @@ class ReorderAlertController extends BaseController
                 'only' => array_values(array_intersect(explode(',', (string) $this->request->getGet('only')), ['out', 'new'])),
             ],
             'suppliers'       => $this->supplierModel->where('is_active', 1)->findAll(),
+            'supplierMap'     => $suppliers, // all suppliers by ID, for the order dialog's data
             'dss'             => $dss,
             'success'         => session()->getFlashdata('success'),
             'error'           => session()->getFlashdata('error'),

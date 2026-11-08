@@ -24,11 +24,12 @@ $products ??= [];
 ?>
 
 <link href="/assets/css/inventory-table.css" rel="stylesheet">
+<link href="/assets/css/item-modal.css" rel="stylesheet">
 <script src="/assets/js/inventory-table.js" defer></script>
 <script src="/assets/js/clamp-tip.js" defer></script>
 <style>
 
-.page-wrap, .order-modal { font-family: 'Poppins', sans-serif; }
+.page-wrap { font-family: 'Poppins', sans-serif; }
 
 /* Filter toolbar, search box and "Clear all": shared rules in admin-theme.css. */
 
@@ -134,214 +135,7 @@ $products ??= [];
     .inv-actions .inv-more-btn { width: 34.5px; height: 34.5px; font-size: 16px; }
 }
 
-/* ===== Add / Edit item modal =====
-   Scoped to .item-modal so the shared .inv-modal shell used by Orders and
-   Sales is untouched. Header and footer stay put; only the body scrolls. */
-#itemModal, #archiveConfirm { font-family: 'Poppins', sans-serif; }
-.item-modal {
-    display: flex;
-    flex-direction: column;
-    width: min(680px, 94vw);
-    max-height: 90vh;
-    padding: 0;
-    overflow: hidden;
-}
-.item-modal input,
-.item-modal select,
-.item-modal button,
-.im-confirm button { font-family: inherit; }
-.im-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 24px 28px 18px;
-    border-bottom: 1px solid #E8E5DC;
-    flex-shrink: 0;
-}
-.im-head h2 { margin: 0; font-size: 22px; font-weight: 600; color: #2C3A1E; line-height: 1.3; }
-.im-subtitle { margin-top: 4px; font-size: 14px; color: #5C6152; }
-.im-close {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 36px; height: 36px; flex-shrink: 0;
-    border: 0; border-radius: var(--radius-icon); background: transparent;
-    color: #2C3A1E; font-size: 16px; cursor: pointer;
-    transition: background-color 0.15s ease;
-}
-.im-close:hover { background: #F5F3EE; }
-.im-close:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
-
-.im-form { display: flex; flex-direction: column; min-height: 0; flex: 1; margin: 0; }
-.im-body { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 28px 24px; }
-.im-section { padding: 16px 0; }
-.im-section + .im-section { border-top: 1px solid #E8E5DC; }
-.im-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-.im-section-head .im-section-title { margin: 0; }
-.im-section-title {
-    display: flex; align-items: center; gap: 8px;
-    margin: 0 0 12px; font-size: 13px; font-weight: 600; color: #2C3A1E;
-}
-.im-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
-.im-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.im-field label,
-.im-field .im-label { font-size: 13px; font-weight: 500; color: #2C3A1E; }
-.im-field[hidden] { display: none; }
-.im-size-slot { min-width: 0; }
-/* Size for a category without sizes: looks like a disabled field, isn't an input. */
-.im-static {
-    display: flex; align-items: center;
-    height: 44px; padding: 0 14px;
-    border: 1px solid #E8E5DC; border-radius: var(--radius-control);
-    background: #F5F3EE; color: #8A8D7E; font-size: 15px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    cursor: not-allowed; user-select: none;
-}
-.im-field input,
-.im-field select {
-    width: 100%;
-    height: 44px;
-    padding: 0 14px;
-    border: 1px solid #E8E5DC;
-    border-radius: var(--radius-control);
-    background: #fff;
-    color: #2C3A1E;
-    font-size: 15px;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-.im-field select {
-    padding-right: 38px;
-    appearance: none; -webkit-appearance: none; -moz-appearance: none;
-    background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%235C6152' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 14px center;
-    text-overflow: ellipsis;
-}
-.im-field select:focus {
-    outline: none;
-    border-color: #71AA60;
-    box-shadow: 0 0 0 3px rgba(113, 170, 96, .25);
-}
-/* Text inputs: the same green as keyboard focus, also for the automatic focus on Item name. */
-.im-field input:focus {
-    outline: none;
-    border-color: #4A6741;
-    box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
-}
-.im-help { font-size: 12px; color: #5C6152; line-height: 1.45; }
-/* Item name counter ("34 / 60"); red only if an older, longer name is over the limit. */
-/* "Item name ......... 25 / 60": the counter shares the label's line, so the rows below never move. */
-.im-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-/* "Reorder At (i)": label and icon on one line, 6px apart, as tall as a plain label. */
-.im-label-line { display: flex; align-items: center; gap: 6px; white-space: nowrap; height: 19.5px; }
-.im-label-line .info-tip { margin-left: 0; vertical-align: 0; }
-/* Edit item moving to Patches / Metal: the size that saving will remove. */
-.im-size-warn { display: block; min-height: 17px; margin-top: 6px; font-size: 12px; line-height: 17px; color: #8A5A00; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.im-static[hidden] { display: none; }
-/* Reorder At calculated by the DSS: read-only value + "Auto" tag. */
-.im-static.im-auto { justify-content: space-between; gap: 8px; border-style: dashed; border-color: #CFCABD; color: #1F2617; font-weight: 500; cursor: default; }
-.im-auto-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--radius-pill); background: #EAF1E3; color: #2F5A27; font-size: 12px; font-weight: 600; letter-spacing: .02em; }
-.im-auto-tag svg { flex: none; width: 12px; height: 12px; }
-.im-count { font-size: 12px; line-height: 1; color: #5C6152; font-variant-numeric: tabular-nums; }
-.im-count.is-near { color: #8A6A00; }
-.im-count.is-over { color: #A1261B; }
-/* Item name over 60 characters (soft limit): red border, and the message on a line that is
-   always reserved under the field, so the Size | Supplier row never moves when it appears. */
-.im-field input.is-invalid,
-.im-field input.is-invalid:focus { border-color: #A1261B; }
-.im-field input.is-invalid:focus { box-shadow: 0 0 0 3px rgba(161, 38, 27, .15); }
-.im-field-error {
-    display: block; min-height: 15px; margin-top: -3px;
-    font-size: 12px; line-height: 15px; color: #A1261B;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.im-prefix { position: relative; }
-.im-prefix span {
-    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-    color: #5C6152; font-size: 15px; pointer-events: none;
-}
-.im-field .im-prefix input { padding-left: 32px; }
-
-.im-reason {
-    margin: 14px 0 0; padding: 14px 16px; border: 0;
-    border-radius: var(--radius-control); background: #F5F3EE;
-}
-.im-reason[hidden] { display: none; }
-.im-reason legend { float: left; width: 100%; margin: 0 0 10px; font-size: 13px; font-weight: 500; color: #2C3A1E; }
-.im-chips { clear: both; display: flex; flex-wrap: wrap; gap: 8px; }
-.im-chip { position: relative; margin: 0; cursor: pointer; }
-.im-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.im-chip span {
-    display: inline-block; padding: 7px 14px;
-    border: 1px solid #E8E5DC; border-radius: var(--radius-pill); background: #fff;
-    font-size: 13px; color: #2C3A1E;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-.im-chip:hover span { border-color: #71AA60; }
-.im-chip input:checked + span { background: #71AA60; border-color: #71AA60; color: #fff; }
-.im-chip input:focus-visible + span { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
-
-.im-margin {
-    display: flex; align-items: center; gap: 8px;
-    margin: 14px 0 0; font-size: 13px; color: #2C3A1E;
-}
-.im-margin.is-error { color: #A1261B; }
-.im-margin.is-pending { color: #5C6152; } /* "Margin: —" until both prices are entered */
-
-.im-archive {
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    margin-top: 20px; padding: 16px 18px;
-    background: #FDF2F0; border: 1px solid #F1C4BD; border-radius: 12px;
-}
-.im-archive[hidden] { display: none; }
-.im-archive strong { display: block; font-size: 14px; font-weight: 600; color: #7a1f17; }
-.im-archive p { margin: 4px 0 0; font-size: 13px; color: #6a3a35; line-height: 1.45; }
-.im-btn-archive {
-    flex-shrink: 0; height: 44px; padding: 0 20px;
-    border: 1px solid #A1261B; border-radius: var(--radius-control);
-    background: #fff; color: #A1261B; font-weight: 500; cursor: pointer;
-}
-/* Hover (solid red) and the red focus ring: shared danger-button rules in admin-theme.css. */
-
-.im-foot {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 16px 28px; border-top: 1px solid #E8E5DC; background: #fff; flex-shrink: 0;
-}
-.im-changes { font-size: 13px; color: #5C6152; }
-.im-field label .im-optional { font-weight: 400; color: #5C6152; }
-.im-changes.is-error { color: #A1261B; } /* "Fix 1 error to add": same red as the field error */
-/* Add item / Save changes while disabled: one look in every state (it can't be clicked). */
-#submitItemBtn:disabled,
-#submitItemBtn:disabled:hover,
-#submitItemBtn:disabled:active,
-#submitItemBtn:disabled:focus,
-#submitItemBtn:disabled:focus-visible {
-    background-color: var(--btn-disabled-bg);
-    border-color: var(--btn-disabled-bg);
-    color: var(--btn-disabled-text);
-    box-shadow: none;
-    transform: none;
-    cursor: not-allowed;
-}
-.im-foot-actions { display: flex; gap: 10px; }
-.im-btn-secondary,
-.im-btn-danger,
-.im-btn-save.btn {
-    height: 44px; padding: 0 20px; border-radius: var(--radius-control);
-    font-size: 15px; font-weight: 500; cursor: pointer;
-    display: inline-flex; align-items: center; justify-content: center;
-}
-.im-btn-secondary {
-    border: 1px solid #E8E5DC; background: #fff; color: #2C3A1E;
-    transition: background-color 0.15s ease, transform 0.12s ease;
-}
-.im-btn-secondary:active { transform: translateY(0); }
-.im-btn-secondary:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
-.im-btn-danger {
-    border: 1px solid #A1261B; background: #A1261B; color: #fff;
-    transition: background-color 0.15s ease, transform 0.12s ease;
-}
-.im-btn-danger:hover { background: #912018; border-color: #912018; }
-.im-btn-danger:active { transform: translateY(0); }
-.im-btn-danger:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
-
+/* Add / Edit item dialog: shared form-dialog rules in assets/css/item-modal.css. */
 #archiveConfirm { z-index: 1010; }
 .im-confirm { width: min(420px, 92vw); padding: 24px; }
 .im-confirm-icon {
@@ -357,12 +151,6 @@ $products ??= [];
 #restoreConfirmText:has(+ #restoreConfirmNote:not([hidden])) { margin-bottom: 6px; }
 .im-confirm .im-foot-actions { justify-content: flex-end; }
 
-@media (max-width: 600px) {
-    .im-grid { grid-template-columns: 1fr; }
-    .im-head, .im-foot { padding-left: 18px; padding-right: 18px; }
-    .im-body { padding-left: 18px; padding-right: 18px; }
-    .im-archive { flex-direction: column; align-items: stretch; }
-    .im-foot { flex-wrap: wrap; }
 }
 
 /* ===== Archived items (?status=archived) ===== */
@@ -741,99 +529,22 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
     <input type="hidden" name="return_query" value="">
 </form>
 
-<div class="order-modal" id="orderModal">
-    <div class="order-modal-card">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="mb-0">New Stock Order</h3>
-            <button type="button" class="btn-close close-order-modal"></button>
-        </div>
-
-        <form method="post" action="<?= site_url('admin/orders/store') ?>">
-            <?= csrf_field() ?>
-            <input type="hidden" name="item_id[]" id="orderItemId">
-
-            <div class="order-form-grid">
-                <div class="order-field">
-                    <label>Item</label>
-                    <input id="orderItemName" readonly>
-                </div>
-
-                <div class="order-field">
-                    <label>Supplier</label>
-                    <select name="supplier_id" id="orderSupplierId" required>
-                        <option value="">Select Supplier...</option>
-                        <?php foreach ($suppliers as $s): ?>
-                            <option value="<?= esc($s['supplier_id']) ?>"><?= esc($s['company_name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="order-field">
-                    <label>Item Quantity</label>
-                    <input name="quantity[]" id="orderQuantity" type="number" min="1" value="1" required>
-                </div>
-
-                <div class="order-field">
-                    <label>Price Per Item (₱)</label>
-                    <input name="unit_price[]" id="orderUnitPrice" type="number" min="0" step="0.01" value="0" required>
-                </div>
-
-                <div class="order-field">
-                    <label>Priority</label>
-                    <select name="priority">
-                        <option value="Urgent">Urgent</option>
-                        <option value="Order" selected>Order</option>
-                        <option value="Planned">Planned</option>
-                    </select>
-                </div>
-
-                <div class="order-field">
-                    <label>Expected Delivery Date</label>
-                    <input name="expected_delivery_date" type="date">
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-end gap-2 mt-4">
-                <button type="button" class="btn btn-secondary close-order-modal">Cancel</button>
-                <button type="submit" class="btn btn-success">Submit</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<style>
-.order-modal {
-    position: fixed; inset: 0; z-index: 1000; display: none;
-    align-items: center; justify-content: center; background: rgba(0,0,0,.4);
-}
-.order-modal.show { display: flex; }
-.order-modal-card { width: min(760px, 92vw); max-height: 90vh; overflow-y: auto; padding: 26px; border-radius: var(--radius-card); background: #fff; }
-.order-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.order-field { display: flex; flex-direction: column; gap: 6px; }
-.order-field input, .order-field select { padding: 12px; border: 1px solid #ccc; border-radius: var(--radius-control); }
-@media (max-width: 700px) { .order-form-grid { grid-template-columns: 1fr; } }
-</style>
+<?php // "Order" opens the shared purchase order dialog (also used by Reorder Alerts). ?>
+<?= view('partials/_purchase_order_dialog', ['suppliers' => $suppliers ?? []]) ?>
 
 <script>
-const orderModal = document.getElementById('orderModal');
-
 // Delegated (not bound per-button): live search replaces the table's rows
 // in place, so a listener attached directly to a button at page load would
 // stop working on anything fetched in afterward. Delegating from a parent
 // that's never replaced keeps this working for every row, old or new.
+// The button carries the line of the size it orders (data-line, kept up to date
+// when the Size dropdown changes); the order comes back to this page and view.
 document.addEventListener('click', event => {
     const button = event.target.closest('.open-order-modal');
-    if (!button) return;
-    document.getElementById('orderItemId').value = button.dataset.itemId || '';
-    document.getElementById('orderItemName').value = button.dataset.itemName || '';
-    document.getElementById('orderSupplierId').value = button.dataset.supplierId || '';
-    document.getElementById('orderQuantity').value = button.dataset.recommendedEoq || 1;
-    document.getElementById('orderUnitPrice').value = button.dataset.unitCost || 0;
-    orderModal.classList.add('show');
-});
-
-document.querySelectorAll('.close-order-modal').forEach(button => {
-    button.addEventListener('click', () => orderModal.classList.remove('show'));
+    if (!button || !window.PurchaseOrderDialog) return;
+    window.PurchaseOrderDialog.open([JSON.parse(button.dataset.line)], {
+        opener: button, returnTo: '/admin/inventory', returnQuery: location.search,
+    });
 });
 </script>
 
@@ -1328,10 +1039,7 @@ function applyVariantToRow(row, v) {
         // Always just "Order"; the size is in the badge, the modal and this tooltip.
         if (target.size) orderBtn.title = 'Orders size ' + target.size; else orderBtn.removeAttribute('title');
         orderBtn.dataset.itemId = target.item_id;
-        orderBtn.dataset.itemName = target.item_name + (target.size ? ' · Size ' + target.size : '');
-        orderBtn.dataset.supplierId = target.supplier_id;
-        orderBtn.dataset.unitCost = target.unit_cost;
-        orderBtn.dataset.recommendedEoq = target.eoq_value || 1;
+        orderBtn.dataset.line = JSON.stringify(target.po); // its line in the purchase order dialog
     }
 
     const editBtn = row.querySelector('.edit-row');

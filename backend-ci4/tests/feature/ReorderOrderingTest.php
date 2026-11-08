@@ -69,7 +69,8 @@ final class ReorderOrderingTest extends CIUnitTestCase
         $orders = $this->db->table('stock_order')->get()->getResultArray();
         $this->assertCount(1, $orders);
         $soId = $orders[0]['so_id'];
-        $this->assertSame(['SUP-001', 'Order', '2026-12-01'], [$orders[0]['supplier_id'], $orders[0]['priority'], substr((string) $orders[0]['expected_delivery_date'], 0, 10)]);
+        // Urgent: size S has nothing on hand (Phase 4b's automatic priority).
+        $this->assertSame(['SUP-001', 'Urgent', '2026-12-01'], [$orders[0]['supplier_id'], $orders[0]['priority'], substr((string) $orders[0]['expected_delivery_date'], 0, 10)]);
         $lines = $this->db->table('so_item')->where('so_id', $soId)->orderBy('item_id')->get()->getResultArray();
         $this->assertSame([['P-M', 8], ['P-S', 12]], array_map(static fn ($l) => [$l['item_id'], (int) $l['order_quantity']], $lines));
         foreach ([$s, $m] as $id) {
@@ -146,16 +147,17 @@ final class ReorderOrderingTest extends CIUnitTestCase
         preg_match_all('/data-line=(["\'])(.*?)\1/', $html, $m);
         $lines = array_column(array_map(static fn ($a) => json_decode(html_entity_decode($a, ENT_QUOTES), true), $m[2]), null, 'item_id');
         $this->assertSame(
-            ['item_id' => 'P-S', 'name' => 'Pants · Size S', 'rop' => 3, 'safety' => 1, 'eoq' => 12, 'cost' => 125.5, 'supplier_id' => 'SUP-001', 'supplier' => 'Tactical Gear Inc', 'lead' => 5],
+            ['item_id' => 'P-S', 'name' => 'Pants · Size S', 'size' => 'S', 'category' => 'Clothes', 'status' => 'Reorder Now', 'status_class' => 'red', 'on_hand' => 0, 'rop' => 3, 'safety' => 1, 'eoq' => 12, 'cost' => 125.5, 'supplier_id' => 'SUP-001', 'supplier' => 'Tactical Gear Inc', 'lead' => 5],
             $lines['P-S']
         );
         $this->assertMatchesRegularExpression('/<button type="button" class="btn btn-outline-success btn-sm" data-order-all>Order all sizes<\/button>/', $html, 'Order all sizes is live.');
 
-        // The form: back to this page, priority Order, a fixed supplier (the dropdown only for sizes without one).
-        $this->assertStringContainsString('<input type="hidden" name="return_to" value="/admin/reorder-alerts">', $html);
-        $this->assertStringContainsString('<input type="hidden" name="priority" value="Order">', $html);
-        $this->assertMatchesRegularExpression('/<select name="supplier_id" id="orderSupplierPick"[^>]*required hidden disabled>/', $html);
-        $this->assertStringContainsString('<template id="orderLineTemplate">', $html);
+        // The shared purchase order dialog (Phase 4b): no Priority field, a fixed supplier
+        // (the dropdown only for sizes without one), back to this page (set when it opens).
+        $this->assertStringNotContainsString('name="priority"', $html);
+        $this->assertMatchesRegularExpression('/<select name="supplier_id" id="poSupplierPick"[^>]*hidden disabled>/', $html);
+        $this->assertStringContainsString('<input type="hidden" name="return_to" id="poReturnTo">', $html);
+        $this->assertStringContainsString('<template id="poLineTemplate">', $html);
     }
 
     // ------------------------------------------------------------ Ordered tab

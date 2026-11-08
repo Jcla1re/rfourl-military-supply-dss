@@ -41,9 +41,11 @@ class InventoryController extends BaseController
         }
 
         $eoqByItem = [];
+        $dssByItem = [];       // safety stock + delivery time, for the purchase order dialog
         $ropCalculatedAt = []; // items whose Reorder At comes from the DSS (latest run gave ROP > 0)
         foreach ($this->pdssComputationModel->latestPerItem() as $c) {
             $eoqByItem[$c['item_id']] = $c['eoq_value'];
+            $dssByItem[$c['item_id']] = ['safety_stock' => $c['safety_stock'], 'lead_time_days' => $c['lead_time_days']];
             if ((int) $c['reorder_point'] > 0) {
                 $ropCalculatedAt[$c['item_id']] = $c['computed_at'];
             }
@@ -54,6 +56,7 @@ class InventoryController extends BaseController
             $p['status']    = $this->productModel->getStatus($p);
             $p['eoq_value'] = $eoqByItem[$p['item_id']] ?? null;
             $p['rop_calculated_at'] = $ropCalculatedAt[$p['item_id']] ?? null;
+            $p += $dssByItem[$p['item_id']] ?? [];
         }
         unset($p);
 
@@ -148,6 +151,7 @@ class InventoryController extends BaseController
             'active'              => 'inventory',
             'products'            => $products,
             'suppliers'           => $this->supplierModel->where('is_active', 1)->findAll(),
+            'supplierMap'         => array_column($this->supplierModel->findAll(), null, 'supplier_id'), // the order dialog's data
             'inStockCount'        => $inStockCount,
             'lowStockCount'       => $lowStockCount,
             'reorderCount'        => $reorderCount,
