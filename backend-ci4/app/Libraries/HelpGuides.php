@@ -23,22 +23,24 @@ class HelpGuides
     {
         return [
             [
-                'title' => 'Approve a staff password reset',
-                'steps' => [
-                    'Open the email "Password reset requested by…" (or click Notifications in the menu).',
-                    'Check with the staff member, by call or chat, that they really sent the request.',
-                    'Click Approve reset, tick "I confirmed with them", then click Approve reset again.',
-                    'The system emails a temporary password directly to the staff member. You won\'t see it.',
-                    'They sign in with it and set their own new password. You\'ll get an email when they\'re done.',
-                ],
-            ],
-            [
                 'title' => 'Reset a staff password yourself',
                 'steps' => [
                     'Go to Settings, then open the Manage Accounts tab.',
                     'Click Reset Password on the staff member\'s row.',
-                    'Enter your own password and tick "I confirmed with them".',
-                    'Click Reset. A temporary password is emailed to the staff member. (If they have no email, it\'s shown to you once. Give it to them privately.)',
+                    'Type the new password twice, then your own password.',
+                    'Tick "I have informed (their name) about this reset", then click Reset.',
+                    'Tell the staff member the new password yourself. They get an email that it was reset, but it does not contain the password.',
+                    'When they sign in with it, they must create their own password. If the account was locked, it is unlocked.',
+                ],
+            ],
+            [
+                'title' => 'Confirm or lock after a staff password reset',
+                'steps' => [
+                    'When a staff member uses "Forgot password?" and sets a new password, you get an email and a notice in Notifications.',
+                    'Ask yourself: did you know about it? If it was really them, click Accept.',
+                    'If it was not, click Lock this account. They are signed out on their next click.',
+                    'Only one of the two works. Once you choose, the other button stops working.',
+                    'To unlock a locked account, use Reset Password in Manage Accounts.',
                 ],
             ],
             [
@@ -130,9 +132,10 @@ class HelpGuides
                 'title' => 'I forgot my password',
                 'steps' => [
                     'On the staff sign-in page, click "Forgot password?".',
-                    'Type your name and the reason, then click Send.',
-                    'Wait for an email with a temporary password (it works for 2 hours).',
-                    'Sign in with it. You\'ll be asked to set your own new password.',
+                    'Type your username or full name, then click Send temporary password.',
+                    'Check your email for the temporary password. It works for 2 hours, and your old password keeps working until you use it.',
+                    'Sign in with the temporary password. You\'ll be asked to create your own new password.',
+                    'The owner is told that you reset it. If you have no email on file, ask the owner to reset it from Manage Accounts.',
                 ],
             ],
         ];

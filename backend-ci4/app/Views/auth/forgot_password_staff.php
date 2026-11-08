@@ -33,10 +33,10 @@ $errorMsg = session()->getFlashdata('error') ?? $error;
 <body class="auth-body">
 <?= view('partials/demo_banner') ?>
     <div class="auth-card">
-        <h2>Can't access your account?</h2>
-        <p class="auth-hint">The owner resets staff passwords. Send a request.</p>
+        <h2>Forgot password?</h2>
+        <p class="auth-hint">Type your username or name. We email you a temporary password.</p>
 
-        <div class="notify-box">After the owner approves, you'll get a temporary password by email. It works for 2 hours.</div>
+        <div class="notify-box">The temporary password works for 2 hours. Your current password keeps working until you use it.</div>
 
         <?php if ($errorMsg): ?>
             <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
@@ -44,18 +44,15 @@ $errorMsg = session()->getFlashdata('error') ?? $error;
 
         <form action="<?= site_url('login/staff/forgot') ?>" method="post">
             <?= csrf_field() ?>
-            <label>Staff name:</label>
-            <input type="text" name="staff_name" required>
+            <label>Username or full name:</label>
+            <input type="text" name="staff_name" required autofocus autocomplete="username">
 
-            <label>Reason</label>
-            <input type="text" name="reason" placeholder="e.g. forgot password">
-
-            <button type="submit" class="btn-login">Send</button>
+            <button type="submit" class="btn-login">Send temporary password</button>
         </form>
 
         <?php if (!empty($sent)): ?>
-            <div class="notify-sent-pill"><i>&check;</i> Request sent to the owner</div>
-            <p class="auth-hint" style="margin-top:0.75rem;">Once the owner approves, check your email for a temporary password. It works for 2 hours.</p>
+            <div class="notify-sent-pill"><i>&check;</i> Request received</div>
+            <p class="auth-hint" style="margin-top:0.75rem;">If the account exists and has an email on file, a temporary password has been sent.</p>
         <?php endif; ?>
 
         <div class="auth-back"><a href="<?= site_url('login/staff') ?>">&larr; Back to login</a></div>

@@ -7,33 +7,37 @@ use App\Models\SecurityLogModel;
 use App\Models\UserModel;
 
 /**
- * Staff temporary passwords: one place for "reset" (2 hours) and "invite"
- * (a new account, 48 hours).
+ * Staff temporary passwords and resets. Three ways a staff password becomes a temporary one that
+ * must be replaced at the next sign-in:
  *
- *   issue()          writes a random temporary password hash, flags the account
- *                    must_change_password and sets the expiry. Returns the password.
- *   issueAndEmail()  does that and emails it to the staff member in one database
- *                    transaction. If the email fails, nothing changes.
- *   complete()       the staff member's own new password: clears the flags and
- *                    tells the owner by email.
+ *   FORGOT  The staff member asks (Forgot password). A temporary password is emailed to them and
+ *           waits beside their current password, which keeps working until the temporary one is
+ *           actually used (promoteTemp()). Valid 2 hours. No owner approval.
+ *   RESET   The owner types a new password in Manage Accounts (ownerReset()). The staff member
+ *           gets an email WITHOUT the password and must ask the owner for it. Valid 2 hours.
+ *   INVITE  A new account (or a resent invite): a temporary password is emailed. Valid 48 hours.
  *
- * The temporary password goes only to the staff member's email (or, for an
- * owner reset of an account with no email, is shown to the owner once). It is
- * never stored in plain text, written to a log, or put in a notification.
+ * Whichever way, the first sign-in forces "Create new password" (complete()), and then the owner
+ * is told (StaffPasswordAlert). A temporary password is never stored in plain text, written to a
+ * log, or put in a notification; the staff member's emailed one goes only to their email.
  */
 class StaffPasswordReset
 {
+    public const KIND_FORGOT = 'forgot';
     public const KIND_RESET  = 'reset';
     public const KIND_INVITE = 'invite';
 
-    /** Start of the title of a "Can't access your account?" request; the typed name follows. */
-    public const REQUEST_TITLE = 'Password reset requested by ';
-
-    public const RESET_TTL  = 7200;   // 2 hours
+    public const RESET_TTL  = 7200;   // 2 hours (forgot and owner reset)
     public const INVITE_TTL = 172800; // 48 hours
+
+    /** At most this many Forgot-password requests per account per hour. */
+    public const FORGOT_PER_HOUR = 3;
 
     private const ALPHABET_LETTERS = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz';
     private const ALPHABET_DIGITS  = '23456789';
+
+    /** Address endings that can never receive mail (the seeded "@rfourl.local" placeholders and the like). */
+    private const UNDELIVERABLE_ENDINGS = ['local', 'localhost', 'invalid'];
 
     private UserModel $users;
 
@@ -71,6 +75,19 @@ class StaffPasswordReset
         return $domain === '' ? $email : mb_substr($name, 0, 1) . '***@' . $domain;
     }
 
+    /** A well-formed address that could receive mail (not a seeded "@rfourl.local"-style placeholder). */
+    public static function usableEmail(?string $email): bool
+    {
+        $email = trim((string) $email);
+        if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+        $domain = strtolower(substr(strrchr($email, '@'), 1));
+
+        return str_contains($domain, '.') && ! in_array(substr(strrchr($domain, '.'), 1), self::UNDELIVERABLE_ENDINGS, true);
+    }
+
+    /** Signed in with a temporary password and must now create their own. */
     public static function isPending(array $user): bool
     {
         return ! empty($user['must_change_password']);
@@ -83,19 +100,130 @@ class StaffPasswordReset
             && strtotime($user['temp_password_expires_at']) < time();
     }
 
-    /** Sets a fresh temporary password for the account and returns it (plain text, once). */
+    /** A Forgot-password temporary password has been emailed and not used yet. */
+    public static function hasWaitingTemp(array $user): bool
+    {
+        return ! empty($user['temp_password_hash']);
+    }
+
+    /** This password is the emailed temporary one that is still waiting to be used. */
+    public static function isWaitingTemp(array $user, string $password): bool
+    {
+        return self::hasWaitingTemp($user) && password_verify($password, $user['temp_password_hash']);
+    }
+
+    /** The waiting temporary password ran out before it was used. */
+    public static function waitingTempExpired(array $user): bool
+    {
+        return self::hasWaitingTemp($user)
+            && ! empty($user['temp_password_expires_at'])
+            && strtotime($user['temp_password_expires_at']) < time();
+    }
+
+    // ------------------------------------------------------------------ Flow 1: Forgot password
+
+    /**
+     * Emails a temporary password to the staff member, valid 2 hours. Their current password is
+     * not touched and keeps working until the temporary one is used. All or nothing: if the email
+     * can't be sent, nothing is stored. Returns the plain password on success (for demo mode's
+     * on-screen box only), null on failure.
+     */
+    public function requestForgot(array $staff): ?string
+    {
+        $db = db_connect();
+        $db->transStart();
+
+        $password = $this->uniquePassword((int) $staff['user_id']);
+        $this->users->update((int) $staff['user_id'], [
+            'temp_password_hash'       => password_hash($password, PASSWORD_DEFAULT),
+            'temp_password_kind'       => self::KIND_FORGOT,
+            'temp_password_expires_at' => date('Y-m-d H:i:s', time() + self::RESET_TTL),
+        ]);
+
+        if (! $this->emailPassword($staff, $password, self::KIND_FORGOT)) {
+            $db->transRollback();
+
+            return null;
+        }
+
+        $db->transComplete();
+
+        return $password;
+    }
+
+    /**
+     * First sign-in with the emailed temporary password: it becomes the account's password, the
+     * old one stops working (and is remembered so it can't be reused), and the staff member must
+     * create their own before anything else. Returns the updated account.
+     */
+    public function promoteTemp(array $user): array
+    {
+        $id = (int) $user['user_id'];
+
+        if (! self::isPending($user)) {
+            PasswordHistory::record($id, $user['password_hash'] ?? null);
+        }
+
+        $this->users->update($id, [
+            'password_hash'        => $user['temp_password_hash'],
+            'temp_password_hash'   => null,
+            'must_change_password' => 1,
+            'temp_password_kind'   => self::KIND_FORGOT,
+        ]);
+        SecurityLogModel::log('forgot_temp_used', $user, 'signed in with the emailed temporary password');
+
+        return $this->users->find($id);
+    }
+
+    // ------------------------------------------------------------------ Flow 2: the owner resets it
+
+    /**
+     * The owner sets a new password for the staff member (also unlocking a locked account). It works
+     * for 2 hours, only to get to "Create new password": the staff member must replace it, so the
+     * owner doesn't keep knowing their password. The password the person chose before is remembered.
+     */
+    public function ownerReset(array $staff, string $newPassword): void
+    {
+        $id = (int) $staff['user_id'];
+
+        if (! self::isPending($staff)) {
+            PasswordHistory::record($id, $staff['password_hash'] ?? null);
+        }
+
+        $changes = [
+            'password_hash'            => password_hash($newPassword, PASSWORD_DEFAULT),
+            'must_change_password'     => 1,
+            'temp_password_kind'       => self::KIND_RESET,
+            'temp_password_expires_at' => date('Y-m-d H:i:s', time() + self::RESET_TTL),
+            'is_active'                => 1,
+        ];
+        if (! empty($staff['temp_password_hash'])) {
+            $changes['temp_password_hash'] = null; // an emailed temporary password no longer applies
+        }
+
+        $this->users->update($id, $changes);
+    }
+
+    /** Tells the staff member the owner reset their password. The email never contains the password. */
+    public function emailOwnerReset(array $staff): void
+    {
+        if (! self::usableEmail($staff['email'] ?? null)) {
+            return;
+        }
+
+        (new EmailNotifier())->toUser(
+            $staff,
+            'Your password was reset by the owner',
+            'The owner reset your RfourL account password on ' . StaffPasswordAlert::now() . '. Please contact the owner to get your new password.'
+        );
+    }
+
+    // ------------------------------------------------------------------ new accounts
+
+    /** Sets a fresh temporary password for a new account (invite) and returns it (plain text, once). */
     public function issue(array $staff, string $kind): string
     {
-        // Staff sign in by password alone, so it must not match any other staff password.
-        do {
-            $password = self::generate();
-        } while ($this->users->staffPasswordInUse($password, (int) $staff['user_id']));
-
-        // An owner reset replaces a password the person chose: remember it so they can't go straight back
-        // to it. Not for a new account (nothing chosen yet) or while an earlier temporary one is still pending.
-        if ($kind === self::KIND_RESET && ! self::isPending($staff)) {
-            PasswordHistory::record((int) $staff['user_id'], $staff['password_hash'] ?? null);
-        }
+        $password = $this->uniquePassword((int) $staff['user_id']);
 
         $this->users->update((int) $staff['user_id'], [
             'password_hash'            => password_hash($password, PASSWORD_DEFAULT),
@@ -131,109 +259,37 @@ class StaffPasswordReset
         return $password;
     }
 
-    /**
-     * Where a "Can't access your account?" request stands, worked out from the account it was
-     * linked to when it was made: 'matched' (an active account, so Approve works), 'locked' (the
-     * name matched one locked account) or 'none' (no single account matched). For the last two
-     * 'message' tells the owner what to do instead. Matching itself is done in AuthController.
-     *
-     * @return array{state: string, staff: ?array, message: ?string}
-     */
-    public static function requestState(array $notification): array
-    {
-        $staff = ! empty($notification['action_user_id'])
-            ? (new UserModel())->activeStaff()->find((int) $notification['action_user_id'])
-            : null;
-
-        if ($staff && $staff['is_active']) {
-            return ['state' => 'matched', 'staff' => $staff, 'message' => null];
-        }
-
-        $title = (string) ($notification['title'] ?? '');
-        $typed = str_starts_with($title, self::REQUEST_TITLE) ? trim(substr($title, strlen(self::REQUEST_TITLE))) : '';
-
-        return [
-            'state'   => $staff ? 'locked' : 'none',
-            'staff'   => $staff,
-            'message' => self::unmatchedMessage($staff, $typed),
-        ];
-    }
-
-    /** What to tell the owner when the request has no active account to approve. */
-    public static function unmatchedMessage(?array $lockedStaff, string $typed): string
-    {
-        return $lockedStaff
-            ? "This name matches {$lockedStaff['full_name']}, whose account is locked. Reset their password in Settings > Manage Accounts to unlock it."
-            : "No single staff account matches \"{$typed}\". Check the name, then use Reset Password in Settings > Manage Accounts.";
-    }
-
-    /**
-     * The owner approves a "Can't access your account?" request: the matched staff
-     * member gets a temporary password by email (the owner never sees it) and the
-     * request is closed. Used by both the email link and the Notifications page.
-     *
-     * @return array{ok: bool, staff?: array, message?: string}
-     */
-    public function approveRequest(array $notification, string $actorName): array
-    {
-        $staff = ! empty($notification['action_user_id'])
-            ? $this->users->activeStaff()->where('is_active', 1)->find((int) $notification['action_user_id'])
-            : null;
-
-        if (! $staff) {
-            return ['ok' => false, 'message' => "We couldn't match this request to a staff account. Use Reset Password in Settings > Manage Accounts instead."];
-        }
-        if (DemoGuard::locksUser($staff)) {
-            return ['ok' => false, 'message' => DemoGuard::MESSAGE];
-        }
-        if (empty($staff['email'])) {
-            return ['ok' => false, 'message' => "{$staff['full_name']} has no email on file. Use Reset Password in Settings > Manage Accounts instead."];
-        }
-        $password = $this->issueAndEmail($staff, self::KIND_RESET);
-        if ($password === null) {
-            return ['ok' => false, 'message' => "We couldn't send the email, so nothing was changed. Please try again."];
-        }
-
-        (new NotificationModel())->approveAccessRequest((int) $notification['notification_id']);
-        SecurityLogModel::log('password_reset_approved', ['user_id' => null, 'username' => $actorName, 'role' => 'Admin'], 'staff: ' . $staff['username'] . ', temporary password emailed');
-
-        StaffPasswordAlert::ownerNotice(
-            'Password reset approved',
-            "You approved the password reset of {$staff['full_name']} on " . StaffPasswordAlert::now() . '. A temporary password was emailed to them.'
-        );
-
-        return ['ok' => true, 'staff' => $staff, 'password' => $password];
-    }
-
     public function emailPassword(array $staff, string $password, string $kind): bool
     {
         if (empty($staff['email'])) {
             return false;
         }
 
-        $hours   = (int) (self::ttlFor($kind) / 3600);
-        $name    = esc($staff['full_name'], 'html');
+        $hours    = (int) (self::ttlFor($kind) / 3600);
+        $name     = esc($staff['full_name'], 'html');
         $loginUrl = site_url('login/staff');
-        $intro   = $kind === self::KIND_INVITE
+        $intro    = $kind === self::KIND_INVITE
             ? 'Your RfourL Military Supply staff account is ready.'
-            : 'The owner approved your password reset.';
+            : 'You asked to reset your RfourL Military Supply password.';
 
         $html = "<div style=\"font-family:'Poppins',Arial,sans-serif;\"><p>Hi {$name},</p><p>{$intro}</p>"
             . '<p>Your temporary password is:</p>'
             . '<p style="font-size:22px;font-weight:bold;letter-spacing:2px;">' . esc($password, 'html') . '</p>'
             . "<p>It works for {$hours} hours. Sign in with it, then you will be asked to set your own new password.</p>"
             . '<p style="margin:24px 0;"><a href="' . htmlspecialchars($loginUrl, ENT_QUOTES) . '" style="background:#2f6431;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;">Sign in</a></p>'
-            . "<p style=\"color:#888;font-size:12px;\">If you did not ask for this, tell the owner.</p></div>";
+            . "<p style=\"color:#888;font-size:12px;\">If you did not ask for this, you can ignore this email: your current password still works. Tell the owner if you are worried.</p></div>";
         $plain = "Hi {$staff['full_name']},\n\n{$intro}\n\nYour temporary password is: {$password}\n\n"
             . "It works for {$hours} hours. Sign in with it, then you will be asked to set your own new password.\n{$loginUrl}\n\n"
-            . 'If you did not ask for this, tell the owner.';
+            . 'If you did not ask for this, you can ignore this email: your current password still works. Tell the owner if you are worried.';
 
         return (new EmailNotifier())->sendHtml($staff, $kind === self::KIND_INVITE ? 'Your staff account is ready' : 'Your temporary password', $html, $plain);
     }
 
+    // ------------------------------------------------------------------ creating their own password
+
     /**
-     * The staff member picks their own password after a temporary one. Clears
-     * the flags and emails the owner that it is done.
+     * The staff member picks their own password after a temporary one. Clears the flags, then tells
+     * the owner in the way that fits how the temporary password came about.
      */
     public function complete(array $staff, string $newPassword): void
     {
@@ -246,11 +302,29 @@ class StaffPasswordReset
             'temp_password_expires_at' => null,
         ]);
 
-        SecurityLogModel::log('password_set_after_temp', $staff, $kind === self::KIND_INVITE ? 'first sign-in: set own password' : 'set own password after reset');
+        SecurityLogModel::log('password_set_after_temp', $staff, match ($kind) {
+            self::KIND_INVITE => 'first sign-in: set own password',
+            self::KIND_FORGOT => 'set own password after Forgot password',
+            default           => 'set own password after the owner reset it',
+        });
 
+        $fresh = $this->users->find((int) $staff['user_id']) ?? $staff;
+
+        if ($kind === self::KIND_FORGOT) {
+            StaffPasswordAlert::forgotReset($fresh);        // one email and one in-app alert: Accept / Lock
+
+            return;
+        }
+        if ($kind === self::KIND_RESET) {
+            StaffPasswordAlert::afterOwnerReset($fresh);    // in-app only, with Lock
+
+            return;
+        }
+
+        // A new account's first sign-in.
         try {
             $name  = $staff['full_name'];
-            $title = $kind === self::KIND_INVITE ? "{$name} signed in and set their password" : "{$name} set a new password";
+            $title = "{$name} signed in and set their password";
             $when  = date('M j, Y, g:i A') . ' PH time';
             $html  = '<div style="font-family:\'Poppins\',Arial,sans-serif;"><p><strong>' . esc($title, 'html') . '</strong></p><p>Done on ' . esc($when, 'html') . '. Nothing else to do.</p></div>';
 
@@ -259,5 +333,15 @@ class StaffPasswordReset
         } catch (\Throwable $e) {
             log_message('error', 'Staff password done notice failed: ' . $e->getMessage());
         }
+    }
+
+    /** A random temporary password that no other staff account uses (staff sign in by password alone). */
+    private function uniquePassword(int $userId): string
+    {
+        do {
+            $password = self::generate();
+        } while ($this->users->staffPasswordInUse($password, $userId));
+
+        return $password;
     }
 }

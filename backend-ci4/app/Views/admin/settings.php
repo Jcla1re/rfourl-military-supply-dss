@@ -242,14 +242,6 @@ $tabs = [
             <h4>Manage Accounts</h4>
             <div class="set-hint">Add, remove or reset staff accounts.</div>
 
-            <?php if (! empty($tempOnce)): ?>
-                <div class="alert alert-warning" role="alert">
-                    <strong>Temporary password for <?= esc($tempOnce['name']) ?></strong> (no email on file). It is shown once. Give it to them privately.
-                    <div class="my-2" style="font-size:1.4rem;font-weight:700;letter-spacing:2px;"><?= esc($tempOnce['password']) ?></div>
-                    It works for <?= (int) $tempOnce['hours'] ?> hours. They will be asked to set their own password when they sign in.
-                </div>
-            <?php endif; ?>
-
             <div class="set-card">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold mb-0">Active Accounts (<?= count($staffAccounts) + 1 ?>)</h5>
@@ -323,9 +315,11 @@ $tabs = [
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                <p class="text-muted small">A temporary password is emailed to the staff member. You won't see it. They set their own when they sign in.</p>
+                                <p class="text-muted small">You choose the new password and give it to the staff member yourself. They get an email that it was reset (it does not contain the password). When they sign in with it, they must create their own. This also unlocks a locked account.</p>
+                                <div class="set-field mb-3"><label>New password</label><input name="new_password" type="password" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" required autocomplete="new-password"></div>
+                                <div class="set-field mb-3"><label>Confirm new password</label><input name="confirm_password" type="password" required autocomplete="new-password"></div>
                                 <div class="set-field mb-3"><label>Your password</label><input name="owner_password" type="password" required autocomplete="current-password"></div>
-                                <label class="d-flex gap-2 align-items-start"><input type="checkbox" name="confirmed" value="1" id="resetConfirmed" style="margin-top:4px;" required> <span>I confirmed with them</span></label>
+                                <label class="d-flex gap-2 align-items-start"><input type="checkbox" name="informed" value="1" id="resetInformed" style="margin-top:4px;" required> <span>I have informed <strong id="resetStaffPwName2"></strong> about this reset.</span></label>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -340,8 +334,9 @@ $tabs = [
                     var btn = e.relatedTarget;
                     document.getElementById('resetStaffPwForm').action = btn.dataset.action;
                     document.getElementById('resetStaffPwName').textContent = btn.dataset.name;
+                    document.getElementById('resetStaffPwName2').textContent = btn.dataset.name;
                     this.querySelectorAll('input[type=password]').forEach(function (i) { i.value = ''; });
-                    document.getElementById('resetConfirmed').checked = false;
+                    document.getElementById('resetInformed').checked = false;
                 });
             </script>
 

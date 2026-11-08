@@ -5,11 +5,10 @@ namespace App\Controllers;
 
 use App\Libraries\AttemptStore;
 use App\Libraries\DemoGuard;
-use App\Libraries\EmailNotifier;
 use App\Libraries\PasswordPolicy;
+use App\Libraries\StaffPasswordAlert;
 use App\Libraries\StaffPasswordReset;
 use App\Libraries\LoginLockout;
-use App\Models\NotificationModel;
 use App\Models\SecurityLogModel;
 use App\Models\UserModel;
 
@@ -123,6 +122,19 @@ class AuthController extends BaseController
         }
 
         $user = $matches[0];
+
+        // The temporary password emailed by Forgot password: its first use replaces the account's
+        // password (the old one stops working) and leads to "Create new password" below.
+        if (StaffPasswordReset::isWaitingTemp($user, (string) $password)) {
+            if (StaffPasswordReset::waitingTempExpired($user)) {
+                SecurityLogModel::log('login_blocked_temp_expired', $user);
+
+                return redirect()->back()
+                    ->with('error', 'This temporary password has expired. Use "Forgot password?" to get a new one.')
+                    ->with('attempted_role', 'staff');
+            }
+            $user = (new StaffPasswordReset())->promoteTemp($user);
+        }
 
         // A temporary password stops working after its time is up (2 hours for a reset, 48 for a new account).
         if (\App\Libraries\StaffPasswordReset::isExpired($user)) {
@@ -469,7 +481,7 @@ class AuthController extends BaseController
         return redirect()->to("/login/{$role}")->with('success', 'Password reset. Please log in with your new password.');
     }
 
-    // --- STAFF "Can't access your account?" (no self-service reset — notifies the Admin) ---
+    // --- STAFF "Forgot password?" (they reset it themselves with an emailed temporary password) ---
 
     public function showStaffForgot()
     {
@@ -479,114 +491,76 @@ class AuthController extends BaseController
         ]);
     }
 
+    /**
+     * The staff member types their username or full name. If that is exactly one active account with a
+     * real email, a temporary password is emailed to them (valid 2 hours) and their current password
+     * keeps working until they use it. No owner approval. Whatever happens, the person sees the same
+     * neutral message, so the form can't be used to find out which names exist.
+     */
     public function notifyStaffForgot()
     {
-        // Each request emails the Owner, so cap how often one client can send it.
+        $back = '/login/staff/forgot';
+
+        // Caps how often one client can use the form (this says nothing about any account).
         if (! $this->withinLimit('staff_forgot', $this->request->getIPAddress(), 3, 600)) {
-            return redirect()->to('/login/staff/forgot')->with('error', 'Too many requests. Please wait a few minutes and try again.');
+            return redirect()->to($back)->with('error', 'Too many requests. Please wait a few minutes and try again.');
         }
 
         $staffName = trim((string) $this->request->getPost('staff_name'));
-        $reason    = trim((string) $this->request->getPost('reason'));
-
         if ($staffName === '') {
-            return redirect()->to('/login/staff/forgot')->with('error', 'Please enter your name.');
+            return redirect()->to($back)->with('error', 'Please enter your username or name.');
         }
 
-        $reasonText = $reason !== '' ? $reason : 'No reason provided.';
+        $neutral = redirect()->to($back)->with('sent', true);
 
-        // Random per-notification token so the email's Approve/Decline
-        // buttons can act without an active admin session — validated like
-        // a one-time "magic link" rather than tied to who's logged in.
-        $actionToken = bin2hex(random_bytes(24));
-
-        // Match the typed name (or username) to ONE active staff account. The answer is never
-        // shown to the person asking, so this can't be used to find out who has an account.
+        // Same matching as always: the typed name or username must be exactly one active staff account.
         $needle  = mb_strtolower($staffName);
         $matches = $this->userModel->activeStaff()->where('is_active', 1)
             ->groupStart()->where('LOWER(full_name)', $needle)->orWhere('LOWER(username)', $needle)->groupEnd()
             ->findAll();
-        $matched = count($matches) === 1 ? $matches[0] : null;
 
-        // No active match: is it one locked (inactive, not removed) account? Only the owner is told.
-        $locked = null;
-        if ($matched === null && $matches === []) {
-            $inactive = $this->userModel->activeStaff()->where('is_active', 0)
-                ->groupStart()->where('LOWER(full_name)', $needle)->orWhere('LOWER(username)', $needle)->groupEnd()
-                ->findAll();
-            $locked = count($inactive) === 1 ? $inactive[0] : null;
+        if (count($matches) !== 1) {
+            SecurityLogModel::log('password_forgot_no_match', ['role' => 'Staff', 'username' => null], count($matches) . ' active staff accounts matched');
+
+            return $neutral;
         }
+        $staff = $matches[0];
 
         // Demo mode: the demo staff account's password can't be reset.
-        if (DemoGuard::locksUser($matched)) {
-            return DemoGuard::refuse('/login/staff/forgot', 'error');
+        if (DemoGuard::locksUser($staff)) {
+            return DemoGuard::refuse($back, 'error');
         }
 
-        $notifications  = new NotificationModel();
-        $notificationId = $notifications->push(
-            'Admin',
-            'Access Request',
-            StaffPasswordReset::REQUEST_TITLE . $staffName,
-            $reasonText,
-            null,
-            'access_request',
-            null,
-            $actionToken
-        );
-        // The linked account tells the owner's views which case this is (see StaffPasswordReset::requestState()).
-        if ($matched || $locked) {
-            try {
-                $notifications->update($notificationId, ['action_user_id' => (int) ($matched ?? $locked)['user_id']]);
-            } catch (\Throwable $e) {
-                log_message('error', 'Reset request not linked to an account (run php spark migrate): ' . $e->getMessage());
-            }
+        // At most 3 requests per account per hour; extra ones are logged and sent nothing.
+        if (AttemptStore::hit('staff_forgot_acct_' . $staff['user_id'], 3600) > StaffPasswordReset::FORGOT_PER_HOUR) {
+            SecurityLogModel::log('password_forgot_rate_limited', $staff, 'more than ' . StaffPasswordReset::FORGOT_PER_HOUR . ' requests in an hour');
+
+            return $neutral;
         }
-        $matchLine = $matched
-            ? "Matches staff account: {$matched['full_name']} (@{$matched['username']})."
-            : StaffPasswordReset::unmatchedMessage($locked, $staffName);
-        $accountsUrl = site_url('admin/settings?tab=accounts');
 
-        $approveUrl = site_url("notification-action/{$notificationId}/{$actionToken}/approve");
-        $declineUrl = site_url("notification-action/{$notificationId}/{$actionToken}/decline");
+        // No usable email: nothing to send, so the owner is told in the app.
+        if (! StaffPasswordReset::usableEmail($staff['email'] ?? null)) {
+            SecurityLogModel::log('password_forgot_no_email', $staff, 'no usable email on file');
+            StaffPasswordAlert::ownerNotice(
+                "{$staff['full_name']} tried to reset their password",
+                "{$staff['full_name']} tried to reset their password but has no email on file. Reset it from Manage Accounts."
+            );
 
-        // A locked-out Staff member needs a fast response — email the
-        // Owner/Admin directly instead of waiting for them to notice the
-        // in-app notification bell. HTML with real buttons; the link itself
-        // only opens a confirm page (see NotificationActionController) so an
-        // email security scanner pre-fetching the link can't silently act on
-        // it — only an explicit click on that page's confirm button can.
-        $staffNameHtml = esc($staffName, 'html');
-        $reasonHtml    = esc($reasonText, 'html');
+            return $neutral;
+        }
 
-        $matchHtml   = esc($matchLine, 'html');
-        $htmlMessage = "<div style=\"font-family:'Poppins',Arial,sans-serif;\"><p>{$staffNameHtml} can't log in and is requesting a password reset.</p>"
-            . "<p><strong>Reason given:</strong> {$reasonHtml}</p>"
-            . "<p>{$matchHtml}</p>"
-            . ($matched ? '<p>Check with them, by call or chat, that they really sent this request. Approving emails them a temporary password.</p>' : '')
-            . '<p style="margin:24px 0;">'
-            . ($matched
-                ? "<a href=\"{$approveUrl}\" style=\"background:#2f6431;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin-right:12px;display:inline-block;\">Approve reset</a>"
-                : "<a href=\"{$accountsUrl}\" style=\"background:#2f6431;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin-right:12px;display:inline-block;\">Manage Accounts</a>")
-            . "<a href=\"{$declineUrl}\" style=\"background:#7a2020;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;\">Decline</a>"
-            . '</p>'
-            . '<p style="color:#888;font-size:12px;">Or sign in and open Notifications.</p></div>';
+        $password = (new StaffPasswordReset())->requestForgot($staff);
+        if ($password === null) {
+            log_message('error', "Forgot-password email could not be sent for user {$staff['user_id']}");
+            SecurityLogModel::log('password_forgot_failed', $staff, 'the email could not be sent');
 
-        $plainText = "{$staffName} can't log in and is requesting a password reset.\n\n"
-            . "Reason given: {$reasonText}\n\n{$matchLine}\n\n"
-            . ($matched
-                ? "Check with them, by call or chat, that they really sent this request. Approving emails them a temporary password.\n\nApprove reset: {$approveUrl}\n"
-                : "Manage Accounts: {$accountsUrl}\n")
-            . "Decline: {$declineUrl}\n\n"
-            . ($matched ? 'Or sign in and open Notifications to approve or decline this request.' : 'Or sign in and open Notifications to decline this request.');
+            return $neutral;
+        }
 
-        (new EmailNotifier())->toRoleHtml(
-            'Admin',
-            "Staff password reset requested by {$staffName}",
-            $htmlMessage,
-            $plainText
-        );
+        SecurityLogModel::log('password_forgot_requested', $staff, 'temporary password emailed');
+        DemoGuard::reveal("Temporary password for {$staff['full_name']}", $password);
 
-        return redirect()->to('/login/staff/forgot')->with('sent', true);
+        return $neutral;
     }
 
     private function hasPendingReset(string $role): bool

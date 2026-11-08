@@ -1,10 +1,10 @@
 <?php
 // app/Views/notification_action/confirm.php
 $notification = $notification ?? [];
-$action       = $action ?? 'approve';
+$action       = $action ?? 'accept';
 $isLock       = $action === 'lock';
+$isAccept     = $action === 'accept';
 $error        = $error ?? null;
-$isApprove    = $action === 'approve';
 ?>
 <!DOCTYPE html>
 <html>
@@ -14,7 +14,7 @@ $isApprove    = $action === 'approve';
     <link rel="apple-touch-icon" href="/assets/img/favicon/apple-touch-icon.png?v=4">
     <meta name="apple-mobile-web-app-title" content="RfourL MS" />
     <link rel="manifest" href="/assets/img/favicon/site.webmanifest?v=4">
-    <title><?= $isLock ? 'Lock Account' : ($isApprove ? 'Approve Reset' : 'Decline Request') ?> | RfourL</title>
+    <title><?= $isLock ? 'Lock Account' : 'Confirm Password Reset' ?> | RfourL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@ $isApprove    = $action === 'approve';
 <body class="auth-body">
 <?= view('partials/demo_banner') ?>
     <div class="auth-card">
-        <h2><?= $isLock ? 'Lock Account' : ($isApprove ? 'Approve Reset' : 'Decline Request') ?></h2>
+        <h2><?= $isLock ? 'Lock Account' : 'Confirm Password Reset' ?></h2>
         <p class="auth-hint"><?= esc((string) ($notification['title'] ?? '')) ?></p>
 
         <?php if (! empty($notification['message'])): ?>
@@ -35,28 +35,15 @@ $isApprove    = $action === 'approve';
 
         <form action="<?= current_url() ?>" method="post">
             <?= csrf_field() ?>
-            <?php if ($isApprove): ?>
-                <p class="auth-hint">Check with the staff member, by call or chat, that they really sent this request. Approving emails them a temporary password. You won't see it.</p>
-                <label style="display:flex;gap:8px;align-items:flex-start;margin:12px 0;text-align:left;">
-                    <input type="checkbox" name="confirmed" value="1" id="confirmedBox" style="width:auto;margin-top:3px;">
-                    <span>I confirmed with them</span>
-                </label>
+            <?php if ($isAccept): ?>
+                <p class="auth-hint">Accept only if it was really them. Once you accept, this request is closed and the account can no longer be locked from here.</p>
+            <?php else: ?>
+                <p class="auth-hint">They won't be able to sign in until you reset their password in Settings &gt; Manage Accounts.</p>
             <?php endif; ?>
-            <button type="submit" class="btn-login" style="background:<?= $isApprove ? '#2f6431' : '#A1261B' ?>;">
-                <?= $isLock ? 'Lock account' : ($isApprove ? 'Approve reset' : 'Yes, Decline This Request') ?>
+            <button type="submit" class="btn-login" style="background:<?= $isAccept ? '#2f6431' : '#A1261B' ?>;">
+                <?= $isLock ? 'Lock account' : 'Accept' ?>
             </button>
         </form>
-        <?php if ($isApprove): ?>
-            <script>
-                // The button stays off until the box is ticked.
-                (function () {
-                    var box = document.getElementById('confirmedBox');
-                    var btn = box.form.querySelector('button[type=submit]');
-                    btn.disabled = !box.checked;
-                    box.addEventListener('change', function () { btn.disabled = !box.checked; });
-                })();
-            </script>
-        <?php endif; ?>
     </div>
 </body>
 </html>

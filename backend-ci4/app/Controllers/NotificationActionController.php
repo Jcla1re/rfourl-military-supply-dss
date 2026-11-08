@@ -4,141 +4,107 @@ namespace App\Controllers;
 
 use App\Libraries\DemoGuard;
 use App\Libraries\StaffPasswordAlert;
-use App\Libraries\StaffPasswordReset;
 use App\Models\NotificationModel;
 
 /**
- * Lets the Owner/Admin approve or decline a staff access-request straight
- * from the one-click email link, without logging into the admin portal.
+ * Lets the Owner/Admin Accept or Lock a staff member after a Forgot-password reset (or just Lock after
+ * a changed email) straight from the email link, without logging into the admin portal.
  *
- * Deliberately NOT session/role-gated — validated instead by a random
- * per-notification token (see AuthController::notifyStaffForgot()), the
- * same "magic link" pattern as an email confirmation link. The GET step
- * only ever shows a confirmation page; the actual approve/decline happens
- * on the POST from that page's button. This split matters: email security
- * scanners (Gmail, Outlook Safe Links, corporate proxies) pre-fetch every
- * link in an email to scan it, so a GET that mutated data would risk being
- * silently triggered by a scanner bot before a human ever saw it.
+ * Deliberately NOT session/role-gated: validated instead by a random per-notification token (only its
+ * hash is stored), the same "magic link" pattern as an email confirmation link. The GET step only ever
+ * shows a confirmation page; the actual Accept/Lock happens on the POST from that page's button. This
+ * split matters: email security scanners (Gmail, Outlook Safe Links, corporate proxies) pre-fetch
+ * every link in an email to scan it, so a GET that mutated data would risk being silently triggered by
+ * a scanner bot before a human ever saw it.
+ *
+ * Only one of Accept / Lock can be used per alert. The old Approve / Decline links (the owner no longer
+ * approves resets) only explain that staff now reset their password themselves.
  */
 class NotificationActionController extends BaseController
 {
-    private const ACTIONS = ['approve', 'decline', 'lock'];
+    private const RETIRED = ['approve', 'decline'];
+
+    public const RETIRED_MESSAGE = 'This link is no longer used. Staff now reset their password themselves.';
 
     public function confirm($notificationId, string $token, string $action)
     {
-        if ($action === 'lock') {
-            $notification = $this->lockRequest($notificationId, $token);
-
-            return $notification
-                ? view('notification_action/confirm', ['notification' => $notification, 'action' => 'lock'])
-                : view('notification_action/problem', ['message' => 'This link is no longer valid.']);
+        if (in_array($action, self::RETIRED, true)) {
+            return $this->retired();
         }
 
-        $notification = $this->validRequest($notificationId, $token, $action);
+        $notification = $this->notification($notificationId);
 
-        if (! $notification) {
-            return view('notification_action/problem', [
-                'message' => 'This link is invalid or has expired.',
-            ]);
+        if (! in_array($action, ['lock', 'accept'], true) || ! StaffPasswordAlert::validToken($notification, $token)) {
+            return $this->noLongerValid();
         }
 
-        if (! empty($notification['status'])) {
-            return view('notification_action/problem', [
-                'message' => 'This request has already been ' . $notification['status'] . '.',
-            ]);
+        if ($action === 'accept' ? StaffPasswordAlert::acceptableStaff($notification) === null : StaffPasswordAlert::lockableStaff($notification) === null) {
+            return $this->alreadyHandled($notification);
         }
 
-        // Nothing to approve when the request was not matched to an active account: say why, right away.
-        if ($action === 'approve') {
-            $request = StaffPasswordReset::requestState($notification);
-
-            if ($request['state'] !== 'matched') {
-                return view('notification_action/problem', ['heading' => "Can't approve this request", 'message' => $request['message']]);
-            }
-        }
-
-        return view('notification_action/confirm', [
-            'notification' => $notification,
-            'action'       => $action,
-        ]);
+        return view('notification_action/confirm', ['notification' => $notification, 'action' => $action]);
     }
 
     public function submit($notificationId, string $token, string $action)
     {
-        if ($action === 'lock') {
-            $notification = $this->lockRequest($notificationId, $token);
-            $staff        = $notification ? StaffPasswordAlert::lockableByToken($notification, $token) : null;
-
-            if (! $notification || ! $staff) {
-                return view('notification_action/problem', ['message' => 'This link is no longer valid.']);
-            }
-
-            if (DemoGuard::locksUser($staff)) {
-                return view('notification_action/problem', ['message' => DemoGuard::MESSAGE]);
-            }
-
-            StaffPasswordAlert::lock($notification, $staff, 'account_locked_via_email', 'owner (email link)');
-
-            return view('notification_action/done', ['action' => 'lock', 'staffName' => $staff['full_name']]);
+        if (in_array($action, self::RETIRED, true)) {
+            return $this->retired();
         }
 
-        $notification = $this->validRequest($notificationId, $token, $action);
+        $notification = $this->notification($notificationId);
 
-        if (! $notification || ! empty($notification['status'])) {
-            return view('notification_action/problem', [
-                'message' => 'This link is invalid, expired, or was already used.',
-            ]);
+        if (! in_array($action, ['lock', 'accept'], true) || ! StaffPasswordAlert::validToken($notification, $token)) {
+            return $this->noLongerValid();
         }
 
-        $model = new NotificationModel();
-
-        if ($action === 'approve') {
-            // The owner must say they checked with the staff member first.
-            if (! $this->request->getPost('confirmed')) {
-                return view('notification_action/confirm', [
-                    'notification' => $notification,
-                    'action'       => $action,
-                    'error'        => 'Tick "I confirmed with them" first.',
-                ]);
+        if ($action === 'accept') {
+            $staff = StaffPasswordAlert::acceptableStaff($notification);
+            if ($staff === null) {
+                return $this->alreadyHandled($notification);
             }
 
-            $result = (new StaffPasswordReset())->approveRequest($notification, 'owner (email link)');
+            StaffPasswordAlert::accept($notification, $staff, 'password_reset_accepted_via_email', 'owner (email link)');
 
-            return $result['ok']
-                ? view('notification_action/done', ['action' => 'approve', 'staffName' => $result['staff']['full_name']])
-                : view('notification_action/problem', ['message' => $result['message']]);
+            return view('notification_action/done', ['action' => 'accept', 'staffName' => $staff['full_name']]);
         }
 
-        $model->declineAccessRequest((int) $notificationId);
+        $staff = StaffPasswordAlert::lockableStaff($notification);
+        if ($staff === null) {
+            return $this->alreadyHandled($notification);
+        }
+        if (DemoGuard::locksUser($staff)) {
+            return view('notification_action/problem', ['message' => DemoGuard::MESSAGE]);
+        }
 
-        return view('notification_action/done', ['action' => $action]);
+        StaffPasswordAlert::lock($notification, $staff, 'account_locked_via_email', 'owner (email link)');
+
+        return view('notification_action/done', ['action' => 'lock', 'staffName' => $staff['full_name']]);
     }
 
-    /** The security alert behind a Lock link, only if the token is valid, unused and unexpired. */
-    private function lockRequest($notificationId, string $token): ?array
+    private function notification($notificationId): ?array
     {
-        if (! is_numeric($notificationId)) {
-            return null;
-        }
-
-        $notification = (new NotificationModel())->find((int) $notificationId);
-
-        return StaffPasswordAlert::lockableByToken($notification, $token) ? $notification : null;
+        return is_numeric($notificationId) ? (new NotificationModel())->find((int) $notificationId) : null;
     }
 
-    private function validRequest($notificationId, string $token, string $action): ?array
+    private function retired()
     {
-        if (! is_numeric($notificationId) || ! in_array($action, self::ACTIONS, true)) {
-            return null;
-        }
+        return view('notification_action/problem', ['heading' => 'Link no longer used', 'message' => self::RETIRED_MESSAGE]);
+    }
 
-        $notification = (new NotificationModel())->find((int) $notificationId);
+    /** The other button was already used (the alert is closed), or the account no longer exists. */
+    private function alreadyHandled(array $notification)
+    {
+        $message = match ($notification['status'] ?? '') {
+            StaffPasswordAlert::STATUS_CONFIRMED => 'Already confirmed. This request can no longer be changed from this link.',
+            StaffPasswordAlert::STATUS_LOCKED    => 'This account was already locked. Reset their password in Settings > Manage Accounts to unlock it.',
+            default                              => 'This link is no longer valid.',
+        };
 
-        if (! $notification || ($notification['category'] ?? null) === StaffPasswordAlert::CATEGORY
-            || empty($notification['action_token']) || ! hash_equals($notification['action_token'], $token)) {
-            return null;
-        }
+        return view('notification_action/problem', ['heading' => 'Already handled', 'message' => $message]);
+    }
 
-        return $notification;
+    private function noLongerValid()
+    {
+        return view('notification_action/problem', ['message' => 'This link is no longer valid.']);
     }
 }

@@ -163,6 +163,12 @@ $unreadCount = $unreadCount ?? 0;
                             <?php if (!empty($n['message'])): ?><div class="msg"><?= esc($n['message']) ?></div><?php endif; ?>
                             <span class="type-pill"><?= esc(['Reorder Point Notice' => 'Reorder At Notice'][$n['type']] ?? $n['type']) ?></span>
                             <div class="notif-actions">
+                                <?php if (empty($n['status']) && !empty($n['action_user_id']) && $n['type'] === \App\Libraries\StaffPasswordAlert::TYPE_FORGOT): ?>
+                                    <form method="post" action="<?= site_url('admin/notifications/accept/' . $n['notification_id']) ?>">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="approve">Accept</button>
+                                    </form>
+                                <?php endif; ?>
                                 <?php if (empty($n['status']) && !empty($n['action_user_id'])): ?>
                                     <form method="post" action="<?= site_url('admin/notifications/lock/' . $n['notification_id']) ?>"
                                           data-confirm="They won't be able to sign in until you reset their password from Manage Accounts."
@@ -175,6 +181,8 @@ $unreadCount = $unreadCount ?? 0;
                                     </form>
                                 <?php elseif (($n['status'] ?? '') === 'locked'): ?>
                                     <div class="msg"><em>Account locked</em></div>
+                                <?php elseif (($n['status'] ?? '') === 'confirmed'): ?>
+                                    <div class="msg"><em>Confirmed</em></div>
                                 <?php endif; ?>
                                 <?php if (!$isRead && empty($n['status'])): ?>
                                     <form method="post" action="<?= site_url('admin/notifications/mark-read/' . $n['notification_id']) ?>">
@@ -186,43 +194,14 @@ $unreadCount = $unreadCount ?? 0;
                         </div>
                     </div>
 
-                <?php elseif ($n['category'] === 'access_request'): ?>
+                <?php elseif ($n['category'] === 'access_request'): // old approval requests: history only ?>
                     <div class="notif-card <?= $color ?> <?= $isRead ? 'is-read' : '' ?>">
                         <div class="icn"><i class="bi <?= $icon ?>"></i></div>
                         <div class="flex-grow-1">
-                            <div class="title"><?= esc($n['title']) ?><?php if (!$isRead): ?><span class="new-pill">NEW</span><?php endif; ?></div>
+                            <div class="title"><?= esc($n['title']) ?></div>
                             <?php if (!empty($n['message'])): ?><div class="msg"><?= esc($n['message']) ?></div><?php endif; ?>
-                            <span class="type-pill"><?= esc(['Reorder Point Notice' => 'Reorder At Notice'][$n['type']] ?? $n['type']) ?></span>
-                            <?php if (empty($n['status'])): ?>
-                                <?php $__req = \App\Libraries\StaffPasswordReset::requestState($n); ?>
-                                <?php if ($__req['state'] !== 'matched'): ?><div class="msg" style="margin-top:6px;"><?= esc($__req['message']) ?></div><?php endif; ?>
-                                <div class="notif-actions">
-                                    <?php if ($__req['state'] === 'matched'): ?>
-                                    <button type="button" class="approve" data-approve-open="<?= (int) $n['notification_id'] ?>">Approve reset</button>
-                                    <?php endif; ?>
-                                    <form method="post" action="<?= site_url('admin/notifications/decline/' . $n['notification_id']) ?>">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="decline">Decline</button>
-                                    </form>
-                                </div>
-                                <?php if ($__req['state'] === 'matched'): ?>
-                                <form method="post" action="<?= site_url('admin/notifications/approve/' . $n['notification_id']) ?>"
-                                      class="approve-confirm" id="approveConfirm<?= (int) $n['notification_id'] ?>" hidden>
-                                    <?= csrf_field() ?>
-                                    <p class="msg mb-2">Check with them, by call or chat, that they really sent this request. Approving emails them a temporary password. You won't see it.</p>
-                                    <label class="d-flex gap-2 align-items-start mb-2">
-                                        <input type="checkbox" name="confirmed" value="1" class="approve-tick" style="margin-top:4px;">
-                                        <span>I confirmed with them</span>
-                                    </label>
-                                    <div class="notif-actions">
-                                        <button type="submit" class="approve" disabled>Approve reset</button>
-                                        <button type="button" class="approve-cancel">Cancel</button>
-                                    </div>
-                                </form>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <div class="msg" style="margin-top:8px;"><em>Resolved: <?= esc(ucfirst($n['status'])) ?></em></div>
-                            <?php endif; ?>
+                            <span class="type-pill"><?= esc($n['type']) ?></span>
+                            <div class="msg" style="margin-top:8px;"><em>Closed: staff now reset their own password.</em></div>
                         </div>
                     </div>
 
@@ -256,15 +235,4 @@ $unreadCount = $unreadCount ?? 0;
     <?php endif; ?>
 </div>
 
-<script>
-// "Approve reset": the first click opens the confirmation; the button inside stays off until "I confirmed with them" is ticked.
-document.querySelectorAll('[data-approve-open]').forEach(function (open) {
-    var form = document.getElementById('approveConfirm' + open.dataset.approveOpen);
-    var tick = form.querySelector('.approve-tick');
-    var go = form.querySelector('button[type=submit]');
-    open.addEventListener('click', function () { form.hidden = false; open.hidden = true; tick.focus(); });
-    tick.addEventListener('change', function () { go.disabled = !tick.checked; });
-    form.querySelector('.approve-cancel').addEventListener('click', function () { form.hidden = true; open.hidden = false; tick.checked = false; go.disabled = true; });
-});
-</script>
 <?= $this->endSection() ?>

@@ -70,7 +70,9 @@ final class HelpPagesTest extends CIUnitTestCase
         $result = $this->actingAs('Admin', 1)->get('admin/help');
 
         $result->assertOK();
-        $result->assertSee('Approve a staff password reset');
+        $result->assertSee('Reset a staff password yourself');
+        $result->assertSee('Confirm or lock after a staff password reset');
+        $result->assertDontSee('Approve a staff password reset');
         $result->assertSee('Run the DSS engine');
         $result->assertSee('Read the ABC classification');
         $result->assertSee('Create a stock order');

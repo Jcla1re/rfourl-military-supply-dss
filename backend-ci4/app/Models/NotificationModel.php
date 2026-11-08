@@ -112,47 +112,6 @@ class NotificationModel extends Model
     }
 
     /**
-     * Resolves an actionable notification (approve/decline a staff access
-     * request) — marks it read at the same time so it drops out of the
-     * pending inbox like any other handled notification.
-     */
-    public function resolve(int $notificationId, string $status): void
-    {
-        $this->update($notificationId, ['status' => $status, 'is_read' => 1]);
-    }
-
-    /**
-     * Shared by the admin portal's Approve button and the one-click email
-     * action link, so both paths have exactly one definition of what
-     * "approving" a staff access request does.
-     */
-    public function approveAccessRequest(int $notificationId): void
-    {
-        $this->resolve($notificationId, 'approved');
-        $this->push(
-            'Staff',
-            'Access Request',
-            'Your password reset request was approved',
-            'Check your email for a temporary password.',
-            null,
-            'staff_activity'
-        );
-    }
-
-    public function declineAccessRequest(int $notificationId): void
-    {
-        $this->resolve($notificationId, 'declined');
-        $this->push(
-            'Staff',
-            'Access Request',
-            'Your password reset request was declined',
-            'Please contact the owner directly if you still need access.',
-            null,
-            'staff_activity'
-        );
-    }
-
-    /**
      * Notifications older than $days are permanently deleted. Called from
      * each role's notifications index() so the inbox self-cleans without
      * needing a cron/scheduled task, which this app doesn't have.

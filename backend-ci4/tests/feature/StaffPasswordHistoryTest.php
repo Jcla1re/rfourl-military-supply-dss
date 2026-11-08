@@ -96,17 +96,14 @@ final class StaffPasswordHistoryTest extends DemoTestCase
         return (new \App\Models\UserModel())->staffPasswordInUse($password);
     }
 
-    /** Owner resets the staff member's password; returns the temporary password from the email. */
-    private function ownerResets(): string
+    /** The owner types a new password for the staff member in Manage Accounts; returns it. */
+    private function ownerResets(string $password = 'OwnerChose123'): string
     {
-        $this->actingAs('owner')->post('admin/settings/staff-accounts/password/' . $this->id['staff'], ['owner_password' => 'OwnerPass123', 'confirmed' => '1']);
+        $this->actingAs('owner')->post('admin/settings/staff-accounts/password/' . $this->id['staff'], [
+            'new_password' => $password, 'confirm_password' => $password, 'owner_password' => 'OwnerPass123', 'informed' => '1',
+        ]);
 
-        foreach (array_reverse($this->mail->sent) as $m) {
-            if (($m['setTo'] ?? '') === 'cashier@real.test' && preg_match('#letter-spacing:2px;">([A-Za-z0-9]{12})</p>#', (string) ($m['setMessage'] ?? ''), $x)) {
-                return $x[1];
-            }
-        }
-        $this->fail('No temporary password was emailed.');
+        return $password;
     }
 
     private function setPassword(string $new)
@@ -215,7 +212,7 @@ final class StaffPasswordHistoryTest extends DemoTestCase
     public function testAnOwnerResetRemembersTheRealOldPasswordButNeverTheTemporaryOne(): void
     {
         $this->change('CashierPass123', 'SecondPass456'); // history: CashierPass123
-        $temp = $this->ownerResets();                      // history: + SecondPass456
+        $temp = $this->ownerResets();                      // history: + SecondPass456 (the one the owner types is not remembered)
 
         $this->assertSame(2, $this->historyCount());
         foreach ($this->db->table('password_history')->get()->getResult() as $row) {

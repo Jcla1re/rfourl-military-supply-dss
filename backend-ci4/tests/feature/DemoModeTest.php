@@ -9,6 +9,7 @@ use App\Libraries\DemoEmail;
 use App\Libraries\DemoGuard;
 use App\Libraries\DemoSetup;
 use App\Libraries\EmailNotifier;
+use App\Libraries\StaffPasswordAlert;
 use App\Models\UserModel;
 use CodeIgniter\Test\Filters\CITestStreamFilter;
 use Config\Services;
@@ -183,22 +184,25 @@ final class DemoModeTest extends DemoTestCase
         $this->assertSame(0, $this->db->table('notifications')->countAllResults());
     }
 
-    public function testApprovingAResetForTheDemoStaffIsRefusedInAppAndByEmailLink(): void
+    public function testTheOwnerCannotResetOrLockTheDemoStaff(): void
     {
-        $this->db->table('notifications')->insert([
-            'recipient_role' => 'Admin', 'type' => 'Access Request', 'category' => 'access_request', 'title' => 'Password reset requested',
-            'action_token' => 'tok-demo', 'action_user_id' => $this->id['demo_staff'],
+        // Manage Accounts > Reset Password, with every field filled in properly.
+        $this->actingAs('owner')->post('admin/settings/staff-accounts/password/' . $this->id['demo_staff'], [
+            'new_password' => 'OwnerChose123', 'confirm_password' => 'OwnerChose123', 'owner_password' => 'OwnerPass123', 'informed' => '1',
         ]);
-        $nid = (int) $this->db->insertID();
-
-        $this->actingAs('owner')->post("admin/notifications/approve/{$nid}", ['confirmed' => '1']);
-        $this->assertStringContainsString('Disabled in the demo version.', json_encode($this->flash('toast')));
-
-        $page = $this->post("notification-action/{$nid}/tok-demo/approve", ['confirmed' => '1'])->getBody();
-        $this->assertStringContainsString('Disabled in the demo version.', $page);
-
+        $this->assertRefused();
         $this->assertTrue(password_verify('DemoStaff123', $this->user($this->id['demo_staff'])->password_hash));
+        $this->assertSame(0, (int) $this->user($this->id['demo_staff'])->must_change_password);
         $this->assertSame([], $this->mailer->sent);
+
+        // Lock this account, from the app.
+        StaffPasswordAlert::emailChanged((array) $this->user($this->id['demo_staff']), 'a@real.test', 'b@real.test');
+        $alert = $this->db->table('notifications')->get()->getRow();
+
+        unset($_SESSION['toast']);
+        $this->actingAs('owner')->post("admin/notifications/lock/{$alert->notification_id}");
+        $this->assertRefused();
+        $this->assertSame(1, (int) $this->user($this->id['demo_staff'])->is_active);
     }
 
     public function testSuppliersWithADemoLoginCannotBeArchived(): void

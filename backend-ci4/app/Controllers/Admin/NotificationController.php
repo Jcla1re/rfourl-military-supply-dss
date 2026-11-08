@@ -5,7 +5,6 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Libraries\DemoGuard;
 use App\Libraries\StaffPasswordAlert;
-use App\Libraries\StaffPasswordReset;
 use App\Libraries\Toast;
 use App\Models\NotificationModel;
 
@@ -92,46 +91,21 @@ class NotificationController extends BaseController
     }
 
     /**
-     * Approving a staff password-reset request emails the matched staff member a
-     * temporary password (the owner never sees it). The owner must tick that they
-     * checked with the staff member first.
+     * "Accept" on the alert that follows a Forgot-password reset: the owner says it was really the staff
+     * member. Closes the alert (so Lock no longer works) and leaves a note.
      */
-    public function approve(int $notificationId)
+    public function accept(int $notificationId)
     {
         $notification = $this->notificationModel->find($notificationId);
+        $staff        = StaffPasswordAlert::acceptableStaff($notification);
 
-        if (! $notification || ! empty($notification['status'])) {
-            return redirect()->to('/admin/notifications');
-        }
-        if (! $this->request->getPost('confirmed')) {
-            return redirect()->to('/admin/notifications')->with('toast', Toast::error('Not approved', 'Tick "I confirmed with them" first.'));
+        if (! $staff) {
+            return redirect()->to('/admin/notifications')->with('toast', Toast::error("Couldn't confirm", 'It was already confirmed or locked, or the account no longer exists.'));
         }
 
-        $result = (new StaffPasswordReset())->approveRequest($notification, (string) session()->get('username'));
+        StaffPasswordAlert::accept($notification, $staff, 'password_reset_accepted_via_notification', (string) session()->get('username'));
 
-        if (! $result['ok']) {
-            return redirect()->to('/admin/notifications')->with('toast', Toast::error("Couldn't approve", $result['message']));
-        }
-
-        DemoGuard::reveal("Temporary password for {$result['staff']['full_name']}", (string) ($result['password'] ?? ''));
-
-        return redirect()->to('/admin/notifications')->with('toast', Toast::success(
-            'Reset approved',
-            'A temporary password was emailed to ' . StaffPasswordReset::maskEmail((string) $result['staff']['email']) . '.'
-        ));
-    }
-
-    public function decline(int $notificationId)
-    {
-        $notification = $this->notificationModel->find($notificationId);
-
-        if (! $notification) {
-            return redirect()->to('/admin/notifications');
-        }
-
-        $this->notificationModel->declineAccessRequest($notificationId);
-
-        return redirect()->to('/admin/notifications')->with('success', 'Request declined.');
+        return redirect()->to('/admin/notifications')->with('toast', Toast::success('Reset confirmed', "You confirmed {$staff['full_name']}'s password reset."));
     }
 
     /** "Lock account" on a staff password-change alert, from the logged-in owner. */

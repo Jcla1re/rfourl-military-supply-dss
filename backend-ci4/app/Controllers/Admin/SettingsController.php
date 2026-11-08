@@ -7,6 +7,7 @@ use App\Libraries\DssRunner;
 use App\Libraries\SalesArchive;
 use App\Libraries\AttemptStore;
 use App\Libraries\DemoGuard;
+use App\Libraries\PasswordHistory;
 use App\Libraries\PasswordPolicy;
 use App\Libraries\StaffPasswordReset;
 use App\Libraries\Toast;
@@ -48,7 +49,6 @@ class SettingsController extends BaseController
             'notifPrefs'    => $this->notificationPreferenceModel->current(),
             'admin'         => $this->userModel->find(session()->get('user_id')),
             'staffAccounts' => $this->userModel->activeStaff()->findAll(),
-            'tempOnce'      => session()->getFlashdata('temp_password_once'),
             'success'       => session()->getFlashdata('success'),
             'error'         => session()->getFlashdata('error'),
         ];
@@ -218,10 +218,11 @@ class SettingsController extends BaseController
     }
 
     /**
-     * The Owner resets a staff member's password. The owner proves who they are with their own
-     * password and says they checked with the staff member. The staff member gets a temporary
-     * password by email (2 hours) and must set their own. If the account has no email, the
-     * temporary password is shown to the owner once, to pass on privately.
+     * The Owner sets a new password for a staff member (this also unlocks a locked account). The owner
+     * proves who they are with their own password and ticks that they told the staff member. The password
+     * follows the same rules as any staff password. The staff member gets an email WITHOUT the password
+     * (they must ask the owner for it) and, at their next sign-in, has to create their own, so the owner
+     * doesn't keep knowing it.
      */
     public function resetStaffPassword($userId)
     {
@@ -243,29 +244,38 @@ class SettingsController extends BaseController
 
             return redirect()->to($back)->with('error', 'Your password is incorrect.');
         }
-        if (! $this->request->getPost('confirmed')) {
-            return redirect()->to($back)->with('error', 'Tick "I confirmed with them" first.');
+        if (! $this->request->getPost('informed')) {
+            return redirect()->to($back)->with('error', "Tick \"I have informed {$staff['full_name']} about this reset\" first.");
         }
 
-        $reset = new StaffPasswordReset();
-
-        if (! empty($staff['email'])) {
-            $password = $reset->issueAndEmail($staff, StaffPasswordReset::KIND_RESET);
-            if ($password === null) {
-                return redirect()->to($back)->with('error', "We couldn't send the email, so nothing was changed. Please try again.");
-            }
-            DemoGuard::reveal("Temporary password for {$staff['full_name']}", $password);
-            $toast = Toast::success('Temporary password sent', 'Emailed to ' . StaffPasswordReset::maskEmail($staff['email']) . '. They set their own when they sign in.');
-        } else {
-            $password = $reset->issue($staff, StaffPasswordReset::KIND_RESET);
-            session()->setFlashdata('temp_password_once', ['name' => $staff['full_name'], 'password' => $password, 'hours' => 2]);
-            $toast = Toast::info('Temporary password ready', 'No email on file, so it is shown below once.');
+        $newPass = (string) $this->request->getPost('new_password');
+        if ($error = PasswordPolicy::check($newPass)) {
+            return redirect()->to($back)->with('error', $error);
         }
+        if ($newPass !== (string) $this->request->getPost('confirm_password')) {
+            return redirect()->to($back)->with('error', 'Passwords do not match.');
+        }
+        // Not one of the staff member's recent passwords (nor the one they have now).
+        if (PasswordHistory::reuses($staff, $newPass)) {
+            return redirect()->to($back)->with('error', "That is one of {$staff['full_name']}'s recent passwords. Choose a different one.");
+        }
+        // Staff sign in by password alone, so it must be unique (never say whose it is).
+        if ($this->userModel->staffPasswordInUse($newPass, (int) $staff['user_id'])) {
+            return redirect()->to($back)->with('error', "This password can't be used. Please choose a different one.");
+        }
+
+        $wasLocked = ! $staff['is_active'];
+        $reset     = new StaffPasswordReset();
+        $reset->ownerReset($staff, $newPass);
+        $reset->emailOwnerReset($staff);
 
         AttemptStore::forget('owner_reset_' . (int) session()->get('user_id'));
-        SecurityLogModel::log('password_reset', null, 'staff: ' . $staff['username'] . ' reset by owner (temporary password)');
+        SecurityLogModel::log('password_reset', null, 'staff: ' . $staff['username'] . ' reset by owner' . ($wasLocked ? ' (account unlocked)' : '') . '; they must create a new password at next sign-in');
 
-        return redirect()->to($back)->with('toast', $toast);
+        return redirect()->to($back)->with('toast', Toast::success(
+            'Password reset',
+            "{$staff['full_name']} must create their own password when they sign in with it." . ($wasLocked ? ' The account is unlocked.' : '')
+        ));
     }
 
     private function changePasswordFor(int $userId, string $label)

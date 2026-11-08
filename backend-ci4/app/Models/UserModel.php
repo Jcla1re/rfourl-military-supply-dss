@@ -21,6 +21,7 @@ class UserModel extends Model
         'email',
         'phone',
         'password_hash',
+        'temp_password_hash',
         'role',
         'full_name',
         'is_active',
@@ -125,7 +126,9 @@ class UserModel extends Model
             if ($exceptUserId !== null && (int) $staff['user_id'] === $exceptUserId) {
                 continue;
             }
-            if (password_verify($password, $staff['password_hash'])) {
+            // A temporary password waiting to be used (Forgot password) signs in too, so it counts like any other.
+            if (password_verify($password, $staff['password_hash'])
+                || (! empty($staff['temp_password_hash']) && password_verify($password, $staff['temp_password_hash']))) {
                 $matches[] = $staff;
             }
         }

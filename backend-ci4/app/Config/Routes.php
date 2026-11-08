@@ -93,8 +93,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->post('notifications/mark-all-read', 'NotificationController::markAllRead');
     $routes->post('notifications/clear-all', 'NotificationController::clearAll');
     $routes->post('notifications/open/(:segment)', 'NotificationController::open/$1');
-    $routes->post('notifications/approve/(:segment)', 'NotificationController::approve/$1');
-    $routes->post('notifications/decline/(:segment)', 'NotificationController::decline/$1');
+    $routes->post('notifications/accept/(:segment)', 'NotificationController::accept/$1');
     $routes->post('notifications/lock/(:segment)', 'NotificationController::lock/$1');
 
     $routes->get('help', 'HelpController::index');

@@ -1,15 +1,17 @@
 <?php
 
 use App\Libraries\AttemptStore;
+use App\Libraries\StaffPasswordAlert;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use Config\Services;
 
 /**
- * The always-on owner alert when a staff member changes their own password,
- * and its single-use "Lock account" link. Runs against the in-memory 'tests'
- * database group; outgoing email is captured by a fake, never sent.
+ * The always-on owner alerts about a staff member's account: a password changed in My Account is an
+ * in-app alert only (with a Lock button, no email), and the alerts that do carry an email (a changed
+ * login email here; Forgot password in StaffPasswordFlowTest) have a single-use "Lock account" link.
+ * Runs against the in-memory 'tests' database group; outgoing email is captured by a fake, never sent.
  *
  * @internal
  */
@@ -169,17 +171,45 @@ final class StaffPasswordAlertTest extends CIUnitTestCase
         return (bool) $this->db->table('users')->where('user_id', $this->staffId)->get()->getRow()->is_active;
     }
 
-    /** Changes the password, then returns [notification id, raw token] taken from the emailed link. */
+    /** Raises the alert that carries an emailed Lock link (a changed login email); returns [notification id, raw token]. */
     private function alertLink(): array
     {
-        $this->change(self::OLD_PASSWORD, self::NEW_PASSWORD);
+        $staff = (array) $this->db->table('users')->where('user_id', $this->staffId)->get()->getRow();
+        StaffPasswordAlert::emailChanged($staff, 'old@example.test', 'cashier1@example.test');
+
         $this->assertCount(1, $this->mailer->sent);
         $this->assertSame(1, preg_match('#notification-action/(\d+)/([0-9a-f]{64})/lock#', $this->mailer->sent[0]['setMessage'], $m));
 
         return [(int) $m[1], $m[2]];
     }
 
-    public function testSuccessfulChangeCreatesAlwaysOnNotificationAndEmail(): void
+    public function testAPasswordChangeInMyAccountIsAnInAppAlertOnlyWithALockButton(): void
+    {
+        $this->change(self::OLD_PASSWORD, self::NEW_PASSWORD);
+
+        $n = $this->notification();
+        $this->assertSame('Admin', $n->recipient_role);
+        $this->assertSame('Security', $n->type);
+        $this->assertSame('security', $n->category);
+        $this->assertSame(0, (int) $n->is_read);
+        $this->assertSame('Cashier1 set a new password on ' . date('M j, Y, g:i A'), $n->title);
+        $this->assertStringContainsString('Changed from ', $n->message);
+        $this->assertStringContainsString("If this wasn't expected, lock the account.", $n->message);
+        $this->assertSame('/admin/settings?tab=accounts', $n->link_url);
+        $this->assertSame($this->staffId, (int) $n->action_user_id);
+        $this->assertNull($n->action_token, 'no email link, so no token');
+        $this->assertSame(1, $this->db->table('notifications')->countAllResults());
+
+        // No email to the owner (or anyone) for this case.
+        $this->assertSame([], $this->mailer->sent);
+
+        // The owner can lock from the app, with the Lock button and nothing else to choose.
+        $page = $this->asOwner()->get('admin/notifications')->getBody();
+        $this->assertStringContainsString("admin/notifications/lock/{$n->notification_id}", $page);
+        $this->assertStringNotContainsString('notifications/accept', $page);
+    }
+
+    public function testAnAlertWithAnEmailHasAHashedSingleUseLockLink(): void
     {
         [$id, $token] = $this->alertLink();
 
@@ -187,17 +217,13 @@ final class StaffPasswordAlertTest extends CIUnitTestCase
         $this->assertSame('Admin', $n->recipient_role);
         $this->assertSame('Security', $n->type);
         $this->assertSame('security', $n->category);
-        $this->assertSame('Cashier1 changed their password', $n->title);
-        $this->assertStringContainsString('Changed on ', $n->message);
-        $this->assertStringContainsString('PH time', $n->message);
-        $this->assertStringContainsString("If this wasn't expected, lock the account.", $n->message);
-        $this->assertSame('/admin/settings?tab=accounts', $n->link_url);
+        $this->assertSame('Staff email changed', $n->title);
         $this->assertSame($this->staffId, (int) $n->action_user_id);
         $this->assertSame($id, (int) $n->notification_id);
 
         $mail = $this->mailer->sent[0];
         $this->assertSame('owner@example.test', $mail['setTo']);
-        $this->assertSame('Cashier1 changed their password', $mail['setSubject']);
+        $this->assertSame('Staff email changed', $mail['setSubject']);
         $this->assertStringContainsString('Lock this account', $mail['setMessage']);
         $this->assertStringContainsString('/lock', $mail['setAltMessage']);
 
@@ -208,6 +234,7 @@ final class StaffPasswordAlertTest extends CIUnitTestCase
 
     public function testPasswordNeverAppearsInAlertsOrLogs(): void
     {
+        $this->change(self::OLD_PASSWORD, self::NEW_PASSWORD);
         $this->alertLink();
 
         $everything = json_encode([
@@ -237,8 +264,8 @@ final class StaffPasswordAlertTest extends CIUnitTestCase
         $result = $this->get("notification-action/{$id}/{$token}/lock");
 
         $result->assertOK();
-        $result->assertSee('Cashier1 changed their password');
-        $result->assertSee('Changed on ');
+        $result->assertSee('Staff email changed');
+        $result->assertSee('Lock account');
         $this->assertTrue($this->staffActive());
         $this->assertNull($this->notification()->status);
     }
@@ -299,7 +326,8 @@ final class StaffPasswordAlertTest extends CIUnitTestCase
         [$id] = $this->alertLink();
         $stored = $this->notification()->action_token;
 
-        $this->post("notification-action/{$id}/{$stored}/approve")->assertSee('invalid');
+        // The old Approve link is retired: it only explains that staff now reset their own password.
+        $this->post("notification-action/{$id}/{$stored}/approve")->assertSee('This link is no longer used. Staff now reset their password themselves.');
         $this->assertNull($this->notification()->status);
     }
 
@@ -377,10 +405,12 @@ final class StaffPasswordAlertTest extends CIUnitTestCase
         $forge->dropColumn('notifications', 'action_user_id');
         $forge->dropColumn('notifications', 'action_expires_at');
 
+        $staff = (array) $this->db->table('users')->where('user_id', $this->staffId)->get()->getRow();
+        StaffPasswordAlert::emailChanged($staff, 'old@example.test', 'cashier1@example.test');
         $this->change(self::OLD_PASSWORD, self::NEW_PASSWORD);
 
-        // In-app alert and email still go out; only the Lock link is missing.
-        $this->assertSame('security', $this->notification()->category);
+        // In-app alerts and the email still go out; only the Lock link is missing.
+        $this->assertSame(2, $this->db->table('notifications')->where('category', 'security')->countAllResults());
         $this->assertCount(1, $this->mailer->sent);
         $this->assertStringNotContainsString('/lock', $this->mailer->sent[0]['setMessage']);
     }
