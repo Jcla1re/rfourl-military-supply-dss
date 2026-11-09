@@ -47,7 +47,6 @@ class NewOrdersController extends BaseController
 
         $data = [
             'title'    => 'New Orders',
-            'subtitle' => count($orders) . ' order' . (count($orders) === 1 ? '' : 's') . ' waiting for you',
             'active'   => 'new_orders',
             'orders'   => $orders,
             'filter'   => $filter,

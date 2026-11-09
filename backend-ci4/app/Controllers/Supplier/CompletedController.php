@@ -63,7 +63,6 @@ class CompletedController extends BaseController
 
         $data = [
             'title'         => 'Completed',
-            'subtitle'      => 'Delivered this month',
             'active'        => 'completed',
             'orders'        => $orders,
             'cancelledOrders' => $cancelled,

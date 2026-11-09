@@ -1,0 +1,122 @@
+/* public/assets/css/notifications.css
+   The Notifications page of the Owner (admin/notifications.php), Staff and Supplier
+   (staff/ and supplier/notifications.php, via partials/_notifications_list.php): one look.
+   Toolbar: partials/_notifications_toolbar.php. Icons and colors: App\Libraries\NotificationIcon. */
+
+/* ---- Toolbar: All / Unread on the left, Mark all as read / Clear all on the right ---- */
+.nt-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.nt-chips, .nt-bar-actions { display: flex; align-items: center; gap: 8px; }
+.nt-bar-actions form { margin: 0; }
+.nt-chip {
+    display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px 0 16px; box-sizing: border-box;
+    border: 1px solid #D6D2C6; border-radius: var(--radius-pill); background: #fff; color: #1F2617;
+    font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap;
+    transition: background-color .15s ease, border-color .15s ease;
+}
+.nt-chip:hover { border-color: #A9C79C; background: #F3F8EF; color: #1F2617; }
+.nt-chip .nt-count {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 7px;
+    box-sizing: border-box; border-radius: var(--radius-pill); background: #EEF0EA; color: #3A4030;
+    font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.nt-chip.active, .nt-chip.active:hover { background: #26331F; border-color: #26331F; color: #fff; }
+.nt-chip.active .nt-count { background: rgba(255, 255, 255, .18); color: #fff; }
+
+.nt-bar-btn {
+    display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 14px; box-sizing: border-box;
+    border: 1px solid; border-radius: 10px; background: #fff; font-family: inherit; font-size: 14px; font-weight: 600;
+    white-space: nowrap; cursor: pointer; transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+.nt-bar-btn.is-read { border-color: #9DB98F; color: #2F5A27; }
+.nt-bar-btn.is-read:hover:not(:disabled) { background: #F3F8EF; }
+.nt-bar-btn.is-clear { border-color: #E2B8B2; color: #A1261B; }
+.nt-bar-btn.is-clear:hover:not(:disabled) { background: #F8E3E0; }
+.nt-bar-btn:disabled { background: #F5F3EE; border-color: #E3E0D7; color: #A9AB9F; cursor: not-allowed; }
+/* A narrow list (768px with the sidebar open, ~460px): the same toolbar, still one row,
+   without the two decorative icons and with a little less padding. */
+.nt-wrap { container-type: inline-size; }
+@container (max-width: 520px) {
+    .nt-bar { gap: 8px; }
+    .nt-chip { padding: 0 10px 0 12px; gap: 6px; }
+    .nt-bar-btn { padding: 0 11px; }
+    .nt-bar-btn i { display: none; }
+}
+
+/* ---- Date group ---- */
+.nt-date { margin: 22px 0 10px; color: #5C6152; font-size: 12px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
+.nt-list > .nt-date:first-child { margin-top: 0; }
+
+/* ---- Card (one look for every role) ---- */
+.nt-card {
+    --nt-bar: #4A6741; --nt-tint: #EAF1E3; --nt-ink: #2F5A27;
+    display: flex; align-items: flex-start; gap: 14px; box-sizing: border-box; width: 100%;
+    margin-bottom: 10px; padding: 16px 18px; border: 1px solid #E3E0D7; border-radius: 14px; background: #fff;
+    color: #1F2617; text-align: left; font-family: inherit;
+}
+.nt-card.amber { --nt-bar: #C98A1B; --nt-tint: #FCF1D8; --nt-ink: #8A5A0B; }
+.nt-card.red   { --nt-bar: #A1261B; --nt-tint: #F8E3E0; --nt-ink: #A1261B; }
+.nt-card.is-unread { box-shadow: inset 4px 0 0 var(--nt-bar); }
+.nt-icon {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 40px; height: 40px; border-radius: 10px; background: var(--nt-tint); color: var(--nt-ink); font-size: 18px;
+}
+.nt-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.nt-title { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font-size: 15.5px; font-weight: 500; color: #3A4030; overflow-wrap: anywhere; }
+.nt-card.is-unread .nt-title { font-weight: 600; color: #1F2617; }
+.new-pill {
+    display: inline-flex; align-items: center; padding: 2px 8px; border-radius: var(--radius-pill);
+    background: #EAF1E3; color: #2F5A27; font-size: 10.5px; font-weight: 700; letter-spacing: .02em; line-height: 1.4;
+}
+.nt-msg { margin-top: 3px; color: #4F5547; font-size: 13.5px; line-height: 1.45; overflow-wrap: anywhere; }
+.nt-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-top: 8px; color: #8A8D7E; font-size: 12px; }
+.type-pill { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: var(--radius-pill); background: #EEF0EA; color: #4F5A45; font-size: 11.5px; font-weight: 500; }
+.nt-note { margin-top: 8px; color: #5C6152; font-size: 13px; }
+
+/* Read: a quieter card, no bar. */
+.nt-card.is-read { background: #FAF9F5; }
+.nt-card.is-read .nt-icon { background: #EFEDE6; color: #8A8D7E; }
+.nt-card.is-read .nt-msg { color: #7A7D70; }
+
+/* Cards that open their link: the whole card is the form's submit button. */
+.nt-openform { display: block; margin: 0; }
+button.nt-card { cursor: pointer; transition: background-color .15s ease, border-color .15s ease; }
+button.nt-card:hover { border-color: #C9D9C0; background: #FBFCFA; }
+.nt-go { align-self: center; flex-shrink: 0; color: #71AA60; font-size: 20px; line-height: 1; }
+.nt-card.is-read .nt-go { color: #A9AB9F; }
+
+/* Card buttons: Accept, Lock account, Mark as Done, Mark read. */
+.nt-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.nt-actions form { margin: 0; }
+.nt-side { align-self: center; flex-shrink: 0; margin: 0; }
+.nt-btn {
+    display: inline-flex; align-items: center; height: 34px; padding: 0 14px; box-sizing: border-box;
+    border: 1px solid #D6D2C6; border-radius: 9px; background: #fff; color: #1F2617;
+    font-family: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease;
+}
+.nt-btn:hover:not(:disabled) { background: #F2F0EA; }
+.nt-btn.is-green { background: #71AA60; border-color: #71AA60; color: #fff; }
+.nt-btn.is-green:hover:not(:disabled) { background: #5F9850; border-color: #5F9850; }
+.nt-btn.is-red { border-color: #E2B8B2; color: #A1261B; }
+.nt-btn.is-red:hover:not(:disabled) { background: #F8E3E0; }
+.nt-btn:disabled { background: #F5F3EE; border-color: #E3E0D7; color: #A9AB9F; cursor: not-allowed; }
+
+/* The Owner's staff-activity notices: a <details> card; the message and Mark as Done open inside it. */
+details.nt-card { display: block; padding: 0; }
+.nt-details > summary { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; list-style: none; cursor: pointer; border-radius: 14px; }
+.nt-details > summary::-webkit-details-marker { display: none; }
+.nt-details > summary:hover .nt-chevron { color: #4A6741; }
+.nt-chevron { align-self: center; flex-shrink: 0; color: #8A8D7E; font-size: 16px; line-height: 1; transition: transform .15s ease; }
+.nt-details[open] .nt-chevron { transform: rotate(180deg); }
+.nt-expand { padding: 0 18px 16px 72px; } /* lines up with the title: 18 + 40 + 14 */
+.nt-expand .nt-msg { margin-top: 0; }
+
+/* ---- Empty ---- */
+.nt-empty {
+    display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 56px; text-align: center;
+    border: 1px solid #E3E0D7; border-radius: 14px; background: #fff; color: #5C6152; font-size: 14.5px;
+}
+.nt-empty-icon {
+    display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px;
+    border-radius: 50%; background: #EAF1E3; color: #4A6741; font-size: 28px;
+}

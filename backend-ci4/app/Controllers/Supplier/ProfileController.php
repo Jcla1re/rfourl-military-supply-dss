@@ -48,7 +48,6 @@ class ProfileController extends BaseController
         $data = [
             'loginAccount' => $this->userModel->find((int) session()->get('user_id')),
             'title'    => 'My Profile',
-            'subtitle' => 'Your account',
             'active'   => 'profile',
             'supplier' => $supplier,
             'stats'    => [

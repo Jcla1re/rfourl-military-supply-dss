@@ -36,7 +36,6 @@ class DeliveriesController extends BaseController
 
         $data = [
             'title'    => 'Deliveries',
-            'subtitle' => count($orders) . ' active shipment' . (count($orders) === 1 ? '' : 's'),
             'active'   => 'deliveries',
             'orders'   => $orders,
             'success'  => session()->getFlashdata('success'),

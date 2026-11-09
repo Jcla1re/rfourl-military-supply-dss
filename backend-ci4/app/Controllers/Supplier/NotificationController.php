@@ -36,7 +36,6 @@ class NotificationController extends BaseController
 
         $data = [
             'title'       => 'Notifications',
-            'subtitle'    => $unreadCount . ' unread',
             'active'      => 'notifications',
             'groups'      => NotificationModel::groupByRecency($notifications),
             'filter'      => $filter,
