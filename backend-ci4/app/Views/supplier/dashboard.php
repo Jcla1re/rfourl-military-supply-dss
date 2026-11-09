@@ -78,7 +78,7 @@
         <div class="col-md-3 col-6"><div class="sd-stat"><span class="icon-box"><i class="bi bi-clipboard"></i></span><div><div class="value"><?= esc($newOrdersCount ?? 0) ?></div><div class="label">New Orders</div></div></div></div>
         <div class="col-md-3 col-6"><div class="sd-stat"><span class="icon-box"><i class="bi bi-truck"></i></span><div><div class="value"><?= esc($inTransitCount ?? 0) ?></div><div class="label">In Transit</div></div></div></div>
         <div class="col-md-3 col-6"><div class="sd-stat"><span class="icon-box"><i class="bi bi-check-lg"></i></span><div><div class="value"><?= esc($completedMonth ?? 0) ?></div><div class="label">Completed (Month)</div></div></div></div>
-        <div class="col-md-3 col-6"><div class="sd-stat"><span class="icon-box"><i class="bi bi-box-seam"></i></span><div><div class="value"><?= number_format($totalUnits ?? 0) ?></div><div class="label">Total Units Supplied</div></div></div></div>
+        <div class="col-md-3 col-6"><div class="sd-stat"><span class="icon-box"><i class="bi bi-box-seam"></i></span><div><div class="value"><?= number_format($totalUnits ?? 0) ?></div><div class="label">Units Delivered This Month</div></div></div></div>
     </div>
 
     <div class="row g-3 mb-3">

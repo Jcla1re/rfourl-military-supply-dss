@@ -74,6 +74,7 @@ class StockOrderController extends BaseController
 
         $activeOrders  = array_values(array_filter($allOrders, fn ($o) => ! in_array($o['status'], ['Delivered', 'Cancelled'], true)));
         $historyOrders = array_values(array_filter($allOrders, fn ($o) => in_array($o['status'], ['Delivered', 'Cancelled'], true)));
+        $historyCount  = count($historyOrders); // before History's filters: for "View history"
 
         $historySearch = trim((string) ($this->request->getGet('search') ?? ''));
         if ($historySearch !== '') {
@@ -109,10 +110,21 @@ class StockOrderController extends BaseController
         if ($month < 1) { $month = 12; $year--; }
         if ($month > 12) { $month = 1; $year++; }
 
+        // The calendar marks only active orders (the cards): a Cancelled (or supplier-declined,
+        // stored as Cancelled) or Delivered order isn't a restock coming. An active order whose
+        // expected date has passed is overdue (amber); one due today keeps the Today square
+        // with a dot.
         $restockDates = [];
-        foreach ($allOrders as $o) {
+        $overdueDates = [];
+        $today        = date('Y-m-d');
+        foreach ($activeOrders as $o) {
             if (! empty($o['expected_delivery_date'])) {
-                $restockDates[] = date('Y-m-d', strtotime($o['expected_delivery_date']));
+                $due = date('Y-m-d', strtotime($o['expected_delivery_date']));
+                if ($due < $today) {
+                    $overdueDates[] = $due;
+                } else {
+                    $restockDates[] = $due;
+                }
             }
         }
 
@@ -151,6 +163,8 @@ class StockOrderController extends BaseController
             'calMonth'       => $month,
             'calYear'        => $year,
             'restockDates'   => $restockDates,
+            'overdueDates'   => $overdueDates,
+            'historyCount'   => $historyCount,
             'success'        => session()->getFlashdata('success'),
             'error'          => session()->getFlashdata('error'),
         ];

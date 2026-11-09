@@ -83,7 +83,7 @@
                 <div class="pf-perf-track"><span style="width: <?= esc($stats['on_time_rate'] ?? 0) ?>%"></span></div>
 
                 <div class="pf-perf-label"><span>Orders Completed (Month)</span><strong><?= esc($stats['orders_completed'] ?? '0 / 0') ?></strong></div>
-                <div class="pf-perf-track"><span style="width: 100%"></span></div>
+                <div class="pf-perf-track"><span style="width: <?= (int) ($stats['orders_completed_pct'] ?? 0) ?>%"></span></div>
 
                 <div class="pf-tiles">
                     <div class="pf-tile"><div class="v"><?= number_format($stats['items_month'] ?? 0) ?></div><div class="l">Items supplied (month)</div></div>

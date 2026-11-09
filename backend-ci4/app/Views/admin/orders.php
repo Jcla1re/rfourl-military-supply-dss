@@ -19,6 +19,8 @@ $tab = $tab ?? 'status';
 $calMonth = $calMonth ?? (int) date('n');
 $calYear = $calYear ?? (int) date('Y');
 $restockDates = $restockDates ?? [];
+$overdueDates = $overdueDates ?? [];
+$historyCount = (int) ($historyCount ?? 0);
 $followedUpToday = $followedUpToday ?? [];
 ?>
 <link href="/assets/css/item-modal.css" rel="stylesheet">
@@ -125,6 +127,8 @@ $followedUpToday = $followedUpToday ?? [];
 .ord-followed-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
 .ord-followed { flex: 0 0 150px; font-size: 12px; color: #5C6152; text-align: center; }
 .ord-followed-spacer { flex: 0 0 110px; }
+.ord-history-link { margin-left: 10px; font-size: 13px; font-weight: 500; color: #4A6741; }
+.ord-history-link:hover { color: #2F5A27; }
 .ord-note { margin: 8px 0 0; font-size: 12.5px; color: #5C6152; }
 .hist-note { display: block; font-size: 12px; color: #777; margin-top: 4px; }
 
@@ -136,6 +140,14 @@ $followedUpToday = $followedUpToday ?? [];
 .cal-day { padding: 8px 0; border-radius: var(--radius-control); font-size: 14px; }
 .cal-day.today { background: var(--sidebar-bg); color: #fff; font-weight: 700; }
 .cal-day.restock { background: #dcecdf; font-weight: 700; }
+/* An active order overdue on that date (same colours as the card's Overdue pill). */
+.cal-day.overdue { background: #FCF1D8; color: #8A5A0B; font-weight: 700; }
+/* Today with an active order due: the Today square keeps a small green dot under the number. */
+.cal-day.today.has-due { position: relative; }
+.cal-day.today.has-due::after {
+    content: ""; position: absolute; left: 50%; bottom: 3px; width: 5px; height: 5px; margin-left: -2.5px;
+    border-radius: 50%; background: #9FD18B;
+}
 .cal-legend { display: flex; gap: 18px; margin-top: 14px; font-size: 13px; }
 .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .cal-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
@@ -166,7 +178,7 @@ $followedUpToday = $followedUpToday ?? [];
                 <div class="ord-col-label">Order Status</div>
 
                 <?php if (empty($orders)): ?>
-                    <div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i> No orders yet. <button type="button" class="btn btn-success btn-sm ms-2" onclick="document.getElementById('openAddModal').click()">Add New Order</button></div>
+                    <div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i> No active orders. <button type="button" class="btn btn-success btn-sm ms-2" onclick="document.getElementById('openAddModal').click()">Add New Order</button><?php if ($historyCount > 0): ?> <a class="ord-history-link" href="<?= site_url('admin/orders') ?>?tab=history">View history</a><?php endif; ?></div>
                 <?php else: ?>
                     <?php foreach ($orders as $o): ?>
                         <?php
@@ -306,6 +318,8 @@ $followedUpToday = $followedUpToday ?? [];
                     $daysInMonth = (int) date('t', $monthTs);
                     $startDow = (int) date('w', $monthTs);
                     $todayStr = date('Y-m-d');
+                    $monthPrefix = sprintf('%04d-%02d-', $calYear, $calMonth);
+                    $monthHasOverdue = (bool) array_filter($overdueDates, static fn ($d) => str_starts_with($d, $monthPrefix));
                     ?>
                     <div class="cal-nav">
                         <a href="?tab=status&month=<?= $prevM ?>&year=<?= $prevY ?>">&larr; <?= date('M', mktime(0,0,0,$prevM,1,$prevY)) ?></a>
@@ -318,7 +332,14 @@ $followedUpToday = $followedUpToday ?? [];
                         <?php for ($d = 1; $d <= $daysInMonth; $d++): ?>
                             <?php
                             $dateStr = sprintf('%04d-%02d-%02d', $calYear, $calMonth, $d);
-                            $cls = $dateStr === $todayStr ? 'today' : (in_array($dateStr, $restockDates, true) ? 'restock' : '');
+                            // Active orders only: today keeps its square (a dot when an order is due), then
+                            // overdue (amber), then an upcoming restock (green).
+                            $cls = match (true) {
+                                $dateStr === $todayStr                     => 'today' . (in_array($dateStr, $restockDates, true) ? ' has-due' : ''),
+                                in_array($dateStr, $overdueDates, true)    => 'overdue',
+                                in_array($dateStr, $restockDates, true)    => 'restock',
+                                default                                    => '',
+                            };
                             ?>
                             <div class="cal-day <?= $cls ?>"><?= $d ?></div>
                         <?php endfor; ?>
@@ -326,6 +347,7 @@ $followedUpToday = $followedUpToday ?? [];
                     <div class="cal-legend">
                         <span><i style="background: var(--sidebar-bg)"></i> Today</span>
                         <span><i style="background:#dcecdf"></i> Restock Event</span>
+                        <?php if ($monthHasOverdue): ?><span><i style="background:#FCF1D8; box-shadow: inset 0 0 0 1px #E5C98F"></i> Overdue</span><?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -364,7 +386,7 @@ $followedUpToday = $followedUpToday ?? [];
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="5" class="text-center py-4"><?= ($historySearch !== '' || $historyDateFrom !== '' || $historyDateTo !== '') ? 'No orders match your filters.' : 'No completed orders yet.' ?></td></tr>
+                        <tr><td colspan="5" class="text-center py-4"><?= ($historySearch !== '' || $historyDateFrom !== '' || $historyDateTo !== '') ? 'No orders match your filters.' : 'No delivered or cancelled orders yet.' ?></td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
