@@ -336,7 +336,7 @@ final class ReorderNotificationTest extends CIUnitTestCase
         $this->pressNotify('dashboard', 'P-M', $alertId);
 
         $html = $this->asStaff()->get('staff/reorder-alerts')->getBody();
-        $this->assertMatchesRegularExpression('/<button type="button" class="notify-btn" disabled>Owner notified<\/button>/', $html);
+        $this->assertMatchesRegularExpression('/<button type="button" class="btn btn-success btn-sm notify-btn" disabled>Owner notified<\/button>/', $html);
         $this->assertStringContainsString('Notified by Ana Cruz &middot; ', $html); // esc() writes the dot as &middot;
         $this->assertStringNotContainsString('>Notify Owner</button>', $html);
     }

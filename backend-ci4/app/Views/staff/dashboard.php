@@ -92,14 +92,14 @@ a.dash-stat:hover { box-shadow: 0 2px 8px rgba(31, 38, 23, .08); cursor: pointer
         <?php if (! empty($alertNotice)): ?>
             <?php /* Already notified for this size (any staff account or page): no second notification. */ ?>
             <div class="text-end">
-                <button type="button" class="btn btn-success" disabled>Owner notified</button>
+                <button type="button" class="btn btn-success notify-btn" disabled>Owner notified</button>
                 <div class="small text-muted mt-1"><?= esc(\App\Models\ReorderNoticeModel::summary($alertNotice)) ?></div>
             </div>
         <?php else: ?>
         <form method="post" action="<?= site_url('staff/dashboard/notify') ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="item_id" value="<?= esc($alertItem['item_id'] ?? '') ?>">
-            <button type="submit" class="btn btn-success">Notify Owner</button>
+            <button type="submit" class="btn btn-success notify-btn">Notify Owner</button>
         </form>
         <?php endif; ?>
     </div>

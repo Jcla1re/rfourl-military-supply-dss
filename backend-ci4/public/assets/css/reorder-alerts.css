@@ -123,6 +123,10 @@
 .ra-actions .btn { min-height: 36px; display: inline-flex; align-items: center; white-space: nowrap; } /* links (View order) too */
 .ra-icon-btn { width: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; }
 .ra-actions [hidden] { display: none; }
+/* Staff: "Notify Owner" (the shared .notify-btn, sized like the Owner's Order button), then
+   "Owner notified" with who and when under it (partials/_reorder_board.php, role 'staff'). */
+.ra-notified { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 3px; min-width: 0; }
+.ra-notified-by { color: #5C6152; font-size: 11.5px; line-height: 1.35; text-align: right; white-space: normal; }
 
 /* Only shown when the columns they stand in for are hidden (below). */
 .ra-inline-size, .ra-narrow { display: none; }

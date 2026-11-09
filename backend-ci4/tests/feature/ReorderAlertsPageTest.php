@@ -337,7 +337,7 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
         $this->assertStringContainsString('<span class="ra-num">1</span><span class="ra-bar"><span class="stock-bar red"><span style="width: 7%"></span></span><span class="ra-tick" style="left: 20%" data-tick></span></span>', $this->cardOf($html, 'P-1'));
         $this->assertStringContainsString('<span class="stock-bar gray"><span style="width: 13%"></span></span>', $this->cardOf($html, 'P-2'), 'Gray for dismissed.');
 
-        $bar = new \ReflectionMethod(\App\Controllers\Admin\ReorderAlertController::class, 'stockBar');
+        $bar = new \ReflectionMethod(\App\Libraries\ReorderBoard::class, 'stockBar');
         $this->assertSame(['pct' => 0, 'tick' => null], $bar->invoke(null, ['current_stock' => 0, 'manual_rop_warning' => 0, 'recommended_eoq' => 12]), 'No tick when Reorder at is 0.');
         $this->assertSame(['pct' => 100, 'tick' => 50.0], $bar->invoke(null, ['current_stock' => 40, 'manual_rop_warning' => 10, 'recommended_eoq' => 10]), 'Capped at 100%.');
     }
