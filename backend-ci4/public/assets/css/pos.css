@@ -1,0 +1,182 @@
+/* public/assets/css/pos.css
+   POS & Sales, Owner (admin/sales.php) and Staff (staff/sales.php): the tab bar and the Point
+   of Sale tab (partials/_pos_tab.php, assets/js/pos.js). The receipts tab and the receipt keep
+   their styles in the views.
+
+   Point of Sale layout: the page fills the space under the green header and doesn't scroll
+   itself. The tabs and the toolbar (chips, search, count) stay put; only the item grid
+   scrolls in its own area, and the cart scrolls inside itself. On a narrow page (under
+   ~700px of content: 768px, sidebar open or collapsed) the cart sits under the grid instead. */
+
+.pos-tabs {
+    display: flex;
+    gap: 2px;
+    background: #4B6B42;
+    padding: 0;
+    margin: -24px -24px 20px -24px;
+}
+.pos-tabs a {
+    flex: 1;
+    height: 44px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: #fff;
+    background: #4B6B42;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-bottom: none;
+    border-radius: var(--radius-control) var(--radius-control) 0 0;
+    transition: background-color 0.15s ease;
+}
+.pos-tabs a:hover:not(.active) { background: rgba(255, 255, 255, 0.08); }
+.pos-tabs a.active { background: #F3F1EB; color: #1E2616; font-weight: 500; border: none; }
+
+/* ---- Page frame (Point of Sale tab only) ---- */
+.page-wrap.pos-page {
+    container: pos / inline-size;
+    display: flex; flex-direction: column; box-sizing: border-box;
+    height: 100%; min-height: 0; padding-bottom: 20px; overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+}
+.pos-page :is(button, input) { font-family: inherit; }
+/* This page doesn't scroll, so the tab bar needn't stick. Sticky inside .pos-page (which clips,
+   so it would be the sticky container) would keep it out of the page's 24px top padding: the tabs
+   would sit 24px under the green header and over the 20px gap below them. */
+.pos-page > .pos-tabs.sticky-tabs { position: relative; top: auto; }
+.pos-page > :not(.pos-layout) { flex: none; }
+.pos-layout {
+    flex: 1; min-height: 0;
+    display: grid; grid-template-columns: minmax(0, 1fr) clamp(300px, 30%, 380px); grid-template-rows: minmax(0, 1fr); gap: 20px;
+}
+.pos-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+
+/* ---- Toolbar: solid, so no card ever shows behind or between the chips ---- */
+.pos-toolbar {
+    flex: none; position: relative; z-index: 2;
+    background: #F2F0EA; border-bottom: 1px solid #E3E0D7; padding-bottom: 10px;
+}
+.pos-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.pos-chips button {
+    display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 16px; box-sizing: border-box;
+    border: 1px solid #D6D2C6; border-radius: 999px; background: #fff; color: #1F2617;
+    font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+.pos-chips button:hover:not(.active) { background: #F5F3EE; }
+.pos-chips button.active { background: #26331F; border-color: #26331F; color: #fff; }
+.pos-chips .pos-icon { flex-shrink: 0; }
+.inv-search.pos-search-box { min-height: 44px; height: 44px; padding: 0 14px; border-radius: 10px; }
+.pos-search-box input { font-size: 14px; color: #1F2617; }
+.pos-count { margin-top: 8px; color: #5C6152; font-size: 12.5px; }
+
+/* ---- Item grid: its own scroll area ---- */
+.pos-grid-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 14px 4px 6px 0; }
+.pos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 12px; }
+.pos-none { margin: 24px 0; color: #5C6152; font-size: 14px; text-align: center; }
+.pos-card {
+    display: flex; flex-direction: column; min-width: 0; min-height: 150px; box-sizing: border-box;
+    padding: 12px 14px 14px; border: 1px solid #E3E0D7; border-radius: 14px; background: #fff;
+    text-align: left; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease;
+}
+.pos-card:hover:not(.disabled) { border-color: #9DB98F; box-shadow: 0 4px 14px rgba(31, 38, 23, .08); }
+.pos-card.selected { border-color: #4A6741; }
+.pos-card.disabled { opacity: .55; cursor: not-allowed; }
+.pos-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.pos-card-icon {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 38px; height: 38px; border-radius: 10px; background: #EEF2EA; color: #3F5B37;
+}
+.pos-card-icon .pos-icon { width: 22px; height: 22px; }
+.pos-card .stock {
+    display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 600; white-space: nowrap; line-height: 1.35;
+}
+.pos-card .stock.green { background: #EAF1E3; color: #2F5A27; }
+.pos-card .stock.low   { background: #FCF1D8; color: #8A5A0B; }
+.pos-card .stock.out   { background: #EFEDE6; color: #6E7165; }
+/* Item name: at most two lines, then "…"; clamp-tip.js adds the full name as tooltip + aria-label. */
+.pos-card .name {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+    overflow: hidden; overflow-wrap: anywhere; color: #1F2617; font-size: 14.5px; font-weight: 600; line-height: 1.35;
+}
+.pos-card .name.name-clamped { cursor: help; }
+.pos-card .name.name-clamped:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: 2px; }
+.pos-card .sub { margin-top: 2px; color: #8A8D7E; font-size: 12px; }
+.pos-card .price { margin-top: auto; padding-top: 8px; color: #1F2617; font-size: 17px; font-weight: 700; }
+
+/* ---- Size picker ---- */
+.size-pick-list { display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; }
+.size-pick-btn {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    width: 100%; padding: 14px 16px; border: 1px solid #ddd; border-radius: var(--radius-control);
+    background: #fff; cursor: pointer; font-size: 15px; text-align: left;
+}
+.size-pick-btn:hover:not([disabled]) { border-color: #3d5230; background: #f7f9f5; }
+.size-pick-btn[disabled] { opacity: .5; cursor: not-allowed; background: #f3f3f1; }
+.size-pick-btn .sz { display: flex; flex-direction: column; font-weight: 800; font-size: 17px; min-width: 64px; }
+.size-pick-btn .sz-id { color: #8A8D7E; font-size: 12px; font-weight: 500; }
+.size-pick-btn .st { color: #777; font-size: 12.5px; flex: 1; }
+.size-pick-btn .pr { font-weight: 700; }
+
+/* ---- Cart: always in view, scrolls inside itself ---- */
+.cart-panel {
+    align-self: start; max-height: 100%; min-height: 0; overflow-y: auto; box-sizing: border-box;
+    background: #fff; border-radius: var(--radius-card); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.cart-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
+.cart-head .count { background: var(--sidebar-bg); color: #fff; border-radius: var(--radius-pill); padding: 2px 10px; font-size: 12px; margin-left: 6px; }
+.pos-clear {
+    height: 32px; padding: 0 12px; border: 1px solid #E2B8B2; border-radius: 8px; background: #fff; color: #A1261B;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color .15s ease;
+}
+.pos-clear:hover:not(:disabled) { background: #F8E3E0; }
+.pos-clear:disabled { background: #F5F3EE; border-color: #E3E0D7; color: #A9AB9F; cursor: not-allowed; }
+.cart-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 14px; }
+.cart-line .info { flex: 1; min-width: 0; }
+.cart-line .name { font-weight: 600; font-size: 14px; }
+.cart-line .price { color: #777; font-size: 12px; }
+.cart-line .badge-disc { display: inline-block; background: #fff3cd; color: #8a6300; border-radius: var(--radius-pill); padding: 1px 8px; font-size: 11px; font-weight: 700; margin-left: 6px; }
+/* − [qty] + in one 34px box; the number can be typed. */
+.cart-line .qty-ctrl {
+    display: inline-flex; align-items: stretch; height: 34px; box-sizing: border-box;
+    border: 1px solid #D6D2C6; border-radius: 8px; overflow: hidden; background: #fff;
+}
+.cart-line .qty-ctrl button { width: 28px; border: 0; background: #fff; color: #1F2617; font-size: 16px; line-height: 1; cursor: pointer; }
+.cart-line .qty-ctrl button:hover:not(:disabled) { background: #EAF1E3; }
+.cart-line .qty-ctrl button:disabled { color: #B9B6AC; cursor: not-allowed; }
+.cart-line .qty-input {
+    width: 46px; padding: 0 4px; border: 0; border-inline: 1px solid #E3E0D7; border-radius: 0;
+    text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; color: #1F2617; background: #fff;
+}
+:root .cart-line .qty-input:focus:not(#focus-boost) { outline: none; box-shadow: inset 0 0 0 2px #4A6741; border-color: transparent; }
+.cart-line .line-total { font-weight: 700; text-align: right; min-width: 64px; }
+.cart-line .line-total .line-disc { display: block; color: #b3261e; font-size: 11px; font-weight: 600; }
+.cart-line-note { flex-basis: 100%; color: #8A5A0B; font-size: 12px; }
+.cart-empty { text-align: center; color: #999; padding: 30px 0; }
+.cart-totals { border-top: 1px solid #333; padding-top: 10px; margin-top: 10px; }
+.cart-totals .row-line { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+.cart-totals .row-line.total { font-weight: 800; font-size: 17px; }
+.cart-totals .row-line.muted { color: #777; font-size: 12.5px; }
+.cart-totals .row-line.discount-row { color: #b3261e; }
+.cart-note { font-size: 11.5px; color: #888; margin: 8px 0 4px; line-height: 1.4; }
+.cart-change { background: var(--green-bg); border-radius: var(--radius-control); padding: 10px 14px; display: flex; justify-content: space-between; margin: 12px 0; }
+
+.pay-method-toggle { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+.pay-btn { padding: 10px 4px; border: 1px solid #ccc; border-radius: var(--radius-control); background: #fff; font-weight: 600; font-size: 13px; cursor: pointer; }
+.pay-btn.active { background: #3d5230; color: #fff; border-color: #3d5230; }
+.quick-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.quick-chip { border: 1px solid #ccc; background: #f7f6f2; border-radius: var(--radius-pill); padding: 4px 12px; font-size: 12.5px; cursor: pointer; }
+.quick-chip:hover { background: #eef0ea; }
+
+/* Narrow page: the cart under the grid, both still scrolling inside themselves. */
+@container pos (max-width: 700px) {
+    .pos-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 12px; }
+    .cart-panel { align-self: stretch; max-height: 36vh; }
+}
