@@ -115,15 +115,77 @@ final class StaffReorderAlertsTest extends CIUnitTestCase
         $this->assertStringContainsString('href="' . site_url('staff/reorder-alerts') . '?tab=dismissed"', $html);
     }
 
-    public function testNotifyOwnerIsTheStaffActionOnToOrderAndDismissed(): void
+    public function testNotifyOwnerIsTheStaffActionOnToOrderOnly(): void
     {
         $html = $this->staffPage();
 
-        $notify = '<button type="submit" class="btn btn-success btn-sm notify-btn" aria-label="Notify Owner: Patrol Cap">Notify Owner</button>';
+        $notify = '<button type="submit" class="btn btn-success btn-sm notify-btn" aria-label="Notify Owner: Whistle">Notify Owner</button>';
         $this->assertStringContainsString('action="' . site_url('staff/reorder-alerts/notify/' . $this->orderAlert) . '"', $html);
-        $this->assertStringContainsString('action="' . site_url('staff/reorder-alerts/notify/' . $this->dismissedAlert) . '"', $html, 'Dismissed is view-only, but Notify Owner still works there.');
         $this->assertStringContainsString($notify, $html);
-        $this->assertSame(4, substr_count($html, '>Notify Owner</button>'), 'One per size on To order (3) and Dismissed (1); none on Ordered.');
+        $this->assertSame(3, substr_count($html, '>Notify Owner</button>'), 'One per size on To order (3); none on Ordered or Dismissed.');
+    }
+
+    public function testTheDismissedTabIsViewOnlyForStaff(): void
+    {
+        $html = $this->staffPage('?tab=dismissed');
+        $this->assertSame(1, preg_match('#<section class="ra-panel" data-panel="dismissed".*?</section>#s', $html, $panel));
+
+        $this->assertStringContainsString('Patrol Cap', $panel[0]);
+        $this->assertMatchesRegularExpression("/Dismissed alerts stay here until the item(&#039;|')s stock is above Reorder at again\\./", $panel[0]);
+        $this->assertStringNotContainsString('Notify Owner', $panel[0]);
+        $this->assertStringNotContainsString('Owner notified', $panel[0]);
+        $this->assertStringNotContainsString('staff/reorder-alerts/notify/', $panel[0]);
+        $this->assertStringContainsString('<span class="ra-c-action">Action</span>', $panel[0]);
+        $this->assertMatchesRegularExpression('#<div class="ra-c-action ra-actions">\s*<span class="notify-dismissed">Dismissed by owner</span>\s*</div>#', $panel[0], 'Said the same way as on Staff Inventory.');
+    }
+
+    public function testTheOrderedTabShowsTheOrdersStatusToStaff(): void
+    {
+        $this->db->table('stock_order')->update(['status' => 'Preparing'], ['so_id' => 'SO-0001']);
+
+        $staff = $this->staffPage('?tab=ordered');
+        $this->assertSame(1, preg_match('#<section class="ra-panel" data-panel="ordered".*?</section>#s', $staff, $panel));
+        $this->assertStringContainsString('<span class="ra-c-action">Status</span>', $panel[0]);
+        $this->assertStringContainsString('<span class="ra-order-status">Preparing</span>', $panel[0], 'The real status, read-only.');
+        $this->assertStringNotContainsString('<a ', $panel[0]);
+
+        // The Owner's card is unchanged: View order, no status pill.
+        $owner = $this->ownerPage();
+        $this->assertStringContainsString('aria-label="View order SO-0001">View order</a>', $owner);
+        $this->assertStringNotContainsString('ra-order-status', $owner);
+    }
+
+    public function testStaffInventoryShowsDismissedByOwnerInsteadOfNotifyOwner(): void
+    {
+        $html = (string) $this->withSession(['isLoggedIn' => true, 'role' => 'Staff', 'user_id' => $this->staffId, 'username' => 'staff1', 'full_name' => 'Ana Cruz', 'last_activity' => time()])
+            ->get('staff/inventory?search=Patrol')->getBody();
+        $this->assertSame(1, preg_match('#<td class="inv-notify-cell col-actions">.*?</td>#s', $html, $cell), 'The Patrol Cap row.');
+
+        $this->assertStringContainsString('<span class="notify-dismissed" style="">Dismissed by owner</span>', $cell[0]);
+        $this->assertMatchesRegularExpression('#class="notify-form" style="display:none;"#', $cell[0], 'No Notify Owner.');
+        $this->assertMatchesRegularExpression('/(&quot;|")dismissed(&quot;|"):true/', $html, 'The size picker knows it too.');
+
+        // A size still waiting to be ordered keeps its Notify Owner.
+        $whistle = (string) $this->withSession(['isLoggedIn' => true, 'role' => 'Staff', 'user_id' => $this->staffId, 'username' => 'staff1', 'full_name' => 'Ana Cruz', 'last_activity' => time()])
+            ->get('staff/inventory?search=Whistle')->getBody();
+        $this->assertStringContainsString('<span class="notify-dismissed" style="display:none;">Dismissed by owner</span>', $whistle);
+        $this->assertMatchesRegularExpression('#class="notify-form" style="">#', $whistle);
+    }
+
+    public function testEveryNotifyRouteRefusesADismissedSize(): void
+    {
+        $session = ['isLoggedIn' => true, 'role' => 'Staff', 'user_id' => $this->staffId, 'username' => 'staff1', 'full_name' => 'Ana Cruz', 'last_activity' => time()];
+
+        foreach ([
+            'reorder-alerts' => fn () => $this->withSession($session)->post('staff/reorder-alerts/notify/' . $this->dismissedAlert),
+            'inventory'      => fn () => $this->withSession($session)->post('staff/inventory/notify/C-1'),
+            'dashboard'      => fn () => $this->withSession($session)->post('staff/dashboard/notify', ['item_id' => 'C-1']),
+        ] as $page => $press) {
+            $press();
+            $this->assertSame(['info', 'No notice sent', 'The owner dismissed this alert, so no notice was sent.'], [$_SESSION['toast']['type'] ?? null, $_SESSION['toast']['title'] ?? null, $_SESSION['toast']['message'] ?? null], $page);
+        }
+        $this->assertSame(0, $this->db->table('reorder_notices')->countAllResults(), 'No notice created.');
+        $this->assertSame(0, $this->db->table('notifications')->where('type', 'Reorder Point Notice')->countAllResults());
     }
 
     public function testNotifyOwnerTurnsIntoOwnerNotifiedAndOnlyNotifiesOnce(): void

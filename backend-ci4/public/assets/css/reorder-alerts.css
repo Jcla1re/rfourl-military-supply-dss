@@ -126,6 +126,8 @@
 /* Staff: "Notify Owner" (the shared .notify-btn, sized like the Owner's Order button), then
    "Owner notified" with who and when under it (partials/_reorder_board.php, role 'staff'). */
 .ra-notified { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 3px; min-width: 0; }
+/* Staff, Ordered tab: the order's status where the Owner has View order. */
+.ra-order-status { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; background: #EEF0EA; color: #3A4030; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .ra-notified-by { color: #5C6152; font-size: 11.5px; line-height: 1.35; text-align: right; white-space: normal; }
 
 /* Only shown when the columns they stand in for are hidden (below). */

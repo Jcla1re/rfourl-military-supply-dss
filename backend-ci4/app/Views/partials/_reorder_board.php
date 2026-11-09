@@ -10,8 +10,8 @@
 //   'admin': Order / Order all sizes / Dismiss (To order), Restore (Dismissed), View order
 //            (Ordered) and the Ordering Report button.
 //   'staff': Notify Owner, or "Owner notified" once any staff account notified the Owner
-//            about that size ($notices, ReorderNoticeModel::openFor), on To order and
-//            Dismissed. Nothing else.
+//            about that size ($notices, ReorderNoticeModel::openFor), on To order only.
+//            Ordered (the order's status) and Dismissed ("Dismissed by owner") are view-only.
 $role          = ($role ?? 'admin') === 'staff' ? 'staff' : 'admin';
 $isOwner       = $role === 'admin';
 $base          = $isOwner ? 'admin' : 'staff';
@@ -154,7 +154,7 @@ $lateBadge = static fn (int $days): string => $days > 0 ? '<span class="status-p
                     <span class="ra-c-size">Size</span>
                     <span class="ra-c-qty">Qty ordered</span>
                     <span class="ra-c-expected">Expected arrival</span>
-                    <span class="ra-c-action"><?= $isOwner ? 'Action' : '' ?></span>
+                    <span class="ra-c-action"><?= $isOwner ? 'Action' : 'Status' ?></span>
                 </div>
                 <?php foreach ($cards['ordered'] ?? [] as $order): ?>
                     <article class="ra-item ra-order-card" data-ra-card>
@@ -169,6 +169,8 @@ $lateBadge = static fn (int $days): string => $days > 0 ? '<span class="status-p
                             <div class="ra-c-expected"><span class="ra-expected"><?= esc($date($order['expected_date'])) ?></span><?= $lateBadge($order['late_days']) ?></div>
                             <div class="ra-c-action ra-actions">
                                 <?php if ($isOwner && $order['so_id']): ?><a class="btn btn-outline-secondary btn-sm" href="<?= site_url('admin/orders/' . $order['so_id']) ?>" aria-label="View order <?= esc($order['so_id'], 'attr') ?>">View order</a><?php endif; ?>
+                                <?php // Staff: the order's status (same names as the Orders page), read-only. ?>
+                                <?php if (! $isOwner && ! empty($order['status'])): ?><span class="ra-order-status"><?= esc($order['status']) ?></span><?php endif; ?>
                             </div>
                         </div>
                         <?php foreach ($order['sizes'] as $r): ?>
@@ -247,7 +249,10 @@ $lateBadge = static fn (int $days): string => $days > 0 ? '<span class="status-p
                                 <div class="ra-c-rop ra-num"><?= $rop($r) ?></div>
                                 <div class="ra-c-status"><?= $statusPill($r) ?></div>
                                 <div class="ra-c-action ra-actions">
-                                    <?php if (! $isOwner): ?>
+                                    <?php if (! $isOwner && $key !== 'order'): ?>
+                                        <?php // Dismissed: view-only for Staff, said the same way as on Staff Inventory. ?>
+                                        <span class="notify-dismissed">Dismissed by owner</span>
+                                    <?php elseif (! $isOwner): ?>
                                         <?php $notice = $notices[$r['item_id']] ?? null; ?>
                                         <?php if ($notice !== null): ?>
                                             <?php // Already notified for this size (any staff account or page): no second notification. ?>

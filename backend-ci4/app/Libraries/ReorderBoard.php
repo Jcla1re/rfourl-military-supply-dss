@@ -64,6 +64,7 @@ class ReorderBoard
 
             $order                 = $orders[$size['so_id'] ?? ''] ?? null;
             $row['order_date']     = $order['order_date'] ?? null;
+            $row['order_status']   = $order['status'] ?? null; // Order Confirmed / Preparing / Shipped
             $row['expected_date']  = $order['expected_delivery_date'] ?? null;
             $row['ordered_qty']    = $orderedQty[$size['so_id'] ?? ''][$size['item_id']] ?? null;
             $row['order_supplier'] = $suppliers[$order['supplier_id'] ?? '']['company_name'] ?? null;
@@ -176,14 +177,14 @@ class ReorderBoard
      * dates, so the cards keep that order. A size whose alert is Ordered without an order
      * number gets a card of its own.
      *
-     * @return list<array{so_id: string|null, supplier_name: string|null, order_date: string|null, expected_date: string|null, late_days: int, sizes: list<array>}>
+     * @return list<array{so_id: string|null, supplier_name: string|null, order_date: string|null, expected_date: string|null, late_days: int, status: string|null, sizes: list<array>}>
      */
     private static function orderCards(array $rows): array
     {
         $cards = [];
         foreach ($rows as $r) {
             $key = $r['so_id'] ?: 'item:' . $r['item_id'];
-            $cards[$key] ??= ['so_id' => $r['so_id'] ?: null, 'supplier_name' => $r['order_supplier'] ?? $r['supplier_name'], 'order_date' => $r['order_date'], 'expected_date' => $r['expected_date'], 'late_days' => (int) $r['late_days'], 'sizes' => []];
+            $cards[$key] ??= ['so_id' => $r['so_id'] ?: null, 'supplier_name' => $r['order_supplier'] ?? $r['supplier_name'], 'order_date' => $r['order_date'], 'expected_date' => $r['expected_date'], 'late_days' => (int) $r['late_days'], 'status' => $r['order_status'] ?? null, 'sizes' => []];
             $cards[$key]['sizes'][] = $r;
         }
         foreach ($cards as &$card) {

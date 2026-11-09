@@ -123,6 +123,27 @@ class ReorderAlertModel extends Model
     }
 
     /**
+     * The sizes the Owner dismissed (the board's Dismissed tab: at Reorder Now, not ordered,
+     * dismissed until the stock recovers), as item_id => true. Staff don't notify the Owner
+     * about these (Staff\NotifiesOwner, Staff Inventory, Staff Reorder Alerts).
+     *
+     * @param list<string>|null $itemIds only these sizes (null: all)
+     *
+     * @return array<string, true>
+     */
+    public function dismissedItemIds(?array $itemIds = null): array
+    {
+        $ids = [];
+        foreach ($this->reorderNowBoard() as $size) {
+            if ($size['tab'] === 'dismissed' && ($itemIds === null || in_array((string) $size['item_id'], array_map('strval', $itemIds), true))) {
+                $ids[(string) $size['item_id']] = true;
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
      * Stock 0 first, then the lowest stock compared with its reorder point, then
      * item name. Size and alert ID only keep the order the same between page loads.
      * A size with no reorder point can't be compared, so it goes last. Needs the

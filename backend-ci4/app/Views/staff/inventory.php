@@ -373,8 +373,11 @@ document.addEventListener('change', event => {
         // Already notified for that size (any staff account): "✓ Owner notified" instead.
         const notifyDone = row.querySelector('.notify-done');
         notifyDone.dataset.tip = target.notice || '';
-        notifyForm.style.display = needsReorder && !target.notice ? '' : 'none';
-        notifyDone.style.display = needsReorder && target.notice ? '' : 'none';
+        // The Owner dismissed that size's alert: "Dismissed by owner" instead of Notify Owner.
+        const notifyDismissed = row.querySelector('.notify-dismissed');
+        notifyDismissed.style.display = needsReorder && target.dismissed ? '' : 'none';
+        notifyForm.style.display = needsReorder && !target.dismissed && !target.notice ? '' : 'none';
+        notifyDone.style.display = needsReorder && !target.dismissed && target.notice ? '' : 'none';
         notifyNone.style.display = needsReorder ? 'none' : '';
     }
 });

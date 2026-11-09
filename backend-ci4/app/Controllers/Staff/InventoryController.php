@@ -6,6 +6,7 @@ namespace App\Controllers\Staff;
 use App\Controllers\BaseController;
 use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
+use App\Models\ReorderAlertModel;
 use App\Models\ReorderNoticeModel;
 
 class InventoryController extends BaseController
@@ -104,11 +105,13 @@ class InventoryController extends BaseController
         foreach ($products as $g) {
             $itemIds = array_merge($itemIds, array_column($g['variants'], 'item_id'));
         }
-        $notices = (new ReorderNoticeModel())->openFor($itemIds);
+        $notices   = (new ReorderNoticeModel())->openFor($itemIds);
+        $dismissed = $itemIds === [] ? [] : (new ReorderAlertModel())->dismissedItemIds($itemIds); // the Owner dismissed: no Notify Owner
         foreach ($products as &$g) {
             foreach ($g['variants'] as &$v) {
                 $n = $notices[$v['item_id']] ?? null;
-                $v['notice'] = $n && $v['status']['label'] === 'Reorder Now' && empty($v['open_so']) ? ReorderNoticeModel::tooltip($n) : null;
+                $v['notice']    = $n && $v['status']['label'] === 'Reorder Now' && empty($v['open_so']) ? ReorderNoticeModel::tooltip($n) : null;
+                $v['dismissed'] = isset($dismissed[(string) $v['item_id']]);
             }
             unset($v);
         }

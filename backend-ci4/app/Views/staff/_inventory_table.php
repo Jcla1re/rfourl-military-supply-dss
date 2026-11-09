@@ -48,6 +48,7 @@
                             'status_label'       => $v['status']['label'] ?? 'In Stock',
                             'open_so'            => $v['open_so'] ?? null,
                             'notice'             => $v['notice'] ?? null,
+                            'dismissed'          => ! empty($v['dismissed']),
                             'updated_at_display' => date('M j, Y', strtotime($v['updated_at'] ?? 'now')),
                         ], $variants);
                         ?>
@@ -77,15 +78,17 @@
                             <td class="inv-bar-cell"><div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% full"><span style="width: <?= $fill['pct'] ?>%"></span></div></td>
                             <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"<?= $pillTitle !== '' ? ' title="' . esc($pillTitle, 'attr') . '"' : '' ?>><?= esc($itemStatus) ?></span><?php if (! empty($group['on_order'])): ?> <span class="ordered-tag" title="On order: <?= esc($group['open_so']) ?>">Ordered</span><?php endif; ?></td>
                             <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
-                            <?php $needsReorder = $itemStatus === 'Reorder Now' && empty($group['on_order']); ?>
+                            <?php $needsReorder = $itemStatus === 'Reorder Now' && empty($group['on_order']); $ownerDismissed = $needsReorder && ! empty($default['dismissed']); ?>
                             <td class="inv-notify-cell col-actions">
-                                <form method="post" action="<?= site_url('staff/inventory/notify/' . $default['item_id']) ?>" class="notify-form" style="<?= $needsReorder && empty($default['notice']) ? '' : 'display:none;' ?>">
+                                <form method="post" action="<?= site_url('staff/inventory/notify/' . $default['item_id']) ?>" class="notify-form" style="<?= $needsReorder && ! $ownerDismissed && empty($default['notice']) ? '' : 'display:none;' ?>">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="return_query" value="<?= esc($_SERVER['QUERY_STRING'] ?? '') ?>">
                                     <button type="submit" class="notify-btn"<?= ! empty($default['size']) ? ' title="Notify about size ' . esc($default['size'], 'attr') . '"' : '' ?>>Notify Owner</button>
                                 </form>
                                 <?php /* Already notified (any staff account) and not ordered yet. Same box as Notify Owner: the hidden copy of that label sets the width. */ ?>
-                                <button type="button" class="notify-btn notify-done" aria-disabled="true" data-tip="<?= esc($default['notice'] ?? '', 'attr') ?>" style="<?= $needsReorder && ! empty($default['notice']) ? '' : 'display:none;' ?>"><span class="notify-done-sizer" aria-hidden="true">Notify Owner</span><span class="notify-done-label">Owner notified</span></button>
+                                <button type="button" class="notify-btn notify-done" aria-disabled="true" data-tip="<?= esc($default['notice'] ?? '', 'attr') ?>" style="<?= $needsReorder && ! $ownerDismissed && ! empty($default['notice']) ? '' : 'display:none;' ?>"><span class="notify-done-sizer" aria-hidden="true">Notify Owner</span><span class="notify-done-label">Owner notified</span></button>
+                                <?php /* The Owner dismissed this size's alert: no Notify Owner. */ ?>
+                                <span class="notify-dismissed" style="<?= $ownerDismissed ? '' : 'display:none;' ?>">Dismissed by owner</span>
                                 <?php /* Staff have no row actions (no ··· menu; "On order" shows as the Status column's Ordered tag): the empty placeholder only keeps the row as tall as admin's. */ ?>
                                 <span class="notify-none" style="<?= $itemStatus === 'Reorder Now' && empty($group['on_order']) ? 'display:none;' : '' ?>" aria-hidden="true"></span>
                             </td>
