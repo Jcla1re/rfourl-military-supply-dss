@@ -68,45 +68,64 @@ $followedUpToday = $followedUpToday ?? [];
 
 .ord-col-label { text-transform: uppercase; letter-spacing: .06em; color: #666; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
 
-.ord-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); padding: 20px; margin-bottom: 16px; }
+/* Order Status cards ("Orders — v2 restyle"). */
+.ord-card { background: #fff; border: 1px solid #E3E0D7; border-radius: 16px; padding: 18px 22px; margin-bottom: 16px; }
 .ord-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .ord-card-top .meta { color: #555; font-size: 13px; }
 .ord-card-top .title { font-weight: 600; font-size: 16px; margin: 2px 0; }
 .ord-card-top .sub { color: #777; font-size: 13px; }
 .ord-pills { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.priority-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 700; color: #4a4a4a; white-space: nowrap; }
-.priority-pill.overdue { background: var(--red-bg); color: var(--red-text); }
+.priority-pill { background: #EEF0EA; color: #3A4030; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.priority-pill.is-urgent { background: #F8E3E0; color: #A1261B; }
+.priority-pill.overdue { background: #FCF1D8; color: #8A5A0B; } /* amber, so it doesn't read as Urgent */
 
-.ord-stepper { display: flex; align-items: center; margin: 22px 6px 6px; }
-.ord-step { flex: 1; text-align: center; position: relative; }
+/* Stepper: every circle is centred in a 30px band, so the 3px line runs through the centres.
+   Done = 24px filled check, current = 22px green circle in a 30px light ring, upcoming = 14px hollow. */
+.ord-stepper { display: flex; align-items: flex-start; margin: 22px 6px 6px; position: relative; z-index: 0; }
+.ord-step { flex: 1; min-width: 0; text-align: center; position: relative; }
 .ord-step .dot {
-    width: 30px; height: 30px; border-radius: 50%; background: #e4e2dc; color: #6b6b6b;
-    display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 14px;
-    border: 2px solid #e4e2dc;
+    position: relative; z-index: 1; box-sizing: border-box; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; margin: 8px auto 18px; /* upcoming: 8 + 14 + 8 = 30, then 10px to the label */
+    background: #fff; border: 2px solid #D6D2C6; color: #fff;
 }
-.ord-step.done .dot, .ord-step.current .dot { background: var(--green-text); color: #fff; border-color: var(--green-text); }
-.ord-step span.label { font-size: 12px; color: #555; }
-.ord-step.current span.label { color: #1c1c1c; font-weight: 700; }
+.ord-step.done .dot { width: 24px; height: 24px; margin: 3px auto 13px; background: #4A6741; border: 0; font-size: 13px; }
+.ord-step.current .dot { width: 22px; height: 22px; margin: 4px auto 14px; background: #71AA60; border: 0; box-shadow: 0 0 0 4px #DCEBD5; font-size: 12px; }
+.ord-step span.label { display: block; font-size: 12.5px; line-height: 1.3; color: #8A8D7E; }
+.ord-step.done span.label { color: #3A4030; }
+.ord-step.current span.label { color: #1F2617; font-weight: 600; }
 .ord-line {
-    position: absolute; top: 15px; left: -50%; width: 100%; height: 3px; background: #e4e2dc; z-index: -1;
+    position: absolute; z-index: 0; top: 13.5px; left: -50%; width: 100%; height: 3px;
+    border-radius: 3px; background: #E6E3DA;
 }
 .ord-step:first-child .ord-line { display: none; }
-.ord-step.done .ord-line, .ord-step.current .ord-line { background: var(--green-text); }
+.ord-step.done .ord-line, .ord-step.current .ord-line { background: #4A6741; }
 
 .ord-info-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
-.ord-info-box { background: #eef0ea; border-radius: var(--radius-control); padding: 10px 14px; }
-.ord-info-box span { display: block; font-size: 12px; color: #3d5230; }
-.ord-info-box strong { font-size: 14px; }
+.ord-info-box { background: #F5F3EE; border-radius: 12px; padding: 10px 14px; min-width: 0; }
+.ord-info-box span { display: block; font-size: 12.5px; color: #5C6152; }
+.ord-info-box strong { display: block; font-size: 15px; font-weight: 600; color: #1F2617; }
+.ord-info-box strong.is-overdue { color: #8A5A0B; }
 
-.ord-actions { display: flex; gap: 10px; }
-.ord-actions form { flex: 1; }
-.ord-actions button { width: 100%; padding: 12px; border-radius: var(--radius-control); border: 1px solid #333; background: #fff; font-weight: 700; cursor: pointer; }
-.ord-actions button.cancel-order { width: auto; padding: 12px 18px; border-color: #A1261B; color: #A1261B; }
-.ord-actions button { white-space: nowrap; }
-.ord-actions .ord-follow { display: flex; flex-direction: column; gap: 4px; min-width: 132px; }
-.ord-actions button:disabled { opacity: .55; cursor: not-allowed; }
-.ord-followed { font-size: 12px; color: #5C6152; text-align: center; }
-.ord-note { margin: 10px 0 0; font-size: 13px; color: #777; }
+/* Buttons: one row, 44px. Mark as Done takes the rest; Follow up 150px; Cancel 110px. */
+.ord-actions { display: flex; align-items: stretch; gap: 10px; }
+.ord-actions .ord-follow { flex: 0 0 150px; margin: 0; }
+.ord-actions button {
+    width: 100%; height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid #D6D2C6; background: #fff; color: #1F2617;
+    font-family: inherit; font-size: 14.5px; font-weight: 600; white-space: nowrap; cursor: pointer;
+}
+.ord-actions button.ord-done { flex: 1 1 auto; min-width: 0; width: auto; }
+.ord-actions button.ord-done:not(:disabled) { background: #71AA60; border-color: #71AA60; color: #fff; }
+.ord-actions button.ord-done:not(:disabled):hover { background: #5F9850; border-color: #5F9850; }
+.ord-actions .ord-follow button:not(:disabled):hover { background: #F2F0EA; }
+.ord-actions button.cancel-order { flex: 0 0 110px; width: 110px; border-color: #E2B8B2; color: #A1261B; }
+.ord-actions button.cancel-order:is(:hover, :active) { background: #F8E3E0; }
+.ord-actions button:disabled { background: #F5F3EE; border-color: #E3E0D7; color: #9A9C90; cursor: not-allowed; }
+/* The followed-up note (.ord-followed): its own row, centred under Follow up (a 110px spacer stands in for Cancel). */
+.ord-followed-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+.ord-followed { flex: 0 0 150px; font-size: 12px; color: #5C6152; text-align: center; }
+.ord-followed-spacer { flex: 0 0 110px; }
+.ord-note { margin: 8px 0 0; font-size: 12.5px; color: #5C6152; }
 .hist-note { display: block; font-size: 12px; color: #777; margin-top: 4px; }
 
 .cal-card { background: #fff; border: 1px solid #e2e2e2; border-radius: var(--radius-card); padding: 18px; position: sticky; top: calc(var(--sticky-top, 0px) + 16px); }
@@ -165,7 +184,7 @@ $followedUpToday = $followedUpToday ?? [];
                                 </div>
                                 <div class="ord-pills">
                                     <?php if ($isOverdue): ?><span class="priority-pill overdue">Overdue</span><?php endif; ?>
-                                    <span class="priority-pill"><?= esc($priorityLabel) ?></span>
+                                    <span class="priority-pill<?= $priorityLabel === 'Urgent' ? ' is-urgent' : '' ?>"><?= esc($priorityLabel) ?></span>
                                 </div>
                             </div>
 
@@ -173,14 +192,14 @@ $followedUpToday = $followedUpToday ?? [];
                                 <?php foreach (['Order Confirmed', 'Preparing', 'Shipped', 'Delivered'] as $i => $label): ?>
                                     <div class="ord-step <?= $i < $stepIndex ? 'done' : ($i === $stepIndex ? 'current' : '') ?>">
                                         <div class="ord-line"></div>
-                                        <div class="dot"><?= $i <= $stepIndex ? '<i class="bi bi-check-lg"></i>' : ($i + 1) ?></div>
+                                        <div class="dot"><?= $i < $stepIndex ? '<i class="bi bi-check-lg" aria-hidden="true"></i>' : ($i === $stepIndex ? '<i class="bi bi-box-seam" aria-hidden="true"></i>' : '') ?></div>
                                         <span class="label"><?= esc($label) ?></span>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
 
                             <div class="ord-info-row">
-                                <div class="ord-info-box"><span>Delivery Due</span><strong><?= !empty($o['expected_delivery_date']) ? esc(date('M j, Y', strtotime($o['expected_delivery_date']))) : '—' ?></strong></div>
+                                <div class="ord-info-box"><span>Delivery Due</span><strong<?= $isOverdue ? ' class="is-overdue"' : '' ?>><?= !empty($o['expected_delivery_date']) ? esc(date('M j, Y', strtotime($o['expected_delivery_date']))) : '—' ?></strong></div>
                                 <div class="ord-info-box"><span>Order Date</span><strong><?= esc(date('M j, Y', strtotime($o['order_date']))) ?></strong></div>
                                 <div class="ord-info-box"><span>Tracking no.</span><strong><?= esc($o['tracking_no'] ?? '—') ?></strong></div>
                             </div>
@@ -195,15 +214,14 @@ $followedUpToday = $followedUpToday ?? [];
                                      quantities first (the checklist modal below), so this only
                                      unlocks once the order has actually been shipped. -->
                                 <?php if ($o['status'] === 'Shipped'): ?>
-                                    <button type="button" onclick="document.getElementById('confirmModal-<?= esc($o['so_id']) ?>').classList.add('show')">Mark as Done</button>
+                                    <button type="button" class="ord-done" onclick="document.getElementById('confirmModal-<?= esc($o['so_id']) ?>').classList.add('show')">Mark as Done</button>
                                 <?php else: ?>
-                                    <button type="button" disabled title="Available once the supplier ships this order">Mark as Done</button>
+                                    <button type="button" class="ord-done" disabled title="Available once the supplier ships this order">Mark as Done</button>
                                 <?php endif; ?>
                                 <?php // Asks the supplier for an update; once per order per day (StockOrderController::flagDelayed). ?>
                                 <form method="post" class="ord-follow" action="<?= site_url('admin/orders/flag-delayed/' . $o['so_id']) ?>">
                                     <?= csrf_field() ?>
                                     <button type="submit"<?= $followedUp ? ' disabled aria-describedby="followed-' . esc($o['so_id'], 'attr') . '"' : '' ?>>Follow up</button>
-                                    <?php if ($followedUp): ?><span class="ord-followed" id="followed-<?= esc($o['so_id'], 'attr') ?>">Followed up today</span><?php endif; ?>
                                 </form>
                                 <?php if (\App\Models\StockOrderModel::canCancel($o)): ?>
                                     <button type="button" class="cancel-order" data-cancel-order
@@ -214,6 +232,12 @@ $followedUpToday = $followedUpToday ?? [];
                                             data-status="<?= esc($o['status'], 'attr') ?>">Cancel</button>
                                 <?php endif; ?>
                             </div>
+                            <?php if ($followedUp): ?>
+                                <div class="ord-followed-row">
+                                    <span class="ord-followed" id="followed-<?= esc($o['so_id'], 'attr') ?>">Followed up today</span>
+                                    <?php if (\App\Models\StockOrderModel::canCancel($o)): ?><span class="ord-followed-spacer" aria-hidden="true"></span><?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                             <?php if ($o['status'] === 'Shipped'): ?>
                                 <p class="ord-note">Already shipped. Contact the supplier to refuse or return it on delivery.</p>
                             <?php endif; ?>

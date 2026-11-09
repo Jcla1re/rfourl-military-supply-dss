@@ -107,8 +107,9 @@ html:root select:not(.inv-size-select):not(:disabled):focus:hover {
 }
 /* Red outlined (danger) buttons: Archive (item dialog), Cancel order, Clear all, Remove, Decline.
    Hover/press fills them red with white text (no lift); keyboard focus keeps the red border
-   and shows a red ring instead of the green one. */
-:root :is(.btn-outline-danger, .im-btn-archive, .ord-actions button.cancel-order):is(:hover, :active):not(:disabled) {
+   and shows a red ring instead of the green one. Orders' Cancel order has its own light red
+   hover (admin/orders.php) and only shares the transition and the focus ring. */
+:root :is(.btn-outline-danger, .im-btn-archive):is(:hover, :active):not(:disabled) {
     background: #A1261B;
     border-color: #A1261B;
     color: #fff;

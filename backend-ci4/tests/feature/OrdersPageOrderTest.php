@@ -331,7 +331,9 @@ final class OrdersPageOrderTest extends CIUnitTestCase
         $this->assertSame(['info', 'You already followed up on SO-0001 today.'], [$_SESSION['toast']['type'], $_SESSION['toast']['title']]);
 
         $html = (string) $this->asOwner()->get('admin/orders')->getBody();
-        $this->assertMatchesRegularExpression('/<button type="submit" disabled aria-describedby="followed-SO-0001">Follow up<\/button>\s*<span class="ord-followed" id="followed-SO-0001">Followed up today<\/span>/', $html);
+        $this->assertStringContainsString('<button type="submit" disabled aria-describedby="followed-SO-0001">Follow up</button>', $html);
+        // Its own row under the buttons, with a spacer for Cancel so it lines up under Follow up.
+        $this->assertMatchesRegularExpression('/<div class="ord-followed-row">\s*<span class="ord-followed" id="followed-SO-0001">Followed up today<\/span>\s*<span class="ord-followed-spacer" aria-hidden="true"><\/span>/', $html);
     }
 
     public function testTheCardSaysFollowUpAndShowsOverdueWhenLate(): void
