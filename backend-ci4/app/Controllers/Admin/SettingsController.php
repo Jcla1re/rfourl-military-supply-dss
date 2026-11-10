@@ -7,6 +7,7 @@ use App\Libraries\DssRunner;
 use App\Libraries\SalesArchive;
 use App\Libraries\AttemptStore;
 use App\Libraries\DemoGuard;
+use App\Libraries\EmailNotifier;
 use App\Libraries\PasswordHistory;
 use App\Libraries\PasswordPolicy;
 use App\Libraries\StaffPasswordReset;
@@ -186,14 +187,37 @@ class SettingsController extends BaseController
 
         $update = [
             'full_name' => $this->request->getPost('full_name'),
-            'email'     => $this->request->getPost('email') ?: null,
+            'email'     => trim((string) $this->request->getPost('email')) ?: null,
             'phone'     => $this->request->getPost('phone') ?: null,
         ];
+        $oldEmail     = $user['email'] ?? null;
+        $emailChanged = strcasecmp((string) $oldEmail, (string) $update['email']) !== 0;
+
+        // Changing the email (the address Forgot password sends to) needs the current password,
+        // like the Supplier's login email. Name and number don't.
+        if ($emailChanged) {
+            if (AttemptStore::hit('owner_email_change_' . $userId, 600) > 5) {
+                return redirect()->to('/admin/settings?tab=profile')->with('error', 'Too many attempts. Please wait a few minutes and try again.');
+            }
+            if (! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
+                SecurityLogModel::log('email_change_failed', null, 'owner profile email: wrong current password');
+
+                return redirect()->to('/admin/settings?tab=profile')->with('error', 'Enter your current password to change your email.');
+            }
+        }
 
         $this->userModel->update($userId, $update);
         session()->set('full_name', $update['full_name']);
-        if (($user['email'] ?? null) !== $update['email']) {
+        if ($emailChanged) {
             SecurityLogModel::log('email_changed', null, 'owner profile email');
+            // The old address is told. No links, no codes.
+            if (! empty($oldEmail)) {
+                (new EmailNotifier())->toUser(
+                    ['email' => $oldEmail],
+                    'Your RfourL account email was changed',
+                    'The email on your RfourL owner account was changed on ' . date('M j, Y, g:i A') . ". If this wasn't you, contact support right away."
+                );
+            }
         }
 
         return redirect()->to('/admin/settings?tab=profile')->with('success', 'Profile updated.');
@@ -313,6 +337,10 @@ class SettingsController extends BaseController
         }
 
         $email = trim((string) $this->request->getPost('contact_email'));
+        // A staff email gets temporary passwords, so it can never be an Owner's.
+        if ($this->userModel->isAdminEmail($email)) {
+            return redirect()->to($back)->with('error', "That is the owner's email. Use the staff member's own email.");
+        }
         $reset = new StaffPasswordReset();
         $db    = db_connect();
 

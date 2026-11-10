@@ -42,6 +42,26 @@
         return on;
     }
 
+    // Every other password field (the app's own forms: change password, the Owner's Reset
+    // Password dialog, confirmations…) gets the same eye: the field goes into a .pw-wrap with the
+    // button right after it (pw-toggle.css). A field can opt out with data-no-pw-toggle.
+    document.querySelectorAll('input[type="password"]:not([data-no-pw-toggle])').forEach(input => {
+        const next = input.nextElementSibling;
+        if (next && next.classList.contains('pw-toggle')) return; // already has one in its markup
+        const wrap = document.createElement('span');
+        wrap.className = 'pw-wrap';
+        input.parentNode.insertBefore(wrap, input);
+        wrap.appendChild(input);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pw-toggle';
+        btn.setAttribute('aria-label', 'Show password');
+        btn.setAttribute('aria-pressed', 'false');
+        btn.tabIndex = -1;
+        btn.innerHTML = '<i class="bi bi-eye"></i>';
+        wrap.appendChild(btn);
+    });
+
     document.querySelectorAll('.pw-toggle').forEach(btn => {
         const input = btn.previousElementSibling;
         if (!input || input.tagName !== 'INPUT') return;

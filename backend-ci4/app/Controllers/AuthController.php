@@ -5,6 +5,7 @@ namespace App\Controllers;
 
 use App\Libraries\AttemptStore;
 use App\Libraries\DemoGuard;
+use App\Libraries\EmailNotifier;
 use App\Libraries\PasswordPolicy;
 use App\Libraries\StaffPasswordAlert;
 use App\Libraries\StaffPasswordReset;
@@ -88,8 +89,19 @@ class AuthController extends BaseController
         }
 
         // No username: the password identifies the staff member. Only active,
-        // non-removed Staff accounts are considered.
-        $matches = $this->userModel->staffMatchingPassword((string) $password, true);
+        // non-removed Staff accounts are considered. Exactly as typed first; if that matches
+        // nobody, without spaces or line breaks at the ends (copied from the temporary-password
+        // email). The policy allows such spaces, so a password that really has them still works.
+        $password = (string) $password;
+        $matches  = $this->userModel->staffMatchingPassword($password, true);
+        $trimmed  = trim($password);
+        if ($matches === [] && $trimmed !== $password && $trimmed !== '') {
+            $trimmedMatches = $this->userModel->staffMatchingPassword($trimmed, true);
+            if ($trimmedMatches !== []) {
+                $password = $trimmed;
+                $matches  = $trimmedMatches;
+            }
+        }
 
         if (count($matches) > 1) {
             // Old data can leave two accounts on the same password. Letting
@@ -476,6 +488,14 @@ class AuthController extends BaseController
         $resetUser = $this->userModel->find($userId);
         SecurityLogModel::log('password_reset', $resetUser, 'via emailed code');
 
+        // One email to this account's own address. No links, no codes.
+        (new EmailNotifier())->toUser(
+            $resetUser,
+            'Your RfourL password was changed',
+            'Your RfourL password was changed on ' . date('M j, Y, g:i A') . ". If this wasn't you, contact "
+                . ($role === 'admin' ? 'support' : 'the owner') . ' right away.'
+        );
+
         session()->remove(['pwd_reset_user_id', 'pwd_reset_role', 'pwd_reset_verified']);
 
         return redirect()->to("/login/{$role}")->with('success', 'Password reset. Please log in with your new password.');
@@ -538,6 +558,18 @@ class AuthController extends BaseController
             return $neutral;
         }
 
+        // A staff email that is also an Owner's email never gets a temporary password (the Owner
+        // would receive it). Nothing is sent; the Owner is told in the app to fix the address.
+        if ($this->userModel->isAdminEmail($staff['email'] ?? null)) {
+            SecurityLogModel::log('password_forgot_owner_email', $staff, "the staff email is the owner's; nothing sent");
+            StaffPasswordAlert::ownerNotice(
+                "{$staff['full_name']} tried to reset their password",
+                "{$staff['full_name']}'s email is the same as the owner's, so no temporary password was sent. Give them their own email in Manage Accounts, or reset the password there."
+            );
+
+            return $neutral;
+        }
+
         // No usable email: nothing to send, so the owner is told in the app.
         if (! StaffPasswordReset::usableEmail($staff['email'] ?? null)) {
             SecurityLogModel::log('password_forgot_no_email', $staff, 'no usable email on file');
@@ -582,7 +614,7 @@ class AuthController extends BaseController
             return false;
         }
 
-        $email = service('email');
+        $email = EmailNotifier::fresh();
         $email->setTo($user['email']);
         $email->setSubject('RfourL Military Supply — Your verification code');
         $email->setMessage(

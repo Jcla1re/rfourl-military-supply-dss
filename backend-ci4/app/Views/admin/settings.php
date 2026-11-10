@@ -200,13 +200,30 @@ $tabs = [
                     <div class="pf-row">
                         <div class="pf-field">
                             <label for="pfEmail">Email Address</label>
-                            <input id="pfEmail" name="email" type="email" value="<?= esc($admin['email'] ?? '') ?>">
+                            <input id="pfEmail" name="email" type="email" value="<?= esc($admin['email'] ?? '') ?>" data-original="<?= esc($admin['email'] ?? '', 'attr') ?>">
                         </div>
                         <div class="pf-field">
                             <label for="pfPhone">Contact Number</label>
                             <input id="pfPhone" name="phone" value="<?= esc($admin['phone'] ?? '') ?>" placeholder="e.g. 0917 123 4567">
                         </div>
                     </div>
+                    <?php // Shown once the email is edited: changing it needs the current password (SettingsController::updateAccount). ?>
+                    <div class="pf-field" id="pfEmailPwField" hidden>
+                        <label for="pfEmailPw">Current password (to change your email)</label>
+                        <input id="pfEmailPw" name="current_password" type="password" autocomplete="current-password">
+                    </div>
+                    <script>
+                    (function () {
+                        const email = document.getElementById('pfEmail'), field = document.getElementById('pfEmailPwField'), pw = document.getElementById('pfEmailPw');
+                        const sync = () => {
+                            const changed = email.value.trim().toLowerCase() !== (email.dataset.original || '').trim().toLowerCase();
+                            field.hidden = !changed;
+                            pw.required = changed;
+                        };
+                        email.addEventListener('input', sync);
+                        sync();
+                    })();
+                    </script>
                     <div class="pf-actions"><button type="submit" class="btn btn-success pf-save"<?= demo_lock_attr($admin ?? null) ?>>Save</button></div>
                 </form>
                     </div>

@@ -280,14 +280,20 @@ class StaffPasswordReset
             ? 'Your RfourL Military Supply staff account is ready.'
             : 'You asked to reset your RfourL Military Supply password.';
 
+        // Which account it is for (staff sign in by password alone), and that only the newest one works.
+        $account  = 'Account: ' . $staff['full_name'] . ' (' . ($staff['username'] ?? '') . ')';
+        $replaces = 'This replaces any earlier temporary password. Only the newest one works.';
+
         $html = "<div style=\"font-family:'Poppins',Arial,sans-serif;\"><p>Hi {$name},</p><p>{$intro}</p>"
+            . '<p>' . esc($account, 'html') . '</p>'
             . '<p>Your temporary password is:</p>'
             . '<p style="font-size:22px;font-weight:bold;letter-spacing:2px;">' . esc($password, 'html') . '</p>'
             . "<p>It works for {$hours} hours. Sign in with it, then you will be asked to set your own new password.</p>"
+            . '<p>' . esc($replaces, 'html') . '</p>'
             . '<p style="margin:24px 0;"><a href="' . htmlspecialchars($loginUrl, ENT_QUOTES) . '" style="background:#2f6431;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;">Sign in</a></p>'
             . "<p style=\"color:#888;font-size:12px;\">If you did not ask for this, you can ignore this email: your current password still works. Tell the owner if you are worried.</p></div>";
-        $plain = "Hi {$staff['full_name']},\n\n{$intro}\n\nYour temporary password is: {$password}\n\n"
-            . "It works for {$hours} hours. Sign in with it, then you will be asked to set your own new password.\n{$loginUrl}\n\n"
+        $plain = "Hi {$staff['full_name']},\n\n{$intro}\n\n{$account}\n\nYour temporary password is: {$password}\n\n"
+            . "It works for {$hours} hours. Sign in with it, then you will be asked to set your own new password.\n{$replaces}\n{$loginUrl}\n\n"
             . 'If you did not ask for this, you can ignore this email: your current password still works. Tell the owner if you are worried.';
 
         return (new EmailNotifier())->sendHtml($staff, $kind === self::KIND_INVITE ? 'Your staff account is ready' : 'Your temporary password', $html, $plain);

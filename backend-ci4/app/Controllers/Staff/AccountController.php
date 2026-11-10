@@ -87,6 +87,11 @@ class AccountController extends BaseController
         $email        = trim((string) $this->request->getPost('email'));
         $emailChanged = strcasecmp($email, (string) ($user['email'] ?? '')) !== 0;
 
+        // A staff email gets temporary passwords, so it can never be an Owner's.
+        if ($emailChanged && $this->userModel->isAdminEmail($email)) {
+            return redirect()->to($back)->with('error', "That email can't be used. Use your own email.");
+        }
+
         if ($emailChanged) {
             // Counted before the password is checked, so an open session can't be used to guess it.
             if (AttemptStore::hit('staff_email_change_' . $userId, self::WINDOW_SECONDS) > self::CODE_TRIES) {
@@ -174,8 +179,9 @@ class AccountController extends BaseController
             return redirect()->to($back)->with('error', 'Incorrect code, please try again.');
         }
 
-        // Someone else may have taken the address while the code was out.
-        if ($this->userModel->where('email', $p['email'])->where('user_id !=', $userId)->countAllResults() > 0) {
+        // Someone else may have taken the address while the code was out (or it became an Owner's).
+        if ($this->userModel->isAdminEmail($p['email'])
+            || $this->userModel->where('email', $p['email'])->where('user_id !=', $userId)->countAllResults() > 0) {
             session()->remove(self::PENDING_KEY);
 
             return redirect()->to($back)->with('error', 'That email is already used by another account.');

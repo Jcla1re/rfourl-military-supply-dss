@@ -13,6 +13,24 @@ use App\Models\UserModel;
  */
 class EmailNotifier
 {
+    /**
+     * The mailer, emptied for a new message. Every email in the app goes through this.
+     *
+     * service('email') is one shared object per request, and its clear() keeps the previous
+     * message's plain-text part (altMessage) and mail type. Without this reset, a plain email
+     * sent after an HTML one in the same request went out as HTML with the earlier message's
+     * text attached (e.g. the Owner's Lock link reaching a staff member's old address).
+     */
+    public static function fresh()
+    {
+        $email = service('email');
+        $email->clear(true);
+        $email->setAltMessage('');
+        $email->setMailType(config('Email')->mailType ?: 'text');
+
+        return $email;
+    }
+
     public function toUser(?array $user, string $subject, string $message): void
     {
         if (empty($user['email'])) {
@@ -20,7 +38,7 @@ class EmailNotifier
         }
 
         try {
-            $email = service('email');
+            $email = self::fresh();
             $email->setTo($user['email']);
             $email->setSubject($subject);
             $email->setMessage($message);
@@ -62,7 +80,7 @@ class EmailNotifier
         }
 
         try {
-            $email = service('email');
+            $email = self::fresh();
             $email->setTo($user['email']);
             $email->setSubject($subject);
             $email->setMailType('html');

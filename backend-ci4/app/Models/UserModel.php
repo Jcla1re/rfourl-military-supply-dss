@@ -100,6 +100,25 @@ class UserModel extends Model
      * rather than deleting the row (see AddDeletedAtToUsers), so every list or
      * picker of staff must go through here; report joins must not.
      */
+    /**
+     * True when $email (trimmed, any letter case) is an Owner's (Admin) email. A staff account
+     * may never use it: staff emails get temporary passwords.
+     */
+    public function isAdminEmail(?string $email): bool
+    {
+        $email = mb_strtolower(trim((string) $email));
+        if ($email === '') {
+            return false;
+        }
+        foreach ($this->where('role', 'Admin')->findAll() as $admin) {
+            if (mb_strtolower(trim((string) ($admin['email'] ?? ''))) === $email) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function activeStaff(): self
     {
         return $this->where('role', 'Staff')->where('deleted_at', null);

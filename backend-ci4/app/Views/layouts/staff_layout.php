@@ -18,6 +18,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="/assets/css/admin-theme.css" rel="stylesheet">
+    <link href="/assets/css/pw-toggle.css" rel="stylesheet">
     <?php // The one stock status rule (ProductModel::getStatus), shared with the browser. ?>
     <script>window.STOCK_RULE = <?= json_encode(\App\Models\ProductModel::statusRule()) ?>;</script>
     <script src="/assets/js/stock-status.js"></script>
@@ -183,5 +184,6 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
     <script src="/assets/js/custom-select.js"></script>
     <?= view('partials/_confirm_modal') ?>
     <script src="/assets/js/confirm-modal.js"></script>
+    <script src="/assets/js/pw-toggle.js"></script>
 </body>
 </html>

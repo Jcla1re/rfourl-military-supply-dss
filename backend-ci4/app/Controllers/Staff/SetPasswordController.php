@@ -37,7 +37,12 @@ class SetPasswordController extends BaseController
             return $this->expired($user);
         }
 
-        return view('staff/set_password', ['kind' => $user['temp_password_kind']]);
+        // Staff sign in by password alone: say whose account the temporary password opened.
+        return view('staff/set_password', [
+            'kind'     => $user['temp_password_kind'],
+            'fullName' => (string) $user['full_name'],
+            'username' => (string) $user['username'],
+        ]);
     }
 
     public function save()

@@ -54,12 +54,19 @@ class RoleAuthFilter implements FilterInterface
 
         if (! $active) {
             $archived = $user && $user['role'] === 'Supplier' && $user['is_active'];
+            // A staff account the Owner locked (inactive, not removed). The request stops here,
+            // before any controller runs, so a checkout posted after the lock records no sale.
+            $locked   = $user && $user['role'] === 'Staff' && ! $user['is_active'] && empty($user['deleted_at']);
+            $checkout = $request->getMethod() === 'POST' && preg_match('#(^|/)staff/sales/checkout$#', trim($request->getUri()->getPath(), '/')); // also behind index.php/
             $session->remove(['isLoggedIn', 'user_id', 'role', 'supplier_id']);
 
-            return redirect()->to('/login/' . strtolower($requiredRole ?? 'admin'))
-                ->with('error', $archived
-                    ? 'This supplier account is archived. Please contact the owner.'
-                    : 'This account has been deactivated.');
+            $message = match (true) {
+                $archived => 'This supplier account is archived. Please contact the owner.',
+                $locked   => 'Your account was locked by the Owner. Please contact the Owner.' . ($checkout ? ' Your last sale was not saved.' : ''),
+                default   => 'This account has been deactivated.',
+            };
+
+            return redirect()->to('/login/' . strtolower($requiredRole ?? 'admin'))->with('error', $message);
         }
 
         // On a temporary password, the only page a staff member can open is "set your own password".

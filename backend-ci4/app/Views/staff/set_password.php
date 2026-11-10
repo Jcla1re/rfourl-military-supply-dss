@@ -24,6 +24,9 @@ $invite   = ($kind ?? '') === 'invite';
 <?= view('partials/demo_banner') ?>
     <div class="auth-card">
         <h2>Set your password</h2>
+        <?php if (! empty($fullName)): ?>
+            <p class="auth-signed-in">Signed in as <strong><?= esc($fullName) ?></strong> (@<?= esc($username ?? '') ?>)</p>
+        <?php endif; ?>
         <p class="auth-hint"><?= $invite ? 'Welcome! Choose your own password to continue.' : 'Choose your own password to continue.' ?></p>
 
         <?php if ($errorMsg): ?>

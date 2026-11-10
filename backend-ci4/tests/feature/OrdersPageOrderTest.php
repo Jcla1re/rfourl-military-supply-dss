@@ -290,7 +290,8 @@ final class OrdersPageOrderTest extends CIUnitTestCase
         $text = 'RfourL is asking for an update on SO-0001 (due ' . date('M j', strtotime($due)) . ').';
         $note = $this->supplierNotes()[0];
         $this->assertSame(['Follow-up on SO-0001', $text], [$note['title'], $note['message']]);
-        $this->assertSame([['setTo' => 'supplier@example.test', 'setSubject' => 'Follow-up on SO-0001', 'setMessage' => $text]], $this->mailer->sent, 'The same text by email.');
+        $this->assertCount(1, $this->mailer->sent);
+        $this->assertSame(['setTo' => 'supplier@example.test', 'setSubject' => 'Follow-up on SO-0001', 'setMessage' => $text], array_intersect_key($this->mailer->sent[0], array_flip(['setTo', 'setSubject', 'setMessage'])), 'The same text by email.');
         $this->assertSame(['success', 'Follow-up sent to Tactical Gear Inc.'], [$_SESSION['toast']['type'], $_SESSION['toast']['title']]);
         $this->assertSame('Order Confirmed', $this->orders()[0]['status'], 'Nothing on the order changes.');
     }

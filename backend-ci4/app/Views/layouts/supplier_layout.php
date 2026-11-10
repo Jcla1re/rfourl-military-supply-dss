@@ -18,6 +18,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="/assets/css/admin-theme.css" rel="stylesheet">
+    <link href="/assets/css/pw-toggle.css" rel="stylesheet">
 <?= view('partials/demo_head') ?>
 </head>
 <body>
@@ -165,5 +166,6 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sup
     <script src="/assets/js/custom-select.js"></script>
     <?= view('partials/_confirm_modal') ?>
     <script src="/assets/js/confirm-modal.js"></script>
+    <script src="/assets/js/pw-toggle.js"></script>
 </body>
 </html>
