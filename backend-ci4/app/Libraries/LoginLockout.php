@@ -39,6 +39,12 @@ class LoginLockout
         }
     }
 
+    /** Wrong tries still allowed before the lock starts (3 at first, then 2, then 1). */
+    public function triesLeft(string $role): int
+    {
+        return max(0, self::MAX_ATTEMPTS - AttemptStore::count($this->key('attempts', $role)));
+    }
+
     public function reset(string $role): void
     {
         AttemptStore::forget($this->key('attempts', $role));

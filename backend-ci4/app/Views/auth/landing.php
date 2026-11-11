@@ -2,6 +2,7 @@
 // app/Views/auth/landing.php
 $attemptedRole = session()->getFlashdata('attempted_role');
 $errorMsg      = session()->getFlashdata('error');
+$triesLeft = (int) session()->getFlashdata('tries_left');
 $successMsg    = session()->getFlashdata('success');
 $lockout       = new \App\Libraries\LoginLockout();
 $lockedSeconds = [
@@ -129,7 +130,8 @@ $lockedSeconds = [
                 </form>
                 <?= view('partials/demo_credentials', ['role' => 'admin']) ?>
                 <?php if ($attemptedRole === 'admin' && $errorMsg): ?>
-                    <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
+                    <div class="auth-error"><?= esc((string) $errorMsg) ?>
+                        <?php if ($triesLeft > 0): ?><div class="auth-tries"><?= $triesLeft ?> <?= $triesLeft === 1 ? 'try' : 'tries' ?> left before sign-in is locked for <?= \App\Libraries\LoginLockout::LOCKOUT_SECONDS ?> seconds.</div><?php endif; ?></div>
                 <?php endif; ?>
                 <?php if ($attemptedRole === 'admin' && $successMsg): ?>
                     <div class="auth-success"><?= esc((string) $successMsg) ?></div>
@@ -161,7 +163,8 @@ $lockedSeconds = [
                 </form>
                 <?= view('partials/demo_credentials', ['role' => 'staff']) ?>
                 <?php if ($attemptedRole === 'staff' && $errorMsg): ?>
-                    <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
+                    <div class="auth-error"><?= esc((string) $errorMsg) ?>
+                        <?php if ($triesLeft > 0): ?><div class="auth-tries"><?= $triesLeft ?> <?= $triesLeft === 1 ? 'try' : 'tries' ?> left before sign-in is locked for <?= \App\Libraries\LoginLockout::LOCKOUT_SECONDS ?> seconds.</div><?php endif; ?></div>
                 <?php endif; ?>
             </div>
 
@@ -197,7 +200,8 @@ $lockedSeconds = [
                 </form>
                 <?= view('partials/demo_credentials', ['role' => 'supplier']) ?>
                 <?php if ($attemptedRole === 'supplier' && $errorMsg): ?>
-                    <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
+                    <div class="auth-error"><?= esc((string) $errorMsg) ?>
+                        <?php if ($triesLeft > 0): ?><div class="auth-tries"><?= $triesLeft ?> <?= $triesLeft === 1 ? 'try' : 'tries' ?> left before sign-in is locked for <?= \App\Libraries\LoginLockout::LOCKOUT_SECONDS ?> seconds.</div><?php endif; ?></div>
                 <?php endif; ?>
                 <?php if ($attemptedRole === 'supplier' && $successMsg): ?>
                     <div class="auth-success"><?= esc((string) $successMsg) ?></div>

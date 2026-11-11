@@ -232,7 +232,7 @@ $tabs = [
                 <div class="col-lg-5">
                     <div class="set-card h-100 mb-0">
                         <h5 class="pf-title">Account Details</h5>
-                        <div class="set-detail"><span>Username</span><strong><?= esc($admin['username'] ?? '—') ?></strong></div>
+                        <div class="set-detail"><span>Username</span><strong><?= esc($admin['username'] ?? '—') ?> <button type="button" class="btn btn-sm btn-outline-dark ms-2" data-bs-toggle="modal" data-bs-target="#ownerUsernameModal"<?= demo_lock_attr($admin ?? null) ?>>Change</button></strong></div>
                         <div class="set-detail"><span>Role</span><strong><?= esc($roleLabel) ?></strong></div>
                         <div class="set-detail"><span>Account Status</span><span class="status-pill acct <?= ! empty($admin['is_active']) ? 'green' : 'gray' ?>"><?= ! empty($admin['is_active']) ? 'Active' : 'Inactive' ?></span></div>
                         <div class="set-detail"><span>Member Since</span><strong><?= !empty($admin['created_at']) ? esc(date('F j, Y', strtotime($admin['created_at']))) : '—' ?></strong></div>
@@ -253,6 +253,29 @@ $tabs = [
                         <div class="col-md-6 col-xl-3"><button type="submit" class="btn btn-success pf-save w-100"<?= demo_lock_attr($admin ?? null) ?> style="padding:11px;">Change Password</button></div>
                     </div>
                 </form>
+            </div>
+
+            <div class="modal fade" id="ownerUsernameModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form method="post" action="<?= site_url('admin/settings/username') ?>">
+                            <?= csrf_field() ?>
+                            <div class="modal-header">
+                                <h5 class="modal-title">Change Username</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="set-field mb-3"><label for="ownerNewUsername">New username</label><input id="ownerNewUsername" name="username" value="<?= esc($admin['username'] ?? '', 'attr') ?>" pattern="[A-Za-z0-9_\-]+" minlength="4" maxlength="50" title="4 to 50 letters, numbers, _ or -" required autocomplete="username"></div>
+                                <div class="set-field mb-2"><label for="ownerUsernamePw">Current password</label><input id="ownerUsernamePw" name="current_password" type="password" required autocomplete="current-password"></div>
+                                <p class="text-muted small mb-0">Use the new username the next time you sign in.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
         <?php elseif ($tab === 'accounts'): ?>
@@ -304,6 +327,9 @@ $tabs = [
                         <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#resetStaffPwModal"
                                 data-action="<?= site_url('admin/settings/staff-accounts/password/' . $s['user_id']) ?>"
                                 data-name="<?= esc($s['full_name'], 'attr') ?>"<?= demo_lock_attr($s) ?>>Reset Password</button>
+                        <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#staffUsernameModal"
+                                data-action="<?= site_url('admin/settings/staff-accounts/username/' . $s['user_id']) ?>"
+                                data-name="<?= esc($s['full_name'], 'attr') ?>" data-username="<?= esc($s['username'], 'attr') ?>"<?= demo_lock_attr($s) ?>>Edit Username</button>
                         <form method="post" action="<?= site_url('admin/settings/staff-accounts/toggle/' . $s['user_id']) ?>"
                               data-confirm="<?= $s['is_active'] ? "They won't be able to sign in until you reactivate the account." : 'They will be able to sign in again with their password.' ?>"
                               data-confirm-title="<?= ($s['is_active'] ? 'Deactivate ' : 'Reactivate ') . esc($s['full_name'], 'attr') ?>?"
@@ -354,6 +380,36 @@ $tabs = [
                     document.getElementById('resetStaffPwName2').textContent = btn.dataset.name;
                     this.querySelectorAll('input[type=password]').forEach(function (i) { i.value = ''; });
                     document.getElementById('resetInformed').checked = false;
+                });
+            </script>
+
+            <div class="modal fade" id="staffUsernameModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form method="post" id="staffUsernameForm" action="">
+                            <?= csrf_field() ?>
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit Username &mdash; <span id="staffUsernameName"></span></h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="set-field mb-3"><label for="staffNewUsername">New username</label><input id="staffNewUsername" name="username" pattern="[A-Za-z0-9_\-]+" minlength="4" maxlength="50" title="4 to 50 letters, numbers, _ or -" required></div>
+                                <p class="text-muted small mb-0">Staff sign in with their password only, so this does not change how they sign in. They use the username for Forgot password.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <script>
+                document.getElementById('staffUsernameModal').addEventListener('show.bs.modal', function (e) {
+                    var btn = e.relatedTarget;
+                    document.getElementById('staffUsernameForm').action = btn.dataset.action;
+                    document.getElementById('staffUsernameName').textContent = btn.dataset.name;
+                    document.getElementById('staffNewUsername').value = btn.dataset.username;
                 });
             </script>
 

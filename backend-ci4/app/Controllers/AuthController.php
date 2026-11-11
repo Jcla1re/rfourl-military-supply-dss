@@ -228,12 +228,16 @@ class AuthController extends BaseController
 
         if ($seconds > 0) {
             return redirect()->to("/login/{$role}/forgot")
-                ->with('error', "Too many tries. Wait {$seconds} seconds or reset your password.");
+                ->with('error', 'Incorrect password. That was ' . LoginLockout::MAX_ATTEMPTS . " wrong tries in a row, so sign-in is locked. Wait {$seconds} seconds or reset your password.");
         }
 
         $message = 'Incorrect password. Please try again';
 
-        return redirect()->back()->with('error', $message)->with('attempted_role', $role);
+        // The text stays the same; the number of tries left is shown under it.
+        return redirect()->back()
+            ->with('error', $message)
+            ->with('tries_left', $this->lockout->triesLeft($role))
+            ->with('attempted_role', $role);
     }
 
     /** A user is active only if their own flag is on and, for suppliers, the supplier record is too. */

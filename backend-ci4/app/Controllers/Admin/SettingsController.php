@@ -241,6 +241,81 @@ class SettingsController extends BaseController
         return $this->changePasswordFor((int) $user['user_id'], 'owner');
     }
 
+    /** One rule set for every username change: 4-50 letters, digits, "_" or "-", not used by anyone else. */
+    private function usernameRules(int $exceptUserId): array
+    {
+        return [
+            ['username' => "required|min_length[4]|max_length[50]|alpha_dash|is_unique[users.username,user_id,{$exceptUserId}]"],
+            ['username' => ['is_unique' => 'That username is already taken.']],
+        ];
+    }
+
+    /**
+     * The owner changes their own username. Needs the current password, like a supplier changing theirs.
+     */
+    public function updateUsername()
+    {
+        $back = '/admin/settings?tab=profile';
+        $id   = (int) session()->get('user_id');
+        $user = $this->userModel->find($id);
+
+        if (DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse($back);
+        }
+        if (AttemptStore::hit('owner_username_change_' . $id, 600) > 5) {
+            return redirect()->to($back)->with('error', 'Too many attempts. Please wait a few minutes and try again.');
+        }
+        if (! $user || ! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
+            SecurityLogModel::log('username_change_failed', null, 'wrong current password');
+
+            return redirect()->to($back)->with('error', 'Current password is incorrect.');
+        }
+
+        [$rules, $messages] = $this->usernameRules($id);
+        if (! $this->validate($rules, $messages)) {
+            return redirect()->to($back)->with('error', implode(' ', $this->validator->getErrors()));
+        }
+
+        $new = trim((string) $this->request->getPost('username'));
+        // The data is checked above; the model's own username rule can't tell "this account" from another one on update.
+        $this->userModel->skipValidation(true)->update($id, ['username' => $new]);
+        $this->userModel->skipValidation(false);
+        session()->set('username', $new);
+        AttemptStore::forget('owner_username_change_' . $id);
+        SecurityLogModel::log('username_changed', $user, "{$user['username']} -> {$new}");
+
+        return redirect()->to($back)->with('success', 'Username updated. Use it the next time you sign in.');
+    }
+
+    /**
+     * The owner changes a staff member's username (not a removed account). No owner password: staff
+     * sign in with their password only, so the username is not a credential (it is used for Forgot password).
+     */
+    public function updateStaffUsername($userId)
+    {
+        $back  = '/admin/settings?tab=accounts';
+        $staff = $this->userModel->activeStaff()->find((int) $userId);
+
+        if (! $staff) {
+            return redirect()->to($back)->with('error', 'Staff account not found.');
+        }
+        if (DemoGuard::locksUser($staff)) {
+            return DemoGuard::refuse($back);
+        }
+
+        [$rules, $messages] = $this->usernameRules((int) $staff['user_id']);
+        if (! $this->validate($rules, $messages)) {
+            return redirect()->to($back)->with('error', implode(' ', $this->validator->getErrors()));
+        }
+
+        $new = trim((string) $this->request->getPost('username'));
+        $this->userModel->skipValidation(true)->update((int) $staff['user_id'], ['username' => $new]);
+        $this->userModel->skipValidation(false);
+        SecurityLogModel::log('username_changed', null, "staff: {$staff['username']} -> {$new} (by owner)");
+
+        return redirect()->to($back)->with('success', "{$staff['full_name']}'s username is now {$new}.");
+    }
+
     /**
      * The Owner sets a new password for a staff member (this also unlocks a locked account). The owner
      * proves who they are with their own password and ticks that they told the staff member. The password

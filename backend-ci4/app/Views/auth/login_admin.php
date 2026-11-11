@@ -1,6 +1,7 @@
 <?php
 // app/Views/auth/login_admin.php
 $errorMsg     = session()->getFlashdata('error');
+$triesLeft = (int) session()->getFlashdata('tries_left');
 $successMsg   = session()->getFlashdata('success');
 $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('admin');
 ?>
@@ -74,7 +75,8 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('admin');
                 </form>
                 <?= view('partials/demo_credentials', ['role' => 'admin']) ?>
                 <?php if ($errorMsg): ?>
-                    <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
+                    <div class="auth-error"><?= esc((string) $errorMsg) ?>
+                        <?php if ($triesLeft > 0): ?><div class="auth-tries"><?= $triesLeft ?> <?= $triesLeft === 1 ? 'try' : 'tries' ?> left before sign-in is locked for <?= \App\Libraries\LoginLockout::LOCKOUT_SECONDS ?> seconds.</div><?php endif; ?></div>
                 <?php endif; ?>
                 <?php if ($successMsg): ?>
                     <div class="auth-success"><?= esc((string) $successMsg) ?></div>

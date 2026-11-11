@@ -61,6 +61,12 @@
 }
 .pw-wrap > input { flex: 1 1 auto; width: 100%; min-width: 0; padding-right: 44px !important; }
 
+/* Microsoft Edge draws its own reveal (eye) and clear buttons inside password fields. Our eye is the
+   one to use, so Edge's are hidden (two eyes side by side otherwise). A field can opt out with
+   data-no-pw-toggle, which keeps the browser's own. */
+input[type="password"]:not([data-no-pw-toggle])::-ms-reveal,
+input[type="password"]:not([data-no-pw-toggle])::-ms-clear { display: none; }
+
 /* Lets pw-toggle.js notice a browser autofill (the value stays unreadable until the user
    interacts, but animationstart still fires). */
 @keyframes pw-autofill-start { from { opacity: 1; } to { opacity: 1; } }

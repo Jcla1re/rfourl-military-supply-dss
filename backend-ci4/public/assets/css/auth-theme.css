@@ -489,6 +489,8 @@ html, body.landing-body {
     color: #1c1c1c;
 }
 
+.auth-tries { margin-top: 4px; font-size: 0.78rem; font-weight: 500; opacity: 0.9; }
+
 .forgot-link-inline:hover {
     color: #4b6a3f;
 }

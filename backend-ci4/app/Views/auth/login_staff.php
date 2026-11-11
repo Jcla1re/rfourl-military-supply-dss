@@ -1,6 +1,7 @@
 <?php
 // app/Views/auth/login_staff.php
 $errorMsg      = session()->getFlashdata('error');
+$triesLeft = (int) session()->getFlashdata('tries_left');
 $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('staff');
 ?>
 <!DOCTYPE html>
@@ -66,7 +67,8 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('staff');
                 </form>
                 <?= view('partials/demo_credentials', ['role' => 'staff']) ?>
                 <?php if ($errorMsg): ?>
-                    <div class="auth-error"><?= esc((string) $errorMsg) ?></div>
+                    <div class="auth-error"><?= esc((string) $errorMsg) ?>
+                        <?php if ($triesLeft > 0): ?><div class="auth-tries"><?= $triesLeft ?> <?= $triesLeft === 1 ? 'try' : 'tries' ?> left before sign-in is locked for <?= \App\Libraries\LoginLockout::LOCKOUT_SECONDS ?> seconds.</div><?php endif; ?></div>
                 <?php endif; ?>
             </div>
         </div>

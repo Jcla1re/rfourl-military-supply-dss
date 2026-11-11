@@ -83,8 +83,10 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->post('settings/notification-preference', 'SettingsController::updateNotificationPreference');
     $routes->post('settings/account', 'SettingsController::updateAccount');
     $routes->post('settings/owner-password', 'SettingsController::changeOwnerPassword');
+    $routes->post('settings/username', 'SettingsController::updateUsername');
     $routes->post('settings/staff-accounts', 'SettingsController::addStaffAccount');
     $routes->post('settings/staff-accounts/password/(:segment)', 'SettingsController::resetStaffPassword/$1');
+    $routes->post('settings/staff-accounts/username/(:segment)', 'SettingsController::updateStaffUsername/$1');
     $routes->post('settings/staff-accounts/resend/(:segment)', 'SettingsController::resendStaffInvite/$1');
     $routes->post('settings/staff-accounts/toggle/(:segment)', 'SettingsController::deactivateStaff/$1');
     $routes->post('settings/staff-accounts/delete/(:segment)', 'SettingsController::deleteStaff/$1');
