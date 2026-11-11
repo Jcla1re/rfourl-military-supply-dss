@@ -122,6 +122,27 @@ $tabs = [
 .pf-row { display: grid; grid-template-columns: 3fr 2fr; gap: 18px; } /* long email addresses need the room */
 @media (max-width: 800px) { .pf-row { grid-template-columns: 1fr; } }
 .pf-actions { display: flex; justify-content: flex-end; margin-top: 20px; }
+.pf-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+.pf-head { min-height: 34px; }
+.pf-head .pf-title { margin: 0; }
+.pf-form .pf-row { margin-bottom: 18px; }
+/* Small square icon buttons (edit / change): transparent at rest, beige on hover and keyboard focus. */
+.pf-pen { width: 34px; height: 34px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: none; border-radius: 8px; background: transparent; color: #5C6152; font-size: 16px; line-height: 1; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
+.pf-pen:hover, .pf-pen:focus-visible { background: #F2F0EA; color: #1F2617; }
+.pf-pen:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; }
+.pf-pen:disabled { opacity: .55; cursor: not-allowed; }
+.pf-view[hidden], .pf-form[hidden] { display: none !important; }
+.set-detail .sec-val { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
+.set-detail .sec-val strong { word-break: break-all; }
+.sec-dots { letter-spacing: 3px; }
+.pf-cancel { background: #fff; }
+.pf-actions { gap: 10px; }
+@media (max-width: 576px) {
+    .pf-pen { width: 40px; height: 40px; }
+    .sec-val .btn, .pf-actions .btn { min-height: 40px; }
+    .set-detail { flex-wrap: wrap; }
+    .set-detail strong { font-size: 13px; }
+}
 .pf-save { background: #71AA60; border-color: #71AA60; }
 .pf-save:hover, .pf-save:focus { background: #5F9850; border-color: #5F9850; }
 .set-detail .status-pill { align-self: center; }
@@ -186,53 +207,86 @@ $tabs = [
                 </div>
             </div>
 
+            <?php
+            // A failed Personal Information save (bad or taken email, missing current password) reopens the card in edit mode.
+            $pfEdit = ! empty($error) && stripos((string) $error, 'email') !== false;
+            $pfVal  = static fn (string $key) => old($key, $admin[$key] ?? '');
+            ?>
             <div class="row g-3 mb-3">
                 <div class="col-lg-7">
-                    <div class="set-card h-100 mb-0">
-                        <h5 class="pf-title">Personal Information</h5>
-                <?php // Role isn't editable here (it's in the badge and Account Details); Save only sends name, email and phone. ?>
-                <form method="post" action="<?= site_url('admin/settings/account') ?>" class="pf-form">
-                    <?= csrf_field() ?>
-                    <div class="pf-field">
-                        <label for="pfFullName">Full Name</label>
-                        <input id="pfFullName" name="full_name" value="<?= esc($admin['full_name'] ?? '') ?>" required>
-                    </div>
-                    <div class="pf-row">
-                        <div class="pf-field">
-                            <label for="pfEmail">Email Address</label>
-                            <input id="pfEmail" name="email" type="email" value="<?= esc($admin['email'] ?? '') ?>" data-original="<?= esc($admin['email'] ?? '', 'attr') ?>">
+                    <div class="set-card h-100 mb-0" id="pfCard">
+                        <div class="pf-head">
+                            <h5 class="pf-title">Personal Information</h5>
+                            <button type="button" class="pf-pen" id="pfEditBtn" aria-label="Edit personal information" data-tooltip="Edit" data-tooltip-pos="above"<?= $pfEdit ? ' hidden' : '' ?><?= demo_lock_attr($admin ?? null) ?>><i class="bi bi-pencil" aria-hidden="true"></i></button>
                         </div>
-                        <div class="pf-field">
-                            <label for="pfPhone">Contact Number</label>
-                            <input id="pfPhone" name="phone" value="<?= esc($admin['phone'] ?? '') ?>" placeholder="e.g. 0917 123 4567">
+
+                        <div class="pf-view" id="pfView"<?= $pfEdit ? ' hidden' : '' ?>>
+                            <div class="set-detail"><span>Full Name</span><strong><?= esc($admin['full_name'] ?? '—') ?></strong></div>
+                            <div class="set-detail"><span>Email Address</span><strong><?= ($admin['email'] ?? '') !== '' ? esc($admin['email']) : '—' ?></strong></div>
+                            <div class="set-detail"><span>Contact Number</span><strong><?= ($admin['phone'] ?? '') !== '' ? esc($admin['phone']) : '—' ?></strong></div>
                         </div>
-                    </div>
-                    <?php // Shown once the email is edited: changing it needs the current password (SettingsController::updateAccount). ?>
-                    <div class="pf-field" id="pfEmailPwField" hidden>
-                        <label for="pfEmailPw">Current password (to change your email)</label>
-                        <input id="pfEmailPw" name="current_password" type="password" autocomplete="current-password">
-                    </div>
-                    <script>
-                    (function () {
-                        const email = document.getElementById('pfEmail'), field = document.getElementById('pfEmailPwField'), pw = document.getElementById('pfEmailPw');
-                        const sync = () => {
-                            const changed = email.value.trim().toLowerCase() !== (email.dataset.original || '').trim().toLowerCase();
-                            field.hidden = !changed;
-                            pw.required = changed;
-                        };
-                        email.addEventListener('input', sync);
-                        sync();
-                    })();
-                    </script>
-                    <div class="pf-actions"><button type="submit" class="btn btn-success pf-save"<?= demo_lock_attr($admin ?? null) ?>>Save</button></div>
-                </form>
+
+                        <?php // Role isn't editable here (it's in the badge and Account Details); Save only sends name, email and phone. ?>
+                        <form method="post" action="<?= site_url('admin/settings/account') ?>" class="pf-form" id="pfForm"<?= $pfEdit ? '' : ' hidden' ?>>
+                            <?= csrf_field() ?>
+                            <div class="pf-field">
+                                <label for="pfFullName">Full Name</label>
+                                <input id="pfFullName" name="full_name" value="<?= esc($pfVal('full_name'), 'attr') ?>" data-original="<?= esc($admin['full_name'] ?? '', 'attr') ?>" required>
+                            </div>
+                            <div class="pf-row">
+                                <div class="pf-field">
+                                    <label for="pfEmail">Email Address</label>
+                                    <input id="pfEmail" name="email" type="email" value="<?= esc($pfVal('email'), 'attr') ?>" data-original="<?= esc($admin['email'] ?? '', 'attr') ?>">
+                                </div>
+                                <div class="pf-field">
+                                    <label for="pfPhone">Contact Number</label>
+                                    <input id="pfPhone" name="phone" value="<?= esc($pfVal('phone'), 'attr') ?>" data-original="<?= esc($admin['phone'] ?? '', 'attr') ?>" placeholder="e.g. 0917 123 4567">
+                                </div>
+                            </div>
+                            <?php // Shown once the email is edited: changing it needs the current password (SettingsController::updateAccount). ?>
+                            <div class="pf-field" id="pfEmailPwField" hidden>
+                                <label for="pfEmailPw">Current password (to change your email)</label>
+                                <input id="pfEmailPw" name="current_password" type="password" autocomplete="current-password">
+                            </div>
+                            <div class="pf-actions">
+                                <button type="button" class="btn btn-outline-dark pf-cancel" id="pfCancelBtn">Cancel</button>
+                                <button type="submit" class="btn btn-success pf-save"<?= demo_lock_attr($admin ?? null) ?>>Save</button>
+                            </div>
+                        </form>
+                        <script>
+                        (function () {
+                            const card = document.getElementById('pfCard'), view = document.getElementById('pfView'), form = document.getElementById('pfForm');
+                            const edit = document.getElementById('pfEditBtn'), cancel = document.getElementById('pfCancelBtn');
+                            const email = document.getElementById('pfEmail'), field = document.getElementById('pfEmailPwField'), pw = document.getElementById('pfEmailPw');
+                            // The current password is only asked for when the email is changed.
+                            const sync = () => {
+                                const changed = email.value.trim().toLowerCase() !== (email.dataset.original || '').trim().toLowerCase();
+                                field.hidden = !changed;
+                                pw.required = changed;
+                            };
+                            const show = (editing) => {
+                                view.hidden = editing;
+                                form.hidden = !editing;
+                                edit.hidden = editing;
+                                if (editing) { document.getElementById('pfFullName').focus(); } else { edit.focus(); }
+                            };
+                            edit.addEventListener('click', () => show(true));
+                            cancel.addEventListener('click', () => {
+                                form.querySelectorAll('input[data-original]').forEach((i) => { i.value = i.dataset.original; });
+                                pw.value = '';
+                                sync();
+                                show(false);
+                            });
+                            email.addEventListener('input', sync);
+                            sync();
+                        })();
+                        </script>
                     </div>
                 </div>
 
                 <div class="col-lg-5">
                     <div class="set-card h-100 mb-0">
-                        <h5 class="pf-title">Account Details</h5>
-                        <div class="set-detail"><span>Username</span><strong><?= esc($admin['username'] ?? '—') ?> <button type="button" class="btn btn-sm btn-outline-dark ms-2" data-bs-toggle="modal" data-bs-target="#ownerUsernameModal"<?= demo_lock_attr($admin ?? null) ?>>Change</button></strong></div>
+                        <div class="pf-head"><h5 class="pf-title">Account Details</h5></div>
                         <div class="set-detail"><span>Role</span><strong><?= esc($roleLabel) ?></strong></div>
                         <div class="set-detail"><span>Account Status</span><span class="status-pill acct <?= ! empty($admin['is_active']) ? 'green' : 'gray' ?>"><?= ! empty($admin['is_active']) ? 'Active' : 'Inactive' ?></span></div>
                         <div class="set-detail"><span>Member Since</span><strong><?= !empty($admin['created_at']) ? esc(date('F j, Y', strtotime($admin['created_at']))) : '—' ?></strong></div>
@@ -241,19 +295,53 @@ $tabs = [
                 </div>
             </div>
 
-            <?php // Full width, fields side by side, so the card fills the row instead of leaving the right half empty. ?>
-            <div class="set-card">
-                <h5 class="pf-title">Change Password</h5>
-                <form method="post" action="<?= site_url('admin/settings/owner-password') ?>">
-                    <?= csrf_field() ?>
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-6 col-xl-3 set-field"><label for="pwCurrent">Current Password</label><input id="pwCurrent" name="current_password" type="password" required autocomplete="current-password"></div>
-                        <div class="col-md-6 col-xl-3 set-field"><label for="pwNew">New Password</label><input id="pwNew" name="new_password" type="password" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" required autocomplete="new-password"></div>
-                        <div class="col-md-6 col-xl-3 set-field"><label for="pwConfirm">Confirm New Password</label><input id="pwConfirm" name="confirm_password" type="password" required autocomplete="new-password"></div>
-                        <div class="col-md-6 col-xl-3"><button type="submit" class="btn btn-success pf-save w-100"<?= demo_lock_attr($admin ?? null) ?> style="padding:11px;">Change Password</button></div>
+            <div class="set-card" id="pfSecurity">
+                <h5 class="pf-title">Sign-in &amp; Security</h5>
+                <div class="set-detail">
+                    <span>Username</span>
+                    <div class="sec-val">
+                        <strong><?= esc($admin['username'] ?? '—') ?></strong>
+                        <button type="button" class="pf-pen" aria-label="Change username" data-tooltip="Change username" data-tooltip-pos="above" data-bs-toggle="modal" data-bs-target="#ownerUsernameModal"<?= demo_lock_attr($admin ?? null) ?>><i class="bi bi-pencil" aria-hidden="true"></i></button>
                     </div>
-                </form>
+                </div>
+                <div class="set-detail">
+                    <span>Password</span>
+                    <div class="sec-val">
+                        <strong class="sec-dots" aria-label="Hidden">••••••••</strong>
+                        <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#ownerPasswordModal"<?= demo_lock_attr($admin ?? null) ?>><i class="bi bi-key" aria-hidden="true"></i> Change password</button>
+                    </div>
+                </div>
+                <p class="text-muted small mb-0 mt-3">For your security, changing your username, email or password asks for your current password.</p>
             </div>
+
+            <div class="modal fade" id="ownerPasswordModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form method="post" action="<?= site_url('admin/settings/owner-password') ?>" id="ownerPasswordForm">
+                            <?= csrf_field() ?>
+                            <div class="modal-header">
+                                <h5 class="modal-title">Change Password</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="set-field mb-3"><label for="pwCurrent">Current password</label><input id="pwCurrent" name="current_password" type="password" required autocomplete="current-password"></div>
+                                <div class="set-field mb-3"><label for="pwNew">New password</label><input id="pwNew" name="new_password" type="password" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" required autocomplete="new-password"></div>
+                                <div class="set-field mb-2"><label for="pwConfirm">Confirm new password</label><input id="pwConfirm" name="confirm_password" type="password" required autocomplete="new-password"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-dark pf-cancel" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success pf-save"<?= demo_lock_attr($admin ?? null) ?>>Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <script>
+                // Nothing typed stays behind when the dialog is closed.
+                document.getElementById('ownerPasswordModal').addEventListener('hidden.bs.modal', function () {
+                    this.querySelectorAll('input').forEach(function (i) { i.value = ''; });
+                });
+            </script>
 
             <div class="modal fade" id="ownerUsernameModal" tabindex="-1">
                 <div class="modal-dialog">
