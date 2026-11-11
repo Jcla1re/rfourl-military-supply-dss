@@ -2,6 +2,8 @@
 
 namespace App\Libraries;
 
+use App\Models\ClusterSegmentModel;
+
 /**
  * The plain-language names the screens use for DSS terms, so every page says
  * the same thing: "Reorder At" instead of ROP and "Order Qty" instead of
@@ -39,7 +41,11 @@ class Glossary
         ],
         'abc' => [
             'label' => 'ABC classification',
-            'tip'   => 'The system groups items using K-Means clustering. Class A items get the most safety stock so they rarely run out.',
+            // Paragraphs: how the groups are made, then what each class is (ClusterSegmentModel).
+            'tip'   => 'The system groups items using K-Means clustering. ' . ClusterSegmentModel::GROUP_NOTE
+                . "\n\nA: " . ClusterSegmentModel::GROUPS['A'] . ' · ' . ClusterSegmentModel::SERVICE_LEVELS['A'] . '% availability target'
+                . "\n\nB: " . ClusterSegmentModel::GROUPS['B'] . ' · ' . ClusterSegmentModel::SERVICE_LEVELS['B'] . '% availability target'
+                . "\n\nC: " . ClusterSegmentModel::GROUPS['C'] . ' · ' . ClusterSegmentModel::SERVICE_LEVELS['C'] . '% availability target',
         ],
     ];
 

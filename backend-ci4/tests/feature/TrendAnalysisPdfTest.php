@@ -173,11 +173,15 @@ final class TrendAnalysisPdfTest extends CIUnitTestCase
         $this->assertLessThanOrEqual(100.0001, array_sum($d['abcClassTotals']));
         $classes = $d['report']['abc']['classes'];
         $this->assertSame(['A', 'B', 'C'], array_column($classes, 'class'));
-        $this->assertSame(['95%', '90%', '85%'], array_column($classes, 'service'));
+        $this->assertSame([
+            'Group with the highest average demand · 95% availability target',
+            'Group with medium average demand · 90% availability target',
+            'Group with the lowest average demand · 85% availability target',
+        ], array_column($classes, 'group'));
         $this->assertSame(['3', '5', '5'], array_column($classes, 'items'));
         $this->assertCount(3, $classes[0]['top']);
         $this->assertCount(5, $classes[1]['top']);
-        $this->assertStringContainsString('K-Means clustering using unit cost, average daily demand, demand variability, and supplier lead time.', $d['report']['abc']['sentence']);
+        $this->assertStringContainsString('Items are grouped by unit cost, daily demand, demand variability and lead time together. The class is a group, not a sales rank, so a best seller can be in any class.', $d['report']['abc']['sentence']);
         $this->assertStringContainsString('1 item sold', $d['report']['abc']['unclassedNote']);
     }
 

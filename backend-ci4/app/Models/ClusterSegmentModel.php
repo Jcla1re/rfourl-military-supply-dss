@@ -26,7 +26,22 @@ class ClusterSegmentModel extends Model
     /** Service level (%) each K-Means class is held to (capstone Objective 4): A 95, B 90, C 85. */
     public const SERVICE_LEVELS = ['A' => 95, 'B' => 90, 'C' => 85];
 
-    public const PRIORITY = ['A' => 'Highest priority', 'B' => 'Medium priority', 'C' => 'Lowest priority'];
+    /** What each K-Means group is, as shown to the user (with its availability target: description()). */
+    public const GROUPS = [
+        'A' => 'Group with the highest average demand',
+        'B' => 'Group with medium average demand',
+        'C' => 'Group with the lowest average demand',
+    ];
+
+    /** How the classes are made; shown with the ABC ⓘ (Glossary 'abc'), Help and the Trend Analysis PDF. */
+    public const GROUP_NOTE = 'Items are grouped by unit cost, daily demand, demand variability and lead time together. '
+        . 'The class is a group, not a sales rank, so a best seller can be in any class.';
+
+    /** "Group with the highest average demand · 95% availability target" */
+    public static function description(string $class): string
+    {
+        return self::GROUPS[$class] . ' · ' . self::SERVICE_LEVELS[$class] . '% availability target';
+    }
 
     /** Shown wherever an item has no K-Means class yet. */
     public const UNCLASSIFIED_NOTE = 'Run the DSS engine to classify this item.';

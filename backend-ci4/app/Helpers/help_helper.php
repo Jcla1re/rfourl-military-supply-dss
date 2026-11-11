@@ -6,7 +6,7 @@ if (! function_exists('help_tip')) {
      * (assets/js/help-tip.js starts the Bootstrap popover once per page).
      *
      *   <?= help_tip('Safety stock', 'Extra units kept for busy days.') ?>
-     *   <?= help_tip('A, B and C', ['A: best sellers (80% of sales)', 'B: the next 15%', 'C: the last 5%']) ?>
+     *   <?= help_tip('Delivery', ['Orders arrive in 3 to 5 days.', 'Track them on Orders.']) ?>
      *
      * $body: a string (blank lines start a new paragraph) or a list of short bullet points
  * (an item can also be a status line: ['name' => …, 'text' => …, 'dot' => green|amber|red|gray]).

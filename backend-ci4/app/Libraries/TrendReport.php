@@ -16,12 +16,6 @@ class TrendReport
 
     private const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-    private const MEANINGS = [
-        'A' => 'Highest priority: keep the highest safety stock (95% service level).',
-        'B' => 'Medium priority: keep a medium safety stock (90% service level).',
-        'C' => 'Lowest priority: keep the lowest safety stock (85% service level).',
-    ];
-
     /**
      * @param array<string, mixed> $d
      *
@@ -321,17 +315,15 @@ class TrendReport
         $shares  = $d['abcClassTotals'] ?? ['A' => 0.0, 'B' => 0.0, 'C' => 0.0];
         $unclass = (int) ($d['abcUnclassified'] ?? 0);
         $byClass = $d['abcByClass'] ?? ['A' => [], 'B' => [], 'C' => []];
-        $svc     = ClusterSegmentModel::SERVICE_LEVELS;
 
         $classes = [];
         foreach (['A', 'B', 'C'] as $c) {
             $classes[] = [
                 'class'    => $c,
                 'items'    => number_format((int) ($counts[$c] ?? 0)),
-                'priority' => ClusterSegmentModel::PRIORITY[$c],
-                'service'  => $svc[$c] . '%',
+                // "Group with the highest average demand · 95% availability target"
+                'group'    => ClusterSegmentModel::description($c),
                 'share'    => number_format((float) ($shares[$c] ?? 0), 1) . '%',
-                'meaning'  => self::MEANINGS[$c],
                 'top'      => array_map(static fn ($it) => [
                     'rank'  => $it['rank'],
                     'label' => $it['label'] . ($it['show_code'] ? ' [' . $it['code'] . ']' : ''),
@@ -357,7 +349,7 @@ class TrendReport
             'unclassedNote' => $unclass > 0
                 ? number_format($unclass) . ' ' . ($unclass === 1 ? 'item sold' : 'items sold') . " in {$year} " . ($unclass === 1 ? 'has' : 'have') . ' no class yet (run the DSS engine); their sales are not in these shares.'
                 : '',
-            'sentence'   => 'Items are grouped by K-Means clustering using unit cost, average daily demand, demand variability, and supplier lead time.',
+            'sentence'   => 'The system groups items using K-Means clustering. ' . ClusterSegmentModel::GROUP_NOTE,
             'shareNote'  => "Share of sales is each class's part of the {$year} sales value (quantity × selling price).",
         ];
     }
@@ -382,7 +374,7 @@ class TrendReport
             'howTo'  => [
                 'Daily sales' => 'the average number of units sold per day.',
                 'Safety stock' => 'extra units kept to cover changes in demand during the supplier lead time.',
-                'Class' => 'the ABC group from the K-Means clustering (A = highest priority, C = lowest).',
+                'Class' => 'the ABC group from the K-Means clustering (A = highest average demand, C = lowest). A group, not a sales rank.',
             ],
         ];
     }

@@ -148,15 +148,19 @@ final class TrendReportTest extends CIUnitTestCase
         $this->assertSame('–', TrendReport::build($d)['monthly']['rows'][0]['pct']);
     }
 
-    public function testAClassTableCarriesPriorityServiceLevelShareAndMeaning(): void
+    public function testAClassTableDescribesEachGroupAndItsShare(): void
     {
         $abc = TrendReport::build($this->pageData())['abc'];
 
         $this->assertSame(['A', 'B', 'C'], array_column($abc['classes'], 'class'));
-        $this->assertSame(['Highest priority', 'Medium priority', 'Lowest priority'], array_column($abc['classes'], 'priority'));
-        $this->assertSame(['95%', '90%', '85%'], array_column($abc['classes'], 'service'));
+        $this->assertSame([
+            'Group with the highest average demand · 95% availability target',
+            'Group with medium average demand · 90% availability target',
+            'Group with the lowest average demand · 85% availability target',
+        ], array_column($abc['classes'], 'group'));
         $this->assertSame(['60.5%', '30.0%', '9.5%'], array_column($abc['classes'], 'share'));
-        $this->assertSame('Highest priority: keep the highest safety stock (95% service level).', $abc['classes'][0]['meaning']);
+        $this->assertStringContainsString('The class is a group, not a sales rank, so a best seller can be in any class.', $abc['sentence']);
+        $this->assertStringNotContainsStringIgnoringCase('priority', json_encode($abc['classes']));
         $this->assertSame('Patrol Shirt (M)', $abc['classes'][0]['top'][0]['label']);
         $this->assertSame('30.3%', $abc['classes'][0]['top'][0]['pct']);
     }

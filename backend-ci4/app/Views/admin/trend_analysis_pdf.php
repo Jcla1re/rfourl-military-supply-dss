@@ -154,16 +154,14 @@ $notFiltered = $scoped ? '<p class="note">Not filtered by item: this section sho
     <div class="chart"><img src="<?= $r['abc']['chart'] ?>" width="680" alt="Number of items in each ABC class"></div>
     <table class="data">
         <thead>
-            <tr><th>Class</th><th class="num">Items</th><th>Priority</th><th class="num">Service level</th><th class="num">Share of sales (<?= esc($year) ?>)</th><th>Meaning</th></tr>
+            <tr><th>Class</th><th class="num">Items</th><th>Group</th><th class="num">Share of sales (<?= esc($year) ?>)</th></tr>
         </thead>
         <?php foreach ($r['abc']['classes'] as $i => $c): ?>
             <tr class="<?= $i % 2 ? 'alt' : '' ?>">
                 <td><span class="badge"><?= esc($c['class']) ?></span></td>
                 <td class="num"><?= esc($c['items']) ?></td>
-                <td><?= esc($c['priority']) ?></td>
-                <td class="num"><?= esc($c['service']) ?></td>
+                <td><?= esc($c['group']) ?></td>
                 <td class="num"><?= esc($c['share']) ?></td>
-                <td><?= esc($c['meaning']) ?></td>
             </tr>
         <?php endforeach; ?>
     </table>

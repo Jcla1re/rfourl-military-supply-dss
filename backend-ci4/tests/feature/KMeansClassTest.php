@@ -178,9 +178,23 @@ final class KMeansClassTest extends CIUnitTestCase
         $this->assertStringContainsString('ABC classification (K-Means)', $body);
         $this->assertStringContainsString('Grouped by cost, demand, demand variability and lead time.', $body);
         $this->assertStringContainsString('Number of items in each class', $body);
-        $this->assertStringContainsString('Highest priority, 95% service level', $body);
-        $this->assertStringContainsString('Medium priority, 90% service level', $body);
-        $this->assertStringContainsString('Lowest priority, 85% service level', $body);
+        $legend = [];
+        foreach ($x->query('//ul[contains(@class,"abc-meanings")]/li') as $li) {
+            $legend[] = preg_replace('/\s+/u', ' ', trim($li->textContent));
+        }
+        $this->assertSame([
+            'A1 items Group with the highest average demand · 95% availability target',
+            'B1 items Group with medium average demand · 90% availability target',
+            'C1 items Group with the lowest average demand · 85% availability target',
+        ], array_slice($legend, 0, 3));
+        // The (i) next to "ABC classification (K-Means)": how the groups are made, then A/B/C.
+        $tip = $x->query('//h6[contains(.,"ABC classification (K-Means)")]/button[contains(@class,"help-tip")]')->item(0);
+        $this->assertNotNull($tip);
+        $tipBody = html_entity_decode($tip->getAttribute('data-help-body'), ENT_QUOTES, 'UTF-8');
+        $this->assertStringContainsString('Items are grouped by unit cost, daily demand, demand variability and lead time together. The class is a group, not a sales rank, so a best seller can be in any class.', $tipBody);
+        $this->assertStringContainsString('C: Group with the lowest average demand · 85% availability target', $tipBody);
+        $this->assertStringNotContainsStringIgnoringCase('priority', $body);
+        $this->assertStringNotContainsString('service level', $body);
         $this->assertStringContainsString('Sales share', $body);
         $this->assertStringContainsString('Run the DSS engine to classify this item.', $body);
         $this->assertStringNotContainsString('% of sales value', $body, 'K-Means classes are not an 80/15/5 split of sales value');

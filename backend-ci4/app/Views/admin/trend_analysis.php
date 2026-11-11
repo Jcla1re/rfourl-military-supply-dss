@@ -357,7 +357,10 @@ foreach ($products as $p) {
     .abc-meanings strong {
         color: #1F2617;
         font-weight: 600;
-        min-width: 34px;
+        /* "N items" on one line and one width, so the group descriptions start in one column */
+        min-width: 72px;
+        flex-shrink: 0;
+        white-space: nowrap;
     }
 
     .abc-badge {
@@ -853,7 +856,6 @@ foreach ($products as $p) {
                     $abcUnclassified = $abcUnclassified ?? 0;
                     $classedTotal = array_sum($abcClassCounts ?? []);
                     $itemTotal = max(1, $classedTotal + $abcUnclassified);
-                    $svc = \App\Models\ClusterSegmentModel::SERVICE_LEVELS;
                     $abcByClass = $abcByClass ?? ['A' => [], 'B' => [], 'C' => []];
                     $abcClassCounts = $abcClassCounts ?? ['A' => 0, 'B' => 0, 'C' => 0];
                     $renderAbcRows = function (array $items) {
@@ -869,8 +871,8 @@ foreach ($products as $p) {
                                 <span class="abc-right">
                                     <span class="abc-share"><?= esc($shareText) ?></span>
                                     <span class="abc-cls"><?php if ($item['class']): ?><span class="abc-badge cls-<?= strtolower($item['class']) ?>"
-                                            title="Class <?= esc($item['class']) ?>, <?= (int) $item['service_level'] ?>% service level"
-                                            aria-label="Class <?= esc($item['class']) ?>, <?= (int) $item['service_level'] ?>% service level"><?= esc($item['class']) ?></span><?php else: ?><span class="abc-none" title="<?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?>" aria-label="<?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?>">&mdash;</span><?php endif; ?></span>
+                                            title="Class <?= esc($item['class']) ?>, <?= (int) $item['service_level'] ?>% availability target"
+                                            aria-label="Class <?= esc($item['class']) ?>, <?= (int) $item['service_level'] ?>% availability target"><?= esc($item['class']) ?></span><?php else: ?><span class="abc-none" title="<?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?>" aria-label="<?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?>">&mdash;</span><?php endif; ?></span>
                                 </span>
                             </div>
                             <?php
@@ -888,7 +890,7 @@ foreach ($products as $p) {
                     <ul class="abc-meanings">
                         <?php foreach (['A', 'B', 'C'] as $k): ?>
                             <li><span class="abc-badge cls-<?= strtolower($k) ?>"><?= $k ?></span><strong><?= number_format((int) $abcClassCounts[$k]) ?> items</strong>
-                                <?= esc(\App\Models\ClusterSegmentModel::PRIORITY[$k]) ?>, <?= (int) $svc[$k] ?>% service level</li>
+                                <?= esc(\App\Models\ClusterSegmentModel::description($k)) ?></li>
                         <?php endforeach; ?>
                         <?php if ($abcUnclassified): ?>
                             <li><span class="abc-badge cls-n">&mdash;</span><strong><?= number_format((int) $abcUnclassified) ?> items</strong>
@@ -952,8 +954,8 @@ foreach ($products as $p) {
                                 <th>Item</th>
                                 <th class="num">Daily sales</th>
                                 <th class="num"><?= \App\Libraries\Glossary::labelWithTip('safety_stock') ?></th>
-                                <th class="cls">Class <?= help_tip('Class and service level', [
-                                    'The K-Means class decides the service level: A 95%, B 90%, C 85%.',
+                                <th class="cls">Class <?= help_tip('Class and availability target', [
+                                    'The K-Means class decides the availability target: A 95%, B 90%, C 85%.',
                                     'That class sets the Z-score used for this item\'s Safety Stock.',
                                 ]) ?></th>
                             </tr>
@@ -969,8 +971,8 @@ foreach ($products as $p) {
                                     <td class="cls">
                                         <?php if (!empty($v['class'])): ?>
                                             <span class="abc-badge cls-<?= strtolower($v['class']) ?>"
-                                                title="Class <?= esc($v['class']) ?>, <?= (int) $v['service_level'] ?>% service level (used for this item's Safety Stock)"
-                                                aria-label="Class <?= esc($v['class']) ?>, <?= (int) $v['service_level'] ?>% service level"><?= esc($v['class']) ?></span>
+                                                title="Class <?= esc($v['class']) ?>, <?= (int) $v['service_level'] ?>% availability target (used for this item's Safety Stock)"
+                                                aria-label="Class <?= esc($v['class']) ?>, <?= (int) $v['service_level'] ?>% availability target"><?= esc($v['class']) ?></span>
                                         <?php else: ?><span class="abc-none" title="<?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?>" aria-label="<?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?>">&mdash;</span><?php endif; ?>
                                     </td>
                                 </tr>

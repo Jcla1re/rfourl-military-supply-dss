@@ -75,10 +75,11 @@ class HelpGuides
             [
                 'title' => 'Read the ABC classification',
                 'steps' => [
-                    'Open Trend Analysis in the menu.',
-                    'Find the ABC classification card.',
-                    'A items are your best sellers. Never let them run out.',
-                    'B items sell steadily. C items sell slowly, so order fewer.',
+                    'Open Trend Analysis in the menu and find the ABC classification card.',
+                    'A: Group with the highest average demand · 95% availability target',
+                    'B: Group with medium average demand · 90% availability target',
+                    'C: Group with the lowest average demand · 85% availability target',
+                    'Items are grouped by unit cost, daily demand, demand variability and lead time together. The class is a group, not a sales rank, so a best seller can be in any class.',
                     'Click All, A, B or C above the list to see one group.',
                     'The number on the left is the rank. 1 sells the most.',
                 ],
