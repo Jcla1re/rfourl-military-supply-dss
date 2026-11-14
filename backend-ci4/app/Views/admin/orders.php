@@ -129,6 +129,8 @@ $followedUpToday = $followedUpToday ?? [];
 .ord-followed-spacer { flex: 0 0 110px; }
 .ord-history-link { margin-left: 10px; font-size: 13px; font-weight: 500; color: #4A6741; }
 .ord-history-link:hover { color: #2F5A27; }
+.ord-doc-link { display: inline-block; margin-top: 4px; font-size: 12px; font-weight: 500; color: #4A6741; text-decoration: none; }
+.ord-doc-link:hover { color: #2F5A27; text-decoration: underline; }
 .ord-note { margin: 8px 0 0; font-size: 12.5px; color: #5C6152; }
 .hist-note { display: block; font-size: 12px; color: #777; margin-top: 4px; }
 
@@ -190,9 +192,10 @@ $followedUpToday = $followedUpToday ?? [];
                         <div class="ord-card">
                             <div class="ord-card-top">
                                 <div>
-                                    <div class="meta">#<?= esc($o['so_id']) ?> &middot; <?= esc($o['company_name'] ?? 'Unassigned') ?></div>
+                                    <div class="meta"><?= esc(\App\Models\StockOrderModel::label($o)) ?> &middot; <?= esc($o['company_name'] ?? 'Unassigned') ?></div>
                                     <div class="title"><?= esc($o['primary_item'] ?? 'Stock Order') ?></div>
                                     <div class="sub"><?= esc($o['total_units'] ?? 0) ?> units &middot; PEst: ₱<?= number_format($o['estimated'] ?? 0) ?></div>
+                                    <a class="ord-doc-link" href="<?= site_url('admin/orders/' . $o['so_id']) ?>#documents"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> Documents</a>
                                 </div>
                                 <div class="ord-pills">
                                     <?php if ($isOverdue): ?><span class="priority-pill overdue">Overdue</span><?php endif; ?>
@@ -238,7 +241,7 @@ $followedUpToday = $followedUpToday ?? [];
                                 <?php if (\App\Models\StockOrderModel::canCancel($o)): ?>
                                     <button type="button" class="cancel-order" data-cancel-order
                                             data-action="<?= site_url('admin/orders/cancel/' . $o['so_id']) ?>"
-                                            data-so="<?= esc($o['so_id'], 'attr') ?>"
+                                            data-so="<?= esc(\App\Models\StockOrderModel::label($o), 'attr') ?>"
                                             data-supplier="<?= esc($o['company_name'] ?? '', 'attr') ?>"
                                             data-items="<?= count($o['lines'] ?? []) ?>"
                                             data-status="<?= esc($o['status'], 'attr') ?>">Cancel</button>
@@ -259,7 +262,7 @@ $followedUpToday = $followedUpToday ?? [];
                         <div class="inv-modal" id="confirmModal-<?= esc($o['so_id']) ?>">
                             <div class="inv-modal-card" style="max-width:560px;">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h3 class="mb-0">Confirm Delivery &mdash; #<?= esc($o['so_id']) ?></h3>
+                                    <h3 class="mb-0">Confirm Delivery &mdash; <?= esc(\App\Models\StockOrderModel::label($o)) ?></h3>
                                     <button type="button" class="btn-close" onclick="this.closest('.inv-modal').classList.remove('show')"></button>
                                 </div>
                                 <p class="subtitle">Tick each item that arrived. It should match what the supplier shipped.</p>
@@ -366,13 +369,13 @@ $followedUpToday = $followedUpToday ?? [];
         <div class="page-panel">
             <table class="data-table">
                 <thead>
-                    <tr><th>Order ID</th><th>Supplier</th><th>Order Date</th><th>Delivered</th><th>Status</th></tr>
+                    <tr><th>PO No.</th><th>Supplier</th><th>Order Date</th><th>Delivered</th><th>Status</th></tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($historyOrders)): ?>
                         <?php foreach ($historyOrders as $o): ?>
                             <tr>
-                                <td><strong><?= esc($o['so_id']) ?></strong></td>
+                                <td><strong><?= esc(\App\Models\StockOrderModel::label($o)) ?></strong><br><a class="ord-doc-link" href="<?= site_url('admin/orders/' . $o['so_id']) ?>#documents"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> Documents</a></td>
                                 <td><?= esc($o['company_name'] ?? '—') ?></td>
                                 <td><?= esc(date('M j, Y', strtotime($o['order_date']))) ?></td>
                                 <td><?= !empty($o['actual_delivery_date']) ? esc(date('M j, Y', strtotime($o['actual_delivery_date']))) : '—' ?></td>

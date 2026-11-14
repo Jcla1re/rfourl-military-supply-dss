@@ -64,6 +64,7 @@ class ReorderBoard
 
             $order                 = $orders[$size['so_id'] ?? ''] ?? null;
             $row['order_date']     = $order['order_date'] ?? null;
+            $row['po_number']      = $order['po_number'] ?? null;
             $row['order_status']   = $order['status'] ?? null; // Order Confirmed / Preparing / Shipped
             $row['expected_date']  = $order['expected_delivery_date'] ?? null;
             $row['ordered_qty']    = $orderedQty[$size['so_id'] ?? ''][$size['item_id']] ?? null;
@@ -184,7 +185,7 @@ class ReorderBoard
         $cards = [];
         foreach ($rows as $r) {
             $key = $r['so_id'] ?: 'item:' . $r['item_id'];
-            $cards[$key] ??= ['so_id' => $r['so_id'] ?: null, 'supplier_name' => $r['order_supplier'] ?? $r['supplier_name'], 'order_date' => $r['order_date'], 'expected_date' => $r['expected_date'], 'late_days' => (int) $r['late_days'], 'status' => $r['order_status'] ?? null, 'sizes' => []];
+            $cards[$key] ??= ['so_id' => $r['so_id'] ?: null, 'po_number' => $r['po_number'] ?? null, 'supplier_name' => $r['order_supplier'] ?? $r['supplier_name'], 'order_date' => $r['order_date'], 'expected_date' => $r['expected_date'], 'late_days' => (int) $r['late_days'], 'status' => $r['order_status'] ?? null, 'sizes' => []];
             $cards[$key]['sizes'][] = $r;
         }
         foreach ($cards as &$card) {

@@ -5,6 +5,7 @@ namespace App\Controllers\Staff;
 
 use App\Controllers\BaseController;
 use App\Libraries\EmailNotifier;
+use App\Libraries\ProcurementDocs;
 use App\Models\InventoryLogModel;
 use App\Models\NotificationModel;
 use App\Models\ProductModel;
@@ -117,6 +118,7 @@ class LogTransactionController extends BaseController
     public function confirmRestock($soId)
     {
         $order = $this->stockOrderModel->find($soId);
+        $label = StockOrderModel::labelFor((string) $soId);
 
         if (! $order || $order['status'] !== 'Shipped') {
             return redirect()->to('/staff/log-transaction/restock')->with('error', 'Order not found or not ready to confirm.');
@@ -125,12 +127,12 @@ class LogTransactionController extends BaseController
         $this->stockOrderModel->markDelivered($soId, session()->get('user_id'));
 
         $staffName = session()->get('full_name') ?? 'A staff member';
-        $message   = "{$staffName} confirmed delivery for order {$soId}. Inventory has been updated.";
+        $message   = "{$staffName} confirmed delivery for order {$label}. Inventory has been updated.";
 
-        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} delivery confirmed", $message, null, 'order_status', "/admin/orders/{$soId}");
-        $this->emailNotifier->toRole('Admin', "Order {$soId} delivery confirmed", $message);
+        $this->notificationModel->push('Admin', 'Order Status', "Order {$label} delivery confirmed", $message, null, 'order_status', "/admin/orders/{$soId}");
+        $this->emailNotifier->toRole('Admin', "Order {$label} delivery confirmed", $message);
 
-        return redirect()->to('/staff/log-transaction/restock')->with('success', "Order {$soId} confirmed as delivered. Inventory updated.");
+        return redirect()->to('/staff/log-transaction/restock')->with('success', "Order {$label} confirmed as delivered. Inventory updated.");
     }
 
     public function store()

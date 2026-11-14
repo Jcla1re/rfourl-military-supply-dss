@@ -50,7 +50,8 @@
             <div class="dv-card">
                 <div class="dv-head">
                     <span class="badge-pill <?= $o['status'] === 'Preparing' ? 'preparing' : 'shipped' ?>"><?= $o['status'] === 'Preparing' ? 'Preparing' : 'In Transit' ?></span>
-                    <span class="fw-bold">#<?= esc($o['so_id']) ?></span>
+                    <span class="fw-bold"><?= esc(\App\Models\StockOrderModel::label($o)) ?></span>
+                    <?= view('partials/_order_docs', ['order' => $o, 'base' => 'supplier']) ?>
                     <?php if ($isOverdue): ?><span class="badge-pill" style="background:var(--red-bg); color:var(--red-text);">OVERDUE</span>
                     <?php elseif ($o['expected_delivery_date'] === date('Y-m-d')): ?><span class="badge-pill" style="background:var(--green-bg); color:var(--green-text);">DUE TODAY</span><?php endif; ?>
                     <span class="dispatched">Delivery due: <?= !empty($o['expected_delivery_date']) ? esc(date('M j, Y', strtotime($o['expected_delivery_date']))) : '—' ?></span>

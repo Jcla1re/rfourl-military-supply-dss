@@ -4,6 +4,7 @@ namespace App\Controllers\Supplier;
 
 use App\Controllers\BaseController;
 use App\Libraries\EmailNotifier;
+use App\Libraries\ProcurementDocs;
 use App\Models\NotificationModel;
 use App\Models\SoItemModel;
 use App\Models\StockOrderModel;
@@ -55,6 +56,7 @@ class DeliveriesController extends BaseController
     public function ship($soId)
     {
         $order = $this->stockOrderModel->find($soId);
+        $label = StockOrderModel::labelFor((string) $soId);
 
         if (! $order || $order['supplier_id'] !== session()->get('supplier_id')) {
             return redirect()->to('/supplier/deliveries')->with('error', 'Order not found.');
@@ -83,12 +85,13 @@ class DeliveriesController extends BaseController
             'status'      => 'Shipped',
             'tracking_no' => $trackingNo,
         ]);
+        ProcurementDocs::ensureNumbers($soId); // the Delivery Receipt number
 
         $message = 'Tracking no.: ' . ($trackingNo ?: 'not provided') . '. Items shipped: ' . implode(', ', $itemSummaries) . '.';
 
-        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} shipped out", $message, null, 'order_status', "/admin/orders/{$soId}");
-        $this->emailNotifier->toRole('Admin', "Order {$soId} shipped out", $message . ' Please confirm receipt once the delivery arrives.');
+        $this->notificationModel->push('Admin', 'Order Status', "Order {$label} shipped out", $message, null, 'order_status', "/admin/orders/{$soId}");
+        $this->emailNotifier->toRole('Admin', "Order {$label} shipped out", $message . ' Please confirm receipt once the delivery arrives.');
 
-        return redirect()->to('/supplier/deliveries')->with('success', "Order {$soId} marked as shipped out.");
+        return redirect()->to('/supplier/deliveries')->with('success', "Order {$label} marked as shipped out.");
     }
 }

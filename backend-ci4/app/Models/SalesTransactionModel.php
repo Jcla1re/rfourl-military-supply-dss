@@ -14,6 +14,7 @@ class SalesTransactionModel extends Model
 
     protected $allowedFields = [
         'receipt_no',
+        'or_number',
         'user_id',
         'sale_date',
         'payment_method',
@@ -26,6 +27,15 @@ class SalesTransactionModel extends Model
     ];
 
     protected $useTimestamps = false;
+
+    /**
+     * The official receipt / invoice number typed from the store's BIR booklet: optional, up to
+     * 30 letters, digits, dashes, slashes or spaces. The system's own receipt_no is not an official receipt.
+     */
+    public static function validOrNumber(string $value): bool
+    {
+        return (bool) preg_match('~^[A-Za-z0-9][A-Za-z0-9 /-]{0,29}$~', $value);
+    }
 
     /** The first receipt number the shop's invoice booklets started from. */
     public const FIRST_RECEIPT_NO = 1001;

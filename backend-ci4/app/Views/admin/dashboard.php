@@ -63,19 +63,6 @@ a.dash-stat:hover { box-shadow: 0 2px 8px rgba(31, 38, 23, .08); cursor: pointer
 }
 .chart-card h6 { font-weight: 700; font-size: 15px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
 
-.top-product-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
-.top-product-track { height: 8px; background: #e4e2dc; border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
-.top-product-track > span {
-    display: block; height: 100%; width: var(--w);
-    background: linear-gradient(90deg, #a8e063 0%, #56ab2f 50%, #2e7d32 100%); border-radius: 4px;
-    /* Opening animation: grows from 0 to its value, one bar after another. */
-    transition: width 0.9s ease-out;
-    transition-delay: calc(var(--i, 0) * 80ms);
-}
-.top-products.is-animating .top-product-track > span { width: 0; transition: none; }
-@media (prefers-reduced-motion: reduce) {
-    .top-product-track > span { transition: none; }
-}
 .sales-chart-wrap { position: relative; }
 .sales-chart-empty {
     position: absolute; inset: 0;
@@ -153,57 +140,12 @@ a.dash-stat:hover { box-shadow: 0 2px 8px rgba(31, 38, 23, .08); cursor: pointer
             <?php endif; ?>
         </div>
     </div>
-
-    <div class="row g-3">
-        <div class="col-md-6">
-            <div class="chart-card">
-                <h6>Items by Category</h6>
-                <div class="chart-fill"><canvas id="seasonChart"></canvas></div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="chart-card">
-                <h6>Top Sellers (All Time)</h6>
-                <?php if (empty($topProducts)): ?>
-                    <div class="text-muted small">No sales recorded yet.</div>
-                <?php else: ?>
-                    <?php $maxUnits = max(array_column($topProducts, 'units_sold')) ?: 1; ?>
-                    <div class="top-products">
-                    <?php foreach ($topProducts as $i => $p): ?>
-                        <div class="top-product-row">
-                            <span><?= esc($p['item_name']) ?></span>
-                            <strong><?= number_format($p['units_sold']) ?></strong>
-                        </div>
-                        <div class="top-product-track">
-                            <span style="--w: <?= round(($p['units_sold'] / $maxUnits) * 100) ?>%; --i: <?= (int) $i ?>"></span>
-                        </div>
-                    <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script src="/assets/js/count-up.js"></script>
 <script src="/assets/js/chart-reveal.js"></script>
 <script>
-// Opening animations play once, on page load only. Chart.js can redraw a
-// chart without animation while the page is still laying out (a resize
-// during creation), so the opening animation is replayed one frame later,
-// once the layout has settled. Animation is then turned off, so later
-// updates (new data, filters) redraw instantly.
-// Users who ask for reduced motion get no animation at all.
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const animateFirstLoadOnly = chart => {
-    if (reduceMotion) return chart;
-    requestAnimationFrame(() => {
-        chart.reset();   // back to the start state (bars at 0, line not drawn)
-        chart.update();  // play the opening animation
-        chart.options.animation = false; // the running animation keeps going; future updates are instant
-    });
-    return chart;
-};
 
 // Weekly Sales Trend: revealed left to right by revealPlugin
 // (assets/js/chart-reveal.js), not Chart.js's per-point animation.
@@ -248,46 +190,6 @@ new Chart(document.getElementById('weeklySalesChart'), {
     },
     plugins: [revealPlugin]
 });
-
-animateFirstLoadOnly(new Chart(document.getElementById('seasonChart'), {
-    type: 'bar',
-    data: {
-        labels: <?= json_encode($seasonLabels ?? []) ?>,
-        datasets: [{
-            data: <?= json_encode($seasonData ?? []) ?>,
-            backgroundColor: (ctx) => {
-                const { ctx: c, chartArea } = ctx.chart;
-                if (!chartArea) return '#56ab2f';
-                const g = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                g.addColorStop(0, '#2e7d32');
-                g.addColorStop(0.5, '#56ab2f');
-                g.addColorStop(1, '#a8e063');
-                return g;
-            },
-            borderRadius: 4
-        }]
-    },
-    options: {
-        maintainAspectRatio: false, // fills .chart-fill, which grows with the card
-        // Bars grow up from 0, one after another.
-        animation: reduceMotion ? false : {
-            duration: 900,
-            easing: 'easeOutQuart',
-            delay: ctx => ctx.type === 'data' && ctx.mode === 'default' ? ctx.dataIndex * 80 : 0
-        },
-        plugins: { legend: { display: false } },
-        scales: { y: { grid: { color: '#eee' } }, x: { grid: { display: false } } }
-    }
-}));
-
-// Top Sellers: bars grow from 0 to their value (CSS transition, 80 ms apart).
-(function () {
-    const list = document.querySelector('.top-products');
-    if (!list || reduceMotion) return;
-    list.classList.add('is-animating');
-    list.getBoundingClientRect(); // apply the 0-width start state first
-    requestAnimationFrame(() => list.classList.remove('is-animating'));
-})();
 
 initCountUp('.dash-stat .value');
 </script>

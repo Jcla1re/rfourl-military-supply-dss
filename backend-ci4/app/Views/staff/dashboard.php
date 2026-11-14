@@ -69,6 +69,11 @@ a.dash-stat:hover { box-shadow: 0 2px 8px rgba(31, 38, 23, .08); cursor: pointer
 .recent-row .amt { text-align: right; font-weight: 700; }
 .recent-row .amt small { display: block; font-weight: 400; color: #888; font-size: 11px; }
 
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.panel-head h6 { margin-bottom: 0; }
+.view-all { font-size: 13px; font-weight: 600; color: #2F5A27; text-decoration: none; white-space: nowrap; }
+.view-all:hover { text-decoration: underline; }
+.view-all:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; border-radius: 4px; }
 .qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; align-content: start; }
 @media (max-width: 575px) { .qa-grid { grid-template-columns: 1fr; } }
 .qa-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; padding: 18px 14px; border-radius: var(--radius-control); font-weight: 700; text-decoration: none; }
@@ -155,11 +160,14 @@ a.dash-stat:hover { box-shadow: 0 2px 8px rgba(31, 38, 23, .08); cursor: pointer
         </div>
         <div class="col-lg-6">
             <div class="panel-box">
-                <h6>Recent Transactions</h6>
+                <div class="panel-head">
+                    <h6>Recent Transactions</h6>
+                    <?php if (! empty($recentTransactions)): ?><a class="view-all" href="<?= site_url('staff/sales') . '?tab=receipts' ?>">View all</a><?php endif; ?>
+                </div>
                 <?php if (empty($recentTransactions)): ?>
                     <div class="panel-empty"><i class="bi bi-clock-history"></i>No sales yet.</div>
                 <?php else: ?>
-                    <?php foreach ($recentTransactions as $t): ?>
+                    <?php foreach (array_slice($recentTransactions, 0, 3) as $t): ?>
                         <div class="recent-row">
                             <div>
                                 <div class="name"><?php foreach ($t['items'] as $l): ?><?= esc($l['item_name'] ?? $l['item_id']) ?> x<?= esc($l['quantity_sold']) ?> <?php endforeach; ?></div>
@@ -176,11 +184,14 @@ a.dash-stat:hover { box-shadow: 0 2px 8px rgba(31, 38, 23, .08); cursor: pointer
     <div class="row g-3">
         <div class="col-lg-6">
             <div class="panel-box">
-                <h6>Low Stock Items</h6>
+                <div class="panel-head">
+                    <h6>Low Stock Items</h6>
+                    <?php if (! empty($lowStockItems)): ?><a class="view-all" href="<?= site_url('staff/reorder-alerts') ?>">View all</a><?php endif; ?>
+                </div>
                 <?php if (empty($lowStockItems)): ?>
                     <div class="text-muted small">All items are well stocked.</div>
                 <?php else: ?>
-                    <?php foreach ($lowStockItems as $li): ?>
+                    <?php foreach (array_slice($lowStockItems, 0, 3) as $li): ?>
                         <div class="lowstock-row">
                             <div>
                                 <div class="name"><?= esc($li['item_name']) ?></div>

@@ -58,7 +58,8 @@
     <?php else: ?>
         <?php foreach ($orders as $o): ?>
             <div class="lt-form-card">
-                <span class="lt-badge">#<?= esc($o['so_id']) ?> &middot; <?= esc($o['company_name'] ?? 'Unassigned') ?></span>
+                <span class="lt-badge"><?= esc(\App\Models\StockOrderModel::label($o)) ?> &middot; <?= esc($o['company_name'] ?? 'Unassigned') ?></span>
+                <?= view('partials/_order_docs', ['order' => $o, 'base' => 'staff']) ?>
 
                 <form method="post" action="<?= site_url('staff/log-transaction/restock-confirm/' . $o['so_id']) ?>">
                     <?= csrf_field() ?>

@@ -41,6 +41,33 @@ $selectedYear = (int) ($selectedYear ?? date('Y'));
 
 // Item picker labels: name, plus size when there is one, so same-name items
 // in different sizes can be told apart.
+// Tabs: kept in the URL (?tab=), together with the year and item filters.
+$taTabs = ['overview' => 'Overview', 'products' => 'Products', 'abc' => 'ABC classification', 'daily' => 'Daily demand'];
+$tab    = (string) service('request')->getGet('tab');
+$tab    = isset($taTabs[$tab]) ? $tab : 'overview';
+$tabUrl = static fn(string $t): string => site_url('admin/trend-analysis') . '?' . http_build_query(array_filter(
+    ['tab' => $t, 'year' => $selectedYear, 'item' => $selectedItem],
+    static fn($v) => $v !== '' && $v !== null
+));
+
+// Moved here from the Dashboard (Products tab): items per category and the all-time top sellers, the same figures.
+// One count per item (sizes of the same item grouped by name + category), active items only: the rule
+// ProductModel::countRowsByCategory() uses for Inventory's category tabs, without its stock-order lookups.
+$categoryCounts = array_fill_keys(\App\Models\ProductModel::CATEGORIES, 0);
+$seenItems      = [];
+foreach ((new \App\Models\ProductModel())->where('is_active', 1)->findAll() as $row) {
+    $key = $row['item_name'] . '|' . $row['category'];
+    if (isset($seenItems[$key])) {
+        continue;
+    }
+    $seenItems[$key] = true;
+    $categoryCounts[(string) $row['category']] = ($categoryCounts[(string) $row['category']] ?? 0) + 1;
+}
+$allTimeTop = array_map(
+    static fn($p) => ['item_name' => $p['item_name'] ?? $p['item_id'], 'units_sold' => (int) $p['units_sold']],
+    (new \App\Models\SalesItemModel())->topSellers(5)
+);
+
 $itemLabel = static fn(array $p): string => $p['item_name'] . (!empty($p['size']) ? ' · ' . $p['size'] : '');
 $selectedItemLabel = '';
 foreach ($products as $p) {
@@ -59,6 +86,7 @@ foreach ($products as $p) {
             <option value="<?= $y ?>" <?= $y == $selectedYear ? 'selected' : '' ?>><?= $y ?></option>
         <?php endforeach; ?>
     </select>
+    <input type="hidden" name="tab" value="<?= esc($tab) ?>">
     <input type="hidden" name="item" id="taItemValue" value="<?= esc($selectedItem) ?>">
     <div class="ta-item-picker">
         <i class="bi bi-search" aria-hidden="true"></i>
@@ -84,6 +112,14 @@ foreach ($products as $p) {
     .page-wrap.ta-page {
         font-family: 'Poppins', sans-serif;
     }
+
+    /* Tabs: plain links, so the tab is in the URL and survives a reload. */
+    .ta-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #dcdad2; flex-wrap: wrap; }
+    .ta-tab { padding: 10px 16px; font-size: 14px; font-weight: 600; color: #5C6152; text-decoration: none; border-bottom: 3px solid transparent; margin-bottom: -1px; border-radius: 8px 8px 0 0; }
+    .ta-tab:hover { color: #1F2617; background: #F2F0EA; }
+    .ta-tab:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; }
+    .ta-tab.active { color: #2F5A27; border-bottom-color: #4b6a3f; }
+    .ta-panel[hidden] { display: none !important; }
 
     /* Header filters (sit in the green top bar) */
     .ta-filters {
@@ -736,6 +772,13 @@ foreach ($products as $p) {
     $changePct = $changePct ?? null;
     $changeDir = $changePct === null ? 'flat' : ($changePct > 0.05 ? 'up' : ($changePct < -0.05 ? 'down' : 'flat'));
     ?>
+    <nav class="ta-tabs" aria-label="Trend Analysis sections">
+        <?php foreach ($taTabs as $key => $label): ?>
+            <a href="<?= esc($tabUrl($key), 'attr') ?>" class="ta-tab<?= $tab === $key ? ' active' : '' ?>"<?= $tab === $key ? ' aria-current="page"' : '' ?>><?= esc($label) ?></a>
+        <?php endforeach; ?>
+    </nav>
+
+    <section class="ta-panel" data-panel="overview"<?= $tab === 'overview' ? '' : ' hidden' ?>>
     <div class="row g-3 mb-1">
         <div class="col-sm-6 col-xl-3">
             <div class="ta-card">
@@ -793,7 +836,7 @@ foreach ($products as $p) {
     </div>
 
     <div class="row g-3 mt-1">
-        <div class="col-lg-8">
+        <div class="col-12">
             <div class="chart-card h-100">
                 <div class="card-head">
                     <div>
@@ -812,7 +855,12 @@ foreach ($products as $p) {
                 </div>
             </div>
         </div>
-        <div class="col-lg-4">
+    </div>
+    </section>
+
+    <section class="ta-panel" data-panel="products"<?= $tab === 'products' ? '' : ' hidden' ?>>
+    <div class="row g-3">
+        <div class="col-lg-6 col-xl-4">
             <div class="chart-card h-100 perf-card">
                 <div class="card-head">
                     <div>
@@ -838,10 +886,46 @@ foreach ($products as $p) {
                 <?php endif; ?>
             </div>
         </div>
+        <div class="col-lg-6 col-xl-4">
+            <div class="chart-card h-100">
+                <div class="card-head">
+                    <div>
+                        <h6>Items by category</h6>
+                        <p class="card-sub">Sizes listed in each category.</p>
+                    </div>
+                </div>
+                <div class="chart-fill"><canvas id="seasonChart" aria-label="Items by category chart" role="img"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6 col-xl-4">
+            <div class="chart-card h-100 perf-card">
+                <div class="card-head">
+                    <div>
+                        <h6>Top sellers (all time)</h6>
+                        <p class="card-sub">Items sold, whole shop.</p>
+                    </div>
+                </div>
+                <?php if (empty($allTimeTop)): ?>
+                    <div class="text-muted small">No sales recorded yet.</div>
+                <?php else: ?>
+                    <?php $allTimeMax = max(array_column($allTimeTop, 'units_sold')) ?: 1; ?>
+                    <div class="perf-list" id="allTimeTop">
+                        <?php foreach ($allTimeTop as $i => $t): ?>
+                            <div>
+                                <div class="perf-row"><span><?= esc($t['item_name']) ?></span><strong><?= number_format($t['units_sold']) ?></strong></div>
+                                <div class="perf-track"><span style="--w: <?= round(($t['units_sold'] / $allTimeMax) * 100) ?>%; --i: <?= (int) $i ?>"></span></div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
+    </section>
 
-    <div class="row g-3 mt-1 ta-pair">
-        <div class="col-lg-6">
+    <section class="ta-panel" data-panel="abc"<?= $tab === 'abc' ? '' : ' hidden' ?>>
+    <div class="row g-3">
+        <div class="col-12">
             <div class="chart-card">
                 <div class="card-head">
                     <div>
@@ -931,7 +1015,12 @@ foreach ($products as $p) {
                 <?php endif; ?>
             </div>
         </div>
-        <div class="col-lg-6">
+    </div>
+    </section>
+
+    <section class="ta-panel" data-panel="daily"<?= $tab === 'daily' ? '' : ' hidden' ?>>
+    <div class="row g-3">
+        <div class="col-12">
             <div class="chart-card">
                 <div class="card-head">
                     <div>
@@ -985,6 +1074,7 @@ foreach ($products as $p) {
             </div>
         </div>
     </div>
+    </section>
 </div>
 
 <script src="/assets/js/count-up.js"></script>
@@ -1219,6 +1309,25 @@ foreach ($products as $p) {
     updateVarScroll();
 
     initCountUp('.ta-card [data-count]');
+
+    // ---- Products tab: items per category (moved from the Dashboard) ---------------------------------
+    (function () {
+        const canvas = document.getElementById('seasonChart');
+        if (!canvas || canvas.closest('[hidden]')) return;
+        new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: <?= json_encode(array_keys($categoryCounts)) ?>,
+                datasets: [{ data: <?= json_encode(array_values($categoryCounts)) ?>, backgroundColor: '#56ab2f', borderRadius: 4 }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                animation: reduceMotion ? false : { duration: 900, easing: 'easeOutQuart' },
+                plugins: { legend: { display: false } },
+                scales: { y: { grid: { color: '#eee' }, ticks: { precision: 0 } }, x: { grid: { display: false } } }
+            }
+        });
+    })();
 </script>
 
 <?= $this->endSection() ?>

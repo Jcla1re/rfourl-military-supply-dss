@@ -148,6 +148,7 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
         <?= view('staff/_inventory_table', get_defined_vars()) ?>
 </div>
 
+<script src="/assets/js/inv-row-detail.js"></script>
 <script>
 // Rows per page + "return to the same page": the page, filters, search and
 // rows-per-page all live in the URL. Forms post the current query string as
@@ -334,6 +335,12 @@ function pillClassForStatus(label) {
     return stockStatusColor(label); // assets/js/stock-status.js
 }
 
+// The Item ID, Order qty, stock bar and Last updated live in the expandable detail row under each item row.
+function rowCell(row, selector) {
+    const detail = row.nextElementSibling;
+    return row.querySelector(selector) || (detail && detail.classList.contains('inv-detail') ? detail.querySelector(selector) : null);
+}
+
 document.addEventListener('change', event => {
     const select = event.target.closest('.inv-size-select');
     if (!select) return;
@@ -343,13 +350,13 @@ document.addEventListener('change', event => {
         const v = variants[select.value];
         if (!v) return;
 
-        row.querySelector('.inv-item-id').textContent = v.item_id;
+        rowCell(row, '.inv-item-id').textContent = v.item_id;
         row.querySelector('.inv-stock-cell').textContent = v.current_stock;
         row.querySelector('.inv-rop-cell').textContent = v.manual_rop_warning;
-        row.querySelector('.inv-updated-cell').textContent = v.updated_at_display || '—';
+        rowCell(row, '.inv-updated-cell').textContent = v.updated_at_display || '—';
 
         const fill = stockFill(v);
-        const bar = row.querySelector('.inv-bar-cell .stock-bar');
+        const bar = rowCell(row, '.inv-bar-cell .stock-bar');
         bar.className = 'stock-bar ' + fill.cls + (fill.empty ? ' is-empty' : '');
         bar.title = fill.pct + '% of reorder point + order quantity';
         bar.querySelector('span').style.width = fill.pct + '%';

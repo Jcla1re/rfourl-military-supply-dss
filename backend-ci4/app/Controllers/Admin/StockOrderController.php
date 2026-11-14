@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\EmailNotifier;
+use App\Libraries\ProcurementDocs;
 use App\Libraries\PurchaseOrderLine;
 use App\Libraries\Toast;
 use App\Models\SecurityLogModel;
@@ -81,6 +82,7 @@ class StockOrderController extends BaseController
             $needle = strtolower($historySearch);
             $historyOrders = array_values(array_filter($historyOrders, function ($o) use ($needle) {
                 return str_contains(strtolower($o['so_id']), $needle)
+                    || str_contains(strtolower($o['po_number'] ?? ''), $needle)
                     || str_contains(strtolower($o['company_name'] ?? ''), $needle);
             }));
         }
@@ -224,7 +226,7 @@ class StockOrderController extends BaseController
 
         $warning = null;
         if (! isset($activeSuppliers[$supplierId])) {
-            $warning    = "The supplier of {$source['so_id']} is archived, so its items weren't added. Choose a supplier to start.";
+            $warning    = "The supplier of " . StockOrderModel::label($source) . " is archived, so its items weren't added. Choose a supplier to start.";
             $lines      = [];
             $supplierId = '';
         } elseif ($leftOut) {
@@ -271,7 +273,7 @@ class StockOrderController extends BaseController
      */
     public static function followUpMessage(array $order, ?string $today = null): string
     {
-        $soId = $order['so_id'];
+        $soId = StockOrderModel::label($order); // shown in the message; the so_id stays the internal key
         $due  = $order['expected_delivery_date'] ?? null;
         if (empty($due)) {
             return "RfourL is asking for an update on {$soId}.";
@@ -290,15 +292,16 @@ class StockOrderController extends BaseController
     public function flagDelayed($soId)
     {
         $order = $this->stockOrderModel->findWithDetails((string) $soId);
+        $label = StockOrderModel::labelFor((string) $soId);
 
         if (! $order) {
             return redirect()->to('/admin/orders')->with('toast', Toast::error("Couldn't follow up", 'Order not found.'));
         }
         if (in_array($order['status'], ['Delivered', 'Cancelled'], true)) {
-            return redirect()->to('/admin/orders')->with('toast', Toast::error("Couldn't follow up", "Order {$soId} is already {$order['status']}."));
+            return redirect()->to('/admin/orders')->with('toast', Toast::error("Couldn't follow up", "Order {$label} is already {$order['status']}."));
         }
         if (isset($this->followedUpToday()[$soId])) {
-            return redirect()->to('/admin/orders')->with('toast', Toast::info("You already followed up on {$soId} today."));
+            return redirect()->to('/admin/orders')->with('toast', Toast::info("You already followed up on {$label} today."));
         }
 
         $title        = self::followUpTitle($soId);
@@ -329,6 +332,7 @@ class StockOrderController extends BaseController
     public function cancel($soId)
     {
         $order = $this->stockOrderModel->find($soId);
+        $label = StockOrderModel::labelFor((string) $soId);
 
         if (! $order) {
             return redirect()->to('/admin/orders')->with('toast', Toast::error("Couldn't cancel", 'Order not found.'));
@@ -338,7 +342,7 @@ class StockOrderController extends BaseController
                 ? 'It is already shipped. Contact the supplier to refuse or return it on delivery.'
                 : "It is already {$order['status']}.";
 
-            return redirect()->to('/admin/orders')->with('toast', Toast::error("Order {$soId} can't be cancelled", $why));
+            return redirect()->to('/admin/orders')->with('toast', Toast::error("Order {$label} can't be cancelled", $why));
         }
 
         $choice = (string) $this->request->getPost('reason');
@@ -363,25 +367,25 @@ class StockOrderController extends BaseController
             'cancelled_at'  => date('Y-m-d H:i:s'),
         ]);
 
-        $message = "Order {$soId} was cancelled by RfourL. Reason: {$reason}. Please don't prepare or ship it."
+        $message = "Order {$label} was cancelled by RfourL. Reason: {$reason}. Please don't prepare or ship it."
             . ($wasPreparing ? " We're sorry for any work already started." : '');
         $supplierUser = $this->supplierUser($order['supplier_id']);
 
         $this->notificationModel->push(
             'Supplier',
             'Order Status',
-            "Order {$soId} was cancelled",
+            "Order {$label} was cancelled",
             $message,
             $supplierUser['user_id'] ?? null,
             'order_status',
             '/supplier/completed?range=all'
         );
-        $this->emailNotifier->toUser($supplierUser, "Order {$soId} was cancelled", $message);
+        $this->emailNotifier->toUser($supplierUser, "Order {$label} was cancelled", $message);
 
         SecurityLogModel::log('order_cancelled', null, "{$soId}: {$reason}");
 
         return redirect()->to('/admin/orders')->with('toast', Toast::success(
-            "Order {$soId} cancelled",
+            "Order {$label} cancelled",
             'Its reorder alerts are active again.',
             null,
             ['action' => ['label' => 'Reorder', 'url' => site_url('admin/orders?reorder=' . $soId)]]
@@ -397,14 +401,24 @@ class StockOrderController extends BaseController
         }
 
         $data = [
-            'title'    => 'Order ' . $soId,
+            'title'    => 'Order ' . StockOrderModel::label($order),
             'active'   => 'orders',
             'order'    => $order,
             'items'    => $this->soItemModel->forOrder($soId),
             'statuses' => StockOrderModel::STATUSES,
+            'steps'    => ProcurementDocs::steps($order),
         ];
 
         return view('admin/order_detail', $data);
+    }
+
+    /** One of the order's PDFs (po, so, dr), inline. The owner can open any order's documents. */
+    public function document($soId, $type)
+    {
+        $order = $this->stockOrderModel->findWithDetails($soId);
+        $pdf   = $order ? ProcurementDocs::respond($this->response, $order, (string) $type) : null;
+
+        return $pdf ?? redirect()->to('/admin/orders')->with('error', 'That document is not available for this order.');
     }
 
     public function store()
@@ -494,6 +508,7 @@ class StockOrderController extends BaseController
         }
 
         $soId = $this->stockOrderModel->generateNextId();
+        $poNumber = ProcurementDocs::nextNumber('po');
 
         $db = db_connect();
         $db->transStart();
@@ -507,6 +522,7 @@ class StockOrderController extends BaseController
             'order_date'              => date('Y-m-d'),
             'expected_delivery_date'  => $this->request->getPost('expected_delivery_date') ?: null,
             'tracking_no'             => null, // the supplier enters it when shipping (Supplier → Deliveries)
+            'po_number'               => $poNumber,
         ]);
 
         foreach ($lines as $line) {
@@ -547,8 +563,8 @@ class StockOrderController extends BaseController
             $this->notificationModel->push(
                 'Staff',
                 'Order Status',
-                "Order placed for {$soId}",
-                'The reorder you flagged for ' . ($product['item_name'] ?? 'an item') . " has been ordered as {$soId}.",
+                "Order placed for {$poNumber}",
+                'The reorder you flagged for ' . ($product['item_name'] ?? 'an item') . " has been ordered as {$poNumber}.",
                 null,
                 'staff_activity',
                 '/staff/reorder-alerts'
@@ -560,8 +576,8 @@ class StockOrderController extends BaseController
         $this->notificationModel->push(
             'Supplier',
             'Order Status',
-            "New order {$soId}",
-            "A new stock order {$soId} has been placed. Check New Orders to accept it.",
+            "New order {$poNumber}",
+            "A new stock order {$poNumber} has been placed. Check New Orders to accept it.",
             $newOrderSupplierUser['user_id'] ?? null,
             'order_status',
             '/supplier/new-orders'
@@ -569,8 +585,8 @@ class StockOrderController extends BaseController
 
         $this->emailNotifier->toUser(
             $newOrderSupplierUser,
-            "New stock order {$soId}",
-            "A new stock order {$soId} has been placed. Please log in to the supplier portal to review and accept it."
+            "New stock order {$poNumber}",
+            "A new stock order {$poNumber} has been placed. Please log in to the supplier portal to review and accept it."
         );
 
         if ($fromDialog) {
@@ -581,7 +597,7 @@ class StockOrderController extends BaseController
             return redirect()->to($url)->with('toast', Toast::success(
                 'Order created',
                 'was sent to ' . $orderSupplier['company_name'] . ($sizes > 1 ? " ({$sizes} sizes)." : '.'),
-                $soId,
+                $poNumber,
                 ['action' => ['label' => 'View order', 'url' => site_url('admin/orders/' . $soId)]]
             ));
         }
@@ -590,12 +606,12 @@ class StockOrderController extends BaseController
             return redirect()->to('/admin/orders')->with('toast', Toast::success(
                 'Order created',
                 'was sent to ' . $orderSupplier['company_name'] . '.',
-                $soId,
+                $poNumber,
                 ['action' => ['label' => 'View order', 'url' => site_url('admin/orders/' . $soId)]]
             ));
         }
 
-        return redirect()->to('/admin/orders')->with('toast', Toast::success('Order created', 'was sent to the supplier.', $soId));
+        return redirect()->to('/admin/orders')->with('toast', Toast::success('Order created', 'was sent to the supplier.', $poNumber));
     }
 
     /**
@@ -669,6 +685,7 @@ class StockOrderController extends BaseController
     public function updateStatus($soId)
     {
         $order = $this->stockOrderModel->find($soId);
+        $label = StockOrderModel::labelFor((string) $soId);
 
         if (! $order) {
             return redirect()->to('/admin/orders')->with('error', 'Order not found.');
@@ -686,7 +703,7 @@ class StockOrderController extends BaseController
         }
         // A cancelled order stays cancelled; a new order is a new order.
         if ($order['status'] === 'Cancelled') {
-            return redirect()->to('/admin/orders')->with('error', "Order {$soId} was cancelled and can't be changed.");
+            return redirect()->to('/admin/orders')->with('error', "Order {$label} was cancelled and can't be changed.");
         }
 
         if ($newStatus === 'Delivered' && $order['status'] !== 'Delivered') {
@@ -694,6 +711,8 @@ class StockOrderController extends BaseController
         } else {
             $this->stockOrderModel->update($soId, ['status' => $newStatus]);
         }
+        // A manual jump (e.g. Preparing, Shipped) still earns the documents that status has reached.
+        ProcurementDocs::ensureNumbers($soId);
 
         if ($newStatus !== $order['status']) {
             $statusSupplierUser = $this->supplierUser($order['supplier_id']);
@@ -701,8 +720,8 @@ class StockOrderController extends BaseController
             $this->notificationModel->push(
                 'Supplier',
                 'Order Status',
-                "Order {$soId} updated to {$newStatus}",
-                "The owner manually set order {$soId} to {$newStatus}.",
+                "Order {$label} updated to {$newStatus}",
+                "The owner manually set order {$label} to {$newStatus}.",
                 $statusSupplierUser['user_id'] ?? null,
                 'order_status',
                 '/supplier/deliveries'
@@ -710,11 +729,11 @@ class StockOrderController extends BaseController
 
             $this->emailNotifier->toUser(
                 $statusSupplierUser,
-                "Order {$soId} updated to {$newStatus}",
-                "The owner manually set order {$soId} to {$newStatus}. Please log in to the supplier portal for details."
+                "Order {$label} updated to {$newStatus}",
+                "The owner manually set order {$label} to {$newStatus}. Please log in to the supplier portal for details."
             );
         }
 
-        return redirect()->to('/admin/orders')->with('success', "Order {$soId} marked as {$newStatus}.");
+        return redirect()->to('/admin/orders')->with('success', "Order {$label} marked as {$newStatus}.");
     }
 }

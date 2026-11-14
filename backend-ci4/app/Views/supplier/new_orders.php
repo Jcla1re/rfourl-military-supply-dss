@@ -45,8 +45,9 @@
             <div class="no-card">
                 <div class="no-card-head">
                     <?php if ($o['priority'] === 'Urgent'): ?><span class="badge-pill urgent">Urgent</span><?php elseif ($o['priority'] === 'Planned'): ?><span class="badge-pill planned">Planned</span><?php endif; ?>
-                    <span class="fw-bold">#<?= esc($o['so_id']) ?></span>
+                    <span class="fw-bold"><?= esc(\App\Models\StockOrderModel::label($o)) ?></span>
                     <span class="badge-pill">Awaiting Confirmation</span>
+                    <?= view('partials/_order_docs', ['order' => $o, 'base' => 'supplier']) ?>
                 </div>
                 <div class="no-card-body">
                     <table class="no-items-table">

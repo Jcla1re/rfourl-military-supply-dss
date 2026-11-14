@@ -2,12 +2,21 @@
 <?= $this->extend('layouts/admin_layout') ?>
 
 <?= $this->section('header_actions') ?>
-<a href="<?= site_url('admin/reorder-alerts') ?>" class="btn btn-success">Back</a>
+<a href="<?= site_url('admin/reorder-alerts') ?>" class="btn btn-topbar"><i class="bi bi-arrow-left"></i> Back</a>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
 
-<?php $rows = $rows ?? []; $dss = $dss ?? []; ?>
+<?php
+$rows = $rows ?? [];
+$dss  = $dss ?? [];
+// 500.00 -> 500, 60.480 -> 60.48
+$trim = static fn ($n): string => rtrim(rtrim(number_format((float) $n, 2, '.', ''), '0'), '.');
+$dssSummary = 'Cost/order ₱' . $trim($dss['ordering_cost'] ?? 0)
+    . ' · Storage ₱' . $trim($dss['holding_cost_per_unit'] ?? 0)
+    . ' · ' . $trim($dss['service_level_target'] ?? 0) . '%'
+    . ' · ' . (int) ($dss['demand_lookback_days'] ?? 0) . ' days';
+?>
 
 <style>
 .pr-params { background: #fff; border-radius: var(--radius-card); padding: 24px 26px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 20px; }
@@ -15,6 +24,17 @@
 .pr-param-row { display: flex; flex-wrap: wrap; gap: 40px; margin-bottom: 18px; }
 .pr-param-row div span { display: block; color: #777; font-size: 13px; }
 .pr-param-row div strong { font-size: 20px; }
+.pr-params.is-compact { padding: 14px 20px; }
+.pr-line { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
+.pr-line h3 { font-size: 15px; margin: 0; }
+.pr-summary { font-weight: 600; font-variant-numeric: tabular-nums; }
+.pr-toggle { margin-left: auto; padding: 4px 10px; border: 1px solid #ccc; border-radius: var(--radius-control); background: #fff; color: #2F5A27; font-size: 13px; font-weight: 600; cursor: pointer; }
+.pr-toggle:hover { background: #F2F0EA; }
+.pr-toggle:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; }
+.pr-toggle i { transition: transform .15s ease; }
+.pr-toggle[aria-expanded="true"] i { transform: rotate(180deg); }
+.pr-details { margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee; }
+.pr-details[hidden] { display: none; }
 .pr-formula { background: #f2f0e9; border-radius: var(--radius-control); padding: 16px 20px; font-size: 15px; line-height: 2; }
 
 .abc-badge {
@@ -33,19 +53,25 @@
 </style>
 
 <div class="page-wrap">
-    <div class="pr-params">
-        <h3>DSS settings <?= \App\Libraries\Glossary::tip('dss') ?></h3>
-        <div class="pr-param-row">
-            <div><span>Cost per order</span><strong>₱<?= esc($dss['ordering_cost'] ?? 0) ?></strong></div>
-            <div><span>Storage cost per item per year</span><strong>₱<?= esc($dss['holding_cost_per_unit'] ?? 0) ?></strong></div>
-            <div><span>Default availability target</span><strong><?= esc($dss['service_level_target'] ?? 0) ?>% (Z = <?= esc($dss['z_score'] ?? 0) ?>)</strong></div>
-            <div><span>Sales history used</span><strong><?= esc($dss['demand_lookback_days'] ?? 0) ?> days</strong></div>
+    <div class="pr-params is-compact">
+        <div class="pr-line">
+            <h3>DSS settings <?= \App\Libraries\Glossary::tip('dss') ?></h3>
+            <span class="pr-summary"><?= esc($dssSummary) ?></span>
+            <button type="button" class="pr-toggle" id="prToggle" aria-expanded="false" aria-controls="prDetails">details <i class="bi bi-chevron-down" aria-hidden="true"></i></button>
         </div>
-        <p class="mb-0 small text-muted">How are these used? <?= help_tip('How the numbers are worked out', [
-            'Order Qty = √(2 × D × S ÷ H). D = yearly sales, S = cost per order, H = storage cost per item per year.',
-            'Reorder At = d × L + Safety Stock. d = daily sales, L = delivery time in days.',
-            'Safety Stock = Z × σd × √L. Z is the safety factor, σd is how much daily sales go up and down.',
-        ]) ?></p>
+        <div class="pr-details" id="prDetails" hidden>
+            <div class="pr-param-row">
+                <div><span>Cost per order</span><strong>₱<?= esc($dss['ordering_cost'] ?? 0) ?></strong></div>
+                <div><span>Storage cost per item per year</span><strong>₱<?= esc($dss['holding_cost_per_unit'] ?? 0) ?></strong></div>
+                <div><span>Default availability target</span><strong><?= esc($dss['service_level_target'] ?? 0) ?>%</strong></div>
+                <div><span>Sales history used</span><strong><?= esc($dss['demand_lookback_days'] ?? 0) ?> days</strong></div>
+            </div>
+            <p class="mb-0 small text-muted">How are these used? <?= help_tip('How the numbers are worked out', [
+                'Order Qty = √(2 × D × S ÷ H). D = yearly sales, S = cost per order, H = storage cost per item per year.',
+                'Reorder At = d × L + Safety Stock. d = daily sales, L = delivery time in days.',
+                'Safety Stock = Z × σd × √L. Z is the safety factor, σd is how much daily sales go up and down.',
+            ]) ?></p>
+        </div>
     </div>
 
     <div class="page-panel">
@@ -78,10 +104,8 @@
                             <td><?= esc($r['item_name']) ?></td>
                             <td>
                                 <?php if ($r['abc_category'] !== '—'): ?>
-                                    <span class="abc-badge cls-<?= esc(strtolower($r['abc_category']), 'attr') ?>"><?= esc($r['abc_category']) ?></span>
-                                    <?php if ($r['z_score'] !== null): ?>
-                                        <small class="text-muted d-block">Z=<?= esc($r['z_score']) ?></small>
-                                    <?php endif; ?>
+                                    <?php $classTip = 'Class ' . $r['abc_category'] . ($r['z_score'] !== null ? ' (Z = ' . $r['z_score'] . ')' : ''); ?>
+                                    <span class="abc-badge cls-<?= esc(strtolower($r['abc_category']), 'attr') ?>" title="<?= esc($classTip, 'attr') ?>" aria-label="<?= esc($classTip, 'attr') ?>"><?= esc($r['abc_category']) ?></span>
                                 <?php else: ?>
                                     <span title="<?= esc(\App\Models\ClusterSegmentModel::UNCLASSIFIED_NOTE) ?>">&mdash;</span>
                                 <?php endif; ?>
@@ -190,6 +214,17 @@
 </style>
 
 <script>
+// DSS settings: one line, with the four numbers behind a "details" toggle.
+(function () {
+    const toggle = document.getElementById('prToggle');
+    const details = document.getElementById('prDetails');
+    toggle.addEventListener('click', () => {
+        const open = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        details.hidden = !open;
+    });
+})();
+
 const orderModal = document.getElementById('orderModal');
 
 document.querySelectorAll('.open-order-modal').forEach(button => {

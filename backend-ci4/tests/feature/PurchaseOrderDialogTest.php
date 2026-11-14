@@ -219,15 +219,15 @@ final class PurchaseOrderDialogTest extends CIUnitTestCase
         $this->addSize('P-M', 'Pants', 'M', 2, 3);
         $this->placeOrder('/admin/reorder-alerts', ['P-S' => [12, 50]]); // urgent
         $this->placeOrder('/admin/reorder-alerts', ['P-M' => [8, 50]]);  // normal
-        [$urgent, $normal] = array_column($this->db->table('stock_order')->orderBy('so_id')->get()->getResultArray(), 'so_id');
+        [$urgent, $normal] = array_column($this->db->table('stock_order')->orderBy('so_id')->get()->getResultArray(), 'po_number');
         $supplier = $this->db->table('users')->where('username', 'tgi')->get()->getRow();
 
         $html = (string) $this->withSession(['isLoggedIn' => true, 'role' => 'Supplier', 'user_id' => (int) $supplier->user_id, 'username' => 'tgi', 'full_name' => 'Tactical Gear', 'supplier_id' => 'SUP-001', 'last_activity' => time()])
             ->get('supplier/new-orders')->getBody();
 
-        $this->assertMatchesRegularExpression('/<span class="badge-pill urgent">Urgent<\/span>\s*<span class="fw-bold">#' . $urgent . '<\/span>/', $html);
-        $this->assertDoesNotMatchRegularExpression('/<span class="badge-pill urgent">Urgent<\/span>\s*<span class="fw-bold">#' . $normal . '<\/span>/', $html);
-        $this->assertStringContainsString('#' . $normal, $html);
+        $this->assertMatchesRegularExpression('/<span class="badge-pill urgent">Urgent<\/span>\s*<span class="fw-bold">' . $urgent . '<\/span>/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<span class="badge-pill urgent">Urgent<\/span>\s*<span class="fw-bold">' . $normal . '<\/span>/', $html);
+        $this->assertStringContainsString('>' . $normal . '<', $html);
     }
 
     public function testTheDialogHasTheUrgentNoteHiddenUntilItApplies(): void
@@ -250,7 +250,7 @@ final class PurchaseOrderDialogTest extends CIUnitTestCase
         $this->assertSame(site_url('admin/inventory?category=Clothes&search=pan'), $response->getRedirectUrl(), 'Back to the same Inventory view.');
         $soId  = $this->db->table('stock_order')->get()->getRow()->so_id;
         $toast = $_SESSION['toast'];
-        $this->assertSame(['success', 'Order created', $soId, 'was sent to Tactical Gear Inc.'], [$toast['type'], $toast['title'], $toast['name'], $toast['message']]);
+        $this->assertSame(['success', 'Order created', $this->db->table('stock_order')->where('so_id', $soId)->get()->getRow()->po_number, 'was sent to Tactical Gear Inc.'], [$toast['type'], $toast['title'], $toast['name'], $toast['message']]);
         $this->assertSame(['label' => 'View order', 'url' => site_url('admin/orders/' . $soId)], $toast['action']);
         $this->assertSame(['Ordered', $soId], [$this->db->table('reorder_alert')->where('alert_id', $id)->get()->getRow()->status, $soId]);
 
@@ -269,15 +269,16 @@ final class PurchaseOrderDialogTest extends CIUnitTestCase
 
     private function assertOrderedOnBothPages(string $itemId, string $soId): void
     {
+        $po = $this->db->table('stock_order')->where('so_id', $soId)->get()->getRow()->po_number; // what the screens show; the link keeps the so_id
         $inventory = $this->page('admin/inventory');
-        $this->assertStringContainsString('<span class="ordered-tag" title="On order: ' . $soId . '">Ordered</span>', $inventory);
+        $this->assertStringContainsString('<span class="ordered-tag" title="On order: ' . $po . '">Ordered</span>', $inventory);
         $this->assertStringContainsString('href="' . site_url('admin/orders/' . $soId) . '">View order</a>', $inventory);
         $this->assertStringNotContainsString('class="inv-action-btn open-order-modal"', $inventory, 'No second Order button.');
 
         $alerts = $this->page('admin/reorder-alerts');
         preg_match('/<section class="ra-panel" data-panel="ordered".*?<\/section>/s', $alerts, $panel);
         $this->assertStringContainsString('data-item-id="' . $itemId . '"', $panel[0]);
-        $this->assertStringContainsString('Order ' . $soId, $panel[0]);
+        $this->assertStringContainsString('Order ' . $po, $panel[0]);
         $this->assertStringContainsString('To order (<span data-tab-count="order">0</span>)', $alerts);
     }
 

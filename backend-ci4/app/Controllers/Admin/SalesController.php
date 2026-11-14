@@ -210,6 +210,11 @@ class SalesController extends BaseController
             $changeDue   = round($cashReceived - $total, 2);
         }
 
+        $orNumber = trim((string) $this->request->getPost('or_number'));
+        if ($orNumber !== '' && ! \App\Models\SalesTransactionModel::validOrNumber($orNumber)) {
+            return redirect()->to('/admin/sales')->with('error', 'Official receipt / invoice no. can only have letters, numbers, dashes and slashes (up to 30 characters).');
+        }
+
         $db = db_connect();
         $db->transStart();
 
@@ -219,6 +224,7 @@ class SalesController extends BaseController
 
         $salesId = $this->salesTransactionModel->insert([
             'receipt_no'          => $receiptNo,
+            'or_number'           => $orNumber !== '' ? $orNumber : null,
             'user_id'             => session()->get('user_id'),
             'sale_date'           => date('Y-m-d H:i:s'),
             'payment_method'      => $method,
@@ -267,6 +273,7 @@ class SalesController extends BaseController
 
         $receipt = [
             'receipt_no'         => $receiptNo,
+            'or_number'          => $orNumber !== '' ? $orNumber : null,
             'sale_date'          => date('Y-m-d H:i:s'),
             'lines'              => array_map(fn ($l) => [
                 'item_name'  => $l['item_name'],

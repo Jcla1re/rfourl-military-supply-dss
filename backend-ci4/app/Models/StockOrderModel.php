@@ -26,6 +26,13 @@ class StockOrderModel extends Model
         'cancel_reason',
         'cancelled_by',
         'cancelled_at',
+        'po_number',
+        'so_number',
+        'dr_number',
+        'accepted_at',
+        'shipped_at',
+        'received_by',
+        'received_at',
     ];
 
     protected $useTimestamps = false;
@@ -97,6 +104,23 @@ class StockOrderModel extends Model
         $who    = ! empty($order['cancelled_by']) ? 'Cancelled by RfourL' : 'Declined by you';
 
         return implode(' · ', array_filter([$who, $reason]));
+    }
+
+    /**
+     * The name an order goes by on screen: its PO number (PO-2026-0001). The so_id (SO-0001) stays
+     * the internal key (routes, links, foreign keys); only an order that has no PO number shows it.
+     */
+    public static function label(array $order): string
+    {
+        return (string) (($order['po_number'] ?? '') !== '' ? $order['po_number'] : ($order['so_id'] ?? ''));
+    }
+
+    /** The same by so_id, looking the order up (the so_id itself when it is not found). */
+    public static function labelFor(string $soId): string
+    {
+        $order = (new self())->select('so_id, po_number')->find($soId);
+
+        return $order ? self::label($order) : $soId;
     }
 
     public function generateNextId(): string
@@ -174,6 +198,9 @@ class StockOrderModel extends Model
         $this->update($soId, [
             'status'                => 'Delivered',
             'actual_delivery_date'  => date('Y-m-d'),
+            // Who confirmed the delivery and when (staff Restock confirm or the owner's Mark as Done).
+            'received_by'           => $userId,
+            'received_at'           => date('Y-m-d H:i:s'),
         ]);
 
         $soItemModel       = new SoItemModel();

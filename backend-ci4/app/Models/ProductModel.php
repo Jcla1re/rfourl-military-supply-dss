@@ -321,6 +321,8 @@ class ProductModel extends Model
      */
     /** item_id => so_id of its newest open stock order (cached per instance). */
     private ?array $openOrderCache = null;
+    /** @var array<string, string> so_id => the name the order goes by on screen (its PO number) */
+    private array $openOrderLabels = [];
 
     /**
      * Items that are on order: in a stock order that hasn't been Delivered or
@@ -334,13 +336,14 @@ class ProductModel extends Model
         if ($this->openOrderCache === null) {
             $this->openOrderCache = [];
             $rows = $this->db->table('so_item si')
-                ->select('si.item_id, so.so_id')
+                ->select('si.item_id, so.so_id, so.po_number')
                 ->join('stock_order so', 'so.so_id = si.so_id')
                 ->whereNotIn('so.status', ['Delivered', 'Cancelled'])
                 ->orderBy('so.so_id', 'DESC')
                 ->get()->getResultArray();
             foreach ($rows as $r) {
                 $this->openOrderCache[$r['item_id']] ??= $r['so_id'];
+                $this->openOrderLabels[$r['so_id']]   = StockOrderModel::label($r);
             }
         }
 
@@ -386,6 +389,7 @@ class ProductModel extends Model
             // Every size that needs reordering is already on order.
             $group['on_order'] = $target['status']['label'] === 'Reorder Now' && ! empty($target['open_so']);
             $group['open_so']  = $group['on_order'] ? $target['open_so'] : null;
+            $group['open_label'] = $group['open_so'] ? ($this->openOrderLabels[$group['open_so']] ?? $group['open_so']) : null; // shown; open_so stays the link key
         }
         unset($group);
 

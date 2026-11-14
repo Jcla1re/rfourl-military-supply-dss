@@ -148,7 +148,7 @@ final class OrdersPageOrderTest extends CIUnitTestCase
 
         $this->assertSame(site_url('admin/orders'), $response->getRedirectUrl());
         $toast = $_SESSION['toast'];
-        $this->assertSame(['success', 'Order created', 'SO-0001', 'was sent to Tactical Gear Inc.'], [$toast['type'], $toast['title'], $toast['name'], $toast['message']]);
+        $this->assertSame(['success', 'Order created', 'PO-' . date('Y') . '-0001', 'was sent to Tactical Gear Inc.'], [$toast['type'], $toast['title'], $toast['name'], $toast['message']]);
         $this->assertSame(['label' => 'View order', 'url' => site_url('admin/orders/SO-0001')], $toast['action']);
 
         $order = $this->orders()[0];
@@ -364,14 +364,14 @@ final class OrdersPageOrderTest extends CIUnitTestCase
         $html = (string) $this->withSession(['isLoggedIn' => true, 'role' => 'Supplier', 'user_id' => (int) $supplier->user_id, 'username' => 'tgi', 'full_name' => 'Tactical Gear', 'supplier_id' => 'SUP-001', 'last_activity' => time()])
             ->get('supplier/new-orders')->getBody();
 
-        $this->assertMatchesRegularExpression('/<span class="badge-pill planned">Planned<\/span>\s*<span class="fw-bold">#SO-0001<\/span>/', $html);
-        $this->assertMatchesRegularExpression('/<div class="no-card-head">\s*<span class="fw-bold">#SO-0002<\/span>/', $html, 'Normal: no pill.');
-        $this->assertMatchesRegularExpression('/<span class="badge-pill urgent">Urgent<\/span>\s*<span class="fw-bold">#SO-0003<\/span>/', $html);
+        $this->assertMatchesRegularExpression('/<span class="badge-pill planned">Planned<\/span>\s*<span class="fw-bold">SO-0001<\/span>/', $html);
+        $this->assertMatchesRegularExpression('/<div class="no-card-head">\s*<span class="fw-bold">SO-0002<\/span>/', $html, 'Normal: no pill.');
+        $this->assertMatchesRegularExpression('/<span class="badge-pill urgent">Urgent<\/span>\s*<span class="fw-bold">SO-0003<\/span>/', $html);
         $this->assertStringContainsString('<strong>Priority:</strong> Normal', $html);
 
         $dashboard = (string) $this->withSession(['isLoggedIn' => true, 'role' => 'Supplier', 'user_id' => (int) $supplier->user_id, 'username' => 'tgi', 'full_name' => 'Tactical Gear', 'supplier_id' => 'SUP-001', 'last_activity' => time()])
             ->get('supplier/dashboard')->getBody();
-        $this->assertStringContainsString('Order &mdash; #SO-0001 <span class="prio-pill">Planned</span></div>', $dashboard);
-        $this->assertStringContainsString('Order &mdash; #SO-0002</div>', $dashboard, 'Normal: no pill.');
+        $this->assertStringContainsString('Order &mdash; SO-0001 <span class="prio-pill">Planned</span></div>', $dashboard);
+        $this->assertStringContainsString('Order &mdash; SO-0002</div>', $dashboard, 'Normal: no pill.');
     }
 }

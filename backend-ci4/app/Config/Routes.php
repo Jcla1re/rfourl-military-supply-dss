@@ -52,6 +52,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
 
     $routes->get('orders', 'StockOrderController::index');
     $routes->get('orders/(:segment)', 'StockOrderController::show/$1');
+    $routes->get('orders/(:segment)/document/(:segment)', 'StockOrderController::document/$1/$2');
     $routes->post('orders/store', 'StockOrderController::store');
     $routes->post('orders/update-status/(:segment)', 'StockOrderController::updateStatus/$1');
     $routes->post('orders/flag-delayed/(:segment)', 'StockOrderController::flagDelayed/$1');
@@ -116,6 +117,7 @@ $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'ro
     $routes->get('log-transaction/(:segment)', 'LogTransactionController::form/$1');
     $routes->post('log-transaction/store', 'LogTransactionController::store');
     $routes->post('log-transaction/restock-confirm/(:segment)', 'LogTransactionController::confirmRestock/$1');
+    $routes->get('orders/(:segment)/document/(:segment)', 'OrderDocumentsController::show/$1/$2');
 
     $routes->get('sales', 'SalesController::index');
     $routes->post('sales/checkout', 'SalesController::checkout');
@@ -152,6 +154,7 @@ $routes->group('supplier', ['namespace' => 'App\Controllers\Supplier', 'filter' 
     $routes->post('deliveries/ship/(:segment)', 'DeliveriesController::ship/$1');
 
     $routes->get('completed', 'CompletedController::index');
+    $routes->get('orders/(:segment)/document/(:segment)', 'OrderDocumentsController::show/$1/$2');
 
     $routes->get('notifications', 'NotificationController::index');
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');

@@ -51,7 +51,7 @@
             <span class="icon"><i class="bi <?= $a['expected_delivery_date'] === $today ? 'bi-exclamation-triangle text-danger' : 'bi-clock text-warning' ?>"></i></span>
             <div>
                 <div class="title">
-                    <?= $a['expected_delivery_date'] === $today ? 'Delivery Due TODAY' : 'Delivery Due Soon' ?> &mdash; Order #<?= esc($a['so_id']) ?>
+                    <?= $a['expected_delivery_date'] === $today ? 'Delivery Due TODAY' : 'Delivery Due Soon' ?> &mdash; Order <?= esc(\App\Models\StockOrderModel::label($a)) ?>
                 </div>
                 <div class="sub"><?= esc($a['total_units']) ?> items scheduled for delivery (<?= esc(date('M j', strtotime($a['expected_delivery_date']))) ?>).</div>
             </div>
@@ -92,7 +92,7 @@
                         <div class="sd-notif-card d-flex gap-3">
                             <span class="icon-badge"><i class="bi bi-exclamation-lg text-danger"></i></span>
                             <div class="flex-grow-1">
-                                <div class="title">New <?= $o['priority'] === 'Urgent' ? 'Urgent ' : '' ?>Order &mdash; #<?= esc($o['so_id']) ?><?php if ($o['priority'] === 'Planned'): ?> <span class="prio-pill">Planned</span><?php endif; ?></div>
+                                <div class="title">New <?= $o['priority'] === 'Urgent' ? 'Urgent ' : '' ?>Order &mdash; <?= esc(\App\Models\StockOrderModel::label($o)) ?><?php if ($o['priority'] === 'Planned'): ?> <span class="prio-pill">Planned</span><?php endif; ?></div>
                                 <div class="small">RfourL Military Apparel has placed a new stock order.</div>
                                 <div class="small"><strong>Items:</strong> <?php foreach ($o['lines'] as $l): ?><?= esc($l['item_name'] ?? $l['item_id']) ?> &times;<?= esc($l['order_quantity']) ?> <?php endforeach; ?></div>
                                 <div class="small"><strong>Requested delivery:</strong> <?= !empty($o['expected_delivery_date']) ? esc(date('M j, Y', strtotime($o['expected_delivery_date']))) : '—' ?></div>
@@ -117,7 +117,7 @@
                         <div class="sd-schedule-row">
                             <span class="sd-schedule-dot"></span>
                             <div>
-                                <strong>#<?= esc($s['so_id']) ?> &mdash; <?= esc($s['status']) ?></strong><br>
+                                <strong><?= esc(\App\Models\StockOrderModel::label($s)) ?> &mdash; <?= esc($s['status']) ?></strong><br>
                                 <span class="small text-muted">Due: <?= !empty($s['expected_delivery_date']) ? esc(date('M j', strtotime($s['expected_delivery_date']))) : '—' ?> &middot; <?= esc($s['total_units']) ?> items</span>
                             </div>
                             <span class="badge-pill <?= $s['expected_delivery_date'] === $today ? '' : 'pending' ?>"><?= $s['expected_delivery_date'] === $today ? 'TODAY' : strtoupper($s['status'] === 'Order Confirmed' ? 'PENDING' : $s['status']) ?></span>
