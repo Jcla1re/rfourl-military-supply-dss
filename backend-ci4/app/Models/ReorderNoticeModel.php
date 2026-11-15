@@ -46,7 +46,7 @@ class ReorderNoticeModel extends Model
         // SQLite (tests) has no FOR UPDATE; it locks the whole file on write.
         $db = $this->db;
         $db->transStart();
-        if ($db->DBDriver !== 'SQLite3') {
+        if ($db->getPlatform() !== 'SQLite3') {
             $db->query('SELECT item_id FROM ' . $db->prefixTable('products') . ' WHERE item_id = ? FOR UPDATE', [$product['item_id']]);
         }
         $existing = $this->openFor([$product['item_id']])[$product['item_id']] ?? null;

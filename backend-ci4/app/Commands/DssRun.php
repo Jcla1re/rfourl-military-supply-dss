@@ -2,6 +2,7 @@
 
 namespace App\Commands;
 
+use App\Models\SalesTransactionModel;
 use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 
@@ -59,7 +60,9 @@ class DssRun extends BaseCommand
         $lookbackDays     = (int) $dssParams['demand_lookback_days'];
         $minimumOrderQty  = (int) ($dssParams['minimum_order_qty'] ?? 5);
 
-        $asOfRow = $db->table('sales_transaction')->select('MAX(sale_date) AS mx')->get()->getRowArray();
+        // Voided sales (php spark sales:void-duplicate) are left out of the demand.
+        $salesItems = new \App\Models\SalesItemModel();
+        $asOfRow    = ['mx' => (new SalesTransactionModel())->lastSaleDate()];
         if (empty($asOfRow['mx'])) {
             CLI::error('No sales_transaction data — cannot compute demand.');
             return;
@@ -70,18 +73,7 @@ class DssRun extends BaseCommand
         CLI::write("As-of date: {$asOf->format('Y-m-d')} (window: {$windowStart->format('Y-m-d')} to {$asOf->format('Y-m-d')}, {$lookbackDays} days back, inclusive)", 'yellow');
 
         // --- Load window sales, grouped per item per day ---
-        $windowRows = $db->table('sales_item si')
-            ->select('si.item_id, DATE(st.sale_date) AS d, SUM(si.quantity_sold) AS qty')
-            ->join('sales_transaction st', 'st.sales_id = si.sales_id')
-            ->where('DATE(st.sale_date) >=', $windowStart->format('Y-m-d'))
-            ->where('DATE(st.sale_date) <=', $asOf->format('Y-m-d'))
-            ->groupBy('si.item_id, d')
-            ->get()->getResultArray();
-
-        $dailyByItem = [];
-        foreach ($windowRows as $r) {
-            $dailyByItem[$r['item_id']][$r['d']] = (int) $r['qty'];
-        }
+        $dailyByItem = $salesItems->dailyQuantitiesByItem($windowStart->format('Y-m-d'), $asOf->format('Y-m-d'));
 
         // --- Supplier lead times per item ---
         $leadRows = $db->table('products p')

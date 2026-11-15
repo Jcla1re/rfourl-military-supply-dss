@@ -109,7 +109,7 @@ class ProductModel extends Model
         }
 
         $sql = $this->db->table($this->table)->whereIn('item_id', $itemIds)->getCompiledSelect();
-        if ($this->db->DBDriver === 'MySQLi') {
+        if ($this->db->getPlatform() === 'MySQLi') { // DBDriver is the app's own class name; the platform is 'MySQLi'
             $sql .= ' FOR UPDATE';
         }
 

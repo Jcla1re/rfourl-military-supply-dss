@@ -57,16 +57,13 @@ class SalesController extends BaseController
             $data['date']         = $date;
             $data['salesToday']   = $this->salesTransactionModel->totalForToday();
             $data['salesWeek']    = array_sum($weekRange['data']);
-            $data['salesMonth']   = (float) ($this->salesTransactionModel->selectSum('total_amount')
-                ->where("DATE_FORMAT(sale_date, '%Y-%m')", date('Y-m'))->first()['total_amount'] ?? 0);
+            $data['salesMonth']   = $this->salesTransactionModel->totalForMonth(date('Y-m'));
             $data['txnToday']     = $this->salesTransactionModel->countForToday();
             $data['txnWeek']      = $this->salesTransactionModel->countInRange(
                 (new \DateTime('-6 days'))->format('Y-m-d'),
                 date('Y-m-d')
             );
-            $data['txnMonth']     = $this->salesTransactionModel
-                ->where("DATE_FORMAT(sale_date, '%Y-%m')", date('Y-m'))
-                ->countAllResults();
+            $data['txnMonth']     = $this->salesTransactionModel->countForMonth(date('Y-m'));
         }
 
         return view('admin/sales', $data);
@@ -75,15 +72,18 @@ class SalesController extends BaseController
     /**
      * Transactions (with line items) for one calendar day, newest first —
      * shared by the receipts tab and PDF export so both always agree on
-     * exactly which day is being shown.
+     * exactly which day is being shown. Voided duplicates are listed (marked, see
+     * SalesTransactionModel::voidLabel()) but never added to a total.
      */
     private function transactionsForDate(string $date): array
     {
-        $transactions = $this->salesTransactionModel
+        $builder = $this->salesTransactionModel
             ->select('sales_transaction.*, users.full_name as cashier_name, users.role as cashier_role')
-            ->join('users', 'users.user_id = sales_transaction.user_id', 'left')
-            ->where('DATE(sale_date)', $date)
-            ->orderBy('sale_date', 'DESC')
+            ->join('users', 'users.user_id = sales_transaction.user_id', 'left');
+        $transactions = SalesTransactionModel::withOriginalReceipt($builder)
+            ->where('sales_transaction.sale_date >=', $date . ' 00:00:00')
+            ->where('sales_transaction.sale_date <', date('Y-m-d', strtotime($date . ' +1 day')) . ' 00:00:00')
+            ->orderBy('sales_transaction.sale_date', 'DESC')
             ->findAll();
 
         foreach ($transactions as &$t) {
@@ -115,7 +115,7 @@ class SalesController extends BaseController
         $html = view('admin/sales_pdf', [
             'date'         => $date,
             'transactions' => $transactions,
-            'totalSales'   => array_sum(array_column($transactions, 'total_amount')),
+            'totalSales'   => SalesTransactionModel::totalOf($transactions), // voided duplicates not counted
         ]);
 
         $dompdf = new \Dompdf\Dompdf();

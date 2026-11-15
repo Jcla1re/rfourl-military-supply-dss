@@ -28,6 +28,71 @@ class SalesTransactionModel extends Model
 
     protected $useTimestamps = false;
 
+    // ------------------------------------------------------------------ voided sales
+    // A voided sale (only `php spark sales:void-duplicate` voids one; voided_at, voided_by, void_reason
+    // and duplicate_of_sales_id are deliberately not in $allowedFields) stays in the table and on the
+    // receipt lists, marked, but is left out of every total, count, chart and demand figure.
+
+    /**
+     * THE condition for "a real sale, not voided", for every query that adds up or counts sales:
+     * `->where(SalesTransactionModel::notVoided('st'), null, false)`, or inside raw SQL.
+     * $alias is the table name or alias that sales_transaction has in the query. The plain table name
+     * gets the connection's table prefix (none in production; the test database uses one), because a
+     * raw condition is not prefixed by the query builder.
+     */
+    public static function notVoided(string $alias = 'sales_transaction'): string
+    {
+        if ($alias === 'sales_transaction') {
+            $alias = db_connect()->prefixTable($alias);
+        }
+
+        return $alias . '.voided_at IS NULL';
+    }
+
+    /** Whether a sale row (with its voided_at column) was voided. */
+    public static function isVoided(array $sale): bool
+    {
+        return ! empty($sale['voided_at']);
+    }
+
+    /**
+     * Joins the original receipt of a voided duplicate, as `duplicate_of_receipt_no`, for the lists that
+     * show voided receipts (receipts tab, day PDF, Reports, Old Sales Records).
+     *
+     * @param \CodeIgniter\Database\BaseBuilder|Model $builder
+     */
+    public static function withOriginalReceipt($builder, string $alias = 'sales_transaction')
+    {
+        return $builder->select("{$alias}.voided_at, {$alias}.duplicate_of_sales_id, void_orig.receipt_no AS duplicate_of_receipt_no")
+            ->join('sales_transaction void_orig', "void_orig.sales_id = {$alias}.duplicate_of_sales_id", 'left');
+    }
+
+    /** "Voided duplicate of #1737" (or "Voided"), or null for a normal sale. */
+    public static function voidLabel(array $sale): ?string
+    {
+        if (! self::isVoided($sale)) {
+            return null;
+        }
+        $of = (string) ($sale['duplicate_of_receipt_no'] ?? '');
+
+        return $of !== '' ? 'Voided duplicate of #' . $of : 'Voided';
+    }
+
+    /** The total of a list of sale rows (e.g. a day's receipts), voided duplicates left out. */
+    public static function totalOf(array $sales): float
+    {
+        return (float) array_sum(array_column(array_filter($sales, static fn (array $s): bool => ! self::isVoided($s)), 'total_amount'));
+    }
+
+    /** The latest sale date-time (voided sales left out), or null when there are none. */
+    public function lastSaleDate(): ?string
+    {
+        $row = $this->db->table($this->table)->selectMax('sale_date', 'mx')
+            ->where(self::notVoided(), null, false)->get()->getRowArray();
+
+        return $row['mx'] ?? null;
+    }
+
     /**
      * The official receipt / invoice number typed from the store's BIR booklet: optional, up to
      * 30 letters, digits, dashes, slashes or spaces. The system's own receipt_no is not an official receipt.
@@ -48,8 +113,10 @@ class SalesTransactionModel extends Model
             return null;
         }
 
+        // A voided duplicate carries the same number as its original; it is not a second use of it.
         return $this->select('sales_id, receipt_no, or_number')
             ->where('LOWER(TRIM(or_number)) =', $orNumber)
+            ->where(self::notVoided(), null, false)
             ->orderBy('sales_id', 'DESC')
             ->first();
     }
@@ -68,12 +135,14 @@ class SalesTransactionModel extends Model
      * on MySQL/MariaDB the read locks the highest receipt, so two cashiers checking
      * out together cannot both be given the same number (receipt_no is also UNIQUE).
      * Receipt numbers that are not plain numbers are ignored.
+     *
+     * Voided sales are deliberately counted here: a voided receipt's number stays taken, never reused.
      */
     public function generateReceiptNo(): string
     {
         $table = $this->db->protectIdentifiers($this->table, true);
 
-        if ($this->db->DBDriver === 'MySQLi') {
+        if ($this->db->getPlatform() === 'MySQLi') { // DBDriver is the app's own class name; the platform is 'MySQLi'
             $row     = $this->db->query("SELECT MAX(CAST(receipt_no AS UNSIGNED)) AS mx FROM {$table} WHERE receipt_no REGEXP '^[0-9]+\$' FOR UPDATE")->getRowArray();
             $highest = (int) ($row['mx'] ?? 0);
         } else {
@@ -90,26 +159,58 @@ class SalesTransactionModel extends Model
 
     public function totalForToday(): float
     {
+        return $this->totalForDate(date('Y-m-d'));
+    }
+
+    /** Sales value of one day (Y-m-d), voided sales left out. */
+    public function totalForDate(string $date): float
+    {
         return (float) ($this->selectSum('total_amount')
-            ->where('DATE(sale_date)', date('Y-m-d'))
+            ->where('DATE(sale_date)', $date)
+            ->where(self::notVoided(), null, false)
             ->first()['total_amount'] ?? 0);
+    }
+
+    /** Sales value of one month ('Y-m'), voided sales left out. */
+    public function totalForMonth(string $month): float
+    {
+        return (float) ($this->selectSum('total_amount')
+            ->where("DATE_FORMAT(sale_date, '%Y-%m')", $month)
+            ->where(self::notVoided(), null, false)
+            ->first()['total_amount'] ?? 0);
+    }
+
+    /** Receipts in one month ('Y-m'), voided sales left out. */
+    public function countForMonth(string $month): int
+    {
+        return $this->where("DATE_FORMAT(sale_date, '%Y-%m')", $month)
+            ->where(self::notVoided(), null, false)
+            ->countAllResults();
     }
 
     public function countForToday(): int
     {
-        return $this->where('DATE(sale_date)', date('Y-m-d'))->countAllResults();
+        return $this->countForDate(date('Y-m-d'));
+    }
+
+    /** Receipts on one day (Y-m-d), voided sales left out. */
+    public function countForDate(string $date): int
+    {
+        return $this->where('DATE(sale_date)', $date)->where(self::notVoided(), null, false)->countAllResults();
     }
 
     public function countInRange(string $startDate, string $endDate): int
     {
         return $this->where('DATE(sale_date) >=', $startDate)
             ->where('DATE(sale_date) <=', $endDate)
+            ->where(self::notVoided(), null, false)
             ->countAllResults();
     }
 
+    /** The latest receipts, voided sales left out. */
     public function recent(int $limit = 20): array
     {
-        return $this->orderBy('sale_date', 'DESC')->findAll($limit);
+        return $this->where(self::notVoided(), null, false)->orderBy('sale_date', 'DESC')->findAll($limit);
     }
 
     public function weeklyTotals(): array
@@ -142,6 +243,7 @@ class SalesTransactionModel extends Model
         $rows = $this->select("DATE(sale_date) as d, SUM(total_amount) as total")
             ->where('sale_date >=', $rangeStart->format('Y-m-d'))
             ->where('sale_date <', $upperBound->format('Y-m-d'))
+            ->where(self::notVoided(), null, false)
             ->groupBy('d')
             ->orderBy('d', 'ASC')
             ->findAll();

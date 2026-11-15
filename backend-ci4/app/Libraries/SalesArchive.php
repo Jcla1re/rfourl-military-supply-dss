@@ -4,6 +4,7 @@ namespace App\Libraries;
 
 use App\Models\AppSettingModel;
 use App\Models\NotificationModel;
+use App\Models\SalesTransactionModel;
 
 /**
  * Sales older than the retention period (Settings > Data & Records: 3 / 5 /
@@ -40,13 +41,16 @@ class SalesArchive
         return (new \DateTime('today'))->modify('-' . self::years() . ' years')->format('Y-m-d');
     }
 
-    /** Receipts older than the retention period. */
+    /**
+     * Records older than the retention period: every row purge() removes, voided duplicates included
+     * (they are removed with the rest), so deliberately not filtered.
+     */
     public static function count($db = null): int
     {
         return (int) ($db ?? db_connect())->table('sales_transaction')->where('sale_date <', self::cutoff())->countAllResults();
     }
 
-    /** First and last sale date past the retention period (['first' => ..., 'last' => ...]), or null. */
+    /** First and last record date past the retention period (['first' => ..., 'last' => ...]), or null. Any record, as count(). */
     public static function range($db = null): ?array
     {
         $row = ($db ?? db_connect())->table('sales_transaction')
@@ -104,17 +108,26 @@ class SalesArchive
         }
     }
 
-    /** Per-year totals of everything past the cutoff, or null when nothing is due. */
+    /**
+     * Per-year totals of everything past the cutoff, or null when nothing is due. receipts / units /
+     * revenue leave voided duplicates out; 'voided' counts those, and 'records' is every row the purge
+     * removes (receipts + voided).
+     */
     public static function summary($db = null): ?array
     {
-        $rows = ($db ?? db_connect())->query(
-            'SELECT YEAR(t.sale_date) AS yr, COUNT(DISTINCT t.sales_id) AS receipts,
-                    COALESCE(SUM(i.quantity_sold), 0) AS units,
-                    COALESCE(SUM(i.quantity_sold * i.selling_price), 0) AS revenue
-             FROM sales_transaction t
-             LEFT JOIN sales_item i ON i.sales_id = t.sales_id
+        $db                = $db ?? db_connect();
+        [$st, $si]         = [$db->prefixTable('sales_transaction'), $db->prefixTable('sales_item')];
+        $real              = SalesTransactionModel::notVoided('t');
+        $rows              = $db->query(
+            "SELECT YEAR(t.sale_date) AS yr,
+                    COUNT(DISTINCT CASE WHEN {$real} THEN t.sales_id END) AS receipts,
+                    COUNT(DISTINCT CASE WHEN {$real} THEN NULL ELSE t.sales_id END) AS voided,
+                    COALESCE(SUM(CASE WHEN {$real} THEN i.quantity_sold END), 0) AS units,
+                    COALESCE(SUM(CASE WHEN {$real} THEN i.quantity_sold * i.selling_price END), 0) AS revenue
+             FROM {$st} t
+             LEFT JOIN {$si} i ON i.sales_id = t.sales_id
              WHERE t.sale_date < ?
-             GROUP BY yr ORDER BY yr',
+             GROUP BY YEAR(t.sale_date) ORDER BY yr",
             [self::cutoff()]
         )->getResultArray();
 
@@ -122,26 +135,38 @@ class SalesArchive
             return null;
         }
 
+        $receipts = (int) array_sum(array_column($rows, 'receipts'));
+        $voided   = (int) array_sum(array_column($rows, 'voided'));
+
         return [
             'cutoff'   => self::cutoff(),
             'years'    => $rows,
-            'receipts' => array_sum(array_column($rows, 'receipts')),
+            'receipts' => $receipts,
+            'voided'   => $voided,
+            'records'  => $receipts + $voided,
             'units'    => array_sum(array_column($rows, 'units')),
             'revenue'  => array_sum(array_column($rows, 'revenue')),
         ];
     }
 
-    /** Everything needed to print/save the old history and its trend figures. */
+    /**
+     * Everything needed to print/save the old history and its trend figures. The monthly trend and
+     * the best sellers leave voided duplicates out; the receipt list shows them, each with its
+     * 'voided' label ("Voided duplicate of #XXXX"; null for a normal receipt).
+     */
     public static function report(): array
     {
-        $db  = db_connect();
-        $cut = self::cutoff();
-        $out = [];
+        $db   = db_connect();
+        $cut  = self::cutoff();
+        $out  = [];
+        $real = SalesTransactionModel::notVoided('t');
+        // Raw SQL: table names carry the connection's prefix (none in production).
+        [$st, $si, $pr] = [$db->prefixTable('sales_transaction'), $db->prefixTable('sales_item'), $db->prefixTable('products')];
 
         $monthly = $db->query(
-            'SELECT YEAR(t.sale_date) yr, MONTH(t.sale_date) m, SUM(i.quantity_sold) units, SUM(i.quantity_sold * i.selling_price) revenue
-             FROM sales_transaction t JOIN sales_item i ON i.sales_id = t.sales_id
-             WHERE t.sale_date < ? GROUP BY yr, m',
+            "SELECT YEAR(t.sale_date) yr, MONTH(t.sale_date) m, SUM(i.quantity_sold) units, SUM(i.quantity_sold * i.selling_price) revenue
+             FROM {$st} t JOIN {$si} i ON i.sales_id = t.sales_id
+             WHERE t.sale_date < ? AND {$real} GROUP BY YEAR(t.sale_date), MONTH(t.sale_date)",
             [$cut]
         )->getResultArray();
         foreach ($monthly as $r) {
@@ -149,23 +174,38 @@ class SalesArchive
         }
 
         $top = $db->query(
-            'SELECT YEAR(t.sale_date) yr, p.item_name, p.size, SUM(i.quantity_sold) units, SUM(i.quantity_sold * i.selling_price) revenue
-             FROM sales_transaction t JOIN sales_item i ON i.sales_id = t.sales_id JOIN products p ON p.item_id = i.item_id
-             WHERE t.sale_date < ? GROUP BY yr, p.item_id, p.item_name, p.size ORDER BY yr, units DESC',
+            "SELECT YEAR(t.sale_date) yr, p.item_name, p.size, SUM(i.quantity_sold) units, SUM(i.quantity_sold * i.selling_price) revenue
+             FROM {$st} t JOIN {$si} i ON i.sales_id = t.sales_id JOIN {$pr} p ON p.item_id = i.item_id
+             WHERE t.sale_date < ? AND {$real} GROUP BY YEAR(t.sale_date), p.item_id, p.item_name, p.size ORDER BY yr, units DESC",
             [$cut]
         )->getResultArray();
         foreach ($top as $r) {
             $out[$r['yr']]['top'][] = $r;
         }
 
+        // Every receipt (voided ones too, marked), with its lines as "2 x Goa Pants (M); 1 x Cap".
         $receipts = $db->query(
-            "SELECT YEAR(t.sale_date) yr, t.receipt_no, t.sale_date, t.total_amount,
-                    GROUP_CONCAT(CONCAT(i.quantity_sold, ' x ', p.item_name, IF(p.size IS NULL OR p.size = '', '', CONCAT(' (', p.size, ')'))) ORDER BY i.sales_item_id SEPARATOR '; ') AS items
-             FROM sales_transaction t JOIN sales_item i ON i.sales_id = t.sales_id JOIN products p ON p.item_id = i.item_id
-             WHERE t.sale_date < ? GROUP BY t.sales_id ORDER BY t.sale_date",
+            "SELECT t.sales_id, YEAR(t.sale_date) yr, t.receipt_no, t.sale_date, t.total_amount, t.voided_at, o.receipt_no AS duplicate_of_receipt_no
+             FROM {$st} t LEFT JOIN {$st} o ON o.sales_id = t.duplicate_of_sales_id
+             WHERE t.sale_date < ? ORDER BY t.sale_date, t.sales_id",
             [$cut]
         )->getResultArray();
+        $lines = [];
+        foreach ($db->query(
+            "SELECT i.sales_id, i.quantity_sold, p.item_name, p.size
+             FROM {$si} i JOIN {$st} t ON t.sales_id = i.sales_id JOIN {$pr} p ON p.item_id = i.item_id
+             WHERE t.sale_date < ? ORDER BY i.sales_item_id",
+            [$cut]
+        )->getResultArray() as $l) {
+            $size = trim((string) ($l['size'] ?? ''));
+            $lines[$l['sales_id']][] = $l['quantity_sold'] . ' x ' . $l['item_name'] . ($size !== '' ? " ({$size})" : '');
+        }
         foreach ($receipts as $r) {
+            if (! isset($lines[$r['sales_id']])) {
+                continue; // a receipt with no lines is left out, as before (the list joined the lines)
+            }
+            $r['items']  = implode('; ', $lines[$r['sales_id']]);
+            $r['voided'] = SalesTransactionModel::voidLabel($r);
             $out[$r['yr']]['receipts'][] = $r;
         }
 
@@ -174,7 +214,10 @@ class SalesArchive
         return $out;
     }
 
-    /** Removes the old sales and any history-only products left with no sales. @return int receipts removed */
+    /**
+     * Removes the old sales (every record past the cutoff, voided duplicates too: not filtered) and
+     * any history-only products left with no sales. @return int records removed
+     */
     public static function purge($db = null): int
     {
         $db  = $db ?? db_connect();

@@ -92,7 +92,7 @@
                 <?= help_tip('Until you remove them', 'They stay in Sales History and Trend Analysis.') ?>
             </p>
             <div class="ar-stats">
-                <div><span>Receipts</span><strong><?= number_format($summary['receipts']) ?></strong></div>
+                <div><span>Receipts</span><strong><?= number_format($summary['receipts']) ?></strong><?php if (($summary['voided'] ?? 0) > 0): ?><small> + <?= number_format($summary['voided']) ?> voided duplicate<?= $summary['voided'] === 1 ? '' : 's' ?> (not counted)</small><?php endif; ?></div>
                 <div><span>Units sold</span><strong><?= number_format($summary['units']) ?></strong></div>
                 <div><span>Sales value</span><strong>&#8369;<?= number_format($summary['revenue'], 2) ?></strong></div>
             </div>
@@ -123,17 +123,17 @@
             <span class="ar-badge is-2" aria-hidden="true">2</span>
             <div class="ar-step-body">
                 <h5 class="ar-title">Remove them from the system</h5>
-                <p class="ar-desc">Delete <?= number_format($summary['receipts']) ?> old receipts? This can't be undone. <?= help_tip('After you remove them', 'Trend Analysis and Top Sellers will no longer include these receipts.') ?></p>
+                <p class="ar-desc">Delete <?= number_format($summary['records'] ?? $summary['receipts']) ?> old receipts? This can't be undone. <?= help_tip('After you remove them', 'Trend Analysis and Top Sellers will no longer include these receipts.') ?></p>
                 <p class="ar-unsaved" id="arUnsaved"<?= $savedCopy ? ' hidden' : '' ?>><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> You haven't saved a copy yet.</p>
                 <form method="post" action="<?= site_url('admin/archive/purge') ?>" id="arPurgeForm" autocomplete="off"
-                      data-confirm="This permanently deletes <?= number_format($summary['receipts']) ?> sales records. It can't be undone."
+                      data-confirm="This permanently deletes <?= number_format($summary['records'] ?? $summary['receipts']) ?> sales records. It can't be undone."
                       data-confirm-title="Permanently remove sales records?"
                       data-confirm-ok="Remove records" data-confirm-variant="danger">
                     <?= csrf_field() ?>
                     <div class="ar-confirm">
                         <label for="arPassword">Enter your password to confirm</label>
                         <input type="password" id="arPassword" name="current_password" value="" placeholder="Password" autocomplete="new-password" aria-describedby="arPasswordHelp" required>
-                        <button type="submit" class="ar-btn ar-btn-danger" id="arRemoveBtn" disabled>Remove <?= number_format($summary['receipts']) ?> records</button>
+                        <button type="submit" class="ar-btn ar-btn-danger" id="arRemoveBtn" disabled>Remove <?= number_format($summary['records'] ?? $summary['receipts']) ?> records</button>
                         <small id="arPasswordHelp">Enter your password to continue.</small>
                     </div>
                 </form>

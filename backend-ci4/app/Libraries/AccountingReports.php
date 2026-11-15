@@ -2,6 +2,8 @@
 
 namespace App\Libraries;
 
+use App\Models\SalesTransactionModel;
+
 /**
  * The owner's Reports: Sales Journal, Purchases Journal and Period Summary for a date range.
  * Read-only: every figure comes straight from sales_transaction and the Delivered stock orders.
@@ -72,6 +74,7 @@ class AccountingReports
         $rows = db_connect()->table('sales_transaction')
             ->select('LOWER(TRIM(or_number)) AS k', false)
             ->where('or_number IS NOT NULL', null, false)
+            ->where(SalesTransactionModel::notVoided(), null, false) // a voided duplicate is not a second use
             ->where("TRIM(or_number) <> ''", null, false)
             ->groupBy('LOWER(TRIM(or_number))', false)
             ->having('COUNT(*) > 1', null, false)
@@ -85,12 +88,15 @@ class AccountingReports
     /**
      * @return array{rows: list<array>, days: list<array>, total: array}
      *         rows: one per receipt; days: date => subtotal row (oldest first); total: the period.
+     *         A voided duplicate is listed (its 'voided' is "Voided duplicate of #XXXX") but not added to
+     *         its day's subtotal, the period total or the receipt counts.
      */
     public static function salesJournal(string $from, string $to): array
     {
-        $receipts = db_connect()->table('sales_transaction st')
+        $builder = db_connect()->table('sales_transaction st')
             ->select('st.sales_id, st.receipt_no, st.or_number, st.sale_date, u.full_name AS cashier, st.subtotal, st.discount, st.total_amount, st.cash_amount, st.gcash_amount')
-            ->join('users u', 'u.user_id = st.user_id', 'left')
+            ->join('users u', 'u.user_id = st.user_id', 'left');
+        $receipts = SalesTransactionModel::withOriginalReceipt($builder, 'st')
             ->where('st.sale_date >=', $from . ' 00:00:00')
             ->where('st.sale_date <', self::after($to) . ' 00:00:00')
             ->orderBy('st.sale_date', 'ASC')
@@ -110,6 +116,8 @@ class AccountingReports
                 'or_number'  => ($r['or_number'] ?? '') !== '' ? (string) $r['or_number'] : null,
                 // The same OR number is on another receipt (in any period): marked "duplicate" on every one of them.
                 'duplicate'  => ($r['or_number'] ?? '') !== '' && isset($duplicates[strtolower(trim((string) $r['or_number']))]),
+                // Voided by `php spark sales:void-duplicate`: "Voided duplicate of #XXXX", else null.
+                'voided'     => SalesTransactionModel::voidLabel($r),
                 'date'       => $date,
                 'time'       => date('g:i A', strtotime((string) $r['sale_date'])),
                 'cashier'    => (string) ($r['cashier'] ?? ''),
@@ -122,8 +130,10 @@ class AccountingReports
             $rows[] = $row;
 
             $days[$date] ??= ['date' => $date] + $empty();
-            $days[$date]   = self::add($days[$date], $row);
-            $total         = self::add($total, $row);
+            if ($row['voided'] === null) {
+                $days[$date] = self::add($days[$date], $row);
+                $total       = self::add($total, $row);
+            }
         }
 
         return ['rows' => $rows, 'days' => array_values($days), 'total' => $total];
@@ -252,7 +262,7 @@ class AccountingReports
             $byDay = array_column($report['days'], null, 'date');
             $last  = count($report['rows']) - 1;
             foreach ($report['rows'] as $i => $r) {
-                fputcsv($out, ['Receipt', self::safe($r['receipt_no']), ($r['or_number'] ?? '—') . ($r['duplicate'] ? ' (duplicate)' : ''), $r['date'], $r['time'], self::safe($r['cashier']),
+                fputcsv($out, ['Receipt', self::safe($r['receipt_no']), self::csvOrCell($r), $r['date'], $r['time'], self::safe($r['cashier']),
                     self::num($r['gross']), self::num($r['discount']), self::num($r['net']), self::num($r['cash']), self::num($r['gcash'])]);
                 if ($i === $last || $report['rows'][$i + 1]['date'] !== $r['date']) {
                     $d = $byDay[$r['date']];
@@ -268,6 +278,17 @@ class AccountingReports
         fclose($out);
 
         return $csv;
+    }
+
+    /**
+     * The Sales Journal CSV's "OR No" cell: the number, then " (duplicate)" for an OR number on more than one
+     * receipt and " (voided duplicate of #XXXX)" for a voided receipt, so the columns stay the same.
+     */
+    private static function csvOrCell(array $r): string
+    {
+        return self::safe(($r['or_number'] ?? '—')
+            . ($r['duplicate'] ? ' (duplicate)' : '')
+            . ($r['voided'] !== null ? ' (' . lcfirst($r['voided']) . ')' : ''));
     }
 
     /**

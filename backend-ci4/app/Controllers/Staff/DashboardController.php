@@ -27,17 +27,17 @@ class DashboardController extends BaseController
         $products    = $productModel->where('is_active', 1)->findAll();
         $totalStock  = array_sum(array_column($products, 'current_stock'));
         $salesToday  = $salesTransactionModel->totalForToday();
-        $salesYesterday = (float) ($salesTransactionModel->selectSum('total_amount')
-            ->where('DATE(sale_date)', date('Y-m-d', strtotime('-1 day')))->first()['total_amount'] ?? 0);
+        $salesYesterday = $salesTransactionModel->totalForDate(date('Y-m-d', strtotime('-1 day')));
 
-        $txnToday     = $salesTransactionModel->where('DATE(sale_date)', date('Y-m-d'))->countAllResults();
-        $txnYesterday = $salesTransactionModel->where('DATE(sale_date)', date('Y-m-d', strtotime('-1 day')))->countAllResults();
+        $txnToday     = $salesTransactionModel->countForDate(date('Y-m-d'));
+        $txnYesterday = $salesTransactionModel->countForDate(date('Y-m-d', strtotime('-1 day')));
 
         $itemsSoldToday = $salesItemModel
             ->select('sales_item.item_id, products.item_name, SUM(sales_item.quantity_sold) as qty, SUM(sales_item.quantity_sold * sales_item.selling_price) as line_total')
             ->join('products', 'products.item_id = sales_item.item_id', 'left')
             ->join('sales_transaction', 'sales_transaction.sales_id = sales_item.sales_id', 'left')
             ->where('DATE(sales_transaction.sale_date)', date('Y-m-d'))
+            ->where(SalesTransactionModel::notVoided(), null, false)
             ->groupBy('sales_item.item_id')
             ->orderBy('line_total', 'DESC')
             ->findAll(4);
@@ -54,7 +54,7 @@ class DashboardController extends BaseController
         }
         unset($li);
 
-        $recentTransactions = $salesTransactionModel->orderBy('sale_date', 'DESC')->findAll(4);
+        $recentTransactions = $salesTransactionModel->recent(4);
         foreach ($recentTransactions as &$t) {
             $t['items'] = $salesItemModel->forSale($t['sales_id']);
         }

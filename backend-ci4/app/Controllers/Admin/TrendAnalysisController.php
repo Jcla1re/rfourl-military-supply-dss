@@ -45,7 +45,8 @@ class TrendAnalysisController extends BaseController
         $lastWeekEnd = (new \DateTime($weekAsOf))->modify('-7 days')->format('Y-m-d');
         $lastWeek = $this->weekSeries($lastWeekEnd, $itemId);
 
-        // Active products plus anything that has sales history, so older items stay searchable.
+        // Active products plus anything that has sales history, so older items stay searchable
+        // (any receipt, voided or not: this only decides which items can be picked).
         $products = $this->productModel
             ->where('is_active', 1)
             ->orWhere('item_id IN (SELECT DISTINCT item_id FROM sales_item)', null, false)
@@ -320,7 +321,7 @@ class TrendAnalysisController extends BaseController
         return $data + [
             'itemLabel'   => $itemLabel,
             'generatedAt' => date('M j, Y g:i A'), // the app's timezone is Asia/Manila
-            'lastSaleAt'  => $db->table('sales_transaction')->selectMax('sale_date', 'mx')->get()->getRowArray()['mx'] ?? null,
+            'lastSaleAt'  => $this->salesTransactionModel->lastSaleDate(),
             'dssRunAt'    => $db->table('pdss_computation')->selectMax('computed_at', 'mx')->get()->getRowArray()['mx'] ?? null,
             'weeks12'     => $this->weeksSeries($data['weekAsOf'], $itemId, 12),
         ];
@@ -375,7 +376,8 @@ class TrendAnalysisController extends BaseController
     /** Every year that has sales (newest first), always including the current year. */
     private function yearsWithSales(): array
     {
-        $rows = db_connect()->query('SELECT DISTINCT YEAR(sale_date) AS y FROM sales_transaction ORDER BY y DESC')->getResultArray();
+        $rows = db_connect()->table('sales_transaction')->distinct()->select('YEAR(sale_date) AS y')
+            ->where(SalesTransactionModel::notVoided(), null, false)->orderBy('y', 'DESC')->get()->getResultArray();
         $years = array_map('intval', array_column($rows, 'y'));
         $years[] = (int) date('Y');
         $years = array_values(array_unique($years));
@@ -422,6 +424,7 @@ class TrendAnalysisController extends BaseController
         $rows = db_connect()->table('sales_transaction')
             ->select('MONTH(sale_date) as m')
             ->where('YEAR(sale_date)', $year)
+            ->where(SalesTransactionModel::notVoided(), null, false)
             ->groupBy('m')
             ->get()->getResultArray();
 
@@ -450,6 +453,7 @@ class TrendAnalysisController extends BaseController
         $builder = db_connect()->table('sales_item si')
             ->select("MONTH(st.sale_date) as m, SUM(si.quantity_sold) as total")
             ->join('sales_transaction st', 'st.sales_id = si.sales_id')
+            ->where(SalesTransactionModel::notVoided('st'), null, false)
             ->where('YEAR(st.sale_date)', $year)
             ->groupBy('m');
 

@@ -196,6 +196,13 @@ class LogTransactionController extends BaseController
                 return redirect()->to("/staff/log-transaction/{$type}")
                     ->with('error', 'Receipt number not found. Check and try again.');
             }
+            // A voided duplicate's stock was already given back: a return must use the original receipt.
+            if (\App\Models\SalesTransactionModel::isVoided($sale)) {
+                $original = db_connect()->table('sales_transaction')->select('receipt_no')->where('sales_id', $sale['duplicate_of_sales_id'] ?? 0)->get()->getRowArray();
+
+                return redirect()->to("/staff/log-transaction/{$type}")
+                    ->with('error', "Receipt #{$sale['receipt_no']} was voided as a duplicate" . ($original ? " of #{$original['receipt_no']}. Use receipt #{$original['receipt_no']} instead." : '.'));
+            }
         }
 
         switch ($type) {

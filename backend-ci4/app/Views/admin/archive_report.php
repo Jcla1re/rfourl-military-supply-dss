@@ -62,11 +62,12 @@ $peso   = fn ($n) => 'PHP ' . number_format((float) $n, 2);
             <?php endforeach; ?>
         </table>
 
-        <h3>Sales history &mdash; <?= count($y['receipts'] ?? []) ?> receipts</h3>
+        <?php $voidedCount = count(array_filter($y['receipts'] ?? [], static fn ($r) => ($r['voided'] ?? null) !== null)); ?>
+        <h3>Sales history &mdash; <?= count($y['receipts'] ?? []) - $voidedCount ?> receipts<?= $voidedCount > 0 ? ' (+ ' . $voidedCount . ' voided duplicate' . ($voidedCount === 1 ? '' : 's') . ', not counted)' : '' ?></h3>
         <table>
             <tr><th style="width:70px">Date</th><th style="width:90px">Receipt</th><th>Items</th><th class="num" style="width:80px">Total</th></tr>
             <?php foreach ($y['receipts'] ?? [] as $r): ?>
-                <tr><td><?= esc(date('Y-m-d', strtotime($r['sale_date']))) ?></td><td><?= esc($r['receipt_no']) ?></td><td><?= esc($r['items']) ?></td><td class="num"><?= number_format($r['total_amount'], 2) ?></td></tr>
+                <tr><td><?= esc(date('Y-m-d', strtotime($r['sale_date']))) ?></td><td><?= esc($r['receipt_no']) ?><?= view('partials/_void_label', ['voidLabel' => $r['voided'] ?? null]) ?></td><td><?= esc($r['items']) ?></td><td class="num"<?= ($r['voided'] ?? null) !== null ? ' style="text-decoration:line-through;color:#8a8a8a"' : '' ?>><?= number_format($r['total_amount'], 2) ?></td></tr>
             <?php endforeach; ?>
         </table>
     </div>

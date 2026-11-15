@@ -30,14 +30,21 @@ class SalesItemModel extends Model
             ->findAll();
     }
 
+    /** Lines of real sales only: joins the receipt and leaves voided sales out. */
+    private function realSales()
+    {
+        return $this->join('sales_transaction', 'sales_transaction.sales_id = sales_item.sales_id')
+            ->where(SalesTransactionModel::notVoided(), null, false);
+    }
+
     public function topSellers(int $limit = 5, ?int $year = null): array
     {
         $builder = $this->select('sales_item.item_id, products.item_name, SUM(sales_item.quantity_sold) as units_sold')
             ->join('products', 'products.item_id = sales_item.item_id', 'left');
+        $this->realSales();
 
         if ($year !== null) {
-            $builder->join('sales_transaction', 'sales_transaction.sales_id = sales_item.sales_id')
-                ->where('YEAR(sales_transaction.sale_date)', $year);
+            $builder->where('YEAR(sales_transaction.sale_date)', $year);
         }
 
         return $builder->groupBy('sales_item.item_id')
@@ -54,10 +61,10 @@ class SalesItemModel extends Model
     {
         $builder = $this->select('sales_item.item_id, products.item_name, products.size, products.product_code, SUM(sales_item.quantity_sold * sales_item.selling_price) as revenue')
             ->join('products', 'products.item_id = sales_item.item_id', 'left');
+        $this->realSales();
 
         if ($year !== null) {
-            $builder->join('sales_transaction', 'sales_transaction.sales_id = sales_item.sales_id')
-                ->where('YEAR(sales_transaction.sale_date)', $year);
+            $builder->where('YEAR(sales_transaction.sale_date)', $year);
         }
 
         return $builder->groupBy('sales_item.item_id')
@@ -72,8 +79,8 @@ class SalesItemModel extends Model
      */
     public function dailyQuantities(string $startDate, string $endDate, ?string $itemId = null): array
     {
-        $builder = $this->select("DATE(sales_transaction.sale_date) as d, SUM(sales_item.quantity_sold) as qty")
-            ->join('sales_transaction', 'sales_transaction.sales_id = sales_item.sales_id')
+        $builder = $this->select("DATE(sales_transaction.sale_date) as d, SUM(sales_item.quantity_sold) as qty");
+        $this->realSales()
             ->where('DATE(sales_transaction.sale_date) >=', $startDate)
             ->where('DATE(sales_transaction.sale_date) <=', $endDate)
             ->groupBy('d');
@@ -93,8 +100,8 @@ class SalesItemModel extends Model
      */
     public function maxSaleDateInYear(int $year, ?string $itemId = null): ?string
     {
-        $builder = $this->select('MAX(sales_transaction.sale_date) as mx')
-            ->join('sales_transaction', 'sales_transaction.sales_id = sales_item.sales_id')
+        $builder = $this->select('MAX(sales_transaction.sale_date) as mx');
+        $this->realSales()
             ->where('YEAR(sales_transaction.sale_date)', $year);
 
         if ($itemId) {
@@ -103,5 +110,31 @@ class SalesItemModel extends Model
 
         $row = $builder->get()->getRowArray();
         return $row['mx'] ?? null;
+    }
+
+    /**
+     * Units sold per item per day between two dates (inclusive), voided sales left out:
+     * [item_id => [Y-m-d => qty]]. The demand the DSS run (dss:run) computes ROP / EOQ and the
+     * K-Means features from.
+     *
+     * @return array<string, array<string, int>>
+     */
+    public function dailyQuantitiesByItem(string $startDate, string $endDate): array
+    {
+        $rows = $this->db->table('sales_item si')
+            ->select('si.item_id, DATE(st.sale_date) AS d, SUM(si.quantity_sold) AS qty')
+            ->join('sales_transaction st', 'st.sales_id = si.sales_id')
+            ->where(SalesTransactionModel::notVoided('st'), null, false)
+            ->where('DATE(st.sale_date) >=', $startDate)
+            ->where('DATE(st.sale_date) <=', $endDate)
+            ->groupBy('si.item_id, d')
+            ->get()->getResultArray();
+
+        $byItem = [];
+        foreach ($rows as $r) {
+            $byItem[$r['item_id']][$r['d']] = (int) $r['qty'];
+        }
+
+        return $byItem;
     }
 }

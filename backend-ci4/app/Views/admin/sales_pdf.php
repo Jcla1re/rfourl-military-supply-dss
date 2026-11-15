@@ -42,8 +42,9 @@
                 <tr><td colspan="9">No sales transactions recorded this period.</td></tr>
             <?php else: ?>
                 <?php foreach ($transactions as $t): ?>
+                    <?php $voided = \App\Models\SalesTransactionModel::isVoided($t); ?>
                     <tr>
-                        <td>#<?= esc($t['receipt_no']) ?></td>
+                        <td>#<?= esc($t['receipt_no']) ?><?= view('partials/_void_label', ['voidLabel' => \App\Models\SalesTransactionModel::voidLabel($t)]) ?></td>
                         <td><?= esc(date('M j, Y g:i A', strtotime($t['sale_date']))) ?></td>
                         <td>
                             <?php foreach (($t['items'] ?? []) as $line): ?>
@@ -72,7 +73,7 @@
                                 —
                             <?php endif; ?>
                         </td>
-                        <td class="num">₱<?= number_format((float) $t['total_amount'], 2) ?></td>
+                        <td class="num"<?= $voided ? ' style="text-decoration:line-through;color:#8a8a8a"' : '' ?>>₱<?= number_format((float) $t['total_amount'], 2) ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -80,5 +81,8 @@
     </table>
 
     <div class="totals">Total for period: ₱<?= number_format((float) ($totalSales ?? 0), 2) ?></div>
+    <?php if (array_filter($transactions ?? [], [\App\Models\SalesTransactionModel::class, 'isVoided'])): ?>
+        <div class="sub" style="text-align:right;">Voided duplicates are listed but not counted in the total.</div>
+    <?php endif; ?>
 </body>
 </html>

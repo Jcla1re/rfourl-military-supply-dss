@@ -2,6 +2,8 @@
 
 namespace App\Libraries;
 
+use App\Models\SalesTransactionModel;
+
 /**
  * Trend Analysis > Projection: the expected items sold per month for next year, from plain averages
  * of what was really sold. Not machine learning, and nothing is fitted: every number can be checked
@@ -195,6 +197,7 @@ class DemandProjection
         $builder = $db->table('sales_item si')
             ->select('SUBSTR(st.sale_date, 1, 7) AS ym, SUM(si.quantity_sold) AS total', false)
             ->join('sales_transaction st', 'st.sales_id = si.sales_id')
+            ->where(SalesTransactionModel::notVoided('st'), null, false)
             ->groupBy('SUBSTR(st.sale_date, 1, 7)', false);
         if ($itemId) {
             $builder->where('si.item_id', $itemId);
@@ -205,10 +208,10 @@ class DemandProjection
         }
 
         $shopMonths = [];
-        foreach ($db->table('sales_transaction')->select('SUBSTR(sale_date, 1, 7) AS ym', false)->groupBy('SUBSTR(sale_date, 1, 7)', false)->get()->getResultArray() as $row) {
+        foreach ($db->table('sales_transaction')->select('SUBSTR(sale_date, 1, 7) AS ym', false)->where(SalesTransactionModel::notVoided(), null, false)->groupBy('SUBSTR(sale_date, 1, 7)', false)->get()->getResultArray() as $row) {
             $shopMonths[(string) $row['ym']] = true;
         }
-        $range = $db->table('sales_transaction')->select('MIN(sale_date) AS first_sale, MAX(sale_date) AS last_sale', false)->get()->getRowArray();
+        $range = $db->table('sales_transaction')->select('MIN(sale_date) AS first_sale, MAX(sale_date) AS last_sale', false)->where(SalesTransactionModel::notVoided(), null, false)->get()->getRowArray();
 
         return self::assemble($units, $shopMonths, $range['first_sale'] ?? null, $range['last_sale'] ?? null, $currentYear ?? (int) date('Y'), $safetyStock, $itemId ? ($itemLabel ?? $itemId) : null);
     }

@@ -71,16 +71,17 @@ $periodText = date('M j, Y', strtotime($from)) . ($from === $to ? '' : ' – ' .
                             <tr><td colspan="9" class="text-center py-4 rp-muted">No sales in this period.</td></tr>
                         <?php endif; ?>
                         <?php foreach ($rows as $i => $r): ?>
-                            <tr class="rp-row">
-                                <td>#<?= esc($r['receipt_no']) ?></td>
+                            <?php $strike = $r['voided'] !== null ? ' style="text-decoration:line-through;color:#8a8a8a"' : ''; ?>
+                            <tr class="rp-row<?= $r['voided'] !== null ? ' rp-voided' : '' ?>">
+                                <td>#<?= esc($r['receipt_no']) ?><?= view('partials/_void_label', ['voidLabel' => $r['voided']]) ?></td>
                                 <td><?= $r['or_number'] !== null ? esc($r['or_number']) : '—' ?><?php if (! empty($r['duplicate'])): ?> <span class="rp-dup" title="This OR number is on more than one receipt">duplicate</span><?php endif; ?></td>
                                 <td><?= esc(date('M j, Y', strtotime($r['date']))) ?> <?= esc($r['time']) ?></td>
                                 <td><?= esc($r['cashier'] !== '' ? $r['cashier'] : '—') ?></td>
-                                <td class="num"><?= $peso($r['gross']) ?></td>
-                                <td class="num"><?= $peso($r['discount']) ?></td>
-                                <td class="num"><?= $peso($r['net']) ?></td>
-                                <td class="num"><?= $peso($r['cash']) ?></td>
-                                <td class="num"><?= $peso($r['gcash']) ?></td>
+                                <td class="num"<?= $strike ?>><?= $peso($r['gross']) ?></td>
+                                <td class="num"<?= $strike ?>><?= $peso($r['discount']) ?></td>
+                                <td class="num"<?= $strike ?>><?= $peso($r['net']) ?></td>
+                                <td class="num"<?= $strike ?>><?= $peso($r['cash']) ?></td>
+                                <td class="num"<?= $strike ?>><?= $peso($r['gcash']) ?></td>
                             </tr>
                             <?php if (! isset($rows[$i + 1]) || $rows[$i + 1]['date'] !== $r['date']): ?>
                                 <?php $d = $days[$r['date']]; ?>

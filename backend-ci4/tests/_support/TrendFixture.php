@@ -54,7 +54,7 @@ trait TrendFixture
         $make('products', ['item_id' => ['type' => 'VARCHAR', 'constraint' => 15], 'item_name' => ['type' => 'VARCHAR', 'constraint' => 100], 'category' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true],
             'size' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true], 'product_code' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true], 'unit_cost' => ['type' => 'REAL', 'default' => 0],
             'is_active' => ['type' => 'INTEGER', 'default' => 1]], 'item_id');
-        $make('sales_transaction', ['sales_id' => ['type' => 'INTEGER', 'auto_increment' => true], 'sale_date' => ['type' => 'DATETIME'], 'total_amount' => ['type' => 'REAL', 'default' => 0]], 'sales_id');
+        $make('sales_transaction', ['sales_id' => ['type' => 'INTEGER', 'auto_increment' => true], 'sale_date' => ['type' => 'DATETIME'], 'total_amount' => ['type' => 'REAL', 'default' => 0]] + \Tests\Support\SalesVoidColumns::FIELDS, 'sales_id');
         $make('sales_item', ['sales_item_id' => ['type' => 'INTEGER', 'auto_increment' => true], 'sales_id' => ['type' => 'INTEGER'], 'item_id' => ['type' => 'VARCHAR', 'constraint' => 15],
             'quantity_sold' => ['type' => 'INTEGER'], 'selling_price' => ['type' => 'REAL']], 'sales_item_id');
         $make('pdss_computation', ['computation_id' => ['type' => 'INTEGER', 'auto_increment' => true], 'item_id' => ['type' => 'VARCHAR', 'constraint' => 15], 'computed_at' => ['type' => 'DATETIME', 'null' => true],

@@ -24,7 +24,8 @@ class InventoryLogModel extends Model
 
     protected $useTimestamps = false;
 
-    public const LOG_TYPES = ['MANUAL_ADJUSTMENT', 'RESTOCK', 'SALE', 'RETURN', 'DAMAGED_LOST'];
+    /** SALE_VOID: stock given back when a duplicate sale is voided (php spark sales:void-duplicate). */
+    public const LOG_TYPES = ['MANUAL_ADJUSTMENT', 'RESTOCK', 'SALE', 'RETURN', 'DAMAGED_LOST', 'SALE_VOID'];
 
     public function record(string $itemId, ?int $userId, string $logType, int $quantityChanged, int $stockAfter, ?string $referenceSoId = null, ?string $notes = null): void
     {

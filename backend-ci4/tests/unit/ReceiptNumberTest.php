@@ -33,7 +33,7 @@ final class ReceiptNumberTest extends CIUnitTestCase
             'payment_method' => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'Cash'],
             'subtotal'       => ['type' => 'REAL', 'default' => 0],
             'total_amount'   => ['type' => 'REAL', 'default' => 0],
-        ]);
+        ] + \Tests\Support\SalesVoidColumns::FIELDS);
         $forge->addKey('sales_id', true);
         $forge->createTable('sales_transaction');
 

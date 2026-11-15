@@ -2,6 +2,8 @@
 
 namespace App\Libraries;
 
+use App\Models\SalesTransactionModel;
+
 /**
  * CSV export of sales transactions, one row per sold line item (receipt
  * fields repeat on each row so the file filters and pivots cleanly in a
@@ -33,6 +35,9 @@ class SalesCsvExport
             ->join('sales_transaction st', 'st.sales_id = si.sales_id')
             ->join('users u', 'u.user_id = st.user_id', 'left')
             ->join('products p', 'p.item_id = si.item_id', 'left')
+            // Lines of real sales only: a spreadsheet of sold lines must add up to the sales. A voided
+            // duplicate shows (marked) on the receipts tab, the day PDF and the Reports page / CSV.
+            ->where(SalesTransactionModel::notVoided('st'), null, false)
             ->where('DATE(st.sale_date) >=', $from)
             ->where('DATE(st.sale_date) <=', $to)
             ->orderBy('st.sale_date', 'ASC')

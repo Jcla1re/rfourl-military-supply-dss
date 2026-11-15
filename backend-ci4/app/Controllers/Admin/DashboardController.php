@@ -36,8 +36,7 @@ class DashboardController extends BaseController
         $lastWeekly = $salesTransactionModel->lastWeekTotals();
 
         $salesToday     = $salesTransactionModel->totalForToday();
-        $salesYesterday = (float) ($salesTransactionModel->selectSum('total_amount')
-            ->where('DATE(sale_date)', date('Y-m-d', strtotime('-1 day')))->first()['total_amount'] ?? 0);
+        $salesYesterday = $salesTransactionModel->totalForDate(date('Y-m-d', strtotime('-1 day')));
         $salesTrendPct  = $salesYesterday > 0
             ? round((($salesToday - $salesYesterday) / $salesYesterday) * 100) . '%'
             : '0%';

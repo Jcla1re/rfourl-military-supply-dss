@@ -164,11 +164,13 @@
                                         'gcash_amount'       => (float) $t['gcash_amount'],
                                         'gcash_reference_no' => $t['gcash_reference_no'] ?? null,
                                         'or_number'          => $t['or_number'] ?? null,
+                                        'void_label'         => \App\Models\SalesTransactionModel::voidLabel($t),
                                         'staff_name'         => ($t['cashier_role'] ?? null) === 'Admin' ? 'Owner' : ($t['cashier_name'] ?? null),
                                     ];
                                 ?>
-                                <tr>
-                                    <td><a href="javascript:void(0)" class="view-receipt-link" data-receipt="<?= esc(json_encode($receiptPayload), 'attr') ?>"><strong>#<?= esc($t['receipt_no']) ?></strong></a></td>
+                                <?php $voided = \App\Models\SalesTransactionModel::isVoided($t); ?>
+                                <tr<?= $voided ? ' class="is-voided"' : '' ?>>
+                                    <td><a href="javascript:void(0)" class="view-receipt-link" data-receipt="<?= esc(json_encode($receiptPayload), 'attr') ?>"><strong>#<?= esc($t['receipt_no']) ?></strong></a><?= view('partials/_void_label', ['voidLabel' => $receiptPayload['void_label']]) ?></td>
                                     <td><?= esc(date('M j, Y g:i A', strtotime($t['sale_date']))) ?></td>
                                     <td>
                                         <?php foreach (($t['items'] ?? []) as $line): ?>
@@ -197,7 +199,7 @@
                                             —
                                         <?php endif; ?>
                                     </td>
-                                    <td>₱<?= number_format((float) $t['total_amount'], 2) ?></td>
+                                    <td<?= $voided ? ' style="text-decoration:line-through;color:#8a8a8a"' : '' ?>>₱<?= number_format((float) $t['total_amount'], 2) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
@@ -321,6 +323,7 @@
 
         <div class="inv-sub inv-not-official">This is not an official receipt.</div>
         <div class="inv-sub inv-or-no" id="hrOrRow" style="display:none;">OR / Invoice no.: <strong id="hrOrNo"></strong></div>
+        <div class="inv-sub" id="hrVoidRow" style="display:none;"><strong id="hrVoid"></strong> &middot; not counted in sales totals</div>
 
         <div class="inv-field-row">
             <div class="inv-field">Sold to<span class="inv-line">&nbsp;</span></div>
@@ -380,6 +383,8 @@
         document.getElementById('hrReceiptNo').textContent = r.receipt_no;
         document.getElementById('hrOrNo').textContent = r.or_number || '';
         document.getElementById('hrOrRow').style.display = r.or_number ? '' : 'none';
+        document.getElementById('hrVoid').textContent = r.void_label || '';
+        document.getElementById('hrVoidRow').style.display = r.void_label ? '' : 'none';
         const saleDate = new Date(r.sale_date.replace(' ', 'T'));
         document.getElementById('hrDate').textContent = saleDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
