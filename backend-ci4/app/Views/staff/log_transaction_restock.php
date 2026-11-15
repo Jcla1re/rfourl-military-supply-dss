@@ -60,8 +60,9 @@
             <div class="lt-form-card">
                 <span class="lt-badge">#<?= esc($o['so_id']) ?> &middot; <?= esc($o['company_name'] ?? 'Unassigned') ?></span>
 
-                <form method="post" action="<?= site_url('staff/log-transaction/restock-confirm/' . $o['so_id']) ?>">
+                <form method="post" action="<?= site_url('staff/log-transaction/restock-confirm/' . $o['so_id']) ?>" data-submit-once data-busy-label="Saving…">
                     <?= csrf_field() ?>
+                    <?= \App\Libraries\OnceToken::field('order_received') ?>
                     <table class="restock-check-table">
                         <thead>
                             <tr><th>Item</th><th class="num">Shipped Qty</th><th class="num">Unit Price</th><th class="num">Line Total</th><th class="check">Received</th></tr>

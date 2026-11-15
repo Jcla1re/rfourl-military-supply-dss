@@ -95,6 +95,57 @@ class ProductModel extends Model
         return $data;
     }
 
+    /**
+     * Inside a transaction: the rows for $itemIds, locked (SELECT ... FOR UPDATE on MySQL) until
+     * the transaction ends, so a stock check made on them can't be overtaken by another request.
+     *
+     * @return array<string, array> item_id => row
+     */
+    public function lockRows(array $itemIds): array
+    {
+        $itemIds = array_values(array_unique(array_map('strval', $itemIds)));
+        if ($itemIds === []) {
+            return [];
+        }
+
+        $sql = $this->db->table($this->table)->whereIn('item_id', $itemIds)->getCompiledSelect();
+        if ($this->db->DBDriver === 'MySQLi') {
+            $sql .= ' FOR UPDATE';
+        }
+
+        return array_column($this->db->query($sql)->getResultArray(), null, 'item_id');
+    }
+
+    /**
+     * Changes stock by $delta relative to what the row holds right now (never an absolute value
+     * worked out from an earlier read). A decrease only happens when enough stock is there.
+     * Returns the new stock, or null when nothing changed (not enough stock, or no such item).
+     *
+     * A plain query, so it skips this model's afterUpdate hook: callers run
+     * ReorderNoticeModel::clearResolved() for the changed items once their transaction is done.
+     */
+    public function changeStock(string $itemId, int $delta): ?int
+    {
+        if ($delta === 0) {
+            return null;
+        }
+
+        $builder = $this->db->table($this->table)
+            ->set('current_stock', 'current_stock ' . ($delta > 0 ? '+ ' : '- ') . abs($delta), false)
+            ->set('updated_at', date('Y-m-d H:i:s'))
+            ->where('item_id', $itemId);
+        if ($delta < 0) {
+            $builder->where('current_stock >=', -$delta);
+        }
+        $builder->update();
+
+        if ($this->db->affectedRows() < 1) {
+            return null;
+        }
+
+        return (int) $this->db->table($this->table)->select('current_stock')->where('item_id', $itemId)->get()->getRow()->current_stock;
+    }
+
     /** Active items that are Low Stock or Reorder Now (same rule as getStatus()). */
     public function getLowStock()
     {

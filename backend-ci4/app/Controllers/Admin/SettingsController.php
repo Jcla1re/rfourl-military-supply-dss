@@ -8,6 +8,7 @@ use App\Libraries\SalesArchive;
 use App\Libraries\AttemptStore;
 use App\Libraries\DemoGuard;
 use App\Libraries\EmailNotifier;
+use App\Libraries\OnceToken;
 use App\Libraries\PasswordHistory;
 use App\Libraries\PasswordPolicy;
 use App\Libraries\StaffPasswordReset;
@@ -335,6 +336,16 @@ class SettingsController extends BaseController
         if (DemoGuard::locksUser($staff)) {
             return DemoGuard::refuse($back);
         }
+        // The same form again (double click, resubmit): the reset was done the first time, so
+        // show that result instead of "one of their recent passwords". Nothing is sent again.
+        $onceKey = OnceToken::key($this->request);
+        $done    = fn () => redirect()->to($back)->with('toast', Toast::success(
+            'Password reset',
+            "{$staff['full_name']} must create their own password when they sign in with it."
+        ));
+        if (OnceToken::used($onceKey)) {
+            return $done();
+        }
         if (AttemptStore::hit('owner_reset_' . (int) session()->get('user_id'), 600) > 5) {
             return redirect()->to($back)->with('error', 'Too many attempts. Please wait a few minutes and try again.');
         }
@@ -365,7 +376,14 @@ class SettingsController extends BaseController
 
         $wasLocked = ! $staff['is_active'];
         $reset     = new StaffPasswordReset();
+        $db        = db_connect();
+        $db->transStart();
+        if (OnceToken::claim($onceKey, 'staff_password_reset', (int) session()->get('user_id'))) {
+            return $done();
+        }
         $reset->ownerReset($staff, $newPass);
+        OnceToken::complete($onceKey, 'user', (int) $staff['user_id']);
+        $db->transComplete();
         $reset->emailOwnerReset($staff);
 
         AttemptStore::forget('owner_reset_' . (int) session()->get('user_id'));
@@ -403,6 +421,20 @@ class SettingsController extends BaseController
     {
         $back = '/admin/settings?tab=accounts';
 
+        // The same form again (double click, resubmit): the account was made the first time, so
+        // show that result instead of "username already taken". Nothing is sent again.
+        $onceKey = OnceToken::key($this->request);
+        $created = function (array $earlier) use ($back) {
+            $staff = ! empty($earlier['result_id']) ? $this->userModel->find((int) $earlier['result_id']) : null;
+
+            return redirect()->to($back)->with('toast', Toast::success('Account created', $staff
+                ? 'A temporary password was emailed to ' . StaffPasswordReset::maskEmail((string) $staff['email']) . '.'
+                : 'A temporary password was emailed.'));
+        };
+        if ($earlier = OnceToken::used($onceKey)) {
+            return $created($earlier);
+        }
+
         if (! $this->validate([
             'full_name'     => 'required',
             'username'      => 'required|is_unique[users.username]',
@@ -420,6 +452,9 @@ class SettingsController extends BaseController
         $db    = db_connect();
 
         $db->transStart();
+        if ($earlier = OnceToken::claim($onceKey, 'staff_account', (int) session()->get('user_id'))) {
+            return $created($earlier);
+        }
         try {
             // The account needs a hash to exist; issue() replaces it with the real temporary password.
             $id = $this->userModel->insert([
@@ -443,6 +478,7 @@ class SettingsController extends BaseController
 
             return redirect()->to($back)->with('error', "We couldn't send the email, so the account was not created. Check the email address and try again.");
         }
+        OnceToken::complete($onceKey, 'user', $id);
         $db->transComplete();
 
         DemoGuard::reveal("Temporary password for {$staff['full_name']}", $password);

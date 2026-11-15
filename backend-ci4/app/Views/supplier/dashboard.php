@@ -56,20 +56,18 @@
                 <div class="sub"><?= esc($a['total_units']) ?> items scheduled for delivery (<?= esc(date('M j', strtotime($a['expected_delivery_date']))) ?>).</div>
             </div>
             <?php if ($a['status'] === 'Order Confirmed'): ?>
-                <form method="post" action="<?= site_url('supplier/new-orders/accept/' . $a['so_id']) ?>">
+                <form method="post" action="<?= site_url('supplier/new-orders/accept/' . $a['so_id']) ?>" data-submit-once>
                     <?= csrf_field() ?>
                     <button type="submit" class="btn btn-success btn-sm">Accept Order</button>
                 </form>
             <?php elseif ($a['status'] === 'Preparing'): ?>
-                <form method="post" action="<?= site_url('supplier/deliveries/ship/' . $a['so_id']) ?>">
+                <form method="post" action="<?= site_url('supplier/deliveries/ship/' . $a['so_id']) ?>" data-submit-once>
                     <?= csrf_field() ?>
                     <button type="submit" class="btn btn-success btn-sm">Shipped</button>
                 </form>
             <?php else: ?>
-                <form method="post" action="<?= site_url('supplier/deliveries/deliver/' . $a['so_id']) ?>">
-                    <?= csrf_field() ?>
-                    <button type="submit" class="btn btn-success btn-sm">Mark Delivered</button>
-                </form>
+                <?php // Shipped: RfourL confirms receipt (Owner Mark as Done / Staff Confirm Delivery Received); suppliers never receive orders themselves. ?>
+                <span class="text-muted small">Shipped &middot; waiting for RfourL to confirm receipt</span>
             <?php endif; ?>
         </div>
     <?php endforeach; ?>
@@ -97,8 +95,8 @@
                                 <div class="small"><strong>Items:</strong> <?php foreach ($o['lines'] as $l): ?><?= esc($l['item_name'] ?? $l['item_id']) ?> &times;<?= esc($l['order_quantity']) ?> <?php endforeach; ?></div>
                                 <div class="small"><strong>Requested delivery:</strong> <?= !empty($o['expected_delivery_date']) ? esc(date('M j, Y', strtotime($o['expected_delivery_date']))) : '—' ?></div>
                                 <div class="d-flex gap-2 mt-2">
-                                    <form method="post" action="<?= site_url('supplier/new-orders/accept/' . $o['so_id']) ?>"><?= csrf_field() ?><button type="submit" class="btn btn-sm btn-success">Accept</button></form>
-                                    <form method="post" action="<?= site_url('supplier/new-orders/decline/' . $o['so_id']) ?>"><?= csrf_field() ?><button type="submit" class="btn btn-sm btn-outline-danger">Decline</button></form>
+                                    <form method="post" action="<?= site_url('supplier/new-orders/accept/' . $o['so_id']) ?>" data-submit-once><?= csrf_field() ?><button type="submit" class="btn btn-sm btn-success">Accept</button></form>
+                                    <form method="post" action="<?= site_url('supplier/new-orders/decline/' . $o['so_id']) ?>" data-submit-once><?= csrf_field() ?><button type="submit" class="btn btn-sm btn-outline-danger">Decline</button></form>
                                 </div>
                             </div>
                         </div>

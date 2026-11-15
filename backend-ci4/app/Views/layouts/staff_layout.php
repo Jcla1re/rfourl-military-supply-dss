@@ -185,5 +185,6 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
     <?= view('partials/_confirm_modal') ?>
     <script src="/assets/js/confirm-modal.js"></script>
     <script src="/assets/js/pw-toggle.js"></script>
+    <script src="/assets/js/submit-once.js"></script>
 </body>
 </html>

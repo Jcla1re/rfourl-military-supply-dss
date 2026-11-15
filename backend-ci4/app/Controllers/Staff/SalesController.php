@@ -4,8 +4,8 @@
 namespace App\Controllers\Staff;
 
 use App\Controllers\BaseController;
-use App\Libraries\PosPricing;
-use App\Models\InventoryLogModel;
+use App\Libraries\PosCheckout;
+use App\Libraries\Toast;
 use App\Models\ProductModel;
 use App\Models\SalesItemModel;
 use App\Models\SalesTransactionModel;
@@ -15,14 +15,12 @@ class SalesController extends BaseController
     protected $salesTransactionModel;
     protected $salesItemModel;
     protected $productModel;
-    protected $inventoryLogModel;
 
     public function __construct()
     {
         $this->salesTransactionModel = new SalesTransactionModel();
         $this->salesItemModel        = new SalesItemModel();
         $this->productModel          = new ProductModel();
-        $this->inventoryLogModel     = new InventoryLogModel();
     }
 
     public function index()
@@ -132,163 +130,32 @@ class SalesController extends BaseController
             ->setBody($dompdf->output());
     }
 
+    /**
+     * Checkout & Print Receipt. The sale itself (one-time key, stock locked and decreased in one
+     * transaction) is App\Libraries\PosCheckout, shared with the other role's POS.
+     */
     public function checkout()
     {
-        $itemIds    = $this->request->getPost('item_id') ?? [];
-        $quantities = $this->request->getPost('quantity') ?? [];
-        $method     = $this->request->getPost('payment_method') ?: 'Cash';
+        $result = PosCheckout::run(
+            $this->request,
+            session()->get('user_id') !== null ? (int) session()->get('user_id') : null,
+            session()->get('role') === 'Admin' ? 'Owner' : (string) session()->get('full_name')
+        );
+        $back = redirect()->to('/staff/sales');
 
-        if (empty($itemIds)) {
-            return redirect()->to('/staff/sales')->with('error', 'Cart is empty.');
+        if (isset($result['error'])) {
+            return $back->with('error', $result['error']);
         }
 
-        if (! in_array($method, ['Cash', 'GCash', 'Split'], true)) {
-            $method = 'Cash';
+        // The same form again (double click, resubmit): nothing new was saved; show the first receipt.
+        if (! empty($result['repeat'])) {
+            $back->with('toast', Toast::info($result['receipt_no'] !== null
+                ? "This sale was already saved (receipt {$result['receipt_no']})."
+                : 'This sale was already saved.'));
+
+            return $result['receipt'] ? $back->with('receipt', $result['receipt']) : $back;
         }
 
-        $products = [];
-        $cartLines = [];
-        foreach ($itemIds as $i => $itemId) {
-            $product = $this->productModel->find($itemId);
-            if (! $product) {
-                continue;
-            }
-            $qty = max(1, (int) ($quantities[$i] ?? 1));
-            if ($qty > (int) $product['current_stock']) {
-                return redirect()->to('/staff/sales')->with('error', "Not enough stock for {$product['item_name']}.");
-            }
-            $products[] = $product;
-            $cartLines[] = [
-                'item_id'    => $product['item_id'],
-                'item_name'  => $product['item_name'],
-                'unit_price' => (float) $product['selling_price'],
-                'qty'        => $qty,
-            ];
-        }
-
-        if (empty($cartLines)) {
-            return redirect()->to('/staff/sales')->with('error', 'Cart is empty.');
-        }
-
-        $pricing  = PosPricing::priceCart($cartLines);
-        $subtotal = $pricing['subtotal'];
-        $discount = $pricing['discount'];
-        $total    = $pricing['total'];
-
-        $gcashRef = trim((string) ($this->request->getPost('gcash_reference_no') ?: ''));
-
-        if ($method === 'Split') {
-            $gcashAmount = round((float) ($this->request->getPost('gcash_amount') ?: 0), 2);
-            if ($gcashAmount <= 0 || $gcashAmount >= $total) {
-                return redirect()->to('/staff/sales')->with('error', "GCash amount can't be more than the total.");
-            }
-            if ($gcashRef === '') {
-                return redirect()->to('/staff/sales')->with('error', 'GCash reference number is required.');
-            }
-            $cashDue      = round($total - $gcashAmount, 2);
-            $cashReceived = round((float) ($this->request->getPost('cash_received') ?: 0), 2);
-            if ($cashReceived < $cashDue) {
-                return redirect()->to('/staff/sales')->with('error', 'Insufficient cash received for the remaining balance.');
-            }
-            $cashAmount = $cashDue;
-            $changeDue  = round($cashReceived - $cashDue, 2);
-        } elseif ($method === 'GCash') {
-            $gcashAmount = $total;
-            $cashAmount  = 0.0;
-            if ($gcashRef === '') {
-                return redirect()->to('/staff/sales')->with('error', 'GCash reference number is required.');
-            }
-            $cashReceived = $total;
-            $changeDue    = 0.0;
-        } else {
-            $cashReceived = round((float) ($this->request->getPost('cash_received') ?: 0), 2);
-            if ($cashReceived < $total) {
-                return redirect()->to('/staff/sales')->with('error', 'Insufficient cash received.');
-            }
-            $cashAmount  = $total;
-            $gcashAmount = 0.0;
-            $gcashRef    = null;
-            $changeDue   = round($cashReceived - $total, 2);
-        }
-
-        $db = db_connect();
-        $db->transStart();
-
-        // Generated inside the transaction (it locks the highest receipt number), so two
-        // cashiers checking out at the same moment can never be given the same number.
-        $receiptNo = $this->salesTransactionModel->generateReceiptNo();
-
-        $salesId = $this->salesTransactionModel->insert([
-            'receipt_no'          => $receiptNo,
-            'user_id'             => session()->get('user_id'),
-            'sale_date'           => date('Y-m-d H:i:s'),
-            'payment_method'      => $method,
-            'cash_amount'         => $cashAmount,
-            'gcash_amount'        => $gcashAmount,
-            'gcash_reference_no'  => $gcashRef,
-            'subtotal'            => $subtotal,
-            'discount'            => $discount,
-            'total_amount'        => $total,
-        ], true);
-
-        foreach ($pricing['lines'] as $i => $line) {
-            $product = $products[$i];
-
-            $this->salesItemModel->insert([
-                'sales_id'      => $salesId,
-                'item_id'       => $product['item_id'],
-                'quantity_sold' => $line['qty'],
-                'selling_price' => $line['unit_price'],
-            ]);
-
-            $newStock = (int) $product['current_stock'] - $line['qty'];
-            $this->productModel->update($product['item_id'], [
-                'current_stock' => $newStock,
-            ]);
-
-            $this->inventoryLogModel->record(
-                $product['item_id'],
-                session()->get('user_id'),
-                'SALE',
-                -$line['qty'],
-                $newStock,
-                null,
-                'Ref: sales_id=' . $salesId
-            );
-        }
-
-        $db->transComplete();
-
-        // Raise any reorder alert this sale caused right away.
-        (new \App\Models\ReorderAlertModel())->syncFromLiveInventory();
-
-        if ($db->transStatus() === false) {
-            return redirect()->to('/staff/sales')->with('error', 'Checkout failed and was rolled back. Please try again.');
-        }
-
-        $receipt = [
-            'receipt_no'         => $receiptNo,
-            'sale_date'          => date('Y-m-d H:i:s'),
-            'lines'              => array_map(fn ($l) => [
-                'item_name'  => $l['item_name'],
-                'qty'        => $l['qty'],
-                'unit_price' => $l['unit_price'],
-                'total'      => $l['line_total'],
-                'discount'   => $l['discount'],
-                'badge'      => $l['badge'],
-            ], $pricing['lines']),
-            'subtotal'           => $subtotal,
-            'discount'           => $discount,
-            'total'              => $total,
-            'cash_received'      => $cashReceived,
-            'change'             => max(0, $changeDue),
-            'payment_method'     => $method,
-            'cash_amount'        => $cashAmount,
-            'gcash_amount'       => $gcashAmount,
-            'gcash_reference_no' => $gcashRef,
-            'staff_name'         => session()->get('role') === 'Admin' ? 'Owner' : session()->get('full_name'),
-        ];
-
-        return redirect()->to('/staff/sales')->with('success', 'Sale completed and receipt printed.')->with('receipt', $receipt);
+        return $back->with('success', 'Sale completed and receipt printed.')->with('receipt', $result['receipt']);
     }
 }

@@ -884,4 +884,61 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->asStaff()->post('admin/notifications/accept/1')->assertRedirectTo(site_url('login/admin'));
         $this->asStaff()->post('admin/notifications/lock/1')->assertRedirectTo(site_url('login/admin'));
     }
+
+    // ================================================================ the same form twice (OnceToken)
+
+    /** Runs $test with the one-time key table (migration 2026-11-14-100000) in place. */
+    private function withFormKeys(callable $test): void
+    {
+        $forge = \Config\Database::forge();
+        $forge->dropTable('form_submissions', true);
+        $forge->addField([
+            'id' => ['type' => 'INTEGER', 'auto_increment' => true], 'submission_key' => ['type' => 'CHAR', 'constraint' => 32],
+            'action' => ['type' => 'VARCHAR', 'constraint' => 40], 'user_id' => ['type' => 'INTEGER', 'null' => true],
+            'result_type' => ['type' => 'VARCHAR', 'constraint' => 40, 'null' => true], 'result_id' => ['type' => 'VARCHAR', 'constraint' => 40, 'null' => true],
+            'created_at' => ['type' => 'DATETIME'],
+        ]);
+        $forge->addKey('id', true);
+        $forge->addUniqueKey('submission_key');
+        $forge->createTable('form_submissions');
+        try {
+            $test();
+        } finally {
+            $forge->dropTable('form_submissions', true);
+        }
+    }
+
+    public function testAResetPasswordSentTwiceShowsTheSuccessAgainNotRecentPassword(): void
+    {
+        $this->withFormKeys(function () {
+            $key = bin2hex(random_bytes(16));
+            $this->ownerReset(['submission_key' => $key]);
+            $hash = $this->user($this->staffId)->password_hash;
+            $sent = count($this->mailer->sent);
+
+            $result = $this->ownerReset(['submission_key' => $key]);
+
+            $result->assertSessionMissing('error');
+            $this->assertSame('Password reset', $_SESSION['toast']['title'] ?? null);
+            $this->assertSame($hash, $this->user($this->staffId)->password_hash, 'Done once.');
+            $this->assertCount($sent, $this->mailer->sent, 'No second email.');
+        });
+    }
+
+    public function testAnAddStaffAccountSentTwiceShowsTheSuccessAgainNotAlreadyTaken(): void
+    {
+        $this->withFormKeys(function () {
+            $post = ['full_name' => 'New Person', 'username' => 'newperson', 'contact_email' => 'juan@gmail.com', 'submission_key' => bin2hex(random_bytes(16))];
+            $this->asOwner()->post('admin/settings/staff-accounts', $post);
+            $sent = count($this->mailer->sent);
+
+            $result = $this->asOwner()->post('admin/settings/staff-accounts', $post);
+
+            $result->assertSessionMissing('error');
+            $this->assertSame('Account created', $_SESSION['toast']['title'] ?? null);
+            $this->assertSame('A temporary password was emailed to j***@gmail.com.', $_SESSION['toast']['message'] ?? null);
+            $this->assertSame(1, $this->db->table('users')->where('username', 'newperson')->countAllResults());
+            $this->assertCount($sent, $this->mailer->sent, 'No second email.');
+        });
+    }
 }

@@ -40,7 +40,9 @@
 
     const peso = n => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const localDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    let lines = [], opener = null, submitting = false, uid = 0;
+    let lines = [], opener = null, uid = 0;
+    // One order per click: the form has data-submit-once (submit-once.js), which blocks a repeat and shows "Creating order…".
+    const busy = () => !!(window.SubmitOnce && window.SubmitOnce.isBusy(form));
     let empty = false, showPriority = false, catalog = {}, priorityChoice = null;
 
     // Expected delivery: today + the supplier's lead time.
@@ -146,7 +148,7 @@
         else message = errors ? `Fix ${errors} error${errors === 1 ? '' : 's'} to create.` : 'Ready to create.';
         status.textContent = message;
         status.classList.toggle('is-error', errors > 0);
-        submit.disabled = blocked > 0 || submitting;
+        submit.disabled = blocked > 0 || busy();
 
         if (empty) {
             refreshItemsArea();
@@ -249,7 +251,7 @@
         catalog = empty ? (options.catalog || {}) : {};
         lines = (newLines || []).slice();
         opener = options.opener || document.activeElement;
-        submitting = false;
+        if (window.SubmitOnce) window.SubmitOnce.reset(form);
 
         chooseSection.hidden = !empty;
         choose.disabled = !empty;
@@ -377,9 +379,7 @@
         if (!picker.hidden) closePicker(); else close(); // Esc first closes the item picker
     });
     form.addEventListener('submit', e => {
-        if (submitting || refresh() > 0) { e.preventDefault(); return; }
-        submitting = true; // one order per click
-        submit.disabled = true;
+        if (refresh() > 0) e.preventDefault(); // not sent, so submit-once leaves the form as it is
     });
 
     window.PurchaseOrderDialog = { open, close };

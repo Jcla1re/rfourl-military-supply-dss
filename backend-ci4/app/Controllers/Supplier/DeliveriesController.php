@@ -4,6 +4,7 @@ namespace App\Controllers\Supplier;
 
 use App\Controllers\BaseController;
 use App\Libraries\EmailNotifier;
+use App\Libraries\Toast;
 use App\Models\NotificationModel;
 use App\Models\SoItemModel;
 use App\Models\StockOrderModel;
@@ -75,14 +76,20 @@ class DeliveriesController extends BaseController
             $itemSummaries[]       = ($line['item_name'] ?? $line['item_id']) . ": {$qty} unit(s)";
         }
 
-        $this->soItemModel->recordShippedQuantities($quantities);
-
         $trackingNo = $this->request->getPost('tracking_no') ?: $order['tracking_no'];
 
-        $this->stockOrderModel->update($soId, [
-            'status'      => 'Shipped',
-            'tracking_no' => $trackingNo,
-        ]);
+        // Only from Preparing, status and quantities together: a repeat or a stale tab can never
+        // move a Delivered (or Cancelled) order back to Shipped, so it can't be received twice.
+        $db = db_connect();
+        $db->transStart();
+        if (! $this->stockOrderModel->transition($soId, ['Preparing'], 'Shipped', ['tracking_no' => $trackingNo])) {
+            $db->transRollback();
+            $now = $this->stockOrderModel->find($soId)['status'] ?? $order['status'];
+
+            return redirect()->to('/supplier/deliveries')->with('toast', Toast::info("This order is already {$now}."));
+        }
+        $this->soItemModel->recordShippedQuantities($quantities);
+        $db->transComplete();
 
         $message = 'Tracking no.: ' . ($trackingNo ?: 'not provided') . '. Items shipped: ' . implode(', ', $itemSummaries) . '.';
 

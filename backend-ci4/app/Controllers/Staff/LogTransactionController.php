@@ -5,6 +5,8 @@ namespace App\Controllers\Staff;
 
 use App\Controllers\BaseController;
 use App\Libraries\EmailNotifier;
+use App\Libraries\OnceToken;
+use App\Libraries\Toast;
 use App\Models\InventoryLogModel;
 use App\Models\NotificationModel;
 use App\Models\ProductModel;
@@ -118,11 +120,33 @@ class LogTransactionController extends BaseController
     {
         $order = $this->stockOrderModel->find($soId);
 
-        if (! $order || $order['status'] !== 'Shipped') {
-            return redirect()->to('/staff/log-transaction/restock')->with('error', 'Order not found or not ready to confirm.');
+        $back = redirect()->to('/staff/log-transaction/restock');
+        $key  = OnceToken::key($this->request);
+        // The same form again: stock was added the first time; say so instead of an error.
+        if (OnceToken::used($key)) {
+            return $back->with('toast', Toast::info('Already saved.'));
+        }
+        if (! $order) {
+            return $back->with('error', 'Order not found or not ready to confirm.');
+        }
+        if ($order['status'] === 'Delivered') {
+            return $back->with('toast', Toast::info('This order was already received.'));
+        }
+        if ($order['status'] !== 'Shipped') {
+            return $back->with('error', 'Order not found or not ready to confirm.');
         }
 
-        $this->stockOrderModel->markDelivered($soId, session()->get('user_id'));
+        // Stock is added once, only from Shipped, in one transaction (also if the Owner confirms it at the same moment).
+        $result = $this->stockOrderModel->markDelivered($soId, (int) session()->get('user_id'), $key);
+        if ($result === StockOrderModel::ALREADY_SAVED) {
+            return $back->with('toast', Toast::info('Already saved.'));
+        }
+        if ($result === StockOrderModel::ALREADY_RECEIVED) {
+            return $back->with('toast', Toast::info('This order was already received.'));
+        }
+        if ($result === StockOrderModel::FAILED) {
+            return $back->with('error', 'Saving failed and nothing was changed. Please try again.');
+        }
 
         $staffName = session()->get('full_name') ?? 'A staff member';
         $message   = "{$staffName} confirmed delivery for order {$soId}. Inventory has been updated.";
@@ -139,6 +163,12 @@ class LogTransactionController extends BaseController
 
         if (! isset(self::TYPES[$type])) {
             return redirect()->to('/staff/log-transaction')->with('error', 'Unknown transaction type.');
+        }
+
+        // The same form again (double click, resubmit): the first one was saved; say so.
+        $onceKey = OnceToken::key($this->request);
+        if (OnceToken::used($onceKey)) {
+            return redirect()->to('/staff/log-transaction')->with('toast', Toast::info('Already saved.'));
         }
 
         $itemId = (string) $this->request->getPost('item_id');
@@ -208,9 +238,34 @@ class LogTransactionController extends BaseController
             return redirect()->to("/staff/log-transaction/{$type}")->with('error', 'Nothing to log — quantity is zero.');
         }
 
-        $newStock = max(0, $currentStock + $delta);
+        // Saved once per form (OnceToken), and the stock change is made inside one transaction on
+        // the locked row, relative to what is there now, never an absolute value from the read above.
+        $db = db_connect();
+        $db->transStart();
 
-        $this->productModel->update($itemId, ['current_stock' => $newStock]);
+        if (OnceToken::claim($onceKey, 'stock_log_' . $type, $userId ? (int) $userId : null)) {
+            return redirect()->to('/staff/log-transaction')->with('toast', Toast::info('Already saved.'));
+        }
+
+        $locked = $this->productModel->lockRows([$itemId])[$itemId] ?? null;
+        $now    = (int) ($locked['current_stock'] ?? 0);
+        if ($type === 'adjustment') {
+            $delta = $actual - $now; // a count sets the stock to what was counted
+            $qty   = abs($delta);
+        }
+        if ($type === 'damaged' && $qty > $now) {
+            $db->transRollback();
+
+            return redirect()->to("/staff/log-transaction/{$type}")
+                ->with('error', "Only {$now} in stock. Enter {$now} or less.");
+        }
+
+        $newStock = $delta === 0 ? null : $this->productModel->changeStock($itemId, $delta);
+        if ($newStock === null) {
+            $db->transRollback();
+
+            return redirect()->to("/staff/log-transaction/{$type}")->with('error', 'Nothing to log — quantity is zero.');
+        }
 
         $this->inventoryLogModel->record(
             $itemId,
@@ -222,6 +277,14 @@ class LogTransactionController extends BaseController
             $notes ?: null
         );
 
+        OnceToken::complete($onceKey, 'stock_log', $itemId);
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return redirect()->to("/staff/log-transaction/{$type}")->with('error', 'Saving failed and nothing was changed. Please try again.');
+        }
+
+        (new \App\Models\ReorderNoticeModel())->clearResolved([$itemId]);
         (new \App\Models\ReorderAlertModel())->syncFromLiveInventory();
 
         $this->notifyAdmin($type, (array) $product, $qty, $delta, $newStock, $notes);

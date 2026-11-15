@@ -212,6 +212,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
     <?= view('partials/_confirm_modal') ?>
     <script src="/assets/js/confirm-modal.js"></script>
     <script src="/assets/js/pw-toggle.js"></script>
+    <script src="/assets/js/submit-once.js"></script>
 <?php // DSS recalculation in the background (weekly or "Recalculate now"): toast on whatever page the admin is on when it finishes. ?>
     <?php $dssStatus = (new \App\Libraries\DssRunner())->status(false); ?>
     <script>window.DSS_WATCH = <?= json_encode(['running' => $dssStatus['running'], 'lastFinished' => $dssStatus['last']['finished_at'] ?? '', 'statusUrl' => site_url('admin/dss/status')]) ?>;</script>

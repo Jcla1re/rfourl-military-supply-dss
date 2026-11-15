@@ -323,6 +323,9 @@ class DssRun extends BaseCommand
         CLI::write('Clusters ' . ($freshClusterRows !== null ? 'refreshed' : 'left as cached') . ': ' . count($classByItem));
         CLI::write('New reorder alerts raised: ' . count($newAlerts) . ' (skipped ' . (count($alertRows) - count($newAlerts)) . ' already-open)');
         CLI::write('Analytics snapshots written: ' . count($snapshotRows));
+
+        // Housekeeping: one-time form keys older than 7 days (App\Libraries\OnceToken) are no longer needed.
+        CLI::write('Old form keys removed: ' . \App\Libraries\OnceToken::purgeOlderThan(7));
     }
 
     /**

@@ -223,8 +223,11 @@ if (document.getElementById('posGrid')) {
         document.getElementById('discountRow').style.display = pricing.discount > 0 ? '' : 'none';
         document.getElementById('cartDiscountOut').textContent = '- ₱' + pricing.discount.toLocaleString();
         document.getElementById('cartTotal').textContent = '₱' + pricing.total.toLocaleString();
-        document.getElementById('checkoutBtn').disabled = ids.length === 0;
-        document.getElementById('clearCart').disabled = ids.length === 0;
+        // While the sale is on its way (submit-once.js), the button stays disabled and says "Processing sale…".
+        if (!(window.SubmitOnce && window.SubmitOnce.isBusy(document.getElementById('cartForm')))) {
+            document.getElementById('checkoutBtn').disabled = ids.length === 0;
+            document.getElementById('clearCart').disabled = ids.length === 0;
+        }
 
         renderChips('cashChips', pricing.total, 'cashReceived');
         renderChips('splitChips', null, 'splitCashReceived');
@@ -263,6 +266,11 @@ if (document.getElementById('posGrid')) {
     lines.addEventListener('keydown', e => {
         // Enter in a quantity box only confirms the number; it never submits the checkout form.
         if (e.key === 'Enter' && e.target.closest('.qty-input')) { e.preventDefault(); e.target.blur(); }
+    });
+    // Same for the payment fields (Cash received, GCash amount and reference): only the
+    // Checkout & Print Receipt button sends the sale.
+    document.getElementById('cartForm').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && e.target.matches('input:not([type="submit"]):not([type="button"])')) e.preventDefault();
     });
 
     // Grays out a product card, matching the "Out of stock" look, once the

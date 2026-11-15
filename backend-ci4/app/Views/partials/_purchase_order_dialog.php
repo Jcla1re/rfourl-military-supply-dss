@@ -26,8 +26,9 @@
             <button type="button" class="im-close" data-po-close aria-label="Close"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
 
-        <form id="poForm" class="im-form" method="post" action="<?= site_url('admin/orders/store') ?>" novalidate>
+        <form id="poForm" class="im-form" method="post" action="<?= site_url('admin/orders/store') ?>" novalidate data-submit-once data-busy-label="Creating order…">
             <?= csrf_field() ?>
+            <?= \App\Libraries\OnceToken::field('stock_order') ?>
             <input type="hidden" name="alert_id" id="poAlertId">
             <input type="hidden" name="return_to" id="poReturnTo">
             <input type="hidden" name="return_query" id="poReturnQuery">

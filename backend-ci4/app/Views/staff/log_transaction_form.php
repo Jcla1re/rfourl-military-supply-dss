@@ -77,8 +77,9 @@ $g = $guide[$type] ?? ['icon' => 'bi-info-circle', 'about' => '', 'points' => []
     <div class="lt-form-card">
         <span class="lt-badge"><?= esc($typeInfo['label']) ?></span>
 
-        <form method="post" action="<?= site_url('staff/log-transaction/store') ?>" id="ltForm">
+        <form method="post" action="<?= site_url('staff/log-transaction/store') ?>" id="ltForm" data-submit-once data-busy-label="Saving…">
             <?= csrf_field() ?>
+            <?= \App\Libraries\OnceToken::field('stock_log') ?>
             <input type="hidden" name="type" value="<?= esc($type) ?>">
 
             <div class="lt-grid">

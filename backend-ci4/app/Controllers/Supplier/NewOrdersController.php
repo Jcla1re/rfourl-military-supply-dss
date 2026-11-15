@@ -4,6 +4,7 @@ namespace App\Controllers\Supplier;
 
 use App\Controllers\BaseController;
 use App\Libraries\EmailNotifier;
+use App\Libraries\Toast;
 use App\Models\NotificationModel;
 use App\Models\SoItemModel;
 use App\Models\StockOrderModel;
@@ -66,7 +67,10 @@ class NewOrdersController extends BaseController
             return redirect()->to('/supplier/new-orders')->with('error', 'Order not found.');
         }
 
-        $this->stockOrderModel->update($soId, ['status' => 'Preparing']);
+        // Only from Order Confirmed: a repeat or a stale tab (cancelled, already accepted) changes nothing and sends nothing.
+        if (! $this->stockOrderModel->transition($soId, ['Order Confirmed'], 'Preparing')) {
+            return $this->already($soId, $order);
+        }
 
         $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} accepted by supplier", session()->get('full_name') . " accepted order {$soId} and has started preparing it.", null, 'order_status', "/admin/orders/{$soId}");
         $this->emailNotifier->toRole('Admin', "Order {$soId} accepted by supplier", session()->get('full_name') . " accepted order {$soId} and has started preparing it.");
@@ -88,12 +92,23 @@ class NewOrdersController extends BaseController
         }
         $reason = mb_substr($reason, 0, 255);
 
-        $this->stockOrderModel->markCancelled($soId, ['decline_reason' => $reason, 'cancelled_at' => date('Y-m-d H:i:s')]); // alerts back to Active
+        // Only an order not yet accepted can be declined; alerts go back to Active.
+        if (! $this->stockOrderModel->markCancelled($soId, ['decline_reason' => $reason, 'cancelled_at' => date('Y-m-d H:i:s')], ['Order Confirmed'])) {
+            return $this->already($soId, $order);
+        }
 
         $declineMsg = session()->get('full_name') . " declined order {$soId}. Reason: {$reason}. Please reassign or follow up.";
         $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} declined by supplier", $declineMsg, null, 'order_status', "/admin/orders/{$soId}");
         $this->emailNotifier->toRole('Admin', "Order {$soId} declined by supplier", $declineMsg);
 
         return redirect()->to('/supplier/new-orders')->with('success', "Order {$soId} declined.");
+    }
+
+    /** A refused move (repeat, stale tab): nothing changed and nothing was sent. */
+    private function already(string $soId, array $order)
+    {
+        $now = $this->stockOrderModel->find($soId)['status'] ?? $order['status'];
+
+        return redirect()->to('/supplier/new-orders')->with('toast', Toast::info("This order is already {$now}."));
     }
 }

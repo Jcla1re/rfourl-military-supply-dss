@@ -123,8 +123,9 @@
             <button type="button" class="btn-close close-order-modal"></button>
         </div>
 
-        <form method="post" action="<?= site_url('admin/orders/store') ?>">
+        <form method="post" action="<?= site_url('admin/orders/store') ?>" data-submit-once data-busy-label="Sending…">
             <?= csrf_field() ?>
+            <?= \App\Libraries\OnceToken::field('stock_order') ?>
             <input type="hidden" name="item_id[]" id="orderItemId">
 
             <div class="order-form-grid">

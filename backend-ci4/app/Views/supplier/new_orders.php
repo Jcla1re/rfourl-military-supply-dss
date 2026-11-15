@@ -74,12 +74,12 @@
                     </div>
                 </div>
                 <div class="no-card-actions">
-                    <form method="post" action="<?= site_url('supplier/new-orders/decline/' . $o['so_id']) ?>" onsubmit="var r = prompt('Reason for declining this order?'); if (!r || !r.trim()) { return false; } this.reason.value = r.trim(); return true;">
+                    <form method="post" action="<?= site_url('supplier/new-orders/decline/' . $o['so_id']) ?>" data-submit-once onsubmit="var r = prompt('Reason for declining this order?'); if (!r || !r.trim()) { return false; } this.reason.value = r.trim(); return true;">
                         <?= csrf_field() ?>
                         <input type="hidden" name="reason" value="">
                         <button type="submit" class="btn btn-outline-danger fw-bold">Decline</button>
                     </form>
-                    <form method="post" action="<?= site_url('supplier/new-orders/accept/' . $o['so_id']) ?>">
+                    <form method="post" action="<?= site_url('supplier/new-orders/accept/' . $o['so_id']) ?>" data-submit-once>
                         <?= csrf_field() ?>
                         <button type="submit" class="btn btn-success fw-bold">Accept Order</button>
                     </form>

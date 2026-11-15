@@ -147,7 +147,7 @@ final class PosPageTest extends CIUnitTestCase
         ]);
 
         $this->assertSame(site_url($role . '/sales'), $response->getRedirectUrl());
-        $this->assertSame('Not enough stock for Tactical Pants.', $_SESSION['error'] ?? null);
+        $this->assertSame('Not enough stock for Tactical Pants · Size S (only 5 left). Nothing was saved.', $_SESSION['error'] ?? null);
         $this->assertSame(5, (int) $this->db->table('products')->where('item_id', '0290')->get()->getRow()->current_stock, 'Stock untouched.');
         foreach (['sales_transaction', 'sales_item', 'inventory_log'] as $t) {
             $this->assertSame(0, $this->db->table($t)->countAllResults(), "Nothing written to {$t}.");

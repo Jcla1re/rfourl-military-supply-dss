@@ -439,8 +439,9 @@ $tabs = [
             <div class="modal fade" id="resetStaffPwModal" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content">
-                        <form method="post" id="resetStaffPwForm" action="">
+                        <form method="post" id="resetStaffPwForm" action="" data-submit-once data-busy-label="Resetting…">
                             <?= csrf_field() ?>
+                            <?= \App\Libraries\OnceToken::field('staff_password_reset') ?>
                             <div class="modal-header">
                                 <h5 class="modal-title">Reset Password &mdash; <span id="resetStaffPwName"></span></h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -504,8 +505,9 @@ $tabs = [
             <div class="modal fade" id="addStaffModal" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content">
-                        <form method="post" action="<?= site_url('admin/settings/staff-accounts') ?>">
+                        <form method="post" action="<?= site_url('admin/settings/staff-accounts') ?>" data-submit-once data-busy-label="Creating…">
                             <?= csrf_field() ?>
+                            <?= \App\Libraries\OnceToken::field('staff_account') ?>
                             <div class="modal-header">
                                 <h5 class="modal-title">Add Staff Account</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

@@ -263,8 +263,9 @@ $followedUpToday = $followedUpToday ?? [];
                                     <button type="button" class="btn-close" onclick="this.closest('.inv-modal').classList.remove('show')"></button>
                                 </div>
                                 <p class="subtitle">Tick each item that arrived. It should match what the supplier shipped.</p>
-                                <form method="post" action="<?= site_url('admin/orders/update-status/' . $o['so_id']) ?>">
+                                <form method="post" action="<?= site_url('admin/orders/update-status/' . $o['so_id']) ?>" data-submit-once data-busy-label="Saving…">
                                     <?= csrf_field() ?>
+                                    <?= \App\Libraries\OnceToken::field('order_received') ?>
                                     <input type="hidden" name="status" value="Delivered">
                                     <table style="width:100%; border-collapse:collapse; margin-bottom:18px;">
                                         <thead>

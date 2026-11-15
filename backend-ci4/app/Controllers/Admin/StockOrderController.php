@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\EmailNotifier;
+use App\Libraries\OnceToken;
 use App\Libraries\PurchaseOrderLine;
 use App\Libraries\Toast;
 use App\Models\SecurityLogModel;
@@ -357,11 +358,18 @@ class StockOrderController extends BaseController
 
         $wasPreparing = $order['status'] === 'Preparing';
 
-        $this->stockOrderModel->markCancelled($soId, [
+        // Only while it is still cancellable (one UPDATE ... WHERE status IN (...)): a repeat or a
+        // second person gets a note instead, and the supplier is told once.
+        $cancelled = $this->stockOrderModel->markCancelled($soId, [
             'cancel_reason' => $reason,
             'cancelled_by'  => (int) session()->get('user_id'),
             'cancelled_at'  => date('Y-m-d H:i:s'),
         ]);
+        if (! $cancelled) {
+            $now = $this->stockOrderModel->find($soId)['status'] ?? $order['status'];
+
+            return redirect()->to('/admin/orders')->with('toast', Toast::info("This order is already {$now}."));
+        }
 
         $message = "Order {$soId} was cancelled by RfourL. Reason: {$reason}. Please don't prepare or ship it."
             . ($wasPreparing ? " We're sorry for any work already started." : '');
@@ -422,6 +430,16 @@ class StockOrderController extends BaseController
         $fromOrders = $returnTo === '/admin/orders';
         $fail       = fn (string $why) => ($fromOrders ? redirect()->to('/admin/orders') : redirect()->back())
             ->with('toast', Toast::error("Couldn't create order", $why));
+
+        // The same form again (double click, resubmit): no second order, back to where the
+        // first one went, with a note. OnceToken is claimed again inside the transaction below.
+        $onceKey      = OnceToken::key($this->request);
+        $alreadySaved = fn (array $earlier) => redirect()
+            ->to($fromDialog ? ($returnTo === '/admin/inventory' ? $this->inventoryUrl() : '/admin/reorder-alerts?tab=ordered') : '/admin/orders')
+            ->with('toast', Toast::info('Already saved.', ! empty($earlier['result_id']) ? "Order {$earlier['result_id']} was already created." : null));
+        if ($earlier = OnceToken::used($onceKey)) {
+            return $alreadySaved($earlier);
+        }
 
         if (! $supplierId) {
             return $fail('Please select a supplier.');
@@ -498,6 +516,10 @@ class StockOrderController extends BaseController
         $db = db_connect();
         $db->transStart();
 
+        if ($earlier = OnceToken::claim($onceKey, 'stock_order', (int) session()->get('user_id'))) {
+            return $alreadySaved($earlier);
+        }
+
         $this->stockOrderModel->insert([
             'so_id'                   => $soId,
             'supplier_id'             => $supplierId,
@@ -533,6 +555,8 @@ class StockOrderController extends BaseController
             $product = $this->productModel->find($alert['item_id']);
             $this->reorderAlertModel->update((int) $alert['alert_id'], ['status' => 'Ordered', 'so_id' => $soId]);
         }
+
+        OnceToken::complete($onceKey, 'stock_order', $soId);
 
         $db->transComplete();
 
@@ -689,10 +713,32 @@ class StockOrderController extends BaseController
             return redirect()->to('/admin/orders')->with('error', "Order {$soId} was cancelled and can't be changed.");
         }
 
-        if ($newStatus === 'Delivered' && $order['status'] !== 'Delivered') {
-            $this->stockOrderModel->markDelivered($soId, session()->get('user_id'));
+        // Only forward (Order Confirmed → Preparing → Shipped → Delivered), never out of Delivered.
+        // Each move is one UPDATE ... WHERE status IN (earlier ones), so a repeat, a stale tab or
+        // two people at once can't make it twice; a refused move changes nothing and sends nothing.
+        $already = static fn (string $status) => redirect()->to('/admin/orders')->with('toast', Toast::info("This order is already {$status}."));
+
+        if ($newStatus === 'Delivered') {
+            // Stock is added here, so only from Shipped, once (StockOrderModel::markDelivered()).
+            $result = $this->stockOrderModel->markDelivered($soId, (int) session()->get('user_id'), OnceToken::key($this->request));
+            if ($result === StockOrderModel::ALREADY_SAVED) {
+                return redirect()->to('/admin/orders')->with('toast', Toast::info('Already saved.'));
+            }
+            if ($result === StockOrderModel::ALREADY_RECEIVED) {
+                $now = $this->stockOrderModel->find($soId)['status'] ?? $order['status'];
+
+                return $now === 'Delivered'
+                    ? redirect()->to('/admin/orders')->with('toast', Toast::info('This order was already received.'))
+                    : $already($now);
+            }
+            if ($result === StockOrderModel::FAILED) {
+                return redirect()->to('/admin/orders')->with('error', 'Saving failed and nothing was changed. Please try again.');
+            }
         } else {
-            $this->stockOrderModel->update($soId, ['status' => $newStatus]);
+            $from = array_slice(StockOrderModel::FLOW, 0, (int) array_search($newStatus, StockOrderModel::FLOW, true));
+            if (! $this->stockOrderModel->transition($soId, $from, $newStatus)) {
+                return $already($this->stockOrderModel->find($soId)['status'] ?? $order['status']);
+            }
         }
 
         if ($newStatus !== $order['status']) {

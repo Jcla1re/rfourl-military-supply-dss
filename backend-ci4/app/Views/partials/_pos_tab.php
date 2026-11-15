@@ -77,8 +77,10 @@ $count  = count($groups);
     </div>
 
     <div class="cart-panel">
-        <form method="post" action="<?= site_url($base . '/sales/checkout') ?>" id="cartForm">
+        <?php // Sent once (submit-once.js); the one-time key stops a repeat on the server too (PosCheckout). ?>
+        <form method="post" action="<?= site_url($base . '/sales/checkout') ?>" id="cartForm" data-submit-once data-busy-label="Processing sale…">
             <?= csrf_field() ?>
+            <?= \App\Libraries\OnceToken::field(\App\Libraries\PosCheckout::ACTION) ?>
             <div class="cart-head">
                 <div>Current order <span class="count" id="cartCount">0</span></div>
                 <button type="button" class="pos-clear" id="clearCart" disabled>Clear</button>

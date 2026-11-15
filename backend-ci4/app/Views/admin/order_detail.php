@@ -142,8 +142,9 @@ $pillClass = match ($order['status'] ?? '') {
         <div class="page-panel mt-3">
             <h5 class="mb-1">Confirm Delivery</h5>
             <p class="subtitle">Tick each item that arrived. It should match what the supplier shipped.</p>
-            <form method="post" action="<?= site_url('admin/orders/update-status/' . $order['so_id']) ?>">
+            <form method="post" action="<?= site_url('admin/orders/update-status/' . $order['so_id']) ?>" data-submit-once data-busy-label="Saving…">
                 <?= csrf_field() ?>
+                <?= \App\Libraries\OnceToken::field('order_received') ?>
                 <input type="hidden" name="status" value="Delivered">
                 <table class="data-table mb-3">
                     <thead><tr><th>Item</th><th>Shipped Qty</th><th>Unit Price</th><th>Line Total</th><th style="text-align:center;">Received</th></tr></thead>

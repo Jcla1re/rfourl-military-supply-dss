@@ -65,7 +65,7 @@
                     </div>
 
                     <?php if ($o['status'] === 'Preparing'): ?>
-                        <form method="post" action="<?= site_url('supplier/deliveries/ship/' . $o['so_id']) ?>">
+                        <form method="post" action="<?= site_url('supplier/deliveries/ship/' . $o['so_id']) ?>" data-submit-once>
                             <?= csrf_field() ?>
                             <table class="dv-items-table">
                                 <thead>

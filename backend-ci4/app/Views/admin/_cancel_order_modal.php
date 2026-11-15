@@ -7,7 +7,7 @@
 <div class="modal fade confirm-modal" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form method="post" id="cancelOrderForm" action="">
+            <form method="post" id="cancelOrderForm" action="" data-submit-once data-busy-label="Cancelling…">
                 <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="text-center">

@@ -147,58 +147,108 @@ class StockOrderModel extends Model
         return $builder->findAll();
     }
 
+    /** The forward order of statuses (Cancelled is a separate path: markCancelled()). */
+    public const FLOW = ['Order Confirmed', 'Preparing', 'Shipped', 'Delivered'];
+
     /**
-     * Cancels an order (admin status change or supplier decline). Its
-     * reorder alerts go back to Active, so the items show as needing
-     * reordering again and can be re-ordered. Shared by both portals.
+     * Moves an order to $to only if its status right now is one of $from, in one UPDATE ... WHERE
+     * status IN (...), so two requests (a double click, a stale tab, two people) can't both make
+     * the same move. Returns whether this request made it; when false nothing changed and the
+     * caller sends no notification or email.
      */
-    public function markCancelled(string $soId, array $extra = []): void
+    public function transition(string $soId, array $from, string $to, array $extra = []): bool
     {
-        $this->update($soId, ['status' => 'Cancelled'] + $extra);
+        if ($from === []) {
+            return false;
+        }
+
+        $this->db->table($this->table)
+            ->where('so_id', $soId)
+            ->whereIn('status', $from)
+            ->update(['status' => $to] + $extra);
+
+        return $this->db->affectedRows() > 0;
+    }
+
+    /**
+     * Cancels an order (owner Cancel, supplier Decline) if it is still in one of $from. Its
+     * reorder alerts go back to Active, so the items show as needing reordering again and can be
+     * re-ordered. Shared by both portals. Returns false (nothing changed) when the order had
+     * already moved on.
+     */
+    public function markCancelled(string $soId, array $extra = [], array $from = self::CANCELLABLE): bool
+    {
+        if (! $this->transition($soId, $from, 'Cancelled', $extra)) {
+            return false;
+        }
 
         (new ReorderAlertModel())
             ->where('so_id', $soId)
             ->where('status', 'Ordered')
             ->set(['status' => 'Active', 'so_id' => null])
             ->update();
+
+        return true;
     }
 
+    public const DELIVERED        = 'delivered';
+    public const ALREADY_SAVED    = 'already_saved';
+    public const ALREADY_RECEIVED = 'already_received';
+    public const FAILED           = 'failed';
+
     /**
-     * Marks an order Delivered, adds the received quantities to on-hand stock,
-     * writes an inventory_log entry per line, and Fulfills any reorder_alert
-     * that this order was created from. Shared by the Admin and Supplier
-     * portals so delivery receiving only lives in one place.
+     * Receives a Shipped order: marks it Delivered, adds the received quantities to on-hand
+     * stock, writes an inventory_log entry per line, and Fulfills the reorder alerts it was
+     * created from. Shared by the Owner's Mark as Done and the Staff's Confirm Delivery Received.
+     *
+     * All in one transaction. The status moves first and only from Shipped
+     * (UPDATE ... WHERE status = 'Shipped'), so the stock is added at most once, however many
+     * times or by however many people it is confirmed. Stock is added relative to what is there
+     * now (current_stock = current_stock + qty). $onceKey (OnceToken) makes a repeat of the same
+     * form report ALREADY_SAVED.
+     *
+     * @return self::DELIVERED|self::ALREADY_SAVED|self::ALREADY_RECEIVED|self::FAILED
      */
-    public function markDelivered(string $soId, ?int $userId): void
+    public function markDelivered(string $soId, ?int $userId, ?string $onceKey = null): string
     {
-        $this->update($soId, [
-            'status'                => 'Delivered',
-            'actual_delivery_date'  => date('Y-m-d'),
-        ]);
+        if (\App\Libraries\OnceToken::used($onceKey)) {
+            return self::ALREADY_SAVED;
+        }
 
         $soItemModel       = new SoItemModel();
         $productModel      = new ProductModel();
         $inventoryLogModel = new InventoryLogModel();
 
-        foreach ($soItemModel->forOrder($soId) as $line) {
-            $product = $productModel->find($line['item_id']);
-            if (! $product) {
-                continue;
-            }
+        $this->db->transStart();
 
+        if (\App\Libraries\OnceToken::claim($onceKey, 'order_received', $userId)) {
+            return self::ALREADY_SAVED;
+        }
+
+        if (! $this->transition($soId, ['Shipped'], 'Delivered', ['actual_delivery_date' => date('Y-m-d')])) {
+            $this->db->transRollback();
+
+            return self::ALREADY_RECEIVED;
+        }
+
+        $itemIds = [];
+        foreach ($soItemModel->forOrder($soId) as $line) {
             // Prefer what the Supplier actually declared at ship time; only
             // legacy orders placed before that feature existed fall back to
             // the originally ordered quantity.
-            $receivedQty = $line['shipped_quantity'] ?? $line['order_quantity'];
+            $receivedQty = (int) ($line['shipped_quantity'] ?? $line['order_quantity']);
 
-            $newStock = (int) $product['current_stock'] + (int) $receivedQty;
-            $productModel->update($line['item_id'], ['current_stock' => $newStock]);
+            $newStock = $productModel->changeStock($line['item_id'], $receivedQty);
+            if ($newStock === null) {
+                continue; // nothing received for this line, or the item no longer exists
+            }
+            $itemIds[] = $line['item_id'];
 
             $inventoryLogModel->record(
                 $line['item_id'],
                 $userId,
                 'RESTOCK',
-                (int) $receivedQty,
+                $receivedQty,
                 $newStock,
                 $soId,
                 'Received from stock order ' . $soId
@@ -210,5 +260,17 @@ class StockOrderModel extends Model
             ->where('status', 'Ordered')
             ->set(['status' => 'Fulfilled'])
             ->update();
+
+        \App\Libraries\OnceToken::complete($onceKey, 'stock_order', $soId);
+
+        if (! $this->db->transComplete()) {
+            return self::FAILED;
+        }
+
+        if ($itemIds !== []) {
+            (new ReorderNoticeModel())->clearResolved($itemIds);
+        }
+
+        return self::DELIVERED;
     }
 }
