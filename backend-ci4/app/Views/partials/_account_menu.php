@@ -18,7 +18,7 @@
     <a href="<?= esc($profileUrl, 'attr') ?>" class="account-menu-item" role="menuitem" tabindex="-1">
         <i class="bi bi-person" aria-hidden="true"></i> My Profile
     </a>
-    <form method="post" action="<?= site_url('logout') ?>" class="m-0">
+    <form method="post" action="<?= site_url('logout') ?>" class="m-0" data-logout>
         <?= csrf_field() ?>
         <button type="submit" class="account-menu-item is-logout" role="menuitem" tabindex="-1">
             <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Log out

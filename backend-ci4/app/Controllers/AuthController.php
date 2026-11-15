@@ -8,6 +8,7 @@ use App\Libraries\DemoGuard;
 use App\Libraries\EmailNotifier;
 use App\Libraries\PasswordPolicy;
 use App\Libraries\ReturnTo;
+use App\Libraries\SavedCart;
 use App\Libraries\StaffPasswordAlert;
 use App\Libraries\StaffPasswordReset;
 use App\Libraries\LoginLockout;
@@ -282,6 +283,8 @@ class AuthController extends BaseController
     private function afterSignIn(string $role): string
     {
         $target = ReturnTo::clean(session()->get('return_to'), $role) ?? ReturnTo::dashboard($role);
+        // After an idle sign-out only: the POS page may bring back the cart the browser saved.
+        SavedCart::markSignIn(session()->get('signed_out_reason'));
         session()->remove(['return_to', 'signed_out_reason']);
 
         return $target;

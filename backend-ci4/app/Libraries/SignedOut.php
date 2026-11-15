@@ -42,6 +42,29 @@ final class SignedOut
         return $session->get('isLoggedIn') && $limit > 0 && $last > 0 && (time() - $last) > $limit;
     }
 
+    /**
+     * window.APP_SESSION for a signed-in page (the layouts): what the page's idle watcher
+     * (session-guard.js) needs. The idle limit is the same one the server uses (test mode included,
+     * on a development machine only). Never a token or anything secret.
+     *
+     * @return array{role: string, userId: int|null, idleSeconds: int, testMode: bool, loginUrl: string, statusUrl: string, csrfUrl: string}
+     */
+    public static function pageConfig(string $role, ?string $environment = null): array
+    {
+        $auth   = config(Auth::class);
+        $userId = session()->get('user_id');
+
+        return [
+            'role'        => $role,
+            'userId'      => $userId !== null ? (int) $userId : null,
+            'idleSeconds' => $auth->idleLimit($environment),
+            'testMode'    => $auth->testModeActive($environment),
+            'loginUrl'    => site_url(ltrim(self::loginPath($role), '/')),
+            'statusUrl'   => site_url('session/status'),
+            'csrfUrl'     => site_url('session/csrf'),
+        ];
+    }
+
     /** Seconds left before the idle sign-out (0 when past it). */
     public static function secondsLeft(?Session $session = null): int
     {

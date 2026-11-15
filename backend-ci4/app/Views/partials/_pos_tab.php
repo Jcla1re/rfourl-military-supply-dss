@@ -99,9 +99,14 @@ $count  = count($groups);
             'gcash_ref' => mb_substr((string) old('gcash_reference_no', '', false), 0, 50) ?: null,
             'or_number' => mb_substr((string) old('or_number', '', false), 0, 30) ?: null,
         ], static fn ($v) => $v !== null);
+        // The cart this browser saved (pos.js; item IDs and quantities only) comes back only on the
+        // first POS page after signing back in from an idle sign-out (App\Libraries\SavedCart), and
+        // never over the cart above. Any other load clears what was saved.
+        $posSavedCart = \App\Libraries\SavedCart::take() && $restore === [];
         ?>
         <form method="post" action="<?= site_url($base . '/sales/checkout') ?>" id="cartForm" data-submit-once data-busy-label="Processing sale…"
-              data-restore="<?= esc(json_encode($restore), 'attr') ?>" data-restore-payment="<?= esc(json_encode((object) $restorePay), 'attr') ?>">
+              data-restore="<?= esc(json_encode($restore), 'attr') ?>" data-restore-payment="<?= esc(json_encode((object) $restorePay), 'attr') ?>"
+              data-restore-saved="<?= $posSavedCart ? '1' : '0' ?>">
             <?= csrf_field() ?>
             <?= \App\Libraries\OnceToken::field(\App\Libraries\PosCheckout::ACTION) ?>
             <div class="cart-head">

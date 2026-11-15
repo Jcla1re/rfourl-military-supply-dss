@@ -235,6 +235,7 @@ if (document.getElementById('posGrid')) {
         updateSplitPanel(pricing.total);
         updateChange();
         updateCardAvailability();
+        cartChanged();
     }
 
     // Typing a quantity: digits only; above the stock it is set to the stock with a note.
@@ -402,33 +403,108 @@ if (document.getElementById('posGrid')) {
         });
     });
 
-    // The cart after "Not enough stock" or "This page needed a refresh": the posted item IDs and
-    // quantities only (data-restore, from old input). Name, size, price and stock come from this
+    // Puts item IDs and quantities back in the cart. Name, size, price and stock come from this
     // page's own item data (the server, now); a quantity above the stock left is capped with the
-    // usual note, and an item that is gone or sold out is left out. The payment details typed are
-    // put back too. Nothing is sent: the cashier checks the cart and clicks Checkout again.
-    (function restoreCart() {
-        const form = document.getElementById('cartForm');
-        let lines = [];
-        let pay = {};
-        try { lines = JSON.parse(form.dataset.restore || '[]'); pay = JSON.parse(form.dataset.restorePayment || '{}'); } catch (e) { return; }
-        if (!Array.isArray(lines) || lines.length === 0) return;
+    // usual note, and an item that is gone or sold out is left out. Returns how many lines came back.
+    function addLines(lines) {
         const variants = {};
         document.querySelectorAll('.pos-card').forEach(card => {
             JSON.parse(card.dataset.variants || '[]').forEach(v => { variants[String(v.item_id)] = v; });
         });
+        let added = 0;
         lines.forEach(line => {
-            const v = variants[String(line.id)];
-            const qty = parseInt(line.qty, 10) || 0;
+            const v = variants[String(line && line.id)];
+            const qty = parseInt(line && line.qty, 10) || 0;
             if (!v || qty < 1 || v.current_stock < 1) return;
             const id = String(v.item_id);
             const wanted = (cart[id] ? cart[id].qty : 0) + qty;
+            if (!cart[id] || cart[id].qty === 0) added++;
             cart[id] = { name: v.item_name, size: v.size || '', price: v.selling_price, stock: v.current_stock, qty: Math.min(wanted, v.current_stock), capped: wanted > v.current_stock };
             document.querySelectorAll('.pos-card').forEach(card => {
                 if ((card.dataset.ids || '').split(' ').includes(id)) card.classList.add('selected');
             });
         });
+        return added;
+    }
+
+    // ---- The cart saved in this browser (session-guard.js idle sign-out) ----
+    // localStorage "rfl.pos.cart": {v: 1, userId, savedAt, lines: [{id, qty}]}: item IDs and
+    // quantities only, never a name or a price. Saved on every change of the cart. Brought back only
+    // on the first POS page after signing back in from an idle sign-out (data-restore-saved="1",
+    // App\Libraries\SavedCart); every other load of this page clears it, so a normal page load never
+    // brings an old cart back (that includes the page after a successful checkout). The logout button
+    // deletes it (session-guard.js). Another user's cart, or one older than 2 hours, is thrown away.
+    const CART_KEY = (window.App && window.App.CART_KEY) || 'rfl.pos.cart';
+    const CART_MAX_AGE = 2 * 60 * 60 * 1000;
+    const cartUser = window.APP_SESSION && window.APP_SESSION.userId != null ? window.APP_SESSION.userId : null;
+    let cartReady = false;   // set once the page's own restore is done; before that nothing is saved
+    let cartChangedAt = 0;
+
+    function readSavedCart() {
+        try { return JSON.parse(window.localStorage.getItem(CART_KEY) || 'null'); } catch (e) { return null; }
+    }
+    function forgetSavedCart() {
+        try { window.localStorage.removeItem(CART_KEY); } catch (e) { /* no storage: nothing saved */ }
+    }
+    // SAVED CART START: what is written: the user, the time and item IDs with quantities. Nothing else.
+    function saveCart() {
+        if (cartUser === null) return;
+        const lines = Object.keys(cart).filter(id => cart[id].qty > 0).map(id => ({ id: id, qty: cart[id].qty }));
+        try {
+            if (lines.length === 0) window.localStorage.removeItem(CART_KEY);
+            else window.localStorage.setItem(CART_KEY, JSON.stringify({ v: 1, userId: cartUser, savedAt: cartChangedAt || Date.now(), lines: lines }));
+        } catch (e) { /* private mode or storage full: the cart just isn't kept */ }
+    }
+    // SAVED CART END
+
+    // Called at the end of every renderCart(): after the first one, every render follows a change.
+    function cartChanged() {
+        if (!cartReady) return;
+        cartChangedAt = Date.now();
+        saveCart();
+    }
+
+    window.addEventListener('session:leaving', e => {
+        if (e.detail && e.detail.reason === 'logout') { forgetSavedCart(); return; }
+        if (!Object.keys(cart).some(id => cart[id].qty > 0)) return;
+        // Two POS tabs: the cart changed last wins.
+        const saved = readSavedCart();
+        if (saved && String(saved.userId) === String(cartUser) && Number(saved.savedAt) > cartChangedAt) return;
+        saveCart();
+    });
+
+    function restoreSavedCart() {
+        const saved = readSavedCart();
+        forgetSavedCart();
+        if (!saved || saved.v !== 1 || !Array.isArray(saved.lines) || cartUser === null) return;
+        if (String(saved.userId) !== String(cartUser)) return;          // another user's cart
+        const age = Date.now() - Number(saved.savedAt);
+        if (!(age <= CART_MAX_AGE && age > -5 * 60 * 1000)) return;      // older than 2 hours
+        const n = addLines(saved.lines);
+        if (n === 0) return;
+        cartChangedAt = Number(saved.savedAt); // the 2 hours still count from the cashier's last change
+        saveCart();
+        if (typeof showToast === 'function') {
+            showToast({ type: 'info', title: 'Your cart was restored', message: `${n} item${n === 1 ? ' is' : 's are'} back in your cart. Check them before checkout.` });
+        }
+    }
+
+    // The cart after "Not enough stock" or "This page needed a refresh": the posted item IDs and
+    // quantities only (data-restore, from old input), rebuilt by addLines(). The payment details
+    // typed are put back too. Nothing is sent: the cashier checks the cart and clicks Checkout again.
+    (function restoreCart() {
+        const form = document.getElementById('cartForm');
+        let lines = [];
+        let pay = {};
+        try { lines = JSON.parse(form.dataset.restore || '[]'); pay = JSON.parse(form.dataset.restorePayment || '{}'); } catch (e) { return; }
+        if (!Array.isArray(lines) || lines.length === 0) {
+            if (form.dataset.restoreSaved === '1') restoreSavedCart(); else forgetSavedCart();
+            return;
+        }
+        addLines(lines);
         renderCart();
+        cartChangedAt = Date.now();
+        saveCart();
         if (pay.method) {
             const btn = document.querySelector('.pay-btn[data-method="' + pay.method + '"]');
             if (btn) btn.click();
@@ -449,4 +525,5 @@ if (document.getElementById('posGrid')) {
     })();
 
     renderCart();
+    cartReady = true; // from here on, every render is a change of the cart, and is saved
 }

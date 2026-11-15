@@ -24,7 +24,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
     <script src="/assets/js/stock-status.js"></script>
 <?= view('partials/demo_head') ?>
     <?php // Background requests go through App.fetch (signed out: the login page, never its HTML in the page). ?>
-    <script>window.APP_SESSION = <?= json_encode(['loginUrl' => site_url('login/admin'), 'csrfUrl' => site_url('session/csrf'), 'statusUrl' => site_url('session/status')]) ?>;</script>
+    <script>window.APP_SESSION = <?= json_encode(\App\Libraries\SignedOut::pageConfig('Admin'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES) ?>;</script>
     <script src="/assets/js/session-guard.js"></script>
 </head>
 <body>
@@ -165,7 +165,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
                     <small><?= esc(session()->get('role') === 'Admin' ? 'Owner' : session()->get('role')) ?></small>
                 </div>
             </a>
-            <form method="post" action="<?= site_url('logout') ?>" class="m-0 d-inline"><?= csrf_field() ?><button type="submit" class="logout-link" title="Log out" aria-label="Log out"><i class="bi bi-box-arrow-right"></i></button></form>
+            <form method="post" action="<?= site_url('logout') ?>" class="m-0 d-inline" data-logout><?= csrf_field() ?><button type="submit" class="logout-link" title="Log out" aria-label="Log out"><i class="bi bi-box-arrow-right"></i></button></form>
             <?= view('partials/_account_menu', [
                 'profileUrl' => site_url('admin/settings?tab=profile'),
                 'name'       => (string) session()->get('full_name'),

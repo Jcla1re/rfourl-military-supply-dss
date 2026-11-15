@@ -53,7 +53,7 @@ $invite   = ($kind ?? '') === 'invite';
             <button type="submit" class="btn-login">Save password</button>
         </form>
 
-        <form method="post" action="<?= site_url('logout') ?>" class="auth-back">
+        <form method="post" action="<?= site_url('logout') ?>" class="auth-back" data-logout>
             <?= csrf_field() ?>
             <button type="submit" class="btn btn-link p-0">&larr; Sign out</button>
         </form>
