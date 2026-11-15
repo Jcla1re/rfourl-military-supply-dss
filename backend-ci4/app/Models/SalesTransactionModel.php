@@ -37,6 +37,23 @@ class SalesTransactionModel extends Model
         return (bool) preg_match('~^[A-Za-z0-9][A-Za-z0-9 /-]{0,29}$~', $value);
     }
 
+    /**
+     * The latest sale that already carries this OR number (trimmed, upper/lower case ignored), or null.
+     * Used for the checkout warning; a repeat is only warned about, never refused.
+     */
+    public function findByOrNumber(string $orNumber): ?array
+    {
+        $orNumber = strtolower(trim($orNumber));
+        if ($orNumber === '') {
+            return null;
+        }
+
+        return $this->select('sales_id, receipt_no, or_number')
+            ->where('LOWER(TRIM(or_number)) =', $orNumber)
+            ->orderBy('sales_id', 'DESC')
+            ->first();
+    }
+
     /** The first receipt number the shop's invoice booklets started from. */
     public const FIRST_RECEIPT_NO = 1001;
 

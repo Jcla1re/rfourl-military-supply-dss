@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\DemandProjection;
 use App\Libraries\TrendReport;
 use App\Models\ClusterSegmentModel;
 use App\Models\PdssComputationModel;
@@ -193,7 +194,22 @@ class TrendAnalysisController extends BaseController
         $topSellers = $this->salesItemModel->topSellers(5);
         $maxUnits = $topSellers ? max(array_column($topSellers, 'units_sold')) : 1;
 
+        // Projection tab / PDF section: next year's expected items sold per month (plain averages of past years).
+        $projectionLabel = null;
+        foreach ($products as $p) {
+            if ($itemId && $p['item_id'] === $itemId) {
+                $size            = trim((string) ($p['size'] ?? ''));
+                $projectionLabel = $p['item_name'] . ($size !== '' ? " ({$size})" : '');
+            }
+        }
+        $projection = DemandProjection::build(
+            $itemId,
+            $itemId && isset($computations[$itemId]) ? (float) $computations[$itemId]['safety_stock'] : null,
+            $projectionLabel
+        );
+
         $data = [
+            'projection' => $projection,
             'title' => 'Trend Analysis',
             'active' => 'trend_analysis',
             'years' => $this->yearsWithSales(),

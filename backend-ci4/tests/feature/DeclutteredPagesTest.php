@@ -154,7 +154,7 @@ final class DeclutteredPagesTest extends CIUnitTestCase
         return $out;
     }
 
-    public function testTrendAnalysisHasFourTabsAndOpensOnOverview(): void
+    public function testTrendAnalysisHasFiveTabsAndOpensOnOverview(): void
     {
         $html = $this->owner('admin/trend-analysis');
         $x    = $this->html($html);
@@ -163,13 +163,13 @@ final class DeclutteredPagesTest extends CIUnitTestCase
         foreach ($x->query('//nav[contains(@class,"ta-tabs")]/a') as $a) {
             $tabs[trim($a->textContent)] = $a->getAttribute('href');
         }
-        $this->assertSame(['Overview', 'Products', 'ABC classification', 'Daily demand'], array_keys($tabs));
-        foreach (['overview', 'products', 'abc', 'daily'] as $key) {
+        $this->assertSame(['Overview', 'Products', 'ABC classification', 'Daily demand', 'Projection'], array_keys($tabs));
+        foreach (['overview', 'products', 'abc', 'daily', 'projection'] as $key) {
             $this->assertStringContainsString('tab=' . $key, implode(' ', $tabs));
         }
         $panels = $this->panels($html);
-        $this->assertSame(['overview', 'products', 'abc', 'daily'], array_keys($panels));
-        $this->assertSame(['overview' => false, 'products' => true, 'abc' => true, 'daily' => true], array_map(static fn ($p) => $p['hidden'], $panels));
+        $this->assertSame(['overview', 'products', 'abc', 'projection', 'daily'], array_keys($panels));
+        $this->assertEquals(['overview' => false, 'products' => true, 'abc' => true, 'daily' => true, 'projection' => true], array_map(static fn ($p) => $p['hidden'], $panels));
         $this->assertStringContainsString('Items sold in', $panels['overview']['text'], 'The four cards.');
         $this->assertSame(4, $x->query('//section[@data-panel="overview"]//*[contains(@class,"ta-card")]')->length);
         $this->assertNotNull($x->query('//section[@data-panel="overview"]//canvas[@id="trendChart"]')->item(0), 'The monthly chart.');
@@ -178,7 +178,7 @@ final class DeclutteredPagesTest extends CIUnitTestCase
 
     public function testTheTabIsInTheUrlAndSelectsThePanel(): void
     {
-        foreach (['products', 'abc', 'daily'] as $tab) {
+        foreach (['products', 'abc', 'daily', 'projection'] as $tab) {
             $html   = $this->owner('admin/trend-analysis?tab=' . $tab);
             $panels = $this->panels($html);
 

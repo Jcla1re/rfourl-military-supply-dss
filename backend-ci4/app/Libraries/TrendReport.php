@@ -48,6 +48,7 @@ class TrendReport
         $report['monthly']  = self::monthly($d, $year, $scopeText);
         $report['weekly']   = self::weekly($d, $scoped);
         $report['products'] = self::products($d);
+        $report['projection'] = self::projection($d);
         $report['abc']      = self::abc($d, $year);
         $report['demand']   = self::demand($d);
         $report['notes']    = self::notes($d, $year);
@@ -115,6 +116,45 @@ class TrendReport
                         . ($scoped ? ' (counted across all items, as on the page).' : '.')
                     : "No item has sold in {$year} yet.",
             ],
+        ];
+    }
+
+    // ------------------------------------------------------------------ projection
+
+    /** The projection section (App\Libraries\DemandProjection), or null when the page data has none. */
+    private static function projection(array $d): ?array
+    {
+        $p = $d['projection'] ?? null;
+        if (! is_array($p)) {
+            return null;
+        }
+
+        $rows = [];
+        foreach ($p['months'] as $m) {
+            $rows[] = [
+                'month' => $m['name'],
+                'proj'  => $m['projection'] === null ? '—' : number_format((int) round($m['projection'])),
+                'range' => $m['projection'] === null ? '—' : number_format($m['min']) . ' – ' . number_format($m['max']),
+                'years' => $m['years'] === [] ? '—' : implode(', ', array_reverse($m['years'])),
+            ];
+        }
+
+        $chart = $p['hasData'] ? PdfCharts::dataUri(PdfCharts::lineChart(
+            $p['labels'],
+            $p['actual'],
+            array_map(static fn ($v) => $v === null ? null : (int) round($v), $p['projection']),
+            ['currentName' => $p['currentYear'] . ' actual', 'previousName' => $p['seriesName'], 'height' => 250]
+        )) : null;
+
+        return [
+            'title'      => 'Projection for ' . $p['targetYear'] . ($p['item'] !== null ? ' · ' . $p['item'] : ' · all items'),
+            'method'     => $p['method'],
+            'hasData'    => $p['hasData'],
+            'chart'      => $chart,
+            'rows'       => $rows,
+            'peaks'      => array_column($p['peaks'], 'text'),
+            'suggestion' => $p['suggestion']['text'] ?? null,
+            'seriesName' => $p['seriesName'],
         ];
     }
 

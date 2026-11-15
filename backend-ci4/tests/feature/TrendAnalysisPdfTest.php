@@ -109,13 +109,13 @@ final class TrendAnalysisPdfTest extends CIUnitTestCase
     {
         $html  = $this->pdf()['html'];
         $last = -1;
-        foreach (['Trend Analysis Report', '>Summary<', 'Items sold per month', 'What this shows', 'Weekly view', 'Product performance', 'ABC classification (K-Means)', 'Top 5 items by sales share in each class', 'Daily demand', '>Notes<'] as $marker) {
+        foreach (['Trend Analysis Report', '>Summary<', 'Items sold per month', 'What this shows', 'Weekly view', 'Projection for', 'Product performance', 'ABC classification (K-Means)', 'Top 5 items by sales share in each class', 'Daily demand', '>Notes<'] as $marker) {
             $pos = strpos($html, $marker);
             $this->assertNotFalse($pos, "missing: {$marker}");
             $this->assertGreaterThan($last, $pos, "out of order: {$marker}");
             $last = $pos;
         }
-        $this->assertSame(4, substr_count($html, 'data:image/svg+xml;base64,'), 'a chart each for months, weeks, products and ABC');
+        $this->assertSame(5, substr_count($html, 'data:image/svg+xml;base64,'), 'a chart each for months, weeks, the projection, products and ABC');
     }
 
     public function testTheHeaderAndSummaryHaveTheRightWords(): void

@@ -74,8 +74,13 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
 
     $routes->get('sales', 'SalesController::index');
     $routes->post('sales/checkout', 'SalesController::checkout');
+    $routes->get('sales/check-or', 'SalesController::checkOr');
     $routes->get('sales/export-pdf', 'SalesController::exportPdf');
     $routes->get('sales/export-csv', 'SalesController::exportCsv');
+
+    $routes->get('reports', 'ReportsController::index');
+    $routes->get('reports/pdf', 'ReportsController::pdf');
+    $routes->get('reports/csv', 'ReportsController::csv');
 
     $routes->get('settings', 'SettingsController::index');
     $routes->post('settings/dss-parameters', 'SettingsController::updateDssParameters');
@@ -121,6 +126,7 @@ $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'ro
 
     $routes->get('sales', 'SalesController::index');
     $routes->post('sales/checkout', 'SalesController::checkout');
+    $routes->get('sales/check-or', 'SalesController::checkOr');
     $routes->get('sales/export-pdf', 'SalesController::exportPdf');
     $routes->get('sales/export-csv', 'SalesController::exportCsv');
 
