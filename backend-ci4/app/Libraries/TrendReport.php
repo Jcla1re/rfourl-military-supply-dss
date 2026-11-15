@@ -65,19 +65,35 @@ class TrendReport
         $pct       = $d['changePct'];
         $prevRange = (string) $d['prevPeriodLabel'];
 
-        if ($pct === null) {
+        // The page's card compares only the months with recorded sales against the same months last year.
+        $months = null;
+        if (array_key_exists('comparePct', $d)) {
+            $months    = (string) ($d['compareMonthsLabel'] ?? '');
+            $prevUnits = (int) $d['comparePrevUnits'];
+            $pct       = $d['comparePct'];
+            $prevRange = $months !== '' ? ($months . ' ' . ($year - 1)) : '';
+        }
+
+        $same = $months !== null ? 'the same months last year' : 'the same dates last year';
+        if ($months === '') {
+            $changeValue    = 'No full month yet';
+            $changeSub      = 'No month with recorded sales to compare';
+            $changeSentence = 'No month of ' . $year . ' with recorded sales is complete yet, so there is nothing to compare with last year.';
+        } elseif ($pct === null) {
             $changeValue    = 'No sales last year';
             $changeSub      = 'Nothing to compare with';
-            $changeSentence = "There were no sales in the same dates last year ({$prevRange}), so there is nothing to compare with.";
+            $changeSentence = "There were no sales in {$same} ({$prevRange}), so there is nothing to compare with.";
         } else {
             $abs            = number_format(abs($pct), 1);
             $changeValue    = self::signed($pct, 1) . '%';
             $changeSub      = number_format($prevUnits) . ' items, ' . $prevRange;
             $changeSentence = abs($pct) < 0.05
-                ? "Compared with the same dates last year ({$prevRange}), sales were about the same."
-                : "Compared with the same dates last year ({$prevRange}), sales were {$abs}% " . ($pct > 0 ? 'higher' : 'lower') . '.';
+                ? "Compared with {$same} ({$prevRange}), sales were about the same."
+                : "Compared with {$same} ({$prevRange}), sales were {$abs}% " . ($pct > 0 ? 'higher' : 'lower') . '.';
         }
-        $changeSentence .= ' This card compares the same dates in both years, not the full years.';
+        $changeSentence .= $months !== null
+            ? ' This card compares only the months of ' . $year . ' that have recorded sales with the same months of ' . ($year - 1) . '.'
+            : ' This card compares the same dates in both years, not the full years.';
 
         $best = $d['bestMonth'] ?? null;
         $top  = $d['topItem'] ?? null;

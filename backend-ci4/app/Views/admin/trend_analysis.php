@@ -778,7 +778,8 @@ foreach ($products as $p) {
 <div class="page-wrap ta-page">
     <?php
     $yearLabel = (string) $selectedYear;
-    $changePct = $changePct ?? null;
+    // The card compares only the months that have recorded sales (see TrendAnalysisController): these are its numbers.
+    $changePct = array_key_exists('comparePct', get_defined_vars()) ? $comparePct : ($changePct ?? null);
     $changeDir = $changePct === null ? 'flat' : ($changePct > 0.05 ? 'up' : ($changePct < -0.05 ? 'down' : 'flat'));
     ?>
     <nav class="ta-tabs" aria-label="Trend Analysis sections">
@@ -801,8 +802,13 @@ foreach ($products as $p) {
             <div class="ta-card">
                 <div class="label">vs. same period last year</div>
                 <?php if ($changePct === null): ?>
-                    <div class="value is-text ta-change flat">No sales last year</div>
-                    <div class="sub">Nothing to compare with</div>
+                    <?php if (empty($compareMonthsLabel)): ?>
+                        <div class="value is-text ta-change flat">No full month yet</div>
+                        <div class="sub">No month with recorded sales to compare</div>
+                    <?php else: ?>
+                        <div class="value is-text ta-change flat">No sales last year</div>
+                        <div class="sub">Compared <?= esc($compareMonthsLabel) ?> &middot; nothing to compare with</div>
+                    <?php endif; ?>
                 <?php else: ?>
                     <div class="value ta-change <?= $changeDir ?>">
                         <?php if ($changeDir === 'up'): ?><i class="bi bi-arrow-up" aria-hidden="true"></i>
@@ -814,7 +820,7 @@ foreach ($products as $p) {
                             aria-hidden="true"><?= ($changeDir === 'up' ? '+' : '') . number_format($changePct, 1) ?>%</span>
                         <span class="visually-hidden"><?= ($changeDir === 'up' ? '+' : '') . number_format($changePct, 1) ?>%</span>
                     </div>
-                    <div class="sub"><?= number_format($unitsPrev ?? 0) ?> items in <?= (int) $selectedYear - 1 ?></div>
+                    <div class="sub" id="compareMonths">Compared <?= esc($compareMonthsLabel ?? '') ?> &middot; <?= number_format($comparePrevUnits ?? $unitsPrev ?? 0) ?> items in <?= (int) $selectedYear - 1 ?></div>
                 <?php endif; ?>
             </div>
         </div>
@@ -1151,7 +1157,7 @@ foreach ($products as $p) {
 
     const MONTHLY = {
         labels: <?= json_encode($annualLabels ?? []) ?>,
-        current: <?= json_encode(array_values($annualData ?? [])) ?>,
+        current: <?= json_encode(array_values($annualChart ?? $annualData ?? [])) ?>,
         previous: <?= json_encode(array_values($annualDataPrev ?? [])) ?>,
         currentLabel: <?= json_encode($yearLabel) ?>,
         previousLabel: <?= json_encode((string) ($selectedYear - 1)) ?>,
