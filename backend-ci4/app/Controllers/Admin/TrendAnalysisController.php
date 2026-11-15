@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\DemandProjection;
 use App\Libraries\TrendReport;
 use App\Models\ClusterSegmentModel;
 use App\Models\PdssComputationModel;
@@ -180,6 +181,21 @@ class TrendAnalysisController extends BaseController
         $unitsYtd = $this->unitsBetween("{$year}-01-01", $periodEnd, $itemId);
         $unitsPrev = $this->unitsBetween(($year - 1) . '-01-01', $prevEnd, $itemId);
 
+        // Overview chart and the "vs. same period last year" card: only months with recorded sales count.
+        // A month the shop recorded no sales in is a gap in the current-year line, not a 0; the card compares
+        // those months (leaving out the month still in progress) with the same months of last year.
+        $recorded     = $this->monthsWithSales($year);
+        $annualChart  = [];
+        $compareMonths = [];
+        foreach ($monthTotals as $m => $total) {
+            $annualChart[] = $m <= $monthsSoFar && isset($recorded[$m]) ? $total : null;
+            if ($m <= $monthsSoFar && isset($recorded[$m]) && ! ($year === $thisYear && $m === (int) date('n'))) {
+                $compareMonths[] = $m;
+            }
+        }
+        $compareUnits     = array_sum(array_map(fn ($m) => $monthTotals[$m], $compareMonths));
+        $comparePrevUnits = array_sum(array_map(fn ($m) => $monthTotalsPrev[$m], $compareMonths));
+
         $bestMonth = null;
         for ($m = 1; $m <= $monthsSoFar; $m++) {
             if ($monthTotals[$m] > 0 && ($bestMonth === null || $monthTotals[$m] > $bestMonth['units'])) {
@@ -193,7 +209,22 @@ class TrendAnalysisController extends BaseController
         $topSellers = $this->salesItemModel->topSellers(5);
         $maxUnits = $topSellers ? max(array_column($topSellers, 'units_sold')) : 1;
 
+        // Projection tab / PDF section: next year's expected items sold per month (plain averages of past years).
+        $projectionLabel = null;
+        foreach ($products as $p) {
+            if ($itemId && $p['item_id'] === $itemId) {
+                $size            = trim((string) ($p['size'] ?? ''));
+                $projectionLabel = $p['item_name'] . ($size !== '' ? " ({$size})" : '');
+            }
+        }
+        $projection = DemandProjection::build(
+            $itemId,
+            $itemId && isset($computations[$itemId]) ? (float) $computations[$itemId]['safety_stock'] : null,
+            $projectionLabel
+        );
+
         $data = [
+            'projection' => $projection,
             'title' => 'Trend Analysis',
             'active' => 'trend_analysis',
             'years' => $this->yearsWithSales(),
@@ -202,6 +233,12 @@ class TrendAnalysisController extends BaseController
             'selectedItem' => $itemId,
             'annualLabels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
             'annualData' => $annualSoFar,
+            'annualChart' => $annualChart,
+            'compareMonths' => $compareMonths,
+            'compareMonthsLabel' => self::monthRuns($compareMonths),
+            'compareUnits' => $compareUnits,
+            'comparePrevUnits' => $comparePrevUnits,
+            'comparePct' => $comparePrevUnits > 0 ? (($compareUnits - $comparePrevUnits) / $comparePrevUnits) * 100 : null,
             'monthsSoFar' => $monthsSoFar,
             'annualDataPrev' => array_values($monthTotalsPrev),
             'annualPeak' => max($monthTotals),
@@ -379,6 +416,35 @@ class TrendAnalysisController extends BaseController
      * a single item — powers the Annual Demand chart's "This Year" /
      * "Last Year" datasets.
      */
+    /** The months (1-12 => true) of a year in which the shop recorded at least one sale, any item. */
+    private function monthsWithSales(int $year): array
+    {
+        $rows = db_connect()->table('sales_transaction')
+            ->select('MONTH(sale_date) as m')
+            ->where('YEAR(sale_date)', $year)
+            ->groupBy('m')
+            ->get()->getResultArray();
+
+        return array_fill_keys(array_map('intval', array_column($rows, 'm')), true);
+    }
+
+    /** [1,2,3,4,5,6,7] => "Jan–Jul"; [1,2,3,5,6] => "Jan–Mar, May–Jun"; [4] => "Apr"; [] => "". */
+    public static function monthRuns(array $months): string
+    {
+        sort($months);
+        $name = static fn (int $m): string => date('M', mktime(0, 0, 0, $m, 1, 2000));
+        $runs = [];
+        foreach ($months as $m) {
+            if ($runs && $m === end($runs)[1] + 1) {
+                $runs[count($runs) - 1][1] = $m;
+            } else {
+                $runs[] = [$m, $m];
+            }
+        }
+
+        return implode(', ', array_map(static fn ($r) => $r[0] === $r[1] ? $name($r[0]) : $name($r[0]) . '–' . $name($r[1]), $runs));
+    }
+
     private function monthlyTotals(int $year, ?string $itemId): array
     {
         $builder = db_connect()->table('sales_item si')

@@ -548,6 +548,7 @@ document.addEventListener('click', event => {
 });
 </script>
 
+<script src="/assets/js/inv-row-detail.js"></script>
 <script>
 const itemModal = document.getElementById('itemModal');
 const itemForm = document.getElementById('itemForm');
@@ -1007,17 +1008,23 @@ function pillClassForStatus(label) {
     return stockStatusColor(label); // assets/js/stock-status.js
 }
 
+// The Item ID, Order qty, stock bar and Last updated live in the expandable detail row under each item row.
+function rowCell(row, selector) {
+    const detail = row.nextElementSibling;
+    return row.querySelector(selector) || (detail && detail.classList.contains('inv-detail') ? detail.querySelector(selector) : null);
+}
+
 function applyVariantToRow(row, v) {
-    row.querySelector('.inv-item-id').textContent = v.item_id;
+    rowCell(row, '.inv-item-id').textContent = v.item_id;
     row.querySelector('.inv-stock-cell').textContent = v.current_stock;
-    row.querySelector('.inv-updated-cell').textContent = v.updated_at_display || '—';
+    rowCell(row, '.inv-updated-cell').textContent = v.updated_at_display || '—';
 
     // Archived rows keep "—" for Reorder At, Order Qty and Stock Level.
     if (!row.classList.contains('is-archived')) {
         row.querySelector('.inv-rop-cell').textContent = v.manual_rop_warning;
-        row.querySelector('.inv-eoq-cell').textContent = (v.eoq_value !== null && v.eoq_value !== undefined) ? v.eoq_value : '—';
+        rowCell(row, '.inv-eoq-cell').textContent = (v.eoq_value !== null && v.eoq_value !== undefined) ? v.eoq_value : '—';
         const fill = stockFill(v);
-        const bar = row.querySelector('.inv-bar-cell .stock-bar');
+        const bar = rowCell(row, '.inv-bar-cell .stock-bar');
         bar.className = 'stock-bar ' + fill.cls + (fill.empty ? ' is-empty' : '');
         bar.title = fill.pct + '% of reorder point + order quantity';
         bar.querySelector('span').style.width = fill.pct + '%';

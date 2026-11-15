@@ -5,6 +5,7 @@ namespace App\Controllers\Supplier;
 use App\Controllers\BaseController;
 use App\Libraries\EmailNotifier;
 use App\Libraries\Toast;
+use App\Libraries\ProcurementDocs;
 use App\Models\NotificationModel;
 use App\Models\SoItemModel;
 use App\Models\StockOrderModel;
@@ -43,7 +44,7 @@ class NewOrdersController extends BaseController
         }
 
         if ($search) {
-            $orders = array_values(array_filter($orders, fn ($o) => str_contains(strtolower($o['so_id']), $search)));
+            $orders = array_values(array_filter($orders, fn ($o) => str_contains(strtolower($o['so_id']), $search) || str_contains(strtolower($o['po_number'] ?? ''), $search)));
         }
 
         $data = [
@@ -62,6 +63,7 @@ class NewOrdersController extends BaseController
     public function accept($soId)
     {
         $order = $this->stockOrderModel->find($soId);
+        $label = StockOrderModel::labelFor((string) $soId);
 
         if (! $order || $order['supplier_id'] !== session()->get('supplier_id')) {
             return redirect()->to('/supplier/new-orders')->with('error', 'Order not found.');
@@ -71,16 +73,18 @@ class NewOrdersController extends BaseController
         if (! $this->stockOrderModel->transition($soId, ['Order Confirmed'], 'Preparing')) {
             return $this->already($soId, $order);
         }
+        ProcurementDocs::ensureNumbers($soId); // the Sales Order number: the supplier's confirmation of the PO
 
-        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} accepted by supplier", session()->get('full_name') . " accepted order {$soId} and has started preparing it.", null, 'order_status', "/admin/orders/{$soId}");
-        $this->emailNotifier->toRole('Admin', "Order {$soId} accepted by supplier", session()->get('full_name') . " accepted order {$soId} and has started preparing it.");
+        $this->notificationModel->push('Admin', 'Order Status', "Order {$label} accepted by supplier", session()->get('full_name') . " accepted order {$label} and has started preparing it.", null, 'order_status', "/admin/orders/{$soId}");
+        $this->emailNotifier->toRole('Admin', "Order {$label} accepted by supplier", session()->get('full_name') . " accepted order {$label} and has started preparing it.");
 
-        return redirect()->to('/supplier/new-orders')->with('success', "Order {$soId} accepted. It now appears under Deliveries.");
+        return redirect()->to('/supplier/new-orders')->with('success', "Order {$label} accepted. It now appears under Deliveries.");
     }
 
     public function decline($soId)
     {
         $order = $this->stockOrderModel->find($soId);
+        $label = StockOrderModel::labelFor((string) $soId);
 
         if (! $order || $order['supplier_id'] !== session()->get('supplier_id')) {
             return redirect()->to('/supplier/new-orders')->with('error', 'Order not found.');
@@ -97,11 +101,11 @@ class NewOrdersController extends BaseController
             return $this->already($soId, $order);
         }
 
-        $declineMsg = session()->get('full_name') . " declined order {$soId}. Reason: {$reason}. Please reassign or follow up.";
-        $this->notificationModel->push('Admin', 'Order Status', "Order {$soId} declined by supplier", $declineMsg, null, 'order_status', "/admin/orders/{$soId}");
-        $this->emailNotifier->toRole('Admin', "Order {$soId} declined by supplier", $declineMsg);
+        $declineMsg = session()->get('full_name') . " declined order {$label}. Reason: {$reason}. Please reassign or follow up.";
+        $this->notificationModel->push('Admin', 'Order Status', "Order {$label} declined by supplier", $declineMsg, null, 'order_status', "/admin/orders/{$soId}");
+        $this->emailNotifier->toRole('Admin', "Order {$label} declined by supplier", $declineMsg);
 
-        return redirect()->to('/supplier/new-orders')->with('success', "Order {$soId} declined.");
+        return redirect()->to('/supplier/new-orders')->with('success', "Order {$label} declined.");
     }
 
     /** A refused move (repeat, stale tab): nothing changed and nothing was sent. */

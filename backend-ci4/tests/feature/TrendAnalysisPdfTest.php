@@ -109,13 +109,13 @@ final class TrendAnalysisPdfTest extends CIUnitTestCase
     {
         $html  = $this->pdf()['html'];
         $last = -1;
-        foreach (['Trend Analysis Report', '>Summary<', 'Items sold per month', 'What this shows', 'Weekly view', 'Product performance', 'ABC classification (K-Means)', 'Top 5 items by sales share in each class', 'Daily demand', '>Notes<'] as $marker) {
+        foreach (['Trend Analysis Report', '>Summary<', 'Items sold per month', 'What this shows', 'Weekly view', 'Projection for', 'Product performance', 'ABC classification (K-Means)', 'Top 5 items by sales share in each class', 'Daily demand', '>Notes<'] as $marker) {
             $pos = strpos($html, $marker);
             $this->assertNotFalse($pos, "missing: {$marker}");
             $this->assertGreaterThan($last, $pos, "out of order: {$marker}");
             $last = $pos;
         }
-        $this->assertSame(4, substr_count($html, 'data:image/svg+xml;base64,'), 'a chart each for months, weeks, products and ABC');
+        $this->assertSame(5, substr_count($html, 'data:image/svg+xml;base64,'), 'a chart each for months, weeks, the projection, products and ABC');
     }
 
     public function testTheHeaderAndSummaryHaveTheRightWords(): void
@@ -126,8 +126,8 @@ final class TrendAnalysisPdfTest extends CIUnitTestCase
         foreach (["Year</td><td>{$year}", 'All items', 'Data covers Jan 1', '(Philippine time)', 'Last recorded sale', "Items sold in {$year}", 'vs. same period last year', 'Best month', "Top item in {$year}"] as $text) {
             $this->assertStringContainsString($text, $html);
         }
-        $this->assertStringContainsString('Compared with the same dates last year (Jan 1 – ', html_entity_decode($html));
-        $this->assertStringContainsString('not the full years', $html);
+        $this->assertStringContainsString('Compared with the same months last year (', html_entity_decode($html));
+        $this->assertStringContainsString('compares only the months of ' . $year . ' that have recorded sales', $html);
     }
 
     // ---------------------------------------------------------------- same numbers as the page
@@ -143,8 +143,11 @@ final class TrendAnalysisPdfTest extends CIUnitTestCase
         $this->assertSame((int) $d['unitsYtd'], (int) $first[1]);
         $this->assertStringContainsString(number_format($d['unitsYtd']), $page);
         $this->assertStringContainsString(number_format($d['unitsYtd']), $pdf['html']);
-        $this->assertStringContainsString(number_format($d['changePct'], 1) . '%', $page);
-        $this->assertStringContainsString(number_format($d['changePct'], 1) . '%', $pdf['html']);
+        // The change card compares the months with recorded sales (comparePct), on the page and in the PDF alike.
+        $this->assertStringContainsString(number_format($d['comparePct'], 1) . '%', $page);
+        $this->assertStringContainsString(number_format($d['comparePct'], 1) . '%', $pdf['html']);
+        $this->assertStringContainsString($d['compareMonthsLabel'], $page);
+        $this->assertStringContainsString($d['compareMonthsLabel'], html_entity_decode($pdf['html']));
         $this->assertStringContainsString($d['bestMonth']['name'], $page);
         $this->assertStringContainsString($d['bestMonth']['name'], $pdf['html']);
         $this->assertStringContainsString($d['topItem']['item_name'], $page);
@@ -154,7 +157,7 @@ final class TrendAnalysisPdfTest extends CIUnitTestCase
         preg_match('/current: (\[[^\]]*\])/', $page, $cur);
         preg_match('/previous: (\[[^\]]*\])/', $page, $prev);
         $this->assertNotEmpty($cur);
-        $this->assertSame(array_values($d['annualData']), json_decode($cur[1], true));
+        $this->assertSame(array_values($d['annualChart']), json_decode($cur[1], true), 'The page plots a gap, not a 0, for a month with no recorded sales.');
         $this->assertSame(array_values($d['annualDataPrev']), json_decode($prev[1], true));
 
         // The latest of the 12 weeks is the page's Weekly view ("this week"); the one before is the week it compares with.

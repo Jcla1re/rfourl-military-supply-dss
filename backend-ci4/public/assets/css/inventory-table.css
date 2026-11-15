@@ -196,3 +196,31 @@
     .inv-table-card .data-table-wrap { overflow-x: auto; }
     .data-table.inv-table { min-width: 1030px; }
 }
+
+/* ---- Decluttered columns (Owner + Staff): chevron, Item, Size, On hand, Reorder at, Status, Actions.
+   Declared after the older width rules (and their media queries) so these win at every width. ---- */
+.inv-table col.c-chev    { width: 44px; }
+.inv-table col.c-size    { width: 72px; }
+.inv-table col.c-onhand  { width: 10%; }
+.inv-table col.c-rop     { width: 11%; }
+.inv-table col.c-status  { width: 170px; }
+.inv-table col.c-actions { width: 17%; }
+
+/* Details: a chevron opens the less-used columns (Item ID, Category, Order qty, stock bar, Last updated) under the row. */
+.inv-table th.col-chev, .inv-table td.inv-chev-cell { padding-left: 8px; padding-right: 0; text-align: center; }
+.inv-expand { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: none; border-radius: 8px; background: transparent; color: #5C6152; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
+.inv-expand:hover, .inv-expand:focus-visible { background: #F2F0EA; color: #1F2617; }
+.inv-expand:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 1px; }
+.inv-expand i { transition: transform .15s ease; font-size: 14px; }
+.inv-expand[aria-expanded="true"] i { transform: rotate(90deg); }
+.inv-table.data-table tbody tr.inv-detail { height: auto; }
+.inv-table.data-table tbody tr.inv-detail[hidden] { display: none; }
+.inv-table.data-table tbody tr.inv-detail:hover { background-color: #FAF8F4; }
+.inv-table tbody tr.inv-detail > td { padding: 4px 16px 16px 54px; background: #FAF8F4; }
+.inv-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px 24px; margin: 0; }
+.inv-detail-grid dt { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #777; margin: 0 0 2px; }
+.inv-detail-grid dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.inv-detail-grid .stock-bar { max-width: 120px; margin-top: 6px; }
+.inv-detail-grid .inv-na { color: #999; font-weight: 400; }
+/* An open row and its detail read as one block. */
+.inv-table.data-table tbody tr.inv-row:has(+ .inv-detail:not([hidden])) > td { border-bottom-color: transparent; background: #FAF8F4; }

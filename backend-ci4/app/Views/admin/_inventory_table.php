@@ -32,41 +32,33 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
     <div class="data-table-wrap">
         <table class="data-table inv-table">
             <colgroup>
-                <col class="c-id">      <!-- Item ID -->
-                <col>                   <!-- Item name: takes the remaining space -->
+                <col class="c-chev">    <!-- Details chevron -->
+                <col>                   <!-- Item: takes the remaining space -->
                 <col class="c-size">    <!-- Size -->
-                <col class="c-type">    <!-- Type -->
                 <col class="c-onhand">  <!-- On hand -->
-                <col class="c-rop">     <!-- Reorder At (ROP) -->
-                <col class="c-eoq">     <!-- Order Qty (EOQ) -->
-                <col class="c-stock">   <!-- Stock level -->
+                <col class="c-rop">     <!-- Reorder at -->
                 <col class="c-status">  <!-- Status -->
-                <col class="c-updated"> <!-- Last updated -->
                 <col class="c-actions"> <!-- Actions -->
             </colgroup>
             <thead>
                 <tr>
-                    <th>Item ID</th>
-                    <th>Item Name</th>
+                    <th class="col-chev"><span class="visually-hidden">Details</span></th>
+                    <th>Item</th>
                     <th class="col-center">Size</th>
-                    <th>Category</th>
                     <th class="col-num">On Hand</th>
                     <th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
-                    <th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('order_qty') ?></th>
-                    <th class="col-stock col-term">Stock Level</th>
                     <th>Status <?= help_tip('Status', [
                         ['name' => 'In Stock', 'text' => 'Enough stock', 'dot' => 'green'],
                         ['name' => 'Low Stock', 'text' => 'Getting close to Reorder At', 'dot' => 'amber'],
                         ['name' => 'Reorder Now', 'text' => 'At or below Reorder At, time to order', 'dot' => 'red'],
                         ['name' => 'Out of Stock', 'text' => 'None left', 'dot' => 'gray'],
                     ]) ?></th>
-                    <th class="col-term">Last Updated</th>
                     <th class="col-actions">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (!empty($products)): ?>
-                    <?php foreach ($products as $group): ?>
+                    <?php foreach ($products as $gi => $group): ?>
                         <?php
                         $variants = $group['variants'];
                         // Row shows the item's WORST status across sizes; the size
@@ -103,8 +95,8 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                             'po'                 => \App\Libraries\PurchaseOrderLine::build($v, $supplierMap ?? []),
                         ], $variants);
                         ?>
-                        <tr class="<?= ! empty($showArchived) ? 'is-archived' : '' ?>" data-row-status="<?= esc($itemStatus) ?>" data-worst-index="<?= $worstIndex ?>" data-category="<?= esc($group['category'] ?? '') ?>" data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
-                            <td class="inv-item-id"><?= esc($default['item_id'] ?? '—') ?></td>
+                        <tr class="inv-row<?= ! empty($showArchived) ? ' is-archived' : '' ?>" data-row-status="<?= esc($itemStatus) ?>" data-worst-index="<?= $worstIndex ?>" data-category="<?= esc($group['category'] ?? '') ?>" data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
+                            <td class="inv-chev-cell"><button type="button" class="inv-expand" aria-expanded="false" aria-controls="inv-detail-<?= (int) $gi ?>" aria-label="Show details for <?= esc($group['item_name'] ?? 'item', 'attr') ?>" title="Details"><i class="bi bi-chevron-right" aria-hidden="true"></i></button></td>
                             <td><strong><?= esc($group['item_name'] ?? 'Unknown item') ?></strong></td>
                             <td class="inv-size-cell col-center">
                                 <?php if (count($variants) > 1): ?>
@@ -123,22 +115,14 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                                     <?= esc($default['size'] ?? '—') ?>
                                 <?php endif; ?>
                             </td>
-                            <td><?= esc($group['category'] ?? '') ?></td>
                             <td class="inv-stock-cell col-num"><?= esc($default['current_stock'] ?? 0) ?></td>
                             <?php if (! empty($showArchived)): ?>
                                 <?php // Archived: no reorder point, order quantity or stock bar to show (stored values unchanged). ?>
                                 <td class="inv-rop-cell col-num inv-na">&mdash;</td>
-                                <td class="inv-eoq-cell col-num inv-na">&mdash;</td>
-                                <td class="inv-bar-cell inv-na">&mdash;</td>
                             <?php else: ?>
                                 <td class="inv-rop-cell col-num"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
-                                <td class="inv-eoq-cell col-num"><?= $default['eoq_value'] !== null ? esc($default['eoq_value']) : '—' ?></td>
-                                <td class="inv-bar-cell">
-                                    <div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% full"><span style="width: <?= $fill['pct'] ?>%"></span></div>
-                                </td>
                             <?php endif; ?>
-                            <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"<?= $pillTitle !== '' ? ' title="' . esc($pillTitle, 'attr') . '"' : '' ?>><?= esc($itemStatus) ?></span><?php if (! empty($group['on_order'])): ?> <span class="ordered-tag" title="On order: <?= esc($group['open_so']) ?>">Ordered</span><?php endif; ?></td>
-                            <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
+                            <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"<?= $pillTitle !== '' ? ' title="' . esc($pillTitle, 'attr') . '"' : '' ?>><?= esc($itemStatus) ?></span><?php if (! empty($group['on_order'])): ?> <span class="ordered-tag" title="On order: <?= esc($group['open_label'] ?? $group['open_so']) ?>">Ordered</span><?php endif; ?></td>
                             <td class="inv-actions-cell col-actions">
                                 <?php if (! empty($showArchived)): ?>
                                 <button type="button" class="btn-restore" data-item-id="<?= esc($default['item_id']) ?>" data-item-name="<?= esc($default['item_name'] ?? '') ?>" data-stock="<?= (int) ($default['current_stock'] ?? 0) ?>" data-rop="<?= (int) ($default['manual_rop_warning'] ?? 0) ?>">
@@ -165,12 +149,28 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                                 <?php endif; ?>
                             </td>
                         </tr>
+                        <tr class="inv-detail" id="inv-detail-<?= (int) $gi ?>" hidden>
+                            <td colspan="7">
+                                <dl class="inv-detail-grid">
+                                    <div><dt>Item ID</dt><dd class="inv-item-id"><?= esc($default['item_id'] ?? '—') ?></dd></div>
+                                    <div><dt>Category</dt><dd><?= esc($group['category'] ?? '') ?></dd></div>
+                                    <?php if (! empty($showArchived)): ?>
+                                        <div><dt><?= \App\Libraries\Glossary::labelWithTip('order_qty') ?></dt><dd class="inv-eoq-cell inv-na">&mdash;</dd></div>
+                                        <div><dt>Stock level</dt><dd class="inv-bar-cell inv-na">&mdash;</dd></div>
+                                    <?php else: ?>
+                                        <div><dt><?= \App\Libraries\Glossary::labelWithTip('order_qty') ?></dt><dd class="inv-eoq-cell"><?= $default['eoq_value'] !== null ? esc($default['eoq_value']) : '—' ?></dd></div>
+                                        <div><dt>Stock level</dt><dd class="inv-bar-cell"><div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% full"><span style="width: <?= $fill['pct'] ?>%"></span></div></dd></div>
+                                    <?php endif; ?>
+                                    <div><dt>Last updated</dt><dd class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></dd></div>
+                                </dl>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <?php if ($searchTerm !== '' && empty($showArchived) && $archivedHits > 0): ?>
                         <?php // No active match, but archived items match: point to the Archived tab (same search). ?>
                         <tr>
-                            <td colspan="11" class="inv-empty-search inv-empty-owner">
+                            <td colspan="7" class="inv-empty-search inv-empty-owner">
                                 <div class="inv-empty-icon" aria-hidden="true"><i class="bi bi-archive"></i></div>
                                 <div class="title">No active items match &ldquo;<?= esc($searchTerm) ?>&rdquo;</div>
                                 <p class="hint">It may be archived, or check the spelling.</p>
@@ -186,7 +186,7 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                         </tr>
                     <?php elseif ($searchTerm !== '' && empty($showArchived)): ?>
                         <tr>
-                            <td colspan="11" class="inv-empty-search inv-empty-owner">
+                            <td colspan="7" class="inv-empty-search inv-empty-owner">
                                 <div class="inv-empty-icon" aria-hidden="true"><i class="bi bi-search"></i></div>
                                 <div class="title">No items match &ldquo;<?= esc($searchTerm) ?>&rdquo;</div>
                                 <p class="hint">Check the spelling or try a shorter word. Archived items were searched too.</p>
@@ -195,7 +195,7 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                         </tr>
                     <?php elseif ($searchTerm !== ''): ?>
                         <tr>
-                            <td colspan="11" class="inv-empty-search">
+                            <td colspan="7" class="inv-empty-search">
                                 <div class="inv-empty-icon" aria-hidden="true"><i class="bi bi-search"></i></div>
                                 <div class="title">No items match &ldquo;<?= esc($searchTerm) ?>&rdquo;</div>
                                 <p class="hint">Check the spelling or try a shorter word.</p>
@@ -204,7 +204,7 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                         </tr>
                     <?php elseif (! empty($showArchived)): ?>
                         <tr>
-                            <td colspan="11" class="inv-empty-state">
+                            <td colspan="7" class="inv-empty-state">
                                 <div class="inv-empty-icon" aria-hidden="true"><i class="bi bi-archive"></i></div>
                                 <div class="inv-empty-title">No archived items</div>
                                 <p class="inv-empty-line">Archived items show here.</p>
@@ -212,7 +212,7 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                         </tr>
                     <?php else: ?>
                         <?= view('partials/_inventory_empty', [
-                            'colspan'  => 11,
+                            'colspan'  => 7,
                             'category' => $category ?? 'All',
                             'size'     => $size ?? '',
                             'status'   => $status ?? '',

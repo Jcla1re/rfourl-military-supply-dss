@@ -41,6 +41,33 @@ $selectedYear = (int) ($selectedYear ?? date('Y'));
 
 // Item picker labels: name, plus size when there is one, so same-name items
 // in different sizes can be told apart.
+// Tabs: kept in the URL (?tab=), together with the year and item filters.
+$taTabs = ['overview' => 'Overview', 'products' => 'Products', 'abc' => 'ABC classification', 'daily' => 'Daily demand', 'projection' => 'Projection'];
+$tab    = (string) service('request')->getGet('tab');
+$tab    = isset($taTabs[$tab]) ? $tab : 'overview';
+$tabUrl = static fn(string $t): string => site_url('admin/trend-analysis') . '?' . http_build_query(array_filter(
+    ['tab' => $t, 'year' => $selectedYear, 'item' => $selectedItem],
+    static fn($v) => $v !== '' && $v !== null
+));
+
+// Moved here from the Dashboard (Products tab): items per category and the all-time top sellers, the same figures.
+// One count per item (sizes of the same item grouped by name + category), active items only: the rule
+// ProductModel::countRowsByCategory() uses for Inventory's category tabs, without its stock-order lookups.
+$categoryCounts = array_fill_keys(\App\Models\ProductModel::CATEGORIES, 0);
+$seenItems      = [];
+foreach ((new \App\Models\ProductModel())->where('is_active', 1)->findAll() as $row) {
+    $key = $row['item_name'] . '|' . $row['category'];
+    if (isset($seenItems[$key])) {
+        continue;
+    }
+    $seenItems[$key] = true;
+    $categoryCounts[(string) $row['category']] = ($categoryCounts[(string) $row['category']] ?? 0) + 1;
+}
+$allTimeTop = array_map(
+    static fn($p) => ['item_name' => $p['item_name'] ?? $p['item_id'], 'units_sold' => (int) $p['units_sold']],
+    (new \App\Models\SalesItemModel())->topSellers(5)
+);
+
 $itemLabel = static fn(array $p): string => $p['item_name'] . (!empty($p['size']) ? ' · ' . $p['size'] : '');
 $selectedItemLabel = '';
 foreach ($products as $p) {
@@ -59,6 +86,7 @@ foreach ($products as $p) {
             <option value="<?= $y ?>" <?= $y == $selectedYear ? 'selected' : '' ?>><?= $y ?></option>
         <?php endforeach; ?>
     </select>
+    <input type="hidden" name="tab" value="<?= esc($tab) ?>">
     <input type="hidden" name="item" id="taItemValue" value="<?= esc($selectedItem) ?>">
     <div class="ta-item-picker">
         <i class="bi bi-search" aria-hidden="true"></i>
@@ -84,6 +112,23 @@ foreach ($products as $p) {
     .page-wrap.ta-page {
         font-family: 'Poppins', sans-serif;
     }
+
+    /* Tabs: plain links, so the tab is in the URL and survives a reload. */
+    .ta-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #dcdad2; flex-wrap: wrap; }
+    .ta-tab { padding: 10px 16px; font-size: 14px; font-weight: 600; color: #5C6152; text-decoration: none; border-bottom: 3px solid transparent; margin-bottom: -1px; border-radius: 8px 8px 0 0; }
+    .ta-tab:hover { color: #1F2617; background: #F2F0EA; }
+    .ta-tab:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; }
+    .ta-tab.active { color: #2F5A27; border-bottom-color: #4b6a3f; }
+    .ta-panel[hidden] { display: none !important; }
+
+    /* Projection tab */
+    .proj-method { color: #5C6152; font-size: 13px; margin: 10px 0 0; }
+    .proj-peaks { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+    .proj-peaks li { background: #F7F6F2; border-left: 4px solid #4b6a3f; border-radius: 6px; padding: 10px 14px; font-size: 14px; }
+    .proj-peaks li strong { font-weight: 700; }
+    .proj-suggest { margin: 12px 0 0; padding: 12px 14px; background: #E4EFDF; border-radius: 8px; font-weight: 600; }
+    .proj-suggest small { display: block; font-weight: 400; color: #5C6152; margin-top: 2px; }
+    .proj-empty { color: #5C6152; padding: 24px 0; }
 
     /* Header filters (sit in the green top bar) */
     .ta-filters {
@@ -733,9 +778,17 @@ foreach ($products as $p) {
 <div class="page-wrap ta-page">
     <?php
     $yearLabel = (string) $selectedYear;
-    $changePct = $changePct ?? null;
+    // The card compares only the months that have recorded sales (see TrendAnalysisController): these are its numbers.
+    $changePct = array_key_exists('comparePct', get_defined_vars()) ? $comparePct : ($changePct ?? null);
     $changeDir = $changePct === null ? 'flat' : ($changePct > 0.05 ? 'up' : ($changePct < -0.05 ? 'down' : 'flat'));
     ?>
+    <nav class="ta-tabs" aria-label="Trend Analysis sections">
+        <?php foreach ($taTabs as $key => $label): ?>
+            <a href="<?= esc($tabUrl($key), 'attr') ?>" class="ta-tab<?= $tab === $key ? ' active' : '' ?>"<?= $tab === $key ? ' aria-current="page"' : '' ?>><?= esc($label) ?></a>
+        <?php endforeach; ?>
+    </nav>
+
+    <section class="ta-panel" data-panel="overview"<?= $tab === 'overview' ? '' : ' hidden' ?>>
     <div class="row g-3 mb-1">
         <div class="col-sm-6 col-xl-3">
             <div class="ta-card">
@@ -749,8 +802,13 @@ foreach ($products as $p) {
             <div class="ta-card">
                 <div class="label">vs. same period last year</div>
                 <?php if ($changePct === null): ?>
-                    <div class="value is-text ta-change flat">No sales last year</div>
-                    <div class="sub">Nothing to compare with</div>
+                    <?php if (empty($compareMonthsLabel)): ?>
+                        <div class="value is-text ta-change flat">No full month yet</div>
+                        <div class="sub">No month with recorded sales to compare</div>
+                    <?php else: ?>
+                        <div class="value is-text ta-change flat">No sales last year</div>
+                        <div class="sub">Compared <?= esc($compareMonthsLabel) ?> &middot; nothing to compare with</div>
+                    <?php endif; ?>
                 <?php else: ?>
                     <div class="value ta-change <?= $changeDir ?>">
                         <?php if ($changeDir === 'up'): ?><i class="bi bi-arrow-up" aria-hidden="true"></i>
@@ -762,7 +820,7 @@ foreach ($products as $p) {
                             aria-hidden="true"><?= ($changeDir === 'up' ? '+' : '') . number_format($changePct, 1) ?>%</span>
                         <span class="visually-hidden"><?= ($changeDir === 'up' ? '+' : '') . number_format($changePct, 1) ?>%</span>
                     </div>
-                    <div class="sub"><?= number_format($unitsPrev ?? 0) ?> items in <?= (int) $selectedYear - 1 ?></div>
+                    <div class="sub" id="compareMonths">Compared <?= esc($compareMonthsLabel ?? '') ?> &middot; <?= number_format($comparePrevUnits ?? $unitsPrev ?? 0) ?> items in <?= (int) $selectedYear - 1 ?></div>
                 <?php endif; ?>
             </div>
         </div>
@@ -793,7 +851,7 @@ foreach ($products as $p) {
     </div>
 
     <div class="row g-3 mt-1">
-        <div class="col-lg-8">
+        <div class="col-12">
             <div class="chart-card h-100">
                 <div class="card-head">
                     <div>
@@ -812,7 +870,12 @@ foreach ($products as $p) {
                 </div>
             </div>
         </div>
-        <div class="col-lg-4">
+    </div>
+    </section>
+
+    <section class="ta-panel" data-panel="products"<?= $tab === 'products' ? '' : ' hidden' ?>>
+    <div class="row g-3">
+        <div class="col-lg-6 col-xl-4">
             <div class="chart-card h-100 perf-card">
                 <div class="card-head">
                     <div>
@@ -838,10 +901,46 @@ foreach ($products as $p) {
                 <?php endif; ?>
             </div>
         </div>
+        <div class="col-lg-6 col-xl-4">
+            <div class="chart-card h-100">
+                <div class="card-head">
+                    <div>
+                        <h6>Items by category</h6>
+                        <p class="card-sub">Sizes listed in each category.</p>
+                    </div>
+                </div>
+                <div class="chart-fill"><canvas id="seasonChart" aria-label="Items by category chart" role="img"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-6 col-xl-4">
+            <div class="chart-card h-100 perf-card">
+                <div class="card-head">
+                    <div>
+                        <h6>Top sellers (all time)</h6>
+                        <p class="card-sub">Items sold, whole shop.</p>
+                    </div>
+                </div>
+                <?php if (empty($allTimeTop)): ?>
+                    <div class="text-muted small">No sales recorded yet.</div>
+                <?php else: ?>
+                    <?php $allTimeMax = max(array_column($allTimeTop, 'units_sold')) ?: 1; ?>
+                    <div class="perf-list" id="allTimeTop">
+                        <?php foreach ($allTimeTop as $i => $t): ?>
+                            <div>
+                                <div class="perf-row"><span><?= esc($t['item_name']) ?></span><strong><?= number_format($t['units_sold']) ?></strong></div>
+                                <div class="perf-track"><span style="--w: <?= round(($t['units_sold'] / $allTimeMax) * 100) ?>%; --i: <?= (int) $i ?>"></span></div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
+    </section>
 
-    <div class="row g-3 mt-1 ta-pair">
-        <div class="col-lg-6">
+    <section class="ta-panel" data-panel="abc"<?= $tab === 'abc' ? '' : ' hidden' ?>>
+    <div class="row g-3">
+        <div class="col-12">
             <div class="chart-card">
                 <div class="card-head">
                     <div>
@@ -931,7 +1030,44 @@ foreach ($products as $p) {
                 <?php endif; ?>
             </div>
         </div>
-        <div class="col-lg-6">
+    </div>
+    </section>
+
+    <?php $proj = $projection ?? null; ?>
+    <section class="ta-panel" data-panel="projection"<?= $tab === 'projection' ? '' : ' hidden' ?>>
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="card-head">
+                    <div>
+                        <h6 id="projTitle">Expected items sold per month in <?= (int) ($proj['targetYear'] ?? (int) date('Y') + 1) ?><?= $selectedItemLabel !== '' ? ' · ' . esc($selectedItemLabel) : '' ?></h6>
+                        <p class="card-sub">Projection (average of past years), with the range of those years and <?= (int) ($proj['currentYear'] ?? date('Y')) ?> so far.</p>
+                    </div>
+                </div>
+                <?php if (empty($proj['hasData'])): ?>
+                    <p class="proj-empty" id="projEmpty"><i class="bi bi-graph-up" aria-hidden="true"></i> Not enough sales history yet to project<?= $selectedItemLabel !== '' ? ' for this item' : '' ?>. A month needs at least one complete past year.</p>
+                <?php else: ?>
+                    <div class="chart-fill"><canvas id="projectionChart" aria-label="Projected items sold per month" role="img"></canvas></div>
+                    <ol class="proj-peaks" id="projPeaks">
+                        <?php foreach ($proj['peaks'] as $peak): ?>
+                            <li><?= esc($peak['text']) ?> <span class="text-muted">(about <?= number_format((int) round($peak['projection'])) ?> items)</span></li>
+                        <?php endforeach; ?>
+                    </ol>
+                    <?php if (! empty($proj['suggestion'])): ?>
+                        <p class="proj-suggest" id="projSuggest"><?= esc($proj['suggestion']['text']) ?>
+                            <?php if (! $proj['suggestion']['has_safety_stock']): ?><small>No safety stock has been calculated for this item yet, so none is added.</small><?php endif; ?>
+                        </p>
+                    <?php endif; ?>
+                <?php endif; ?>
+                <p class="proj-method" id="projMethod">Method: <?= esc($proj['method'] ?? \App\Libraries\DemandProjection::METHOD) ?></p>
+            </div>
+        </div>
+    </div>
+    </section>
+
+    <section class="ta-panel" data-panel="daily"<?= $tab === 'daily' ? '' : ' hidden' ?>>
+    <div class="row g-3">
+        <div class="col-12">
             <div class="chart-card">
                 <div class="card-head">
                     <div>
@@ -985,6 +1121,7 @@ foreach ($products as $p) {
             </div>
         </div>
     </div>
+    </section>
 </div>
 
 <script src="/assets/js/count-up.js"></script>
@@ -1020,7 +1157,7 @@ foreach ($products as $p) {
 
     const MONTHLY = {
         labels: <?= json_encode($annualLabels ?? []) ?>,
-        current: <?= json_encode(array_values($annualData ?? [])) ?>,
+        current: <?= json_encode(array_values($annualChart ?? $annualData ?? [])) ?>,
         previous: <?= json_encode(array_values($annualDataPrev ?? [])) ?>,
         currentLabel: <?= json_encode($yearLabel) ?>,
         previousLabel: <?= json_encode((string) ($selectedYear - 1)) ?>,
@@ -1219,6 +1356,54 @@ foreach ($products as $p) {
     updateVarScroll();
 
     initCountUp('.ta-card [data-count]');
+
+    // ---- Projection tab: expected items sold per month next year (plain averages of past years) ------------
+    (function () {
+        const canvas = document.getElementById('projectionChart');
+        if (!canvas || canvas.closest('[hidden]')) return;
+        const proj = <?= json_encode($projection ?? null) ?>;
+        new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: proj.labels,
+                datasets: [
+                    { label: 'Lowest of past years', data: proj.min, borderWidth: 0, pointRadius: 0, fill: false, order: 4 },
+                    { label: 'Range of past years (lowest to highest)', data: proj.max, borderWidth: 0, pointRadius: 0, backgroundColor: 'rgba(113, 170, 96, 0.22)', fill: '-1', order: 3 },
+                    { label: proj.seriesName, data: proj.projection, borderColor: '#2F5A27', borderDash: [6, 5], borderWidth: 2.5, backgroundColor: '#2F5A27', pointRadius: 3, tension: 0.2, order: 1 },
+                    { label: proj.currentYear + ' actual', data: proj.actual, borderColor: '#b9791f', backgroundColor: '#b9791f', borderWidth: 2.5, pointRadius: 3, tension: 0.2, spanGaps: false, order: 2 }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                animation: reduceMotion ? false : { duration: 700 },
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top', align: 'start', labels: { boxWidth: 24, filter: (item) => item.datasetIndex !== 0 } },
+                    tooltip: { filter: (item) => item.datasetIndex !== 0 }
+                },
+                scales: { y: { beginAtZero: true, grid: { color: '#eee' }, ticks: { precision: 0 } }, x: { grid: { display: false } } }
+            }
+        });
+    })();
+
+    // ---- Products tab: items per category (moved from the Dashboard) ---------------------------------
+    (function () {
+        const canvas = document.getElementById('seasonChart');
+        if (!canvas || canvas.closest('[hidden]')) return;
+        new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: <?= json_encode(array_keys($categoryCounts)) ?>,
+                datasets: [{ data: <?= json_encode(array_values($categoryCounts)) ?>, backgroundColor: '#56ab2f', borderRadius: 4 }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                animation: reduceMotion ? false : { duration: 900, easing: 'easeOutQuart' },
+                plugins: { legend: { display: false } },
+                scales: { y: { grid: { color: '#eee' }, ticks: { precision: 0 } }, x: { grid: { display: false } } }
+            }
+        });
+    })();
 </script>
 
 <?= $this->endSection() ?>

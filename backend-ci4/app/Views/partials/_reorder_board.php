@@ -27,9 +27,14 @@ $searchText    = static fn (array $r): string => strtolower(implode(' ', array_f
 $lateCount     = count(array_filter($tabs['ordered'], static fn ($r) => $r['late_days'] > 0));
 $tabLabels     = ['order' => 'To order', 'ordered' => 'Ordered', 'dismissed' => 'Dismissed'];
 $captions      = [
-    'order'     => 'Sorted by stock left: out of stock first, then lowest compared to Reorder at. The black tick on each bar marks Reorder at.',
-    'ordered'   => 'Late deliveries first, then by expected arrival. Items leave this tab when the delivery is received.',
-    'dismissed' => "Dismissed alerts stay here until the item's stock is above Reorder at again.",
+    'order'     => 'Most urgent first.',
+    'ordered'   => 'Late deliveries first.',
+    'dismissed' => 'Hidden until restocked.',
+];
+$captionTips   = [
+    'order'     => ['How this list is sorted', ['Sorted by stock left: out of stock first, then lowest compared to Reorder at.', 'Hover an item name to see its supplier and delivery days.']],
+    'ordered'   => ['Ordered', ['Late deliveries first, then by expected arrival.', 'Items leave this tab when the delivery is received.']],
+    'dismissed' => ['Dismissed', ["Dismissed alerts stay here until the item's stock is above Reorder at again."]],
 ];
 $emptyTexts    = [
     'order'     => $sizes === 0 ? 'All stocked up. Nothing is at Reorder Now.' : 'Nothing left to order. Every size at Reorder Now is ordered or dismissed.',
@@ -49,15 +54,15 @@ $newTag    = '<span class="ra-new">NEW</span>';
 $sizeCount = static fn (int $shown, int $total): string => $shown === $total ? $total . ' sizes' : $shown . ' of ' . $total . ' sizes';
 // "Tactical Gear Inc · 5-day delivery"
 $supplierLine = static fn (array $r): string => implode(' · ', array_filter([$r['supplier_name'], ! empty($r['lead_time_days']) ? (int) $r['lead_time_days'] . '-day delivery' : null]));
+// The tooltip on an item name: "Tactical Gear Inc · 5-day delivery · Clothes · 0290".
+$nameTip = static fn (array $r): string => ' data-tooltip="' . esc(implode(' · ', array_filter([$supplierLine($r), $r['category'] ?? null, ($r['product_code'] ?? '') ?: ($r['item_id'] ?? null)])), 'attr') . '" data-tooltip-pos="above" tabindex="0"';
 $statusPill   = static fn (array $r): string => match (true) {
     $r['tab'] === 'dismissed' => '<span class="status-pill gray">Dismissed</span>',
     $r['out']                 => '<span class="status-pill ra-pill-out">Out of stock</span>',
     default                   => '<span class="status-pill red">Reorder Now</span>',
 };
-// On hand: the number, then a bar (on hand ÷ (Reorder at + order qty)) with a tick at Reorder at.
-$onHand = static fn (array $r): string => '<span class="ra-num">' . (int) $r['current_stock'] . '</span>'
-    . '<span class="ra-bar"><span class="stock-bar ' . ($r['tab'] === 'dismissed' ? 'gray' : 'red') . ($r['out'] ? ' is-empty' : '') . '"><span style="width: ' . $r['bar']['pct'] . '%"></span></span>'
-    . ($r['bar']['tick'] !== null ? '<span class="ra-tick" style="left: ' . $r['bar']['tick'] . '%" data-tick></span>' : '') . '</span>';
+// On hand: just the number (the stock-level bar is in Inventory's row detail).
+$onHand = static fn (array $r): string => '<span class="ra-num">' . (int) $r['current_stock'] . '</span>';
 $rop = static fn (array $r): int => (int) ($r['manual_rop_warning'] ?? 0);
 // Shown under the name when the Reorder at and Status columns don't fit (narrow content).
 $narrowMeta = static fn (array $r): string => '<span class="ra-narrow">' . $statusPill($r) . '<span>Reorder at ' . $rop($r) . '</span></span>';
@@ -135,7 +140,7 @@ $lateBadge = static fn (int $days): string => $days > 0 ? '<span class="status-p
                 </div>
             <?php endif; ?>
 
-            <p class="ra-caption"><?= esc($captions[$key]) ?></p>
+            <p class="ra-caption"><?= esc($captions[$key]) ?> <?= help_tip($captionTips[$key][0], $captionTips[$key][1]) ?></p>
 
             <div class="ra-empty" data-tab-empty<?= $tabs[$key] === [] ? '' : ' hidden' ?>>
                 <i class="bi bi-check-circle" aria-hidden="true"></i> <?= esc($emptyTexts[$key]) ?>
@@ -160,7 +165,7 @@ $lateBadge = static fn (int $days): string => $days > 0 ? '<span class="status-p
                     <article class="ra-item ra-order-card" data-ra-card>
                         <div class="ra-row ra-grid ra-item-head">
                             <div class="ra-c-item">
-                                <span class="ra-name"><?= $order['so_id'] ? 'Order ' . esc($order['so_id']) : 'Ordered' ?></span>
+                                <span class="ra-name"><?= $order['so_id'] ? 'Order ' . esc(\App\Models\StockOrderModel::label($order)) : 'Ordered' ?></span>
                                 <span class="ra-sub"><?= esc(implode(' · ', array_filter([$order['supplier_name'], $order['order_date'] ? 'ordered ' . $date($order['order_date']) : null]))) ?></span>
                                 <span class="ra-narrow">Expected <?= esc($date($order['expected_date'])) ?><?= $lateBadge($order['late_days']) ?></span>
                             </div>
@@ -214,8 +219,7 @@ $lateBadge = static fn (int $days): string => $days > 0 ? '<span class="status-p
                         <?php if ($multi): ?>
                             <div class="ra-row ra-grid ra-item-head">
                                 <div class="ra-c-item">
-                                    <span class="ra-name"><?= esc($card['item_name']) ?></span>
-                                    <span class="ra-sub"><?= esc(implode(' · ', array_filter([$card['category'], ($first['product_code'] ?? '') ?: $first['item_id'], $oneSupplier ? $supplierLine($first) : 'Several suppliers']))) ?></span>
+                                    <span class="ra-name"<?= $oneSupplier ? $nameTip($first) : ' data-tooltip="Several suppliers" data-tooltip-pos="above" tabindex="0"' ?>><?= esc($card['item_name']) ?></span>
                                     <span class="ra-sub ra-inline-size" data-size-count><?= esc($sizeCount(count($sizesHere), $card['total'])) ?></span>
                                 </div>
                                 <div class="ra-c-size" data-size-count><?= esc($sizeCount(count($sizesHere), $card['total'])) ?></div>
@@ -237,10 +241,8 @@ $lateBadge = static fn (int $days): string => $days > 0 ? '<span class="status-p
                                     <?php if ($multi): ?>
                                         <span class="ra-inline-size ra-size-label"><?= esc($sizeText !== '' ? 'Size ' . $sizeText : 'No size') ?><?= $r['is_new'] ? $newTag : '' ?></span>
                                     <?php else: ?>
-                                        <span class="ra-name"><?= esc($r['item_name']) ?><?= $r['is_new'] ? $newTag : '' ?></span>
+                                        <span class="ra-name"<?= $nameTip($r) ?>><?= esc($r['item_name']) ?><?= $r['is_new'] ? $newTag : '' ?></span>
                                         <?php if ($sizeText !== ''): ?><span class="ra-sub ra-inline-size">Size <?= esc($sizeText) ?></span><?php endif; ?>
-                                        <span class="ra-sub"><?= esc(implode(' · ', array_filter([$r['category'] ?? null, $r['item_id']]))) ?></span>
-                                        <span class="ra-sub"><?= esc($supplierLine($r)) ?></span>
                                     <?php endif; ?>
                                     <?= $narrowMeta($r) ?>
                                 </div>

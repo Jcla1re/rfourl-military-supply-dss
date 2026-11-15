@@ -129,6 +129,9 @@ $count  = count($groups);
                 <div class="cart-change"><span>Change</span><strong id="splitChange">₱0</strong></div>
             </div>
 
+            <label class="fw-bold mt-2 mb-1 d-block" for="orNumber">Official receipt / invoice no. <span class="text-muted fw-normal">(from the store's BIR booklet, optional)</span></label>
+            <input type="text" name="or_number" id="orNumber" class="form-control mb-2" data-check-url="<?= site_url($base . '/sales/check-or') ?>" maxlength="30" autocomplete="off" placeholder="e.g. 1001" pattern="[A-Za-z0-9][A-Za-z0-9 /\-]{0,29}" title="Letters, numbers, dashes and slashes, up to 30 characters">
+
             <button type="submit" class="btn btn-success w-100 mt-2" id="checkoutBtn" disabled>
                 <i class="bi bi-check-lg"></i> Checkout &amp; Print Receipt
             </button>
@@ -146,3 +149,4 @@ $count  = count($groups);
     </div>
 </div>
 <script src="/assets/js/pos.js" defer></script>
+<script src="/assets/js/pos-or-check.js" defer></script>

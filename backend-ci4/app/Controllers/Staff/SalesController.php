@@ -131,6 +131,17 @@ class SalesController extends BaseController
     }
 
     /**
+     * Has this OR / invoice number been used before? The checkout form asks before it submits and, if so,
+     * warns the cashier with the receipt it was used on. A warning only: checkout() still accepts the sale.
+     */
+    public function checkOr()
+    {
+        $used = $this->salesTransactionModel->findByOrNumber((string) $this->request->getGet('or_number'));
+
+        return $this->response->setJSON($used ? ['used' => true, 'receipt_no' => (string) $used['receipt_no']] : ['used' => false]);
+    }
+
+    /**
      * Checkout & Print Receipt. The sale itself (one-time key, stock locked and decreased in one
      * transaction) is App\Libraries\PosCheckout, shared with the other role's POS.
      */

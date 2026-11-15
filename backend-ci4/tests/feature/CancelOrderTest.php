@@ -68,6 +68,8 @@ final class CancelOrderTest extends CIUnitTestCase
             'tracking_no' => ['type' => 'VARCHAR', 'constraint' => 30, 'null' => true], 'decline_reason' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true],
             'cancel_reason' => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => true], 'cancelled_by' => ['type' => 'INTEGER', 'null' => true],
             'cancelled_at' => ['type' => 'DATETIME', 'null' => true],
+            'po_number' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true], 'so_number' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true], 'dr_number' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true],
+            'accepted_at' => ['type' => 'DATETIME', 'null' => true], 'shipped_at' => ['type' => 'DATETIME', 'null' => true], 'received_by' => ['type' => 'INTEGER', 'null' => true], 'received_at' => ['type' => 'DATETIME', 'null' => true],
         ], 'so_id');
         $table('so_item', [
             'so_item_id' => ['type' => 'INTEGER', 'auto_increment' => true], 'so_id' => ['type' => 'VARCHAR', 'constraint' => 15], 'item_id' => ['type' => 'VARCHAR', 'constraint' => 15],

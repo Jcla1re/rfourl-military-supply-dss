@@ -78,7 +78,7 @@ final class ReorderOrderingTest extends CIUnitTestCase
         }
 
         $toast = $_SESSION['toast'];
-        $this->assertSame(['success', 'Order created', $soId, 'was sent to Tactical Gear Inc (2 sizes).'], [$toast['type'], $toast['title'], $toast['name'], $toast['message']]);
+        $this->assertSame(['success', 'Order created', $this->db->table('stock_order')->where('so_id', $soId)->get()->getRow()->po_number, 'was sent to Tactical Gear Inc (2 sizes).'], [$toast['type'], $toast['title'], $toast['name'], $toast['message']]);
         $this->assertSame(['label' => 'View order', 'url' => site_url('admin/orders/' . $soId)], $toast['action']);
 
         $html = (string) $this->asOwner()->get('admin/reorder-alerts?tab=ordered')->getBody();

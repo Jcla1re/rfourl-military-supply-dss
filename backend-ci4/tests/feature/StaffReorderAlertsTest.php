@@ -131,7 +131,8 @@ final class StaffReorderAlertsTest extends CIUnitTestCase
         $this->assertSame(1, preg_match('#<section class="ra-panel" data-panel="dismissed".*?</section>#s', $html, $panel));
 
         $this->assertStringContainsString('Patrol Cap', $panel[0]);
-        $this->assertMatchesRegularExpression("/Dismissed alerts stay here until the item(&#039;|')s stock is above Reorder at again\\./", $panel[0]);
+        $this->assertStringContainsString('Hidden until restocked.', $panel[0]);
+        $this->assertMatchesRegularExpression("/Dismissed alerts stay here until the item(&amp;#039;|&#039;|')s stock is above Reorder at again\\./", $panel[0]);
         $this->assertStringNotContainsString('Notify Owner', $panel[0]);
         $this->assertStringNotContainsString('Owner notified', $panel[0]);
         $this->assertStringNotContainsString('staff/reorder-alerts/notify/', $panel[0]);

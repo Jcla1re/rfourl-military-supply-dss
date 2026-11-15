@@ -48,6 +48,7 @@ class TrendReport
         $report['monthly']  = self::monthly($d, $year, $scopeText);
         $report['weekly']   = self::weekly($d, $scoped);
         $report['products'] = self::products($d);
+        $report['projection'] = self::projection($d);
         $report['abc']      = self::abc($d, $year);
         $report['demand']   = self::demand($d);
         $report['notes']    = self::notes($d, $year);
@@ -64,19 +65,35 @@ class TrendReport
         $pct       = $d['changePct'];
         $prevRange = (string) $d['prevPeriodLabel'];
 
-        if ($pct === null) {
+        // The page's card compares only the months with recorded sales against the same months last year.
+        $months = null;
+        if (array_key_exists('comparePct', $d)) {
+            $months    = (string) ($d['compareMonthsLabel'] ?? '');
+            $prevUnits = (int) $d['comparePrevUnits'];
+            $pct       = $d['comparePct'];
+            $prevRange = $months !== '' ? ($months . ' ' . ($year - 1)) : '';
+        }
+
+        $same = $months !== null ? 'the same months last year' : 'the same dates last year';
+        if ($months === '') {
+            $changeValue    = 'No full month yet';
+            $changeSub      = 'No month with recorded sales to compare';
+            $changeSentence = 'No month of ' . $year . ' with recorded sales is complete yet, so there is nothing to compare with last year.';
+        } elseif ($pct === null) {
             $changeValue    = 'No sales last year';
             $changeSub      = 'Nothing to compare with';
-            $changeSentence = "There were no sales in the same dates last year ({$prevRange}), so there is nothing to compare with.";
+            $changeSentence = "There were no sales in {$same} ({$prevRange}), so there is nothing to compare with.";
         } else {
             $abs            = number_format(abs($pct), 1);
             $changeValue    = self::signed($pct, 1) . '%';
             $changeSub      = number_format($prevUnits) . ' items, ' . $prevRange;
             $changeSentence = abs($pct) < 0.05
-                ? "Compared with the same dates last year ({$prevRange}), sales were about the same."
-                : "Compared with the same dates last year ({$prevRange}), sales were {$abs}% " . ($pct > 0 ? 'higher' : 'lower') . '.';
+                ? "Compared with {$same} ({$prevRange}), sales were about the same."
+                : "Compared with {$same} ({$prevRange}), sales were {$abs}% " . ($pct > 0 ? 'higher' : 'lower') . '.';
         }
-        $changeSentence .= ' This card compares the same dates in both years, not the full years.';
+        $changeSentence .= $months !== null
+            ? ' This card compares only the months of ' . $year . ' that have recorded sales with the same months of ' . ($year - 1) . '.'
+            : ' This card compares the same dates in both years, not the full years.';
 
         $best = $d['bestMonth'] ?? null;
         $top  = $d['topItem'] ?? null;
@@ -115,6 +132,45 @@ class TrendReport
                         . ($scoped ? ' (counted across all items, as on the page).' : '.')
                     : "No item has sold in {$year} yet.",
             ],
+        ];
+    }
+
+    // ------------------------------------------------------------------ projection
+
+    /** The projection section (App\Libraries\DemandProjection), or null when the page data has none. */
+    private static function projection(array $d): ?array
+    {
+        $p = $d['projection'] ?? null;
+        if (! is_array($p)) {
+            return null;
+        }
+
+        $rows = [];
+        foreach ($p['months'] as $m) {
+            $rows[] = [
+                'month' => $m['name'],
+                'proj'  => $m['projection'] === null ? '—' : number_format((int) round($m['projection'])),
+                'range' => $m['projection'] === null ? '—' : number_format($m['min']) . ' – ' . number_format($m['max']),
+                'years' => $m['years'] === [] ? '—' : implode(', ', array_reverse($m['years'])),
+            ];
+        }
+
+        $chart = $p['hasData'] ? PdfCharts::dataUri(PdfCharts::lineChart(
+            $p['labels'],
+            $p['actual'],
+            array_map(static fn ($v) => $v === null ? null : (int) round($v), $p['projection']),
+            ['currentName' => $p['currentYear'] . ' actual', 'previousName' => $p['seriesName'], 'height' => 250]
+        )) : null;
+
+        return [
+            'title'      => 'Projection for ' . $p['targetYear'] . ($p['item'] !== null ? ' · ' . $p['item'] : ' · all items'),
+            'method'     => $p['method'],
+            'hasData'    => $p['hasData'],
+            'chart'      => $chart,
+            'rows'       => $rows,
+            'peaks'      => array_column($p['peaks'], 'text'),
+            'suggestion' => $p['suggestion']['text'] ?? null,
+            'seriesName' => $p['seriesName'],
         ];
     }
 

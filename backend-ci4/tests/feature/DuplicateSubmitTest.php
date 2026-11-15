@@ -49,7 +49,7 @@ final class DuplicateSubmitTest extends CIUnitTestCase
             $forge->createTable($name);
         };
         $forge->addUniqueKey('receipt_no');
-        $make('sales_transaction', ['sales_id' => $id, 'receipt_no' => $str, 'user_id' => $int, 'sale_date' => ['type' => 'DATETIME', 'null' => true], 'payment_method' => $str, 'cash_amount' => $real, 'gcash_amount' => $real, 'gcash_reference_no' => $str, 'subtotal' => $real, 'discount' => $real, 'total_amount' => $real], 'sales_id');
+        $make('sales_transaction', ['sales_id' => $id, 'receipt_no' => $str, 'or_number' => $str, 'user_id' => $int, 'sale_date' => ['type' => 'DATETIME', 'null' => true], 'payment_method' => $str, 'cash_amount' => $real, 'gcash_amount' => $real, 'gcash_reference_no' => $str, 'subtotal' => $real, 'discount' => $real, 'total_amount' => $real], 'sales_id');
         $make('sales_item', ['sales_item_id' => $id, 'sales_id' => $int, 'item_id' => $str, 'quantity_sold' => $int, 'selling_price' => $real], 'sales_item_id');
         $make('inventory_log', ['log_id' => $id, 'item_id' => $str, 'user_id' => $int, 'log_type' => $str, 'quantity_changed' => $int, 'stock_after_change' => $int, 'reference_so_id' => $str, 'notes' => $str, 'timestamp' => ['type' => 'DATETIME', 'null' => true]], 'log_id');
         // The migration's table (2026-11-14-100000_CreateFormSubmissions): the UNIQUE key is the real guard.
@@ -371,7 +371,7 @@ final class DuplicateSubmitTest extends CIUnitTestCase
         $this->asOwner()->post('admin/orders/store', $post)->assertRedirectTo(site_url('/admin/orders'));
 
         $this->assertSame('Already saved.', $_SESSION['toast']['title'] ?? null);
-        $this->assertSame('Order SO-0001 was already created.', $_SESSION['toast']['message'] ?? null);
+        $this->assertSame('Order PO-' . date('Y') . '-0001 was already created.', $_SESSION['toast']['message'] ?? null, 'Named by its PO number.');
         $this->assertSame(1, $this->rows('stock_order'));
         $this->assertSame(1, $this->rows('so_item'));
         $this->assertSame(1, $this->mail->sent);
@@ -401,5 +401,56 @@ final class DuplicateSubmitTest extends CIUnitTestCase
         $this->openOrder('SO-0020', ['P-1'], null, 'Shipped');
         $orders = (string) $this->asOwner()->get('admin/orders')->getBody();
         $this->assertMatchesRegularExpression('/update-status\/SO-0020" data-submit-once data-busy-label="Saving(…|&hellip;)">\s*<input type="hidden" name="csrf_test_name"[^>]*>\s*<input type="hidden" name="submission_key"/', $orders);
+    }
+
+    // ------------------------------------------------------------ with the procurement documents and OR numbers
+
+    /** @dataProvider roles */
+    public function testTheOrNumberGoesThroughTheSharedCheckoutAndOnTheFirstReceipt(string $role): void
+    {
+        $key = $this->key();
+        $this->checkout($role, 'P-1', 1, $key, ['or_number' => 'OR-0457']);
+        $this->assertSame('OR-0457', $_SESSION['receipt']['or_number'] ?? null);
+        $this->assertSame('OR-0457', $this->db->table('sales_transaction')->get()->getRow()->or_number);
+
+        // The same form again: still one sale, and the first receipt keeps its OR number.
+        $this->checkout($role, 'P-1', 1, $key, ['or_number' => 'OR-0457']);
+        $this->assertSame('OR-0457', $_SESSION['receipt']['or_number'] ?? null);
+        $this->assertSame(1, $this->rows('sales_transaction'));
+
+        // A bad OR number is refused before anything is saved.
+        $this->checkout($role, 'P-1', 1, $this->key(), ['or_number' => '<bad>']);
+        $this->assertStringStartsWith('Official receipt / invoice no. can only have', $_SESSION['error'] ?? '');
+        $this->assertSame(1, $this->rows('sales_transaction'));
+        $this->assertSame(4, $this->stock('P-1'));
+    }
+
+    public function testWhoReceivedTheOrderIsRecordedOnceByTheGuardedMove(): void
+    {
+        $this->openOrder('SO-0030', ['P-1'], null, 'Shipped');
+
+        $this->asStaff()->post('staff/log-transaction/restock-confirm/SO-0030', [OnceToken::FIELD => $this->key()]);
+        $this->asOwner()->post('admin/orders/update-status/SO-0030', ['status' => 'Delivered', OnceToken::FIELD => $this->key()]);
+
+        $row = $this->db->table('stock_order')->where('so_id', 'SO-0030')->get()->getRow();
+        $this->assertSame('Delivered', $row->status);
+        $this->assertSame($this->staffId, (int) $row->received_by, 'The staff member who really received it, not the late second confirm.');
+        $this->assertNotNull($row->received_at);
+        $this->assertSame(17, $this->stock('P-1'));
+    }
+
+    public function testDocumentNumbersAreOnlyIssuedWhenTheMoveHappens(): void
+    {
+        $this->openOrder('SO-0031', ['P-1'], null, 'Order Confirmed');
+        $this->openOrder('SO-0032', ['P-1'], null, 'Cancelled');
+
+        $this->asSupplier()->post('supplier/new-orders/accept/SO-0031');
+        $this->asSupplier()->post('supplier/new-orders/accept/SO-0032');
+
+        $accepted = $this->db->table('stock_order')->where('so_id', 'SO-0031')->get()->getRow();
+        $refused  = $this->db->table('stock_order')->where('so_id', 'SO-0032')->get()->getRow();
+        $this->assertStringStartsWith('SO-' . date('Y') . '-', (string) $accepted->so_number, 'Accepted: gets its Sales Order number.');
+        $this->assertNull($refused->so_number, 'Refused accept on a cancelled order: no number, nothing changed.');
+        $this->assertSame('Cancelled', $refused->status);
     }
 }

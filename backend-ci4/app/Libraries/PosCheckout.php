@@ -82,6 +82,14 @@ final class PosCheckout
             return $payment;
         }
 
+        // The official receipt / invoice no. from the store's BIR booklet: optional. A number used
+        // before is only warned about in the form (SalesController::checkOr), never refused here.
+        $orNumber = trim((string) $request->getPost('or_number'));
+        if ($orNumber !== '' && ! SalesTransactionModel::validOrNumber($orNumber)) {
+            return ['error' => 'Official receipt / invoice no. can only have letters, numbers, dashes and slashes (up to 30 characters).'];
+        }
+        $orNumber = $orNumber !== '' ? $orNumber : null;
+
         $db           = db_connect();
         $sales        = new SalesTransactionModel();
         $salesItems   = new SalesItemModel();
@@ -115,6 +123,7 @@ final class PosCheckout
 
         $salesId = $sales->insert([
             'receipt_no'         => $receiptNo,
+            'or_number'          => $orNumber,
             'user_id'            => $userId,
             'sale_date'          => date('Y-m-d H:i:s'),
             'payment_method'     => $method,
@@ -159,6 +168,7 @@ final class PosCheckout
 
         return ['receipt' => [
             'receipt_no'         => $receiptNo,
+            'or_number'          => $orNumber,
             'sale_date'          => date('Y-m-d H:i:s'),
             'lines'              => self::receiptLines($pricing['lines']),
             'subtotal'           => $subtotal,
@@ -266,6 +276,7 @@ final class PosCheckout
             'receipt_no' => $sale['receipt_no'],
             'receipt'    => [
                 'receipt_no'         => $sale['receipt_no'],
+                'or_number'          => $sale['or_number'] ?? null,
                 'sale_date'          => $sale['sale_date'],
                 'lines'              => self::receiptLines($pricing['lines']),
                 'subtotal'           => (float) $sale['subtotal'],

@@ -10,23 +10,22 @@
     <div class="data-table-wrap">
         <table class="data-table inv-table">
             <colgroup>
-                <col class="c-id"><col><col class="c-size"><col class="c-type"><col class="c-onhand"><col class="c-rop">
-                <col class="c-stock"><col class="c-status"><col class="c-updated"><col class="c-actions">
+                <col class="c-chev"><col><col class="c-size"><col class="c-onhand"><col class="c-rop"><col class="c-status"><col class="c-actions">
             </colgroup>
             <thead>
                 <tr>
-                    <th>Item ID</th><th>Item Name</th><th class="col-center">Size</th><th>Category</th><th class="col-num">On Hand</th><th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
-                    <th class="col-stock col-term">Stock Level</th><th>Status <?= help_tip('Status', [
+                    <th class="col-chev"><span class="visually-hidden">Details</span></th><th>Item</th><th class="col-center">Size</th><th class="col-num">On Hand</th><th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
+                    <th>Status <?= help_tip('Status', [
                         ['name' => 'In Stock', 'text' => 'Enough stock', 'dot' => 'green'],
                         ['name' => 'Low Stock', 'text' => 'Getting close to Reorder At', 'dot' => 'amber'],
                         ['name' => 'Reorder Now', 'text' => 'At or below Reorder At, time to order', 'dot' => 'red'],
                         ['name' => 'Out of Stock', 'text' => 'None left', 'dot' => 'gray'],
-                    ]) ?></th><th class="col-term">Last Updated</th><th class="col-actions">Actions</th>
+                    ]) ?></th><th class="col-actions">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (!empty($products)): ?>
-                    <?php foreach ($products as $group): ?>
+                    <?php foreach ($products as $gi => $group): ?>
                         <?php
                         $variants = $group['variants'];
                         // Row shows the item's WORST status across sizes; the size
@@ -52,8 +51,8 @@
                             'updated_at_display' => date('M j, Y', strtotime($v['updated_at'] ?? 'now')),
                         ], $variants);
                         ?>
-                        <tr data-row-status="<?= esc($itemStatus) ?>" data-worst-index="<?= $worstIndex ?>" data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
-                            <td class="inv-item-id"><?= esc($default['item_id'] ?? '—') ?></td>
+                        <tr class="inv-row" data-row-status="<?= esc($itemStatus) ?>" data-worst-index="<?= $worstIndex ?>" data-variants="<?= esc(json_encode($variantsPayload), 'attr') ?>">
+                            <td class="inv-chev-cell"><button type="button" class="inv-expand" aria-expanded="false" aria-controls="inv-detail-<?= (int) $gi ?>" aria-label="Show details for <?= esc($group['item_name'] ?? 'item', 'attr') ?>" title="Details"><i class="bi bi-chevron-right" aria-hidden="true"></i></button></td>
                             <td><strong><?= esc($group['item_name'] ?? 'Unknown item') ?></strong></td>
                             <td class="inv-size-cell col-center">
                                 <?php if (count($variants) > 1): ?>
@@ -72,12 +71,9 @@
                                     <?= esc($default['size'] ?? '—') ?>
                                 <?php endif; ?>
                             </td>
-                            <td><?= esc($group['category'] ?? '') ?></td>
                             <td class="inv-stock-cell col-num"><?= esc($default['current_stock'] ?? 0) ?></td>
                             <td class="inv-rop-cell col-num"><?= esc($default['manual_rop_warning'] ?? 0) ?></td>
-                            <td class="inv-bar-cell"><div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% full"><span style="width: <?= $fill['pct'] ?>%"></span></div></td>
-                            <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"<?= $pillTitle !== '' ? ' title="' . esc($pillTitle, 'attr') . '"' : '' ?>><?= esc($itemStatus) ?></span><?php if (! empty($group['on_order'])): ?> <span class="ordered-tag" title="On order: <?= esc($group['open_so']) ?>">Ordered</span><?php endif; ?></td>
-                            <td class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></td>
+                            <td class="inv-status-cell"><span class="status-pill <?= $pillClass ?>"<?= $pillTitle !== '' ? ' title="' . esc($pillTitle, 'attr') . '"' : '' ?>><?= esc($itemStatus) ?></span><?php if (! empty($group['on_order'])): ?> <span class="ordered-tag" title="On order: <?= esc($group['open_label'] ?? $group['open_so']) ?>">Ordered</span><?php endif; ?></td>
                             <?php $needsReorder = $itemStatus === 'Reorder Now' && empty($group['on_order']); $ownerDismissed = $needsReorder && ! empty($default['dismissed']); ?>
                             <td class="inv-notify-cell col-actions">
                                 <form method="post" action="<?= site_url('staff/inventory/notify/' . $default['item_id']) ?>" class="notify-form" style="<?= $needsReorder && ! $ownerDismissed && empty($default['notice']) ? '' : 'display:none;' ?>">
@@ -93,11 +89,21 @@
                                 <span class="notify-none" style="<?= $itemStatus === 'Reorder Now' && empty($group['on_order']) ? 'display:none;' : '' ?>" aria-hidden="true"></span>
                             </td>
                         </tr>
+                        <tr class="inv-detail" id="inv-detail-<?= (int) $gi ?>" hidden>
+                            <td colspan="7">
+                                <dl class="inv-detail-grid">
+                                    <div><dt>Item ID</dt><dd class="inv-item-id"><?= esc($default['item_id'] ?? '—') ?></dd></div>
+                                    <div><dt>Category</dt><dd><?= esc($group['category'] ?? '') ?></dd></div>
+                                    <div><dt>Stock level</dt><dd class="inv-bar-cell"><div class="stock-bar <?= $fill['class'] ?><?= $fill['empty'] ? ' is-empty' : '' ?>" title="<?= $fill['pct'] ?>% full"><span style="width: <?= $fill['pct'] ?>%"></span></div></dd></div>
+                                    <div><dt>Last updated</dt><dd class="inv-updated-cell"><?= esc(date('M j, Y', strtotime($default['updated_at'] ?? 'now'))) ?></dd></div>
+                                </dl>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <?php if (($search ?? '') !== ''): ?>
                         <tr>
-                            <td colspan="10" class="inv-empty-search">
+                            <td colspan="7" class="inv-empty-search">
                                 <div class="inv-empty-icon" aria-hidden="true"><i class="bi bi-search"></i></div>
                                 <div class="title">No items match &ldquo;<?= esc($search) ?>&rdquo;</div>
                                 <p class="hint">Check the spelling or try a shorter word.</p>
@@ -106,7 +112,7 @@
                         </tr>
                     <?php else: ?>
                         <?= view('partials/_inventory_empty', [
-                            'colspan'  => 10,
+                            'colspan'  => 7,
                             'category' => $category ?? 'All',
                             'size'     => $size ?? '',
                             'status'   => $status ?? '',

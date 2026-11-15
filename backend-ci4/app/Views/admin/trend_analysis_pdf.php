@@ -138,6 +138,37 @@ $notFiltered = $scoped ? '<p class="note">Not filtered by item: this section sho
 </table>
 <p><?= esc($r['weekly']['sentence']) ?></p>
 
+<?php if (! empty($r['projection'])): ?>
+<?php $proj = $r['projection']; ?>
+<h2><?= esc($proj['title']) ?></h2>
+<p class="note"><?= esc($proj['seriesName']) ?>. Method: <?= esc($proj['method']) ?></p>
+<?php if ($proj['hasData']): ?>
+<div class="chart"><img src="<?= $proj['chart'] ?>" width="680" height="250" alt="Projected items sold per month"></div>
+<table class="data">
+    <thead>
+        <tr><th style="width:130px;">Month</th><th class="num">Projection</th><th class="num">Range of past years</th><th>Years used</th></tr>
+    </thead>
+    <?php foreach ($proj['rows'] as $i => $row): ?>
+        <tr class="<?= $i % 2 ? 'alt' : '' ?>">
+            <td><?= esc($row['month']) ?></td>
+            <td class="num"><?= esc($row['proj']) ?></td>
+            <td class="num"><?= esc($row['range']) ?></td>
+            <td><?= esc($row['years']) ?></td>
+        </tr>
+    <?php endforeach; ?>
+</table>
+<div class="box">
+    <h3>Peak months</h3>
+    <ul>
+        <?php foreach ($proj['peaks'] as $line): ?><li><?= esc($line) ?></li><?php endforeach; ?>
+        <?php if ($proj['suggestion']): ?><li><b><?= esc($proj['suggestion']) ?></b></li><?php endif; ?>
+    </ul>
+</div>
+<?php else: ?>
+<p class="note">Not enough sales history yet to project. A month needs at least one complete past year.</p>
+<?php endif; ?>
+<?php endif; ?>
+
 <h2>Product performance</h2>
 <p class="muted">Items sold, all time: the five best sellers.</p>
 <?php if ($r['products']['chart']): ?>

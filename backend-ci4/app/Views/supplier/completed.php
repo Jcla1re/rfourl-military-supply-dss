@@ -28,12 +28,12 @@
 
     <div class="page-panel">
         <table class="data-table">
-            <thead><tr><th>Order ID</th><th>Items</th><th>Units</th><th>Delivered</th><th>Status</th></tr></thead>
+            <thead><tr><th>PO No.</th><th>Items</th><th>Units</th><th>Delivered</th><th>Status</th></tr></thead>
             <tbody>
                 <?php if (!empty($orders)): ?>
                     <?php foreach ($orders as $o): ?>
                         <tr>
-                            <td><strong>#<?= esc($o['so_id']) ?></strong></td>
+                            <td><strong><?= esc(\App\Models\StockOrderModel::label($o)) ?></strong><br><?= view('partials/_order_docs', ['order' => $o, 'base' => 'supplier']) ?></td>
                             <td><?php foreach ($o['lines'] as $l): ?><?= esc($l['item_name'] ?? $l['item_id']) ?><?= end($o['lines']) === $l ? '' : ', ' ?><?php endforeach; ?></td>
                             <td><?= esc($o['total_units']) ?></td>
                             <td><?= esc(date('M j, Y', strtotime($o['actual_delivery_date']))) ?></td>
@@ -57,11 +57,11 @@
         <h5 class="fw-bold mt-4 mb-2">Cancelled orders</h5>
         <div class="page-panel">
             <table class="data-table">
-                <thead><tr><th>Order ID</th><th>Items</th><th>Units</th><th>Cancelled</th></tr></thead>
+                <thead><tr><th>PO No.</th><th>Items</th><th>Units</th><th>Cancelled</th></tr></thead>
                 <tbody>
                     <?php foreach ($cancelledOrders as $o): ?>
                         <tr>
-                            <td><strong>#<?= esc($o['so_id']) ?></strong></td>
+                            <td><strong><?= esc(\App\Models\StockOrderModel::label($o)) ?></strong><br><?= view('partials/_order_docs', ['order' => $o, 'base' => 'supplier']) ?></td>
                             <td><?= esc(implode(', ', array_map(fn ($l) => $l['item_name'] ?? $l['item_id'], $o['lines']))) ?></td>
                             <td><?= esc($o['total_units']) ?></td>
                             <td><span class="status-pill red">Cancelled</span> <span class="text-muted small"><?= esc($o['note'] ?? '') ?></span></td>

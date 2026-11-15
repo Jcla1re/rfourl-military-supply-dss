@@ -151,9 +151,15 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
         $this->assertMatchesRegularExpression('/<option value="SUP-002" selected>Quiapo Patches Co<\/option>/', $html);
         $this->assertMatchesRegularExpression('/data-only="out" class="active" aria-pressed="true"/', $html);
         $this->assertStringContainsString('data-search="whistle p-1 wh-01 quiapo patches co"', $html);
-        $this->assertStringContainsString('Sorted by stock left: out of stock first, then lowest compared to Reorder at. The black tick on each bar marks Reorder at.', $html);
-        $this->assertStringContainsString('Late deliveries first, then by expected arrival. Items leave this tab when the delivery is received.', $html);
-        $this->assertStringContainsString("Dismissed alerts stay here until the item's stock is above Reorder at again.", $html);
+        // One short line per tab; the longer explanation sits in that line's help tip.
+        foreach (['Most urgent first.', 'Late deliveries first.', 'Hidden until restocked.'] as $caption) {
+            $this->assertStringContainsString('<p class="ra-caption">' . $caption, $html);
+        }
+        $this->assertStringContainsString('Sorted by stock left: out of stock first, then lowest compared to Reorder at.', $html);
+        $this->assertStringContainsString('Late deliveries first, then by expected arrival.', $html);
+        $this->assertStringContainsString('Items leave this tab when the delivery is received.', $html);
+        $this->assertMatchesRegularExpression('/Dismissed alerts stay here until the item(&amp;#039;|&#039;|\')s stock is above Reorder at again\./', $html);
+        $this->assertSame(3, substr_count($html, 'class="info-tip help-tip"'), 'One help tip per tab caption.');
     }
 
     // ------------------------------------------------------------ Show only chips
@@ -253,9 +259,11 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
 
         $this->assertStringNotContainsString('data-multi', $card);
         $this->assertStringNotContainsString('ra-item-head', $card, 'One row, no card header.');
-        $this->assertStringContainsString('<span class="ra-name">Whistle<span class="ra-new">NEW</span></span>', $card, 'NEW next to the name.');
-        $this->assertStringContainsString('<span class="ra-sub">Accessories &middot; P-1</span>', $card);
-        $this->assertStringContainsString('<span class="ra-sub">Quiapo Patches Co &middot; 5-day delivery</span>', $card);
+        $this->assertStringContainsString('>Whistle<span class="ra-new">NEW</span></span>', $card, 'NEW next to the name.');
+        // Supplier and delivery days (and category, code) are a tooltip on the name, not extra lines.
+        $this->assertStringContainsString('<span class="ra-name" data-tooltip="Quiapo Patches Co &middot; 5-day delivery &middot; Accessories &middot; P-1" data-tooltip-pos="above" tabindex="0">Whistle', $card);
+        $this->assertStringNotContainsString('<span class="ra-sub">Quiapo', $card);
+        $this->assertStringNotContainsString('<span class="ra-sub">Accessories', $card);
         $this->assertStringContainsString('<div class="ra-c-size">L</div>', $card);
         $this->assertStringContainsString('<span class="ra-sub ra-inline-size">Size L</span>', $card, 'Under the name on narrow widths.');
         $this->assertStringContainsString('<span class="status-pill red">Reorder Now</span>', $card);
@@ -274,8 +282,8 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
         $card = $this->cardOf($this->page('', ['previous_login' => '2026-11-03 09:00:00']), 'P-S');
 
         $this->assertStringContainsString('data-total="2" data-multi', $card);
-        $this->assertStringContainsString('<span class="ra-name">Pants</span>', $card);
-        $this->assertStringContainsString('<span class="ra-sub">Clothes &middot; 0111 &middot; Tactical Gear Inc &middot; 5-day delivery</span>', $card);
+        $this->assertStringContainsString('<span class="ra-name" data-tooltip="Tactical Gear Inc &middot; 5-day delivery &middot; Clothes &middot; 0111" data-tooltip-pos="above" tabindex="0">Pants</span>', $card);
+        $this->assertStringNotContainsString('<span class="ra-sub">Clothes', $card);
         $this->assertStringContainsString('<div class="ra-c-size" data-size-count>2 sizes</div>', $card);
         $this->assertMatchesRegularExpression('/<button type="button" class="btn btn-outline-success btn-sm" data-order-all>Order all sizes<\/button>/', $card);
         $this->assertStringNotContainsString('P-L', $card);
@@ -334,8 +342,11 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
         $this->alertFor('P-2', 'Dismissed', ['hidden_until_recovered' => 1]);
         $html = $this->page();
 
-        $this->assertStringContainsString('<span class="ra-num">1</span><span class="ra-bar"><span class="stock-bar red"><span style="width: 7%"></span></span><span class="ra-tick" style="left: 20%" data-tick></span></span>', $this->cardOf($html, 'P-1'));
-        $this->assertStringContainsString('<span class="stock-bar gray"><span style="width: 13%"></span></span>', $this->cardOf($html, 'P-2'), 'Gray for dismissed.');
+        // One compact row: on hand is just the number (the stock-level bar is in Inventory's row detail).
+        $this->assertStringContainsString('<div class="ra-c-onhand"><span class="ra-num">1</span></div>', $this->cardOf($html, 'P-1'));
+        $this->assertStringContainsString('<div class="ra-c-onhand"><span class="ra-num">2</span></div>', $this->cardOf($html, 'P-2'));
+        $this->assertStringNotContainsString('ra-bar', $html);
+        $this->assertStringNotContainsString('ra-tick', $html);
 
         $bar = new \ReflectionMethod(\App\Libraries\ReorderBoard::class, 'stockBar');
         $this->assertSame(['pct' => 0, 'tick' => null], $bar->invoke(null, ['current_stock' => 0, 'manual_rop_warning' => 0, 'recommended_eoq' => 12]), 'No tick when Reorder at is 0.');
@@ -362,12 +373,14 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
         $this->assertStringContainsString('<span class="status-pill gray">Dismissed</span>', $dismissed);
         $this->assertStringNotContainsString('open-order-modal', $dismissed);
 
-        // No info-icon tooltips; the only title on the page's cards is the icon button's name.
-        $this->assertStringNotContainsString('class="info-tip help-tip"', $html); // help_tip() / Glossary tips (the layout still loads help-tip.js)
-        // The icon button is named by the shared tooltip (data-tooltip), not the browser's title.
+        // Tooltips come from the shared data-tooltip, never the browser's title: the icon button's name
+        // and the supplier / delivery line on each item name.
         preg_match('/<div class="ra-items".*<\/section>/s', $html, $list);
         $this->assertSame(0, preg_match_all('/\stitle="/', $list[0]), 'No browser title tooltips.');
-        $this->assertSame(['Dismiss until restocked'], array_values(array_unique(preg_match_all('/data-tooltip="([^"]*)"/', $list[0], $m) ? $m[1] : [])));
+        $tips = array_values(array_unique(preg_match_all('/data-tooltip="([^"]*)"/', $list[0], $m) ? $m[1] : []));
+        $this->assertContains('Dismiss until restocked', $tips);
+        $this->assertContains('Tactical Gear Inc &middot; 5-day delivery &middot; Clothes &middot; P-1', $tips);
+        $this->assertCount(3, $tips, 'The icon button plus one tooltip per item name.');
     }
 
     // ------------------------------------------------------------ Phase 3: Dismiss and Restore

@@ -163,6 +163,7 @@
                                         'cash_amount'        => (float) $t['cash_amount'],
                                         'gcash_amount'       => (float) $t['gcash_amount'],
                                         'gcash_reference_no' => $t['gcash_reference_no'] ?? null,
+                                        'or_number'          => $t['or_number'] ?? null,
                                         'staff_name'         => ($t['cashier_role'] ?? null) === 'Admin' ? 'Owner' : ($t['cashier_name'] ?? null),
                                     ];
                                 ?>
@@ -219,9 +220,12 @@
         <div class="inv-sub">Non-VAT Reg. TIN: 335-802-288-00000</div>
 
         <div class="inv-heading-row">
-            <div class="inv-heading">SALES INVOICE</div>
+            <div class="inv-heading">SALES RECEIPT</div>
             <div class="inv-no"><span class="inv-no-label">Nº</span><?= esc($receipt['receipt_no']) ?></div>
         </div>
+
+        <div class="inv-sub inv-not-official">This is not an official receipt.</div>
+        <?php if (!empty($receipt['or_number'])): ?><div class="inv-sub inv-or-no">OR / Invoice no.: <strong><?= esc($receipt['or_number']) ?></strong></div><?php endif; ?>
 
         <div class="inv-field-row">
             <div class="inv-field">Sold to<span class="inv-line">&nbsp;</span></div>
@@ -311,9 +315,12 @@
         <div class="inv-sub">Non-VAT Reg. TIN: 335-802-288-00000</div>
 
         <div class="inv-heading-row">
-            <div class="inv-heading">SALES INVOICE</div>
+            <div class="inv-heading">SALES RECEIPT</div>
             <div class="inv-no"><span class="inv-no-label">Nº</span><span id="hrReceiptNo"></span></div>
         </div>
+
+        <div class="inv-sub inv-not-official">This is not an official receipt.</div>
+        <div class="inv-sub inv-or-no" id="hrOrRow" style="display:none;">OR / Invoice no.: <strong id="hrOrNo"></strong></div>
 
         <div class="inv-field-row">
             <div class="inv-field">Sold to<span class="inv-line">&nbsp;</span></div>
@@ -371,6 +378,8 @@
 
     function showHistoryReceipt(r) {
         document.getElementById('hrReceiptNo').textContent = r.receipt_no;
+        document.getElementById('hrOrNo').textContent = r.or_number || '';
+        document.getElementById('hrOrRow').style.display = r.or_number ? '' : 'none';
         const saleDate = new Date(r.sale_date.replace(' ', 'T'));
         document.getElementById('hrDate').textContent = saleDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 

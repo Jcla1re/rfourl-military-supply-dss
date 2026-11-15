@@ -14,6 +14,7 @@ class SalesTransactionModel extends Model
 
     protected $allowedFields = [
         'receipt_no',
+        'or_number',
         'user_id',
         'sale_date',
         'payment_method',
@@ -26,6 +27,32 @@ class SalesTransactionModel extends Model
     ];
 
     protected $useTimestamps = false;
+
+    /**
+     * The official receipt / invoice number typed from the store's BIR booklet: optional, up to
+     * 30 letters, digits, dashes, slashes or spaces. The system's own receipt_no is not an official receipt.
+     */
+    public static function validOrNumber(string $value): bool
+    {
+        return (bool) preg_match('~^[A-Za-z0-9][A-Za-z0-9 /-]{0,29}$~', $value);
+    }
+
+    /**
+     * The latest sale that already carries this OR number (trimmed, upper/lower case ignored), or null.
+     * Used for the checkout warning; a repeat is only warned about, never refused.
+     */
+    public function findByOrNumber(string $orNumber): ?array
+    {
+        $orNumber = strtolower(trim($orNumber));
+        if ($orNumber === '') {
+            return null;
+        }
+
+        return $this->select('sales_id, receipt_no, or_number')
+            ->where('LOWER(TRIM(or_number)) =', $orNumber)
+            ->orderBy('sales_id', 'DESC')
+            ->first();
+    }
 
     /** The first receipt number the shop's invoice booklets started from. */
     public const FIRST_RECEIPT_NO = 1001;
