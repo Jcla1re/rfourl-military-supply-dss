@@ -50,4 +50,4 @@ Thumbs.db
 # Docs (compiled outputs, keep source)
 # ==============================
 docs/*.docx#
-reports/
+/reports/
