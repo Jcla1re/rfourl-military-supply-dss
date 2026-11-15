@@ -77,8 +77,31 @@ $count  = count($groups);
     </div>
 
     <div class="cart-panel">
-        <?php // Sent once (submit-once.js); the one-time key stops a repeat on the server too (PosCheckout). ?>
-        <form method="post" action="<?= site_url($base . '/sales/checkout') ?>" id="cartForm" data-submit-once data-busy-label="Processing sale…">
+        <?php
+        // Sent once (submit-once.js); the one-time key stops a repeat on the server too (PosCheckout).
+        // After "Not enough stock" or "This page needed a refresh" the cart comes back: only the item
+        // IDs and quantities that were posted (old input), never a price. pos.js rebuilds the cart
+        // from this page's own item data (prices and stock from the server) and caps to stock.
+        $oldIds  = (array) (old('item_id', [], false) ?? []);
+        $oldQty  = (array) (old('quantity', [], false) ?? []);
+        $restore = [];
+        foreach (array_values($oldIds) as $i => $oldId) {
+            $oldId = (string) $oldId;
+            $qty   = (int) (array_values($oldQty)[$i] ?? 0);
+            if ($oldId !== '' && strlen($oldId) <= 15 && $qty > 0) {
+                $restore[] = ['id' => $oldId, 'qty' => min($qty, 9999)];
+            }
+        }
+        $restorePay = $restore === [] ? [] : array_filter([
+            'method'    => in_array(old('payment_method', '', false), ['Cash', 'GCash', 'Split'], true) ? old('payment_method', '', false) : null,
+            'cash'      => is_numeric(old('cash_received', '', false)) ? (string) old('cash_received', '', false) : null,
+            'gcash'     => is_numeric(old('gcash_amount', '', false)) ? (string) old('gcash_amount', '', false) : null,
+            'gcash_ref' => mb_substr((string) old('gcash_reference_no', '', false), 0, 50) ?: null,
+            'or_number' => mb_substr((string) old('or_number', '', false), 0, 30) ?: null,
+        ], static fn ($v) => $v !== null);
+        ?>
+        <form method="post" action="<?= site_url($base . '/sales/checkout') ?>" id="cartForm" data-submit-once data-busy-label="Processing sale…"
+              data-restore="<?= esc(json_encode($restore), 'attr') ?>" data-restore-payment="<?= esc(json_encode((object) $restorePay), 'attr') ?>">
             <?= csrf_field() ?>
             <?= \App\Libraries\OnceToken::field(\App\Libraries\PosCheckout::ACTION) ?>
             <div class="cart-head">

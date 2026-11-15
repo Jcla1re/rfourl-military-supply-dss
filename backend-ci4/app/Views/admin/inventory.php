@@ -800,20 +800,14 @@ itemForm.addEventListener('submit', event => {
         showToast({ type: 'error', title: "Couldn't save", message: 'Something went wrong. Please try again.' });
         settle();
     };
-    fetch(itemForm.action, {
+    // App.fetch: signed out, the page goes to the login page; an expired token gets a fresh one and
+    // the "This page needed a refresh" toast (the modal and its input stay, nothing is sent again).
+    App.fetch(itemForm.action, {
         method: 'POST',
         body: new FormData(itemForm),
-        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-        credentials: 'same-origin',
-        redirect: 'manual', // a redirect here means the sign-in page: the session has ended
+        headers: { 'Accept': 'application/json' },
     })
         .then(response => {
-            if (response.type === 'opaqueredirect') {
-                // Signed out (session timed out): say so, keep the modal and the input.
-                showToast({ type: 'error', title: 'Your session has expired. Please sign in again.' });
-                settle();
-                return;
-            }
             return response.json().then(
                 data => ({ status: response.status, data }),
                 () => ({ status: response.status, data: null })
@@ -832,7 +826,7 @@ itemForm.addEventListener('submit', event => {
                 failed();
             });
         })
-        .catch(failed);
+        .catch(err => (err && err.handled ? settle() : failed()));
 });
 
 function openItemModal(opener) {
@@ -1168,9 +1162,11 @@ function syncClearFilters() {
         url.searchParams.delete('page');
 
         const request = ++latestRequest;
-        fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(response => response.text())
+        // App.fetch: signed out, the page goes to the login page (its HTML is never pasted in here).
+        App.fetch(url.toString())
+            .then(response => response.ok ? response.text() : null)
             .then(html => {
+                if (html === null) return;
                 // Ignore a response that's been overtaken by newer typing,
                 // including typing that made the search invalid.
                 if (request !== latestRequest) return;

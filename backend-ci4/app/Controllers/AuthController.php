@@ -7,6 +7,7 @@ use App\Libraries\AttemptStore;
 use App\Libraries\DemoGuard;
 use App\Libraries\EmailNotifier;
 use App\Libraries\PasswordPolicy;
+use App\Libraries\ReturnTo;
 use App\Libraries\StaffPasswordAlert;
 use App\Libraries\StaffPasswordReset;
 use App\Libraries\LoginLockout;
@@ -32,6 +33,8 @@ class AuthController extends BaseController
     // --- ADMIN ---
     public function showAdminLogin()
     {
+        $this->keepReturnTo();
+
         return view('auth/login_admin');
     }
 
@@ -66,12 +69,14 @@ class AuthController extends BaseController
 
         $this->lockout->reset('admin');
         $this->logUserIn($user);
-        return redirect()->to('/admin/dashboard');
+        return redirect()->to($this->afterSignIn('Admin'));
     }
 
     // --- STAFF (password only; each staff member has their own unique password, which identifies them) ---
     public function showStaffLogin()
     {
+        $this->keepReturnTo();
+
         return view('auth/login_staff');
     }
 
@@ -162,15 +167,18 @@ class AuthController extends BaseController
 
         // Temporary password: they must pick their own before anything else.
         if (\App\Libraries\StaffPasswordReset::isPending($user)) {
+            $this->afterSignIn('Staff'); // the page to return to is dropped
             return redirect()->to('/staff/set-password');
         }
 
-        return redirect()->to('/staff/dashboard');
+        return redirect()->to($this->afterSignIn('Staff'));
     }
 
     // --- SUPPLIER ---
     public function showSupplierLogin()
     {
+        $this->keepReturnTo();
+
         return view('auth/login_supplier');
     }
 
@@ -207,7 +215,7 @@ class AuthController extends BaseController
 
         $this->lockout->reset('supplier');
         $this->logUserIn($user);
-        return redirect()->to('/supplier/dashboard');
+        return redirect()->to($this->afterSignIn('Supplier'));
     }
 
     /**
@@ -254,6 +262,31 @@ class AuthController extends BaseController
         return true;
     }
 
+    /**
+     * A login page opened with ?return=/staff/sales (the page's script after an idle sign-out): kept
+     * as the page to return to, if ReturnTo accepts it. Kept in the session, so it survives a wrong
+     * password or a lockout wait.
+     */
+    private function keepReturnTo(): void
+    {
+        $return = $this->request->getGet('return');
+        if (is_string($return) && ($clean = ReturnTo::clean($return)) !== null) {
+            session()->set('return_to', $clean);
+        }
+    }
+
+    /**
+     * Where to go after signing in: the page to return to, when it is a GET page of this role's own
+     * area (ReturnTo::clean), else the role's dashboard. The idle notice and the page are cleared.
+     */
+    private function afterSignIn(string $role): string
+    {
+        $target = ReturnTo::clean(session()->get('return_to'), $role) ?? ReturnTo::dashboard($role);
+        session()->remove(['return_to', 'signed_out_reason']);
+
+        return $target;
+    }
+
     private function logUserIn(array $user): void
     {
         // New session ID on login so a pre-login session ID can't be reused
@@ -278,6 +311,8 @@ class AuthController extends BaseController
     public function logout()
     {
         SecurityLogModel::log('logout');
+        // Everything goes, including the idle notice and the page to return to (never shown after this).
+        session()->remove(array_keys($_SESSION ?? []));
         session()->destroy();
         return redirect()->to('/');
     }
@@ -354,6 +389,7 @@ class AuthController extends BaseController
             'pwd_reset_user_id'  => $user['user_id'],
             'pwd_reset_role'     => $role,
             'pwd_reset_verified' => false,
+            'pwd_reset_touched'  => time(),
         ]);
 
         return redirect()->to("/login/{$role}/otp");
@@ -500,7 +536,7 @@ class AuthController extends BaseController
                 . ($role === 'admin' ? 'support' : 'the owner') . ' right away.'
         );
 
-        session()->remove(['pwd_reset_user_id', 'pwd_reset_role', 'pwd_reset_verified']);
+        session()->remove(['pwd_reset_user_id', 'pwd_reset_role', 'pwd_reset_verified', 'pwd_reset_touched']);
 
         return redirect()->to("/login/{$role}")->with('success', 'Password reset. Please log in with your new password.');
     }
@@ -599,9 +635,27 @@ class AuthController extends BaseController
         return $neutral;
     }
 
+    /** Forgot password: how long a started reset stays usable without a step in it (as before, 30 minutes). */
+    private const RESET_IDLE_SECONDS = 1800;
+
+    /**
+     * A started password reset for this role. It ends after 30 minutes without a step in it, exactly as
+     * when it ended with the 30-minute session (the session itself now lives longer: Config\Session).
+     */
     private function hasPendingReset(string $role): bool
     {
-        return session()->get('pwd_reset_role') === $role && session()->get('pwd_reset_user_id');
+        $session = session();
+        if ($session->get('pwd_reset_role') !== $role || ! $session->get('pwd_reset_user_id')) {
+            return false;
+        }
+        if (time() - (int) $session->get('pwd_reset_touched') > self::RESET_IDLE_SECONDS) {
+            $session->remove(['pwd_reset_user_id', 'pwd_reset_role', 'pwd_reset_verified', 'pwd_reset_touched']);
+
+            return false;
+        }
+        $session->set('pwd_reset_touched', time());
+
+        return true;
     }
 
     /**

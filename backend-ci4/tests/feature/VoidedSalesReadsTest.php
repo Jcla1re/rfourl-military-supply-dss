@@ -347,7 +347,9 @@ final class VoidedSalesReadsTest extends CIUnitTestCase
 
         $result = $this->asStaff()->post('staff/log-transaction/store', ['type' => 'return', 'item_id' => 'P-1', 'qty_returned' => '1', 'original_sale_ref' => '1003']);
 
-        $this->assertStringContainsString('Receipt #1003 was voided as a duplicate of #1002. Use receipt #1002 instead.', (string) $result->getRedirectUrl() . json_encode($_SESSION['error'] ?? ''));
+        $this->assertSame(site_url('staff/log-transaction/return'), $result->getRedirectUrl());
+        $this->assertSame("Can't log this return", $_SESSION['toast']['title'] ?? null);
+        $this->assertSame('Receipt #1003 was voided as a duplicate of #1002. Use receipt #1002 instead.', $_SESSION['toast']['message'] ?? null);
         $this->assertSame($before, $this->stock('P-1'), 'No stock was added.');
         $this->assertSame(0, $this->db->table('inventory_log')->where('log_type', 'RETURN')->countAllResults());
     }

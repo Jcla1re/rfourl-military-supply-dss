@@ -66,6 +66,12 @@ $g = $guide[$type] ?? ['icon' => 'bi-info-circle', 'about' => '', 'points' => []
 .lt-submit { width: 100%; border: none; padding: 14px; margin-top: 6px; } /* colors: shared primary-button rules */
 </style>
 
+<?php
+// After a refused log ("Can't log this return" / "Can't log this transaction") the form comes back
+// with what was typed (old input). Plain values only; the one-time key is always a fresh one.
+$ltOld = static fn (string $name, string $default = ''): string => esc((string) (old($name, $default, false) ?? $default));
+$ltSel = static fn (string $name, string $value): string => (string) old($name, '', false) === $value ? ' selected' : '';
+?>
 <div class="page-wrap">
     <?php if (!empty($error)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
 
@@ -88,7 +94,7 @@ $g = $guide[$type] ?? ['icon' => 'bi-info-circle', 'about' => '', 'points' => []
                 <select name="item_id" id="itemSelect" required>
                     <option value="">Search product....</option>
                     <?php foreach ($products as $p): ?>
-                        <option value="<?= esc($p['item_id']) ?>" data-stock="<?= esc($p['current_stock']) ?>">
+                        <option value="<?= esc($p['item_id']) ?>" data-stock="<?= esc($p['current_stock']) ?>"<?= $ltSel('item_id', (string) $p['item_id']) ?>>
                             <?= esc($p['item_name']) ?><?= !empty($p['size']) ? ' - ' . esc($p['size']) : '' ?> (Stock: <?= esc($p['current_stock']) ?>)
                         </option>
                     <?php endforeach; ?>
@@ -96,70 +102,70 @@ $g = $guide[$type] ?? ['icon' => 'bi-info-circle', 'about' => '', 'points' => []
             </div>
 
             <?php if ($type === 'restock'): ?>
-                <div class="lt-field"><label>Quantity</label><input type="number" name="quantity" min="1" required></div>
-                <div class="lt-field"><label>Supplier</label><input type="text" name="supplier" placeholder="e.g. Supplier A"></div>
+                <div class="lt-field"><label>Quantity</label><input type="number" name="quantity" value="<?= $ltOld('quantity') ?>" min="1" required></div>
+                <div class="lt-field"><label>Supplier</label><input type="text" name="supplier" value="<?= $ltOld('supplier') ?>" placeholder="e.g. Supplier A"></div>
 
             <?php elseif ($type === 'return'): ?>
-                <div class="lt-field"><label>Qty Returned</label><input type="number" name="qty_returned" min="1" required></div>
-                <div class="lt-field"><label>Original Sale Ref.</label><input type="text" name="original_sale_ref" placeholder="e.g TXN-0042"></div>
+                <div class="lt-field"><label>Qty Returned</label><input type="number" name="qty_returned" value="<?= $ltOld('qty_returned') ?>" min="1" required></div>
+                <div class="lt-field"><label>Original Sale Ref.</label><input type="text" name="original_sale_ref" value="<?= $ltOld('original_sale_ref') ?>" placeholder="e.g TXN-0042"></div>
                 <div class="lt-field">
                     <label>Item Condition</label>
                     <select name="item_condition">
                         <option value="">Select condition.....</option>
-                        <option>Passed Inspection</option>
-                        <option>Damaged</option>
-                        <option>Wrong Item / Size</option>
+                        <option<?= $ltSel('item_condition', 'Passed Inspection') ?>>Passed Inspection</option>
+                        <option<?= $ltSel('item_condition', 'Damaged') ?>>Damaged</option>
+                        <option<?= $ltSel('item_condition', 'Wrong Item / Size') ?>>Wrong Item / Size</option>
                     </select>
                 </div>
                 <div class="lt-field">
                     <label>Reason for Return</label>
                     <select name="reason">
                         <option value="">Select reason.....</option>
-                        <option>Wrong Size</option>
-                        <option>Changed Mind</option>
-                        <option>Defective</option>
-                        <option>Other</option>
+                        <option<?= $ltSel('reason', 'Wrong Size') ?>>Wrong Size</option>
+                        <option<?= $ltSel('reason', 'Changed Mind') ?>>Changed Mind</option>
+                        <option<?= $ltSel('reason', 'Defective') ?>>Defective</option>
+                        <option<?= $ltSel('reason', 'Other') ?>>Other</option>
                     </select>
                 </div>
                 <div class="lt-field full">
                     <label>Refund Action</label>
                     <select name="refund_action">
                         <option value="">Select action.....</option>
-                        <option>Restock to Inventory</option>
-                        <option>Refund Issued</option>
-                        <option>Exchange</option>
+                        <option<?= $ltSel('refund_action', 'Restock to Inventory') ?>>Restock to Inventory</option>
+                        <option<?= $ltSel('refund_action', 'Refund Issued') ?>>Refund Issued</option>
+                        <option<?= $ltSel('refund_action', 'Exchange') ?>>Exchange</option>
                     </select>
                 </div>
 
             <?php elseif ($type === 'damaged'): ?>
-                <div class="lt-field"><label>Qty Affected</label><input type="number" name="qty_affected" min="1" required></div>
-                <div class="lt-field"><label>Est. Loss (₱)</label><input type="number" step="0.01" name="est_loss" placeholder="0.00"></div>
+                <div class="lt-field"><label>Qty Affected</label><input type="number" name="qty_affected" value="<?= $ltOld('qty_affected') ?>" min="1" required></div>
+                <div class="lt-field"><label>Est. Loss (₱)</label><input type="number" step="0.01" name="est_loss" value="<?= $ltOld('est_loss') ?>" placeholder="0.00"></div>
                 <div class="lt-field">
                     <label>Item Condition</label>
                     <select name="item_condition">
                         <option value="">Select condition.....</option>
-                        <option>Damaged</option>
-                        <option>Lost</option>
-                        <option>Expired</option>
+                        <option<?= $ltSel('item_condition', 'Damaged') ?>>Damaged</option>
+                        <option<?= $ltSel('item_condition', 'Lost') ?>>Lost</option>
+                        <option<?= $ltSel('item_condition', 'Expired') ?>>Expired</option>
                     </select>
                 </div>
-                <div class="lt-field"><label>Incident Date</label><input type="date" name="incident_date"></div>
-                <div class="lt-field full"><label>Notes / Remarks</label><textarea name="notes" rows="2" placeholder="Describe what happened..."></textarea></div>
+                <div class="lt-field"><label>Incident Date</label><input type="date" name="incident_date" value="<?= $ltOld('incident_date') ?>"></div>
+                <div class="lt-field full"><label>Notes / Remarks</label><textarea name="notes" rows="2" placeholder="Describe what happened..."><?= $ltOld('notes') ?></textarea></div>
 
             <?php elseif ($type === 'adjustment'): ?>
                 <div class="lt-field"><label>System Qty</label><input type="text" id="systemQty" readonly placeholder="auto-filled"></div>
-                <div class="lt-field"><label>Actual Counted Qty</label><input type="number" name="actual_counted_qty" min="0" required></div>
+                <div class="lt-field"><label>Actual Counted Qty</label><input type="number" name="actual_counted_qty" value="<?= $ltOld('actual_counted_qty') ?>" min="0" required></div>
                 <div class="lt-field">
                     <label>Adjustment Reason</label>
                     <select name="adjustment_reason">
                         <option value="">Select reason...</option>
-                        <option>Physical Count Mismatch</option>
-                        <option>Data Entry Error</option>
-                        <option>Theft / Loss</option>
+                        <option<?= $ltSel('adjustment_reason', 'Physical Count Mismatch') ?>>Physical Count Mismatch</option>
+                        <option<?= $ltSel('adjustment_reason', 'Data Entry Error') ?>>Data Entry Error</option>
+                        <option<?= $ltSel('adjustment_reason', 'Theft / Loss') ?>>Theft / Loss</option>
                     </select>
                 </div>
-                <div class="lt-field"><label>Adjustment Date</label><input type="date" name="adjustment_date" value="<?= date('Y-m-d') ?>"></div>
-                <div class="lt-field full"><label>Staff name or ID</label><input type="text" name="staff_ref" placeholder="Staff name or ID..."></div>
+                <div class="lt-field"><label>Adjustment Date</label><input type="date" name="adjustment_date" value="<?= $ltOld('adjustment_date', date('Y-m-d')) ?>"></div>
+                <div class="lt-field full"><label>Staff name or ID</label><input type="text" name="staff_ref" value="<?= $ltOld('staff_ref') ?>" placeholder="Staff name or ID..."></div>
             <?php endif; ?>
             </div>
 
@@ -198,10 +204,12 @@ $g = $guide[$type] ?? ['icon' => 'bi-info-circle', 'about' => '', 'points' => []
 const itemSelect = document.getElementById('itemSelect');
 const systemQty = document.getElementById('systemQty');
 if (itemSelect && systemQty) {
-    itemSelect.addEventListener('change', () => {
+    const showSystemQty = () => {
         const opt = itemSelect.options[itemSelect.selectedIndex];
-        systemQty.value = opt ? (opt.dataset.stock || '0') : '';
-    });
+        systemQty.value = opt && opt.value ? (opt.dataset.stock || '0') : '';
+    };
+    itemSelect.addEventListener('change', showSystemQty);
+    showSystemQty(); // an item already chosen (the form came back after a refused log)
 }
 </script>
 

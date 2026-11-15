@@ -177,7 +177,7 @@ class LogTransactionController extends BaseController
         $product = $itemId ? $this->productModel->find($itemId) : null;
 
         if (! $product) {
-            return redirect()->to("/staff/log-transaction/{$type}")->with('error', 'Please select a valid item.');
+            return $this->refuse($type, 'Please select a valid item.');
         }
 
         $currentStock = (int) $product['current_stock'];
@@ -185,23 +185,20 @@ class LogTransactionController extends BaseController
         $userId       = session()->get('user_id');
 
         if ($type === 'damaged' && (int) $this->request->getPost('qty_affected') > $currentStock) {
-            return redirect()->to("/staff/log-transaction/{$type}")
-                ->with('error', "Only {$currentStock} in stock. Enter {$currentStock} or less.");
+            return $this->refuse($type, "Only {$currentStock} in stock. Enter {$currentStock} or less.");
         }
 
         if ($type === 'return') {
             $saleRef = trim((string) $this->request->getPost('original_sale_ref'));
             $sale    = $saleRef !== '' ? db_connect()->table('sales_transaction')->where('receipt_no', $saleRef)->get()->getRowArray() : null;
             if (! $sale) {
-                return redirect()->to("/staff/log-transaction/{$type}")
-                    ->with('error', 'Receipt number not found. Check and try again.');
+                return $this->refuse($type, 'Receipt number not found. Check and try again.');
             }
             // A voided duplicate's stock was already given back: a return must use the original receipt.
             if (\App\Models\SalesTransactionModel::isVoided($sale)) {
                 $original = db_connect()->table('sales_transaction')->select('receipt_no')->where('sales_id', $sale['duplicate_of_sales_id'] ?? 0)->get()->getRowArray();
 
-                return redirect()->to("/staff/log-transaction/{$type}")
-                    ->with('error', "Receipt #{$sale['receipt_no']} was voided as a duplicate" . ($original ? " of #{$original['receipt_no']}. Use receipt #{$original['receipt_no']} instead." : '.'));
+                return $this->refuse($type, "Receipt #{$sale['receipt_no']} was voided as a duplicate" . ($original ? " of #{$original['receipt_no']}. Use receipt #{$original['receipt_no']} instead." : '.'));
             }
         }
 
@@ -244,7 +241,7 @@ class LogTransactionController extends BaseController
         }
 
         if ($delta === 0) {
-            return redirect()->to("/staff/log-transaction/{$type}")->with('error', 'Nothing to log — quantity is zero.');
+            return $this->refuse($type, 'Nothing to log — quantity is zero.');
         }
 
         // Saved once per form (OnceToken), and the stock change is made inside one transaction on
@@ -265,15 +262,14 @@ class LogTransactionController extends BaseController
         if ($type === 'damaged' && $qty > $now) {
             $db->transRollback();
 
-            return redirect()->to("/staff/log-transaction/{$type}")
-                ->with('error', "Only {$now} in stock. Enter {$now} or less.");
+            return $this->refuse($type, "Only {$now} in stock. Enter {$now} or less.");
         }
 
         $newStock = $delta === 0 ? null : $this->productModel->changeStock($itemId, $delta);
         if ($newStock === null) {
             $db->transRollback();
 
-            return redirect()->to("/staff/log-transaction/{$type}")->with('error', 'Nothing to log — quantity is zero.');
+            return $this->refuse($type, 'Nothing to log — quantity is zero.');
         }
 
         $this->inventoryLogModel->record(
@@ -299,6 +295,17 @@ class LogTransactionController extends BaseController
         $this->notifyAdmin($type, (array) $product, $qty, $delta, $newStock, $notes);
 
         return redirect()->to('/staff/log-transaction')->with('success', 'Transaction logged successfully.');
+    }
+
+    /**
+     * A log that can't be saved as entered (not a fault): back to the same form with everything typed
+     * still in it (old input) and an accurate title: "Can't log this return" / "Can't log this
+     * transaction". The form carries a fresh one-time key, so the next click is a new submit.
+     */
+    private function refuse(string $type, string $reason)
+    {
+        return redirect()->to("/staff/log-transaction/{$type}")->withInput()
+            ->with('toast', Toast::error($type === 'return' ? "Can't log this return" : "Can't log this transaction", $reason));
     }
 
     /**

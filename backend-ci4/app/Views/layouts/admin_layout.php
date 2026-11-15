@@ -23,6 +23,9 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
     <script>window.STOCK_RULE = <?= json_encode(\App\Models\ProductModel::statusRule()) ?>;</script>
     <script src="/assets/js/stock-status.js"></script>
 <?= view('partials/demo_head') ?>
+    <?php // Background requests go through App.fetch (signed out: the login page, never its HTML in the page). ?>
+    <script>window.APP_SESSION = <?= json_encode(['loginUrl' => site_url('login/admin'), 'csrfUrl' => site_url('session/csrf'), 'statusUrl' => site_url('session/status')]) ?>;</script>
+    <script src="/assets/js/session-guard.js"></script>
 </head>
 <body>
 <?= view('partials/demo_banner') ?>
@@ -210,6 +213,7 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
 </script>
 <?php // Shared toast: specific title, bold item name, Undo, × / Esc. Set with App\Libraries\Toast. ?>
     <?= view('partials/_toast', ['toast' => session()->getFlashdata('toast')]) ?>
+    <?= view('partials/_idle_test_mode') ?>
     <script src="/assets/js/toast-timer.js"></script>
     <script src="/assets/js/sticky-offset.js"></script>
     <script src="/assets/js/account-menu.js"></script>

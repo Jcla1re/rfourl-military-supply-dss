@@ -26,7 +26,8 @@ class Filters extends BaseFilters
      * or [filter_name => [classname1, classname2, ...]]
      */
     public array $aliases = [
-        'csrf'          => CSRF::class,
+        // CodeIgniter's CSRF check, with friendlier handling of a failed check (App\Filters\CsrfFilter).
+        'csrf'          => \App\Filters\CsrfFilter::class,
         'toolbar'       => DebugToolbar::class,
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,

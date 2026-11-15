@@ -13,6 +13,10 @@ $routes->post('login/supplier', 'AuthController::attemptSupplierLogin');
 
 $routes->post('logout', 'AuthController::logout');
 
+// For the page's own scripts; outside the role areas so they never count as activity (SessionController).
+$routes->get('session/status', 'SessionController::status');
+$routes->get('session/csrf', 'SessionController::csrf');
+
 // Staff has no self-service reset — it notifies the Admin instead (see Figma "Can't access your account?").
 // Registered before the generic (:segment) routes below so it takes precedence for the "staff" segment.
 $routes->get('login/staff/forgot', 'AuthController::showStaffForgot');

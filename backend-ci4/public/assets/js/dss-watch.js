@@ -48,7 +48,8 @@
     };
 
     const startedAt = Date.now();
-    const poll = () => fetch(cfg.statusUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' })
+    // A background poll (App.fetch background): it does not count as activity for the idle sign-out.
+    const poll = () => App.fetch(cfg.statusUrl, { cache: 'no-store' }, { background: true })
         .then(r => r.json())
         .then(s => {
             if (!s.running) return finish(s);

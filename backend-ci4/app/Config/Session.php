@@ -40,8 +40,14 @@ class Session extends BaseConfig
      *
      * The number of SECONDS you want the session to last.
      * Setting to 0 (zero) means expire when the browser is closed.
+     *
+     * 8 hours: how long the browser keeps the session cookie and the server keeps the session file.
+     * This is NOT the idle sign-out: that stays 30 minutes (Config\Auth::$idleSeconds, enforced by
+     * RoleAuthFilter on every request). The longer life lets the server still tell "signed out for
+     * inactivity" (and the page to return to) after the 30 minutes; a session past the idle limit
+     * holds nothing that signs anyone in.
      */
-    public int $expiration = 1800;
+    public int $expiration = 28800;
 
     /**
      * --------------------------------------------------------------------------

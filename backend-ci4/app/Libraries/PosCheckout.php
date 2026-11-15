@@ -26,8 +26,11 @@ final class PosCheckout
 {
     public const ACTION = 'pos_checkout';
 
+    /** 'code' of a refusal because an item doesn't have enough stock (the cart is kept: SalesController). */
+    public const NOT_ENOUGH_STOCK = 'not_enough_stock';
+
     /**
-     * @return array{error?: string, receipt?: ?array, repeat?: bool, receipt_no?: ?string}
+     * @return array{error?: string, code?: string, receipt?: ?array, repeat?: bool, receipt_no?: ?string}
      */
     public static function run(IncomingRequest $request, ?int $userId, string $staffName): array
     {
@@ -58,7 +61,7 @@ final class PosCheckout
             }
             $qty = max(1, (int) ($quantities[$i] ?? 1));
             if ($qty > (int) $product['current_stock']) {
-                return ['error' => self::notEnough($product)];
+                return ['error' => self::notEnough($product), 'code' => self::NOT_ENOUGH_STOCK];
             }
             $products[]  = $product;
             $cartLines[] = [
@@ -113,7 +116,7 @@ final class PosCheckout
             if (! $row || (int) $row['current_stock'] < $qty) {
                 $db->transRollback();
 
-                return ['error' => self::notEnough($row ?? ['current_stock' => 0] + $byId[$itemId])];
+                return ['error' => self::notEnough($row ?? ['current_stock' => 0] + $byId[$itemId]), 'code' => self::NOT_ENOUGH_STOCK];
             }
         }
 
@@ -147,7 +150,7 @@ final class PosCheckout
             if ($newStock === null) {
                 $db->transRollback();
 
-                return ['error' => self::notEnough($productModel->find($line['item_id']) ?? $line)];
+                return ['error' => self::notEnough($productModel->find($line['item_id']) ?? $line), 'code' => self::NOT_ENOUGH_STOCK];
             }
 
             $inventoryLog->record($line['item_id'], $userId, 'SALE', -$line['qty'], $newStock, null, 'Ref: sales_id=' . $salesId);

@@ -165,7 +165,7 @@ final class DuplicateSubmitTest extends CIUnitTestCase
         $this->checkout($role, 'P-LAST', 1, $this->key());
         $this->checkout($role, 'P-LAST', 1, $this->key());
 
-        $this->assertSame('Not enough stock for Brass Medal (only 0 left). Nothing was saved.', $_SESSION['error'] ?? null);
+        $this->assertSame(['Not enough stock', 'Not enough stock for Brass Medal (only 0 left). Nothing was saved.'], [$_SESSION['toast']['title'] ?? null, $_SESSION['toast']['message'] ?? null], 'The "Not enough stock" toast.');
         $this->assertSame(0, $this->stock('P-LAST'), 'Never negative.');
         $this->assertSame(1, $this->rows('sales_transaction'));
         $this->assertSame(1, $this->rows('sales_item'));
@@ -181,7 +181,7 @@ final class DuplicateSubmitTest extends CIUnitTestCase
             'item_id' => ['P-LAST', 'P-LAST'], 'quantity' => ['1', '1'], 'payment_method' => 'Cash', 'cash_received' => '5000', OnceToken::FIELD => $key,
         ]);
 
-        $this->assertSame('Not enough stock for Brass Medal (only 1 left). Nothing was saved.', $_SESSION['error'] ?? null);
+        $this->assertSame(['Not enough stock', 'Not enough stock for Brass Medal (only 1 left). Nothing was saved.'], [$_SESSION['toast']['title'] ?? null, $_SESSION['toast']['message'] ?? null], 'The "Not enough stock" toast.');
         $this->assertSame(1, $this->stock('P-LAST'));
         foreach (self::TABLES as $t) {
             $this->assertSame(0, $this->rows($t), "Nothing written to {$t}.");

@@ -16,8 +16,10 @@ final class IdleTimeoutTest extends CIUnitTestCase
 
     public function testIdleSessionIsRefused(): void
     {
-        $limit = (int) config('Session')->expiration;
+        // The idle limit (Config\Auth), not the session cookie's life (Config\Session, 8 hours).
+        $limit = config(\Config\Auth::class)->idleLimit();
         $this->assertSame(1800, $limit);
+        $this->assertSame(28800, (int) config('Session')->expiration);
 
         $result = $this->withSession([
             'isLoggedIn'    => true,

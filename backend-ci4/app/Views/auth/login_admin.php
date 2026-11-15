@@ -49,13 +49,14 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('admin');
                 <div class="portal-badge"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 9l1.5-5h15L21 9"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12v8h14v-8"/><path d="M10 20v-5h4v5"/></svg> OWNER PORTAL</div>
                 <h2>Welcome</h2>
                 <p class="form-subtitle">Sign in with your owner account.</p>
+                <?= view('partials/_auth_session_notice') ?>
                 <form action="/login/admin" method="post">
                     <?= csrf_field() ?>
                     <div class="field-group">
                         <label>Username</label>
                         <div class="input-icon-wrap">
                             <i class="bi bi-person"></i>
-                            <input type="text" name="username" placeholder="Enter your username" required>
+                            <input type="text" name="username" placeholder="Enter your username" value="<?= esc((string) old('username', '', false)) ?>" required>
                         </div>
                     </div>
                     <div class="field-group">

@@ -154,6 +154,12 @@ class SalesController extends BaseController
         $back = redirect()->to('/admin/sales');
 
         if (isset($result['error'])) {
+            // Not enough stock: nothing was sold; the cart comes back (the posted items and quantities,
+            // as old input; prices are read again from the server) with an accurate title.
+            if (($result['code'] ?? null) === PosCheckout::NOT_ENOUGH_STOCK) {
+                return $back->withInput()->with('toast', Toast::error('Not enough stock', $result['error']));
+            }
+
             return $back->with('error', $result['error']);
         }
 

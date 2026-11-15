@@ -49,13 +49,14 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('supplier
                 <div class="portal-badge"><i class="bi bi-truck"></i> SUPPLIER PORTAL</div>
                 <h2>Welcome</h2>
                 <p class="form-subtitle">Sign in with your supplier account.</p>
+                <?= view('partials/_auth_session_notice') ?>
                 <form action="/login/supplier" method="post">
                     <?= csrf_field() ?>
                     <div class="field-group">
                         <label>Username</label>
                         <div class="input-icon-wrap">
                             <i class="bi bi-person"></i>
-                            <input type="text" name="username" placeholder="Enter your username" required>
+                            <input type="text" name="username" placeholder="Enter your username" value="<?= esc((string) old('username', '', false)) ?>" required>
                         </div>
                     </div>
                     <div class="field-group">

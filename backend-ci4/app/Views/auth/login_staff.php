@@ -48,6 +48,7 @@ $lockedSeconds = (new \App\Libraries\LoginLockout())->secondsRemaining('staff');
                 <div class="portal-badge"><i class="bi bi-receipt"></i> STAFF PORTAL</div>
                 <h2>Welcome</h2>
                 <p class="form-subtitle">Sign in with your staff account.</p>
+                <?= view('partials/_auth_session_notice') ?>
                 <form action="/login/staff" method="post">
                     <?= csrf_field() ?>
                     <div class="field-group">

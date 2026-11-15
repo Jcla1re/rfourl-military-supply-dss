@@ -246,9 +246,11 @@ function syncClearFilters() {
         url.searchParams.delete('page');
 
         const request = ++latestRequest;
-        fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(response => response.text())
+        // App.fetch: signed out, the page goes to the login page (its HTML is never pasted in here).
+        App.fetch(url.toString())
+            .then(response => response.ok ? response.text() : null)
             .then(html => {
+                if (html === null) return;
                 // Ignore a response that's been overtaken by newer typing,
                 // including typing that made the search invalid.
                 if (request !== latestRequest) return;

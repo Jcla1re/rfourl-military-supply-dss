@@ -161,7 +161,7 @@
                 pdf.setAttribute('aria-busy', 'true');
                 label.textContent = 'Preparing PDF…';
                 icon.className = 'bi bi-arrow-repeat ar-spin';
-                fetch(pdf.href, { credentials: 'same-origin' })
+                App.fetch(pdf.href)
                     .then(r => {
                         if (!r.ok || !(r.headers.get('Content-Type') || '').includes('pdf')) throw new Error('not a pdf');
                         const name = ((r.headers.get('Content-Disposition') || '').match(/filename="([^"]+)"/) || [])[1] || 'sales-records.pdf';

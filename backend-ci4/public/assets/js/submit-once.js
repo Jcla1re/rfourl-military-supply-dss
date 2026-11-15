@@ -74,6 +74,25 @@
         setTimeout(function () { setBusy(form); }, 0);
     });
 
+    // Every post form also sends the label of the button that was clicked (_submit_label), so a
+    // "This page needed a refresh" message can say which button to click again (App\Filters\CsrfFilter).
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!form.matches || e.defaultPrevented || String(form.method).toLowerCase() !== 'post') return;
+        var btn = e.submitter || form.querySelector('button[type="submit"], button:not([type]), input[type="submit"]');
+        var label = btn ? (btn.tagName === 'INPUT' ? btn.value : btn.textContent) : '';
+        label = String(label || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+        if (!label) return;
+        var input = form.querySelector('input[name="_submit_label"]');
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '_submit_label';
+            form.appendChild(input);
+        }
+        input.value = label;
+    });
+
     // Back button (page restored from the cache): usable again.
     window.addEventListener('pageshow', function () {
         document.querySelectorAll(SELECTOR).forEach(reset);

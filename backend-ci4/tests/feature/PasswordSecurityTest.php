@@ -293,7 +293,7 @@ final class PasswordSecurityTest extends CIUnitTestCase
     public function testAnOtpResetSendsOneEmailToThatAccount(string $role, string $userProp, string $email, string $contact): void
     {
         $userId = $this->{$userProp};
-        $this->withSession(['pwd_reset_user_id' => $userId, 'pwd_reset_role' => $role, 'pwd_reset_verified' => true])
+        $this->withSession(['pwd_reset_user_id' => $userId, 'pwd_reset_role' => $role, 'pwd_reset_verified' => true, 'pwd_reset_touched' => time()])
             ->post("login/{$role}/reset-password", ['new_password' => 'BrandNew123', 'confirm_password' => 'BrandNew123']);
 
         $this->assertTrue(password_verify('BrandNew123', $this->row($userId)['password_hash']));

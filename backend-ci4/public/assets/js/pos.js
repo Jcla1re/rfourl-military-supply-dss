@@ -402,5 +402,51 @@ if (document.getElementById('posGrid')) {
         });
     });
 
+    // The cart after "Not enough stock" or "This page needed a refresh": the posted item IDs and
+    // quantities only (data-restore, from old input). Name, size, price and stock come from this
+    // page's own item data (the server, now); a quantity above the stock left is capped with the
+    // usual note, and an item that is gone or sold out is left out. The payment details typed are
+    // put back too. Nothing is sent: the cashier checks the cart and clicks Checkout again.
+    (function restoreCart() {
+        const form = document.getElementById('cartForm');
+        let lines = [];
+        let pay = {};
+        try { lines = JSON.parse(form.dataset.restore || '[]'); pay = JSON.parse(form.dataset.restorePayment || '{}'); } catch (e) { return; }
+        if (!Array.isArray(lines) || lines.length === 0) return;
+        const variants = {};
+        document.querySelectorAll('.pos-card').forEach(card => {
+            JSON.parse(card.dataset.variants || '[]').forEach(v => { variants[String(v.item_id)] = v; });
+        });
+        lines.forEach(line => {
+            const v = variants[String(line.id)];
+            const qty = parseInt(line.qty, 10) || 0;
+            if (!v || qty < 1 || v.current_stock < 1) return;
+            const id = String(v.item_id);
+            const wanted = (cart[id] ? cart[id].qty : 0) + qty;
+            cart[id] = { name: v.item_name, size: v.size || '', price: v.selling_price, stock: v.current_stock, qty: Math.min(wanted, v.current_stock), capped: wanted > v.current_stock };
+            document.querySelectorAll('.pos-card').forEach(card => {
+                if ((card.dataset.ids || '').split(' ').includes(id)) card.classList.add('selected');
+            });
+        });
+        renderCart();
+        if (pay.method) {
+            const btn = document.querySelector('.pay-btn[data-method="' + pay.method + '"]');
+            if (btn) btn.click();
+        }
+        const set = (id, value) => { const el = document.getElementById(id); if (el && value !== undefined && value !== null) el.value = value; };
+        if (pay.method === 'Split') {
+            set('splitGcashAmount', pay.gcash);
+            set('gcashRefSplit', pay.gcash_ref);
+            set('splitCashReceived', pay.cash);
+            document.getElementById('splitGcashAmount').dispatchEvent(new Event('input'));
+        } else if (pay.method === 'GCash') {
+            set('gcashRefGcash', pay.gcash_ref);
+        } else {
+            set('cashReceived', pay.cash);
+        }
+        set('orNumber', pay.or_number);
+        updateChange();
+    })();
+
     renderCart();
 }

@@ -20,7 +20,9 @@
             form.dataset.orChecked = orNo;
             form.requestSubmit(); // submitter-less resubmit: the checkout button is not what was clicked, the form is the same
         };
-        fetch(input.dataset.checkUrl + '?or_number=' + encodeURIComponent(orNo), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+        // App.fetch: signed out, the page goes to the login page and this never settles, so the
+        // sale is NOT sent. Only a check that couldn't be made at all (network) lets it go ahead.
+        App.fetch(input.dataset.checkUrl + '?or_number=' + encodeURIComponent(orNo), { headers: { Accept: 'application/json' } })
             .then(function (response) { return response.ok ? response.json() : { used: false }; })
             .then(function (result) {
                 if (!result.used || window.confirm('OR no. ' + orNo + ' was already used on receipt #' + result.receipt_no + '. Continue anyway?')) {
