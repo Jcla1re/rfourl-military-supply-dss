@@ -56,19 +56,25 @@ class SupplierController extends BaseController
         unset($s);
 
         $pendingOrders   = $stockOrderModel->whereNotIn('status', ['Delivered', 'Cancelled'])->countAllResults();
-        $avgLeadTime     = $suppliers ? round(array_sum(array_column($suppliers, 'lead_time_days')) / count($suppliers), 1) : 0;
+
+        // Summary cards: the same on both tabs and with any search (not the listed suppliers).
+        $activeCount   = $this->supplierModel->where('is_active', 1)->countAllResults();
+        $archivedCount = $this->supplierModel->where('is_active', 0)->countAllResults();
+        $avgRow        = $this->supplierModel->selectAvg('lead_time_days', 'avg_lead')->where('is_active', 1)->get()->getRowArray();
+        $avgLeadTime   = $activeCount > 0 ? round((float) ($avgRow['avg_lead'] ?? 0), 1) : 0;
 
         $data = [
-            'title'         => 'Suppliers',
-            'active'        => 'suppliers',
-            'suppliers'     => $suppliers,
-            'totalSuppliers'=> count($suppliers),
-            'avgLeadTime'   => $avgLeadTime,
-            'pendingOrders' => $pendingOrders,
-            'search'        => $search ?? '',
-            'status'        => $status,
-            'activeCount'   => $this->supplierModel->where('is_active', 1)->countAllResults(),
-            'archivedCount' => $this->supplierModel->where('is_active', 0)->countAllResults(),
+            'title'          => 'Suppliers',
+            'active'         => 'suppliers',
+            'suppliers'      => $suppliers,
+            'totalSuppliers' => $activeCount + $archivedCount,
+            'activeSuppliers'=> $activeCount,
+            'avgLeadTime'    => $avgLeadTime,
+            'pendingOrders'  => $pendingOrders,
+            'search'         => $search ?? '',
+            'status'         => $status,
+            'activeCount'    => $activeCount,
+            'archivedCount'  => $archivedCount,
             'success'       => session()->getFlashdata('success'),
             'error'         => session()->getFlashdata('error'),
         ];
