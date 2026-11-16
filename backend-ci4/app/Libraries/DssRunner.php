@@ -172,7 +172,10 @@ class DssRunner
         $before = (int) ($db->table('pdss_computation')->selectMax('computation_id', 'mx')->get()->getRow()->mx ?? 0);
 
         try {
-            @set_time_limit(300);
+            // Not under PHPUnit (it would cap the rest of the test run); live CLI runs (spark dss:auto) keep the limit.
+            if (ENVIRONMENT !== 'testing') {
+                @set_time_limit(300);
+            }
             $summary = trim(preg_replace('/\e\[[0-9;]*m/', '', (string) command('dss:run')));
             $items   = (int) $db->table('pdss_computation')->where('computation_id >', $before)->countAllResults();
             $ok      = $items > 0 && stripos($summary, 'failed') === false && stripos($summary, 'cannot compute') === false;

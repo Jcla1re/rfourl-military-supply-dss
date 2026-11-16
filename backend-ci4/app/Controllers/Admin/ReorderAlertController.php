@@ -95,7 +95,10 @@ class ReorderAlertController extends BaseController
     public function reportPdf()
     {
         @ini_set('memory_limit', '512M');
-        @set_time_limit(120);
+        // Web requests only: under the CLI (PHPUnit) set_time_limit() would cap the rest of the whole test run.
+        if (! is_cli()) {
+            @set_time_limit(120);
+        }
 
         $filters   = ProcurementReport::filters($this->request->getGet() ?? []);
         $dss       = $this->dssParameterModel->current();

@@ -276,8 +276,10 @@ final class ReportsTest extends CIUnitTestCase
 
         $this->assertSame(['Sales Journal', 'Purchases Journal', 'Period Summary'], array_map(static fn ($a) => trim($a->textContent), iterator_to_array($x->query('//nav[contains(@class,"rp-tabs")]/a'))));
         $this->assertStringContainsString('Purchases Journal', $x->query('//nav[contains(@class,"rp-tabs")]/a[contains(@class,"active")]')->item(0)->textContent);
+        $this->assertSame(0, $x->query('//*[contains(@class,"topbar")]//a[contains(@href,"admin/reports/pdf") or contains(@href,"admin/reports/csv")]')->length, 'Export buttons are not in the green header.');
+        $this->assertStringContainsString('rp-btn-secondary', $x->query('//form[@id="rpFilter"]/a[normalize-space()="This month"]')->item(0)->getAttribute('class'));
         foreach (['pdf' => 'Export PDF', 'csv' => 'Export CSV'] as $kind => $label) {
-            $a = $x->query('//a[contains(@href,"admin/reports/' . $kind . '")]')->item(0);
+            $a = $x->query('//form[@id="rpFilter"]//div[contains(@class,"rp-exports")]/a[contains(@href,"admin/reports/' . $kind . '")]')->item(0);
             $this->assertNotNull($a, $label);
             $this->assertStringContainsString($label, $a->textContent);
             foreach (['type=purchases', 'from=' . self::FROM, 'to=' . self::TO] as $part) {

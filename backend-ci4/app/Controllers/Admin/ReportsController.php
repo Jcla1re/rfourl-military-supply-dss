@@ -36,7 +36,10 @@ class ReportsController extends BaseController
         // Dompdf keeps the whole document in memory: a year's Sales Journal already needs ~120MB,
         // the live server's limit is 128M, so this request alone gets more (as Old Sales Records' PDF does).
         @ini_set('memory_limit', '512M');
-        @set_time_limit(120);
+        // Web requests only: under the CLI (PHPUnit) set_time_limit() would cap the rest of the whole test run.
+        if (! is_cli()) {
+            @set_time_limit(120);
+        }
 
         $data = $this->load();
 

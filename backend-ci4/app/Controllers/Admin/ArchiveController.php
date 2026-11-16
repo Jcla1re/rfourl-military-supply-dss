@@ -37,7 +37,10 @@ class ArchiveController extends BaseController
         }
 
         @ini_set('memory_limit', '512M');
-        @set_time_limit(180);
+        // Web requests only: under the CLI (PHPUnit) set_time_limit() would cap the rest of the whole test run.
+        if (! is_cli()) {
+            @set_time_limit(180);
+        }
 
         $html = view('admin/archive_report', ['summary' => $summary, 'report' => SalesArchive::report(), 'mode' => 'pdf']);
 

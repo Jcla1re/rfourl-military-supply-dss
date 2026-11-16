@@ -15,11 +15,6 @@ $periodText = date('M j, Y', strtotime($from)) . ($from === $to ? '' : ' – ' .
 ?>
 <?= $this->extend('layouts/admin_layout') ?>
 
-<?= $this->section('header_actions') ?>
-<a class="btn btn-topbar" href="<?= site_url('admin/reports/pdf') . '?' . $current ?>"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Export PDF</a>
-<a class="btn btn-topbar" href="<?= site_url('admin/reports/csv') . '?' . $current ?>"><i class="bi bi-filetype-csv" aria-hidden="true"></i> Export CSV</a>
-<?= $this->endSection() ?>
-
 <?= $this->section('content') ?>
 <style>
 .rp-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #dcdad2; flex-wrap: wrap; }
@@ -30,6 +25,13 @@ $periodText = date('M j, Y', strtotime($from)) . ($from === $to ? '' : ' – ' .
 .rp-filter { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 16px; }
 .rp-filter label { display: block; font-size: 12px; font-weight: 600; color: #5C6152; margin-bottom: 4px; }
 .rp-filter input[type=date] { padding: 8px 10px; border: 1px solid #ccc; border-radius: var(--radius-control); }
+/* Every button in the filter row is 40px tall and never shrinks; the Export pair sits at the
+   right end and wraps to its own line when the row runs out of room. */
+.rp-filter .btn { display: inline-flex; align-items: center; gap: 7px; height: 40px; white-space: nowrap; flex-shrink: 0; }
+.rp-exports { display: flex; gap: 10px; flex-wrap: wrap; margin-left: auto; }
+/* Secondary button (This month, Export PDF/CSV): same resting look as the Procurement Report's
+   Export buttons. Reports-only; .btn-outline-secondary still supplies the shared hover and focus. */
+.btn.rp-btn-secondary { padding: 0 16px; border: 1px solid #D6D2C6; border-radius: 10px; background: #fff; color: #1F2617; font-size: 14px; font-weight: 500; }
 .rp-period { color: #5C6152; font-size: 14px; margin: 0 0 12px; }
 .rp-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .rp-table tr.rp-sub td { background: #F7F6F2; font-weight: 600; }
@@ -53,7 +55,11 @@ $periodText = date('M j, Y', strtotime($from)) . ($from === $to ? '' : ' – ' .
         <div><label for="rpFrom">From</label><input type="date" id="rpFrom" name="from" value="<?= esc($from, 'attr') ?>" required></div>
         <div><label for="rpTo">To</label><input type="date" id="rpTo" name="to" value="<?= esc($to, 'attr') ?>" required></div>
         <button type="submit" class="btn btn-success">Show</button>
-        <a class="btn btn-outline-secondary" href="<?= site_url('admin/reports') . '?type=' . esc($type, 'attr') ?>">This month</a>
+        <a class="btn btn-outline-secondary rp-btn-secondary" href="<?= site_url('admin/reports') . '?type=' . esc($type, 'attr') ?>">This month</a>
+        <div class="rp-exports">
+            <a class="btn btn-outline-secondary rp-btn-secondary" href="<?= site_url('admin/reports/pdf') . '?' . $current ?>"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Export PDF</a>
+            <a class="btn btn-outline-secondary rp-btn-secondary" href="<?= site_url('admin/reports/csv') . '?' . $current ?>"><i class="bi bi-filetype-csv" aria-hidden="true"></i> Export CSV</a>
+        </div>
     </form>
 
     <div class="page-panel">
