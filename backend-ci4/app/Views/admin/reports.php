@@ -36,10 +36,25 @@ $periodText = date('M j, Y', strtotime($from)) . ($from === $to ? '' : ' – ' .
 .rp-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .rp-table tr.rp-sub td { background: #F7F6F2; font-weight: 600; }
 .rp-table tr.rp-total td { background: #E4EFDF; font-weight: 800; }
-.rp-note { background: #FFF8E5; border: 1px solid #EAD9A0; border-radius: var(--radius-control); padding: 10px 14px; font-weight: 600; margin-bottom: 14px; }
-.rp-summary { max-width: 560px; }
-.rp-summary td { padding: 10px 12px; }
 .rp-muted { color: #8a8d7e; }
+/* Period Summary (screen only; the PDF and CSV have their own layout). */
+.rp-period.rp-ps-period { margin-bottom: 0; }
+.rp-ps-sub { font-size: 13px; font-weight: 400; color: #5C6152; margin: 3px 0 0; }
+.rp-ps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; margin-top: 16px; }
+.rp-ps-col { display: flex; flex-direction: column; gap: 20px; }
+.rp-ps-section { border: 1px solid #E3E0D7; border-radius: 12px; padding: 14px 18px 6px; background: #fff; }
+.rp-ps-heading { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #5C6152; margin: 0; }
+.rp-ps-heading.rp-ps-subhead { margin-top: 16px; }
+.rp-ps-row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 10px 0; border-bottom: 1px solid #F0EDE6; font-size: inherit; }
+.rp-ps-row.rp-ps-last { border-bottom: 0; }
+.rp-ps-row.rp-ps-indent { padding-left: 14px; }
+.rp-ps-label { font-weight: 400; color: #3A4030; }
+.rp-ps-value { font-weight: 500; color: #1F2617; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rp-ps-row.rp-ps-total { border-top: 1px solid #D6D2C6; border-bottom: 0; }
+.rp-ps-row.rp-ps-total .rp-ps-label,
+.rp-ps-row.rp-ps-total .rp-ps-value,
+.rp-ps-row.rp-ps-total-value .rp-ps-value { font-weight: 600; color: #1F2617; }
+@media (max-width: 899.98px) { .rp-ps-grid { grid-template-columns: 1fr; } }
 .rp-dup { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 999px; background: #FDE8E8; color: #8A1C1C; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; vertical-align: middle; }
 </style>
 
@@ -63,7 +78,7 @@ $periodText = date('M j, Y', strtotime($from)) . ($from === $to ? '' : ' – ' .
     </form>
 
     <div class="page-panel">
-        <p class="rp-period"><strong><?= esc(AccountingReports::TYPES[$type]) ?></strong> &middot; <?= esc($periodText) ?></p>
+        <p class="rp-period<?= $type === 'summary' ? ' rp-ps-period' : '' ?>"><strong><?= esc(AccountingReports::TYPES[$type]) ?></strong> &middot; <?= esc($periodText) ?></p>
 
         <?php if ($type === 'sales'): ?>
             <?php $days = array_column($report['days'], null, 'date'); $rows = $report['rows']; ?>
@@ -136,23 +151,35 @@ $periodText = date('M j, Y', strtotime($from)) . ($from === $to ? '' : ' – ' .
             </div>
 
         <?php else: ?>
-            <div class="rp-note"><?= esc(AccountingReports::SUMMARY_LABEL) ?></div>
-            <table class="data-table rp-table rp-summary" id="periodSummary">
-                <tbody>
-                    <?php foreach ([
-                        ['Total sales (gross)', $peso($report['sales'])],
-                        ['Discounts', $peso($report['discounts'])],
-                        ['Net sales', $peso($report['net_sales'])],
-                        ['Cash', $peso($report['cash'])],
-                        ['GCash', $peso($report['gcash'])],
-                        ['Total purchases', $peso($report['purchases'])],
-                        ['Number of receipts', number_format($report['receipts'])],
-                        ['Number of orders received', number_format($report['orders'])],
-                    ] as [$label, $value]): ?>
-                        <tr><td><?= esc($label) ?></td><td class="num"><strong><?= esc($value) ?></strong></td></tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <?php
+            // One row: [label, value, extra classes]. 'rp-ps-last' drops the line under a group's last row.
+            $psRow = static fn (string $label, string $value, string $cls = ''): string =>
+                '<div class="rp-ps-row' . ($cls !== '' ? ' ' . $cls : '') . '"><span class="rp-ps-label">' . esc($label)
+                . '</span><span class="rp-ps-value">' . esc($value) . '</span></div>';
+            ?>
+            <p class="rp-ps-sub">Totals for the accountant to post to the trial balance.</p>
+            <div class="rp-ps-grid" id="periodSummary">
+                <section class="rp-ps-section" aria-labelledby="rpPsSales">
+                    <h2 class="rp-ps-heading" id="rpPsSales">Sales</h2>
+                    <?= $psRow('Gross sales', $peso($report['sales'])) ?>
+                    <?= $psRow('Less: discounts', $peso($report['discounts'])) ?>
+                    <?= $psRow('Net sales', $peso($report['net_sales']), 'rp-ps-total') ?>
+                    <h3 class="rp-ps-heading rp-ps-subhead">Net sales received as</h3>
+                    <?= $psRow('Cash', $peso($report['cash']), 'rp-ps-indent') ?>
+                    <?= $psRow('GCash', $peso($report['gcash']), 'rp-ps-indent rp-ps-last') ?>
+                </section>
+                <div class="rp-ps-col">
+                    <section class="rp-ps-section" aria-labelledby="rpPsPurchases">
+                        <h2 class="rp-ps-heading" id="rpPsPurchases">Purchases</h2>
+                        <?= $psRow('Total purchases (orders received)', $peso($report['purchases']), 'rp-ps-last rp-ps-total-value') ?>
+                    </section>
+                    <section class="rp-ps-section" aria-labelledby="rpPsCounts">
+                        <h2 class="rp-ps-heading" id="rpPsCounts">Counts</h2>
+                        <?= $psRow('Receipts', number_format($report['receipts'])) ?>
+                        <?= $psRow('Orders received', number_format($report['orders']), 'rp-ps-last') ?>
+                    </section>
+                </div>
+            </div>
         <?php endif; ?>
     </div>
 </div>

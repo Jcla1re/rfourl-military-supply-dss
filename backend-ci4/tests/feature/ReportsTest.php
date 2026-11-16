@@ -259,15 +259,18 @@ final class ReportsTest extends CIUnitTestCase
         $html = $this->owner('admin/reports?type=summary&from=' . self::FROM . '&to=' . self::TO);
         $x    = $this->html($html);
 
-        $this->assertStringContainsString('Totals for posting to the trial balance (prepared by the accountant)', $html);
+        $this->assertStringContainsString('Totals for the accountant to post to the trial balance.', $html);
+        $this->assertStringNotContainsString('prepared by the accountant', $html, 'The old yellow box is gone from the screen.');
         $values = [];
-        foreach ($x->query('//table[@id="periodSummary"]//tr') as $tr) {
-            $values[trim($tr->childNodes->item(0)->textContent)] = trim($tr->childNodes->item(1)->textContent);
+        foreach ($x->query('//div[@id="periodSummary"]//div[contains(@class,"rp-ps-row")]') as $row) {
+            $label = trim($x->query('.//span[@class="rp-ps-label"]', $row)->item(0)->textContent);
+            $values[$label] = trim($x->query('.//span[@class="rp-ps-value"]', $row)->item(0)->textContent);
         }
         $this->assertSame([
-            'Total sales (gross)' => '₱1,550.50', 'Discounts' => '₱60.00', 'Net sales' => '₱1,490.50', 'Cash' => '₱1,050.50', 'GCash' => '₱440.00',
-            'Total purchases' => '₱920.00', 'Number of receipts' => '3', 'Number of orders received' => '2',
-        ], array_filter($values, static fn ($k) => $k !== '', ARRAY_FILTER_USE_KEY));
+            'Gross sales' => '₱1,550.50', 'Less: discounts' => '₱60.00', 'Net sales' => '₱1,490.50', 'Cash' => '₱1,050.50', 'GCash' => '₱440.00',
+            'Total purchases (orders received)' => '₱920.00', 'Receipts' => '3', 'Orders received' => '2',
+        ], $values);
+        $this->assertSame(['Sales', 'Net sales received as', 'Purchases', 'Counts'], array_map(static fn ($h) => trim($h->textContent), iterator_to_array($x->query('//div[@id="periodSummary"]//*[contains(@class,"rp-ps-heading")]'))));
     }
 
     public function testThePageHasTheThreeTabsAndTheExportButtonsKeepingTheRange(): void
