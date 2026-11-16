@@ -157,26 +157,26 @@ $periodText = date('M j, Y', strtotime($from)) . ($from === $to ? '' : ' – ' .
                 '<div class="rp-ps-row' . ($cls !== '' ? ' ' . $cls : '') . '"><span class="rp-ps-label">' . esc($label)
                 . '</span><span class="rp-ps-value">' . esc($value) . '</span></div>';
             ?>
-            <p class="rp-ps-sub">Totals for the accountant to post to the trial balance.</p>
+            <p class="rp-ps-sub"><?= esc(AccountingReports::SUMMARY_LABEL) ?></p>
             <div class="rp-ps-grid" id="periodSummary">
                 <section class="rp-ps-section" aria-labelledby="rpPsSales">
                     <h2 class="rp-ps-heading" id="rpPsSales">Sales</h2>
-                    <?= $psRow('Gross sales', $peso($report['sales'])) ?>
-                    <?= $psRow('Less: discounts', $peso($report['discounts'])) ?>
-                    <?= $psRow('Net sales', $peso($report['net_sales']), 'rp-ps-total') ?>
+                    <?= $psRow(AccountingReports::SUMMARY_LINES['sales'], $peso($report['sales'])) ?>
+                    <?= $psRow(AccountingReports::SUMMARY_LINES['discounts'], $peso($report['discounts'])) ?>
+                    <?= $psRow(AccountingReports::SUMMARY_LINES['net_sales'], $peso($report['net_sales']), 'rp-ps-total') ?>
                     <h3 class="rp-ps-heading rp-ps-subhead">Net sales received as</h3>
-                    <?= $psRow('Cash', $peso($report['cash']), 'rp-ps-indent') ?>
-                    <?= $psRow('GCash', $peso($report['gcash']), 'rp-ps-indent rp-ps-last') ?>
+                    <?= $psRow(AccountingReports::SUMMARY_LINES['cash'], $peso($report['cash']), 'rp-ps-indent') ?>
+                    <?= $psRow(AccountingReports::SUMMARY_LINES['gcash'], $peso($report['gcash']), 'rp-ps-indent rp-ps-last') ?>
                 </section>
                 <div class="rp-ps-col">
                     <section class="rp-ps-section" aria-labelledby="rpPsPurchases">
                         <h2 class="rp-ps-heading" id="rpPsPurchases">Purchases</h2>
-                        <?= $psRow('Total purchases (orders received)', $peso($report['purchases']), 'rp-ps-last rp-ps-total-value') ?>
+                        <?= $psRow(AccountingReports::SUMMARY_LINES['purchases'], $peso($report['purchases']), 'rp-ps-last rp-ps-total-value') ?>
                     </section>
                     <section class="rp-ps-section" aria-labelledby="rpPsCounts">
                         <h2 class="rp-ps-heading" id="rpPsCounts">Counts</h2>
-                        <?= $psRow('Receipts', number_format($report['receipts'])) ?>
-                        <?= $psRow('Orders received', number_format($report['orders']), 'rp-ps-last') ?>
+                        <?= $psRow(AccountingReports::SUMMARY_LINES['receipts'], number_format($report['receipts'])) ?>
+                        <?= $psRow(AccountingReports::SUMMARY_LINES['orders'], number_format($report['orders']), 'rp-ps-last') ?>
                     </section>
                 </div>
             </div>

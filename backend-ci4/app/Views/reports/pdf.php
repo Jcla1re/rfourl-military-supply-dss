@@ -31,9 +31,17 @@ $n           = 0; // rows printed so far
     .page { page-break-before: always; }
     tr.sub-row td { background: #f7f6f2; font-weight: bold; }
     tr.total-row td { background: #e4efdf; font-weight: bold; font-size: 11px; }
-    .note { border: 1px solid #ead9a0; background: #fff8e5; padding: 8px 10px; font-weight: bold; margin-bottom: 12px; }
-    .summary { width: 70%; }
-    .summary td { padding: 7px 9px; font-size: 11px; }
+    /* Period Summary: one column of groups, plain tables only (no flex / grid) so Dompdf lays it out reliably */
+    .ps-label { font-size: 10.5px; font-weight: normal; color: #3A4030; margin-top: 10px; }
+    .ps-group { margin-top: 20px; }
+    .ps-heading { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: .06em; color: #5C6152; padding-bottom: 5px; border-bottom: 1px solid #9A9C8F; }
+    .ps-subhead { margin-top: 12px; }
+    table.ps td { border: 0; border-bottom: 1px solid #E3E0D7; padding: 7px 0; font-weight: normal; }
+    table.ps td.ps-value { width: 40%; text-align: right; white-space: nowrap; }
+    table.ps td.ps-indent { padding-left: 14px; }
+    table.ps tr.ps-last td { border-bottom: 0; }
+    table.ps tr.ps-total td { border-top: 1px solid #1F2617; border-bottom: 0; font-weight: bold; }
+    table.ps tr.ps-bold td { font-weight: bold; }
     .rp-dup { background: #fde8e8; color: #8a1c1c; font-size: 7px; font-weight: bold; text-transform: uppercase; padding: 1px 4px; }
     .foot { margin-top: 14px; color: #777; font-size: 9px; }
 </style>
@@ -102,23 +110,42 @@ $n           = 0; // rows printed so far
         </table>
 
     <?php else: ?>
-        <div class="note"><?= esc(AccountingReports::SUMMARY_LABEL) ?></div>
-        <table class="summary">
-            <tbody>
-                <?php foreach ([
-                    ['Total sales (gross)', $peso($report['sales'])],
-                    ['Discounts', $peso($report['discounts'])],
-                    ['Net sales', $peso($report['net_sales'])],
-                    ['Cash', $peso($report['cash'])],
-                    ['GCash', $peso($report['gcash'])],
-                    ['Total purchases', $peso($report['purchases'])],
-                    ['Number of receipts', number_format($report['receipts'])],
-                    ['Number of orders received', number_format($report['orders'])],
-                ] as [$label, $value]): ?>
-                    <tr><td><?= esc($label) ?></td><td class="num"><strong><?= esc($value) ?></strong></td></tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+        <?php
+        // One row of a group: the label from AccountingReports::SUMMARY_LINES, the value, and row / label classes.
+        $psRow = static fn (string $key, string $value, string $row = '', string $label = ''): string =>
+            '<tr' . ($row !== '' ? ' class="' . $row . '"' : '') . '><td' . ($label !== '' ? ' class="' . $label . '"' : '') . '>'
+            . esc(AccountingReports::SUMMARY_LINES[$key]) . '</td><td class="ps-value">' . esc($value) . '</td></tr>';
+        ?>
+        <div class="ps-label"><?= esc(AccountingReports::SUMMARY_LABEL) ?></div>
+
+        <div class="ps-group">
+            <div class="ps-heading">Sales</div>
+            <table class="ps"><tbody>
+                <?= $psRow('sales', $peso($report['sales'])) ?>
+                <?= $psRow('discounts', $peso($report['discounts']), 'ps-last') ?>
+                <?= $psRow('net_sales', $peso($report['net_sales']), 'ps-total') ?>
+            </tbody></table>
+            <div class="ps-heading ps-subhead">Net sales received as</div>
+            <table class="ps"><tbody>
+                <?= $psRow('cash', $peso($report['cash']), '', 'ps-indent') ?>
+                <?= $psRow('gcash', $peso($report['gcash']), 'ps-last', 'ps-indent') ?>
+            </tbody></table>
+        </div>
+
+        <div class="ps-group">
+            <div class="ps-heading">Purchases</div>
+            <table class="ps"><tbody>
+                <?= $psRow('purchases', $peso($report['purchases']), 'ps-last ps-bold') ?>
+            </tbody></table>
+        </div>
+
+        <div class="ps-group">
+            <div class="ps-heading">Counts</div>
+            <table class="ps"><tbody>
+                <?= $psRow('receipts', number_format($report['receipts'])) ?>
+                <?= $psRow('orders', number_format($report['orders']), 'ps-last') ?>
+            </tbody></table>
+        </div>
     <?php endif; ?>
 
     <div class="foot">Figures are taken from the system's receipts and received stock orders.</div>

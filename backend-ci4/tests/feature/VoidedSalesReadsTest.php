@@ -247,8 +247,8 @@ final class VoidedSalesReadsTest extends CIUnitTestCase
         $rows  = $this->csvRows((string) $this->asOwner()->get('admin/reports/csv?type=summary&from=' . $this->today . '&to=' . $this->today)->response()->getBody());
         $lines = array_column($rows, 1, 0);
 
-        $this->assertSame('490.00', $lines['Total sales (gross)']);
-        $this->assertSame('2', $lines['Number of receipts']);
+        $this->assertSame('490.00', $lines['Gross sales']);
+        $this->assertSame('2', $lines['Receipts']);
     }
 
     public function testTheDuplicateOrLabelAndTheCheckoutWarningIgnoreAVoidedReceipt(): void

@@ -260,6 +260,7 @@ final class ReportsTest extends CIUnitTestCase
         $x    = $this->html($html);
 
         $this->assertStringContainsString('Totals for the accountant to post to the trial balance.', $html);
+        $this->assertSame('Totals for the accountant to post to the trial balance.', AccountingReports::SUMMARY_LABEL, 'The screen, PDF and CSV share one label.');
         $this->assertStringNotContainsString('prepared by the accountant', $html, 'The old yellow box is gone from the screen.');
         $values = [];
         foreach ($x->query('//div[@id="periodSummary"]//div[contains(@class,"rp-ps-row")]') as $row) {
@@ -340,12 +341,12 @@ final class ReportsTest extends CIUnitTestCase
         $rows = $this->csvRows($this->csv('type=summary&from=' . self::FROM . '&to=' . self::TO)->response()->getBody());
 
         $this->assertSame(['Period Summary', '2026-11-02 to 2026-11-08'], $rows[0]);
-        $this->assertSame('Totals for posting to the trial balance (prepared by the accountant)', $rows[1][0]);
+        $this->assertSame('Totals for the accountant to post to the trial balance.', $rows[1][0]);
         $this->assertSame(['Item', 'Amount'], $rows[2]);
-        $this->assertSame(['Total sales (gross)', '1550.50'], $rows[3]);
-        $this->assertSame(['Net sales', '1490.50'], $rows[5]);
-        $this->assertSame(['Total purchases', '920.00'], $rows[8]);
-        $this->assertSame(['Number of orders received', '2'], end($rows));
+        $this->assertSame([
+            ['Gross sales', '1550.50'], ['Less: discounts', '60.00'], ['Net sales', '1490.50'], ['Cash', '1050.50'], ['GCash', '440.00'],
+            ['Total purchases (orders received)', '920.00'], ['Receipts', '3'], ['Orders received', '2'],
+        ], array_slice($rows, 3));
     }
 
     public function testTheCsvDefusesSpreadsheetFormulasInNames(): void
@@ -385,9 +386,12 @@ final class ReportsTest extends CIUnitTestCase
             $this->assertStringContainsString($text, $purchases);
         }
         $summary = view('reports/pdf', $data + ['type' => 'summary', 'report' => AccountingReports::summary(self::FROM, self::TO)]);
-        foreach (['Period Summary', 'Totals for posting to the trial balance (prepared by the accountant)', '₱1,490.50', '₱920.00'] as $text) {
+        foreach (['Period Summary', 'Totals for the accountant to post to the trial balance.', 'Gross sales', 'Less: discounts', 'Net sales received as',
+            'Total purchases (orders received)', 'Orders received', '₱1,490.50', '₱920.00'] as $text) {
             $this->assertStringContainsString($text, $summary);
         }
+        $this->assertStringNotContainsString('prepared by the accountant', $summary, 'The old yellow box is gone from the PDF.');
+        $this->assertStringNotContainsString('class="note"', $summary);
     }
 
     // ---------------------------------------------------------------- owner only

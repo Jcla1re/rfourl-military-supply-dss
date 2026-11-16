@@ -24,7 +24,19 @@ class AccountingReports
         'summary'   => 'Period Summary',
     ];
 
-    public const SUMMARY_LABEL = 'Totals for posting to the trial balance (prepared by the accountant)';
+    public const SUMMARY_LABEL = 'Totals for the accountant to post to the trial balance.';
+
+    /** The Period Summary's line labels, keyed by the summary() field they show (screen, PDF and CSV). */
+    public const SUMMARY_LINES = [
+        'sales'     => 'Gross sales',
+        'discounts' => 'Less: discounts',
+        'net_sales' => 'Net sales',
+        'cash'      => 'Cash',
+        'gcash'     => 'GCash',
+        'purchases' => 'Total purchases (orders received)',
+        'receipts'  => 'Receipts',
+        'orders'    => 'Orders received',
+    ];
 
     public static function type(?string $type): string
     {
@@ -298,15 +310,11 @@ class AccountingReports
      */
     public static function summaryLines(array $s): array
     {
-        return [
-            ['Total sales (gross)', self::num($s['sales'])],
-            ['Discounts', self::num($s['discounts'])],
-            ['Net sales', self::num($s['net_sales'])],
-            ['Cash', self::num($s['cash'])],
-            ['GCash', self::num($s['gcash'])],
-            ['Total purchases', self::num($s['purchases'])],
-            ['Number of receipts', (string) $s['receipts']],
-            ['Number of orders received', (string) $s['orders']],
-        ];
+        $lines = [];
+        foreach (self::SUMMARY_LINES as $key => $label) {
+            $lines[] = [$label, in_array($key, ['receipts', 'orders'], true) ? (string) $s[$key] : self::num($s[$key])];
+        }
+
+        return $lines;
     }
 }
