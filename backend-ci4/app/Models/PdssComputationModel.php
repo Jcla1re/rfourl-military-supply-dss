@@ -22,6 +22,7 @@ class PdssComputationModel extends Model
         'safety_stock',
         'reorder_point',
         'eoq_value',
+        'eoq_raw', // EOQ before the minimum order quantity (NULL on rows saved before it existed)
         'triggered_by',
     ];
 
@@ -49,8 +50,8 @@ class PdssComputationModel extends Model
     /**
      * When the item's Reorder At (ROP) was last calculated from sales, or null
      * when it has no calculated ROP (new item, or no sales in the demand window:
-     * the latest run gave ROP 0). The DSS run only writes a ROP above 0 to the
-     * item, so a null here means the item's current value was typed in.
+     * the latest run gave ROP 0). Then the item's current value is either 0 or one
+     * the Owner typed (products.rop_source 'manual', which a ROP-0 run keeps).
      */
     public function ropCalculatedAt(string $itemId): ?string
     {

@@ -64,6 +64,8 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
 
     $routes->get('reorder-alerts', 'ReorderAlertController::index');
     $routes->get('procurement-report', 'ReorderAlertController::report');
+    $routes->get('procurement-report/pdf', 'ReorderAlertController::reportPdf');
+    $routes->get('procurement-report/csv', 'ReorderAlertController::reportCsv');
     $routes->post('reorder-alerts/order', 'ReorderAlertController::createOrder');
     $routes->post('reorder-alerts/dismiss/(:segment)', 'ReorderAlertController::dismiss/$1');
     $routes->post('reorder-alerts/restore/(:segment)', 'ReorderAlertController::restore/$1');

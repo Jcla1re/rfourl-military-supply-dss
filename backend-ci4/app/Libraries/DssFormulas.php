@@ -61,6 +61,30 @@ class DssFormulas
     }
 
     /**
+     * What dss:run writes to the item's Reorder At (products.manual_rop_warning / rop_source),
+     * or null to leave it as it is.
+     *
+     *  - Calculated ROP above 0: written and marked 'dss', even over a value the Owner typed
+     *    (the Edit item field then shows "Auto").
+     *  - Calculated ROP 0 (too few sales): written as 0 only when the current value came from the
+     *    DSS ('dss'), so an old calculated value doesn't stay behind; a typed value ('manual', or
+     *    no source recorded) is kept.
+     *
+     * @return array{manual_rop_warning: int, rop_source: string}|null
+     */
+    public static function reorderPointUpdate(int $calculated, ?int $current, ?string $source): ?array
+    {
+        if ($calculated > 0) {
+            return ['manual_rop_warning' => $calculated, 'rop_source' => 'dss'];
+        }
+        if ($source === 'dss' && (int) $current !== 0) {
+            return ['manual_rop_warning' => 0, 'rop_source' => 'dss'];
+        }
+
+        return null;
+    }
+
+    /**
      * EOQ = sqrt(2DS / H). Returns 0 (no recommendation) when demand or
      * holding cost is not positive, so there is never a division by zero.
      */

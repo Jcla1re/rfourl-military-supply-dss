@@ -32,7 +32,6 @@ $g = $guide[$type] ?? ['icon' => 'bi-info-circle', 'about' => '', 'points' => []
 ?>
 
 <style>
-.lt-back { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: var(--radius-control); border: 1px solid #ccc; background: #fff; text-decoration: none; color: #1c1c1c; font-weight: 700; margin-bottom: 18px; }
 .lt-label { font-size: 12px; letter-spacing: .05em; color: #666; font-weight: 700; margin-bottom: 12px; }
 .lt-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 991px) { .lt-layout { grid-template-columns: 1fr; } }

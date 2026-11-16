@@ -10,7 +10,7 @@ use Tests\Support\ReorderFixture;
  * The decluttered Owner and Staff pages (view-only changes): the Owner dashboard keeps the banner, three
  * stat cards and Weekly Sales Trend; Items by Category and Top Sellers moved to Trend Analysis > Products;
  * Trend Analysis has ?tab= tabs; Inventory shows six columns with the rest in an expandable row; the
- * Ordering Report has one DSS line with a details toggle and Z only in the class tooltip; Staff dashboard
+ * Procurement Report is tested in ProcurementReportTest; Staff dashboard
  * lists show three rows and a "View all" link. Runs on the in-memory 'tests' database.
  *
  * @internal
@@ -306,46 +306,6 @@ final class DeclutteredPagesTest extends CIUnitTestCase
         foreach (['admin' => $this->owner('admin/inventory'), 'staff' => $this->staff('staff/inventory')] as $role => $html) {
             $this->assertSame(10, $this->html($html)->query('//tr[contains(@class,"inv-row")]')->length, "{$role}: 10 rows per page");
         }
-    }
-
-    // ---------------------------------------------------------------- Ordering Report
-
-    public function testTheOrderingReportDssCardIsOneLineWithADetailsToggle(): void
-    {
-        $this->db->table('dss_parameters')->update(['ordering_cost' => 500, 'holding_cost_per_unit' => 60.48, 'service_level_target' => 95, 'z_score' => 1.645, 'demand_lookback_days' => 730]);
-        $html = $this->owner('admin/procurement-report');
-        $x    = $this->html($html);
-
-        $this->assertSame('Cost/order ₱500 · Storage ₱60.48 · 95% · 730 days', trim($x->query('//*[contains(@class,"pr-summary")]')->item(0)->textContent));
-        $toggle = $x->query('//button[@id="prToggle"]')->item(0);
-        $this->assertSame('false', $toggle->getAttribute('aria-expanded'));
-        $this->assertStringContainsString('details', $toggle->textContent);
-        $details = $x->query('//*[@id="prDetails"]')->item(0);
-        $this->assertTrue($details->hasAttribute('hidden'), 'The four numbers wait behind the toggle.');
-        foreach (['Cost per order', 'Storage cost per item per year', 'Default availability target', 'Sales history used'] as $label) {
-            $this->assertStringContainsString($label, $details->textContent);
-        }
-        $this->assertStringNotContainsString('Z =', $details->textContent, 'Z is only in the class tooltip.');
-    }
-
-    public function testZIsOnlyInTheClassTooltip(): void
-    {
-        $this->db->table('pdss_computation')->where('item_id', 'P-S')->update(['service_level_z' => 1.645]);
-        $this->db->table('cluster_segments')->insert(['item_id' => 'P-S', 'cluster_label' => 0, 'cluster_name' => 'A', 'abc_class' => 'A', 'service_level' => 95, 'z_score' => 1.645, 'computed_at' => '2026-11-01 10:00:00']);
-        $html = $this->owner('admin/procurement-report');
-        $x    = $this->html($html);
-
-        $badge = $x->query('//table//span[contains(@class,"abc-badge")]')->item(0);
-        $this->assertNotNull($badge, 'The class badge.');
-        $this->assertStringContainsString('Z = 1.645', $badge->getAttribute('title'));
-        $this->assertStringNotContainsString('Z=', $x->query('//table')->item(0)->textContent, 'No Z under the badge.');
-    }
-
-    public function testTheOrderingReportBackButtonIsTheHeadersOnlyButton(): void
-    {
-        $x = $this->html($this->owner('admin/procurement-report'));
-
-        $this->assertStringContainsString('btn-topbar', $x->query('//a[contains(@href,"admin/reorder-alerts") and contains(@class,"btn")]')->item(0)->getAttribute('class'));
     }
 
     // ---------------------------------------------------------------- Staff dashboard

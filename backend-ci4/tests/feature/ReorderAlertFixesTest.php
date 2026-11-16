@@ -144,19 +144,6 @@ final class ReorderAlertFixesTest extends CIUnitTestCase
         $this->assertSame('Whistle', $names['P-N']);
     }
 
-    public function testReportOrderButtonNamesTheSize(): void
-    {
-        $this->product('P-S', 'Olive Green (OG) Cotton', 'S', 1, 3);
-        $this->product('P-M', 'Olive Green (OG) Cotton', 'M', 2, 3);
-        $this->product('P-N', 'Whistle', null, 1, 2);
-
-        $html = $this->asOwner()->get('admin/procurement-report')->getBody();
-
-        $this->assertMatchesRegularExpression('/data-item-id="P-S"\s+data-item-name="Olive Green \(OG\) Cotton &middot; Size S"/', $html);
-        $this->assertMatchesRegularExpression('/data-item-id="P-M"\s+data-item-name="Olive Green \(OG\) Cotton &middot; Size M"/', $html);
-        $this->assertMatchesRegularExpression('/data-item-id="P-N"\s+data-item-name="Whistle"/', $html);
-    }
-
     public function testOrderIsSavedForThatExactSizeRow(): void
     {
         $this->product('P-S', 'Olive Green (OG) Cotton', 'S', 1, 3);
@@ -265,7 +252,7 @@ final class ReorderAlertFixesTest extends CIUnitTestCase
 
         $owner = $this->asOwner()->get('admin/reorder-alerts')->getBody();
         $this->assertStringNotContainsString('Last updated', $owner);
-        $this->assertStringContainsString('Ordering Report', $owner);
+        $this->assertStringContainsString('Procurement Report', $owner);
 
         $staff = $this->asStaff()->get('staff/reorder-alerts');
         $staff->assertOK();

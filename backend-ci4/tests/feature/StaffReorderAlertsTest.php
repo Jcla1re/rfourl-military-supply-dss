@@ -104,7 +104,7 @@ final class StaffReorderAlertsTest extends CIUnitTestCase
             $this->assertStringContainsString($text, $html);
         }
         foreach (['open-order-modal', 'data-order-all', 'reorder-alerts/dismiss', 'reorder-alerts/restore', '>Restore</button>', 'View order',
-                  'Ordering Report', 'procurement-report', 'admin/orders', 'id="poModal"', 'purchase-order-dialog.js'] as $owner) {
+                  'Procurement Report', 'Ordering Report', 'procurement-report', 'admin/orders', 'id="poModal"', 'purchase-order-dialog.js'] as $owner) {
             $this->assertStringNotContainsString($owner, $html, "Staff must not see: {$owner}");
         }
         // The old Staff page's parts are gone.

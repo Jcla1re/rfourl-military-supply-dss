@@ -197,10 +197,16 @@ class DssRun extends BaseCommand
             $eoq = max($eoqRaw, $minimumOrderQty);
 
             // The live status/alerts read products.manual_rop_warning, so the
-            // engine's ROP is written there. A zero ROP (no demand signal) keeps
-            // whatever the Admin entered by hand.
-            if ($reorderPoint > 0) {
-                $ropUpdates[$itemId] = $reorderPoint;
+            // engine's ROP is written there (DssFormulas::reorderPointUpdate):
+            // above 0 always; a zero ROP (no demand signal) only over a value
+            // the DSS set, never over one the Owner typed (rop_source 'manual').
+            $ropUpdate = \App\Libraries\DssFormulas::reorderPointUpdate(
+                $reorderPoint,
+                $p['manual_rop_warning'] !== null ? (int) $p['manual_rop_warning'] : null,
+                $p['rop_source'] ?? null
+            );
+            if ($ropUpdate !== null) {
+                $ropUpdates[$itemId] = $ropUpdate;
             }
 
             $computationRows[] = [
@@ -213,13 +219,14 @@ class DssRun extends BaseCommand
                 'safety_stock'     => $safetyStock,
                 'reorder_point'    => $reorderPoint,
                 'eoq_value'        => $eoq,
+                'eoq_raw'          => $eoqRaw, // before the minimum order quantity
                 'triggered_by'     => 'spark:dss:run',
             ];
 
             // Same rule as the Inventory table (ProductModel::getStatus), with
             // the ROP the item will have after this run. Out of Stock (nothing
             // on hand, no demand) is not a reorder signal.
-            $effectiveRop = $reorderPoint > 0 ? $reorderPoint : (int) ($p['manual_rop_warning'] ?? 0);
+            $effectiveRop = $ropUpdate !== null ? $ropUpdate['manual_rop_warning'] : (int) ($p['manual_rop_warning'] ?? 0);
             if ($statusModel->getStatus(['current_stock' => $p['current_stock'], 'manual_rop_warning' => $effectiveRop])['label'] === 'Reorder Now') {
                 $alertRows[$itemId] = [
                     'item_id'          => $itemId,
@@ -242,8 +249,8 @@ class DssRun extends BaseCommand
             $db->table('products')->where('item_id', $itemId)->update(['abc_category' => $grade]);
         }
 
-        foreach ($ropUpdates as $itemId => $rop) {
-            $db->table('products')->where('item_id', $itemId)->update(['manual_rop_warning' => $rop]);
+        foreach ($ropUpdates as $itemId => $ropUpdate) {
+            $db->table('products')->where('item_id', $itemId)->update($ropUpdate);
         }
         // A new reorder point can take an item out of Reorder Now: close its staff "Owner notified".
         (new \App\Models\ReorderNoticeModel())->clearResolved(array_map('strval', array_keys($ropUpdates)));

@@ -212,6 +212,8 @@ class InventoryController extends BaseController
         }
 
         $newId = $this->productModel->generateNextId();
+        // A typed Reorder At is the Owner's ('manual'): a DSS run that gives 0 keeps it.
+        $typedRop = (int) ($this->request->getPost('manual_rop_warning') ?: 0);
 
         $this->productModel->insert([
             'item_id'            => $newId,
@@ -222,7 +224,8 @@ class InventoryController extends BaseController
             'unit_cost'          => (float) $this->request->getPost('unit_cost'),
             'selling_price'      => (float) $this->request->getPost('selling_price'),
             'current_stock'      => (int) ($this->request->getPost('current_stock') ?: 0),
-            'manual_rop_warning' => (int) ($this->request->getPost('manual_rop_warning') ?: 0),
+            'manual_rop_warning' => $typedRop,
+            'rop_source'         => $typedRop > 0 ? 'manual' : 'dss',
             'is_active'          => 1,
         ]);
 
@@ -363,6 +366,12 @@ class InventoryController extends BaseController
         $rop = ($postedRop === null || $this->pdssComputationModel->ropCalculatedAt((string) $itemId) !== null)
             ? $product['manual_rop_warning']
             : (int) ($postedRop ?: 0);
+        // A changed, typed value is the Owner's ('manual'); cleared to 0 there is nothing to keep
+        // ('dss'). Unchanged (or not accepted): who set it stays as it was.
+        $ropSource = $product['rop_source'] ?? null;
+        if ((int) $rop !== (int) ($product['manual_rop_warning'] ?? 0)) {
+            $ropSource = (int) $rop > 0 ? 'manual' : 'dss';
+        }
 
         $this->productModel->update($itemId, [
             'supplier_id'        => $this->request->getPost('supplier_id') ?: null,
@@ -373,6 +382,7 @@ class InventoryController extends BaseController
             'selling_price'      => (float) $this->request->getPost('selling_price'),
             'current_stock'      => $newStock,
             'manual_rop_warning' => $rop,
+            'rop_source'         => $ropSource,
         ]);
 
         if ($delta !== 0) {

@@ -117,9 +117,9 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
         $html = $this->page();
         $topbar = substr($html, strpos($html, 'class="topbar'), strpos($html, 'class="main-scroll"') - strpos($html, 'class="topbar'));
 
-        $this->assertStringNotContainsString('Ordering Report', $topbar);
+        $this->assertStringNotContainsString('Procurement Report', $topbar);
         $this->assertStringContainsString('notification-button', $topbar);
-        $this->assertMatchesRegularExpression('/<a href="[^"]*admin\/procurement-report" class="btn btn-outline-success ra-report-btn">Ordering Report<\/a>/', $html);
+        $this->assertMatchesRegularExpression('/<a href="[^"]*admin\/procurement-report" class="btn btn-outline-success ra-report-btn">Procurement Report<\/a>/', $html);
     }
 
     public function testReorderLevelsCalculatedDate(): void

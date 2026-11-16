@@ -22,6 +22,7 @@ class ProductModel extends Model
         'selling_price',
         'current_stock',
         'manual_rop_warning',
+        'rop_source', // 'dss' | 'manual': who set Reorder At (dss:run writes a 0 over 'dss' only)
         'abc_category',
         'is_active',
     ];
@@ -558,6 +559,17 @@ class ProductModel extends Model
             'outOfStockTip'  => self::OUT_OF_STOCK_TIP,
         ];
     }
+
+    /**
+     * The Status column's (i) card: the four badges with one short line each. Owner Inventory
+     * and the Procurement Report use this, so the two always match.
+     */
+    public const STATUS_HELP = [
+        ['name' => 'In Stock', 'text' => 'Enough stock', 'dot' => 'green'],
+        ['name' => 'Low Stock', 'text' => 'Getting close to Reorder At', 'dot' => 'amber'],
+        ['name' => 'Reorder Now', 'text' => 'At or below Reorder At, time to order', 'dot' => 'red'],
+        ['name' => 'Out of Stock', 'text' => 'None left', 'dot' => 'gray'],
+    ];
 
     /** Badge / card / bar color for a status label. */
     public static function statusColor(string $label): string

@@ -113,4 +113,30 @@ final class DssFormulasTest extends CIUnitTestCase
         $this->assertFalse($inWindow(91));
         $this->assertSame('2026-04-30', $start->format('Y-m-d'));
     }
+
+    // ---- Reorder At written by dss:run (products.rop_source) ----
+
+    public function testACalculatedReorderPointIsAlwaysWrittenAndMarkedDss(): void
+    {
+        $this->assertSame(['manual_rop_warning' => 4, 'rop_source' => 'dss'], DssFormulas::reorderPointUpdate(4, 2, 'dss'));
+        $this->assertSame(['manual_rop_warning' => 4, 'rop_source' => 'dss'], DssFormulas::reorderPointUpdate(4, 9, 'manual'), 'Overwrites a typed value, as before.');
+        $this->assertSame(['manual_rop_warning' => 4, 'rop_source' => 'dss'], DssFormulas::reorderPointUpdate(4, null, null));
+    }
+
+    public function testAZeroResultClearsAnOldDssValue(): void
+    {
+        $this->assertSame(['manual_rop_warning' => 0, 'rop_source' => 'dss'], DssFormulas::reorderPointUpdate(0, 2, 'dss'));
+    }
+
+    public function testAZeroResultKeepsAValueTheOwnerTyped(): void
+    {
+        $this->assertNull(DssFormulas::reorderPointUpdate(0, 5, 'manual'));
+        $this->assertNull(DssFormulas::reorderPointUpdate(0, 5, null), 'No source recorded: kept, never guessed.');
+    }
+
+    public function testAZeroResultOverZeroWritesNothing(): void
+    {
+        $this->assertNull(DssFormulas::reorderPointUpdate(0, 0, 'dss'));
+        $this->assertNull(DssFormulas::reorderPointUpdate(0, null, 'dss'));
+    }
 }

@@ -1137,6 +1137,9 @@ body {
 .danger-zone strong { display: block; }
 .danger-zone small { color: #6a5a5a; }
 
+/* ===== "← Back" button (Log Transaction forms, Procurement Report): white, left arrow ===== */
+.lt-back { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: var(--radius-control); border: 1px solid #ccc; background: #fff; text-decoration: none; color: #1c1c1c; font-weight: 500; margin-bottom: 18px; } /* 500 like the other buttons (was 700) */
+
 /* ===== Filter toolbar: search box, dropdowns, "Clear all (n)" =====
    Shared by Inventory (Owner and Staff) and Reorder Alerts. Focus rings and the
    Clear-all hover and count badge are further up ("White outlined buttons"). */

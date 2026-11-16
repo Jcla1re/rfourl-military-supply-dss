@@ -43,6 +43,12 @@
             var box = table.getBoundingClientRect();
             table.classList.toggle('is-stuck', !!sticky && box.top < line - 0.5 && box.bottom > line);
         });
+        // Reorder Alerts' card list (partials/_reorder_board.php): same rule for its sticky
+        // .ra-head column header row (reorder-alerts.css turns it white while stuck).
+        Array.prototype.forEach.call(document.querySelectorAll('.ra-items'), function (list) {
+            var box = list.getBoundingClientRect();
+            list.classList.toggle('is-stuck', box.height > 0 && box.top < line - 0.5 && box.bottom > line);
+        });
     };
 
     var stuckFrame = 0;

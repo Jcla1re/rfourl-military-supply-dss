@@ -80,7 +80,8 @@
 /* Item name: semibold, not the browser's bold <strong>. Long names wrap onto at most two
    balanced lines; beyond that they end in "…" and clamp-tip.js adds the full name as
    a tooltip (hover / keyboard focus) and aria-label. Other cells stay vertically centred. */
-.inv-table tbody td:nth-child(2) > strong {
+.inv-table tbody td:nth-child(2) > strong,
+.inv-table.pr-table tbody td:first-child > strong { /* Procurement Report: Item is its first column */
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;

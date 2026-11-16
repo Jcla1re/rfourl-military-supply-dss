@@ -47,12 +47,7 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                     <th class="col-center">Size</th>
                     <th class="col-num">On Hand</th>
                     <th class="col-num col-term"><?= \App\Libraries\Glossary::labelWithTip('reorder_at') ?></th>
-                    <th>Status <?= help_tip('Status', [
-                        ['name' => 'In Stock', 'text' => 'Enough stock', 'dot' => 'green'],
-                        ['name' => 'Low Stock', 'text' => 'Getting close to Reorder At', 'dot' => 'amber'],
-                        ['name' => 'Reorder Now', 'text' => 'At or below Reorder At, time to order', 'dot' => 'red'],
-                        ['name' => 'Out of Stock', 'text' => 'None left', 'dot' => 'gray'],
-                    ]) ?></th>
+                    <th>Status <?= help_tip('Status', \App\Models\ProductModel::STATUS_HELP) ?></th>
                     <th class="col-actions">Actions</th>
                 </tr>
             </thead>

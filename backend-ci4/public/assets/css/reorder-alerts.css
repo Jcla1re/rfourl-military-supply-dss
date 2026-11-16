@@ -76,6 +76,13 @@
     box-shadow: -24px 0 0 var(--content-bg), 24px 0 0 var(--content-bg);
     font-size: 12px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: #5C6152;
 }
+/* Stuck under the page header with cards scrolling beneath it (sticky-offset.js sets .is-stuck):
+   white, like the stuck table headers on Inventory and the Procurement Report, with their soft
+   shadow under the 2px line. At the top of the list it keeps the page background. */
+.ra-items.is-stuck .ra-head {
+    background: #ffffff;
+    box-shadow: -24px 0 0 var(--content-bg), 24px 0 0 var(--content-bg), 0 2px 6px rgba(31, 38, 23, .08);
+}
 
 .ra-item {
     margin-top: 8px;
@@ -137,7 +144,7 @@
 
 /* Narrower content: the Size column goes; the size moves under the name. */
 @container ra (max-width: 980px) {
-    .ra-items { --ra-cols: minmax(0, 1fr) 84px 76px 112px 140px; }
+    .ra-items { --ra-cols: minmax(0, 1fr) 84px 88px 112px 140px; } /* Reorder at 88px (was 76): "REORDER AT" stays on one line at 1280 */
     .ra-grid { column-gap: 12px; }
     .ra-c-size { display: none; }
     .ra-inline-size { display: block; }

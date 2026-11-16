@@ -3,33 +3,31 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\DssRunner;
+use App\Libraries\ProcurementReport;
 use App\Libraries\ReorderBoard;
 use App\Libraries\Toast;
-use App\Models\ClusterSegmentModel;
 use App\Models\DssParameterModel;
-use App\Models\PdssComputationModel;
 use App\Models\ProductModel;
 use App\Models\ReorderAlertModel;
-use App\Models\StockOrderModel;
 use App\Models\SupplierModel;
 
 class ReorderAlertController extends BaseController
 {
+    /** Procurement Report rows-per-page choices (same as Inventory); first is the default. */
+    private const PER_PAGE_OPTIONS = [10, 25, 50];
+
     protected ReorderAlertModel $reorderAlertModel;
     protected ProductModel $productModel;
     protected SupplierModel $supplierModel;
-    protected PdssComputationModel $pdssComputationModel;
     protected DssParameterModel $dssParameterModel;
-    protected ClusterSegmentModel $clusterSegmentModel;
 
     public function __construct()
     {
-        $this->reorderAlertModel    = new ReorderAlertModel();
-        $this->productModel         = new ProductModel();
-        $this->supplierModel        = new SupplierModel();
-        $this->pdssComputationModel = new PdssComputationModel();
-        $this->dssParameterModel    = new DssParameterModel();
-        $this->clusterSegmentModel  = new ClusterSegmentModel();
+        $this->reorderAlertModel = new ReorderAlertModel();
+        $this->productModel      = new ProductModel();
+        $this->supplierModel     = new SupplierModel();
+        $this->dssParameterModel = new DssParameterModel();
     }
 
     public function index()
@@ -47,51 +45,88 @@ class ReorderAlertController extends BaseController
         return view('admin/reorder_alerts', $data);
     }
 
+    /**
+     * Procurement Report: read-only DSS results per size (App\Libraries\ProcurementReport).
+     * Search, Class / Status filters and paging are GET parameters worked out on the server
+     * over every active size; the live search fetches just the table (isAJAX). Ordering
+     * stays on Reorder Alerts and Inventory. Nothing here writes, not even the alert sync.
+     */
     public function report()
     {
-        $this->reorderAlertModel->syncFromLiveInventory();
+        $filters = ProcurementReport::filters($this->request->getGet() ?? []);
+        $dss     = $this->dssParameterModel->current();
+        $rows    = ProcurementReport::rows($filters, $dss);
 
-        $products = $this->productModel->where('is_active', 1)->orderBy('item_name', 'ASC')->findAll();
-        $computations = [];
-        foreach ($this->pdssComputationModel->latestPerItem() as $c) {
-            $computations[$c['item_id']] = $c;
+        $perPage = (int) ($this->request->getGet('per_page') ?? self::PER_PAGE_OPTIONS[0]);
+        if (! in_array($perPage, self::PER_PAGE_OPTIONS, true)) {
+            $perPage = self::PER_PAGE_OPTIONS[0];
         }
+        $totalItems = count($rows);
+        $totalPages = max(1, (int) ceil($totalItems / $perPage));
+        $page       = min(max(1, (int) ($this->request->getGet('page') ?? 1)), $totalPages);
 
-        $classByItem = $this->clusterSegmentModel->classByItem(); // the K-Means class, same as everywhere
-        $rows = [];
-        foreach ($products as $p) {
-            $status = $this->productModel->getStatus($p);
-            $rows[] = [
-                'item_id'      => $p['item_id'],
-                'item_name'    => $p['item_name'],
-                'size'         => $p['size'] ?? null,
-                'abc_category' => $classByItem[$p['item_id']] ?? '—', // K-Means class (cluster_segments)
-                'stock'        => $p['current_stock'],
-                'rop'          => $p['manual_rop_warning'],
-                'status'       => $status['label'],
-                'safety_stock' => $computations[$p['item_id']]['safety_stock'] ?? null,
-                'eoq'          => $computations[$p['item_id']]['eoq_value'] ?? null,
-                'z_score'      => $computations[$p['item_id']]['service_level_z'] ?? null,
-                'supplier_id'  => $p['supplier_id'] ?? null,
-                'unit_cost'    => $p['unit_cost'] ?? 0,
-            ];
-        }
-
-        $alerts = $this->reorderAlertModel->openAlerts();
-
-        $data = [
-            'title'         => 'Ordering Report',
-            'active'        => 'reorder_alerts',
-            'rows'          => $rows,
-            'suppliers'     => $this->supplierModel->where('is_active', 1)->findAll(),
-            'dss'           => $this->dssParameterModel->current(),
-            'criticalCount' => count(array_filter($alerts, fn ($a) => (int) $a['stock_at_trigger'] <= 0)),
-            'lowStockCount' => count($alerts),
-            'receivedCount' => $this->reorderAlertModel->resolvedThisWeek(),
-            'openOrders'    => (new \App\Models\StockOrderModel())->whereNotIn('status', ['Delivered', 'Cancelled'])->countAllResults(),
+        $data = $filters + [
+            'title'          => 'Procurement Report',
+            'active'         => 'reorder_alerts',
+            'rows'           => array_slice($rows, ($page - 1) * $perPage, $perPage),
+            'totalItems'     => $totalItems,
+            'currentPage'    => $page,
+            'totalPages'     => $totalPages,
+            'perPage'        => $perPage,
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+            'minimumOrder'   => (int) ($dss['minimum_order_qty'] ?? 0),
+            'lastRunAt'      => (new DssRunner())->lastRunAt(),
+            'activeFilters'  => ProcurementReport::activeFilterCount($filters),
+            'exportQuery'    => ProcurementReport::query($filters),
         ];
 
+        if ($this->request->isAJAX()) {
+            return view('admin/_procurement_table', $data);
+        }
+
         return view('admin/procurement_report', $data);
+    }
+
+    /** Export PDF: every size matching the current search / filters (not only the page shown). Read-only. */
+    public function reportPdf()
+    {
+        $filters   = ProcurementReport::filters($this->request->getGet() ?? []);
+        $dss       = $this->dssParameterModel->current();
+        $lastRunAt = (new DssRunner())->lastRunAt();
+
+        $options = new \Dompdf\Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('isRemoteEnabled', false);
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('a4', 'landscape');
+        $dompdf->loadHtml(view('reports/procurement_pdf', [
+            'rows'        => ProcurementReport::rows($filters, $dss),
+            'basis'       => ProcurementReport::basis($lastRunAt, $dss),
+            'filterLabel' => ProcurementReport::filterLabel($filters),
+            'generatedAt' => date('M j, Y g:i A'),
+        ]));
+        $dompdf->render();
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="procurement-report-' . date('Y-m-d') . '.pdf"')
+            ->setBody($dompdf->output());
+    }
+
+    /** Export CSV: same rows as the PDF, "Item ID" first, then the Basis note. Read-only. */
+    public function reportCsv()
+    {
+        $filters = ProcurementReport::filters($this->request->getGet() ?? []);
+        $dss     = $this->dssParameterModel->current();
+
+        return $this->response
+            ->setHeader('Content-Type', 'text/csv; charset=utf-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="procurement-report-' . date('Y-m-d') . '.csv"')
+            ->setBody(ProcurementReport::csv(
+                ProcurementReport::rows($filters, $dss),
+                ProcurementReport::basis((new DssRunner())->lastRunAt(), $dss)
+            ));
     }
 
     /**

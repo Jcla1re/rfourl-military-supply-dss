@@ -191,7 +191,7 @@ class DssRunner
             $label . ($ok ? ": {$items} items" : ': ' . mb_substr($summary, 0, 200))
         );
 
-        // Active sizes that now have a reorder point (dss:run saves ROP > 0 only).
+        // Active sizes that now have a reorder point (a typed one kept when the run gave 0 counts too).
         $withRop = (int) $db->table('products')->where('is_active', 1)->where('manual_rop_warning >', 0)->countAllResults();
 
         $result = [

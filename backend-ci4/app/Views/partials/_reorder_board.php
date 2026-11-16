@@ -8,7 +8,7 @@
 //
 // $role switches the actions:
 //   'admin': Order / Order all sizes / Dismiss (To order), Restore (Dismissed), View order
-//            (Ordered) and the Ordering Report button.
+//            (Ordered) and the Procurement Report button.
 //   'staff': Notify Owner, or "Owner notified" once any staff account notified the Owner
 //            about that size ($notices, ReorderNoticeModel::openFor), on To order only.
 //            Ordered (the order's status) and Dismissed ("Dismissed by owner") are view-only.
@@ -87,7 +87,7 @@ $lateBadge = static fn (int $days): string => $days > 0 ? '<span class="status-p
             <span class="ra-calc"><?= ! empty($lastRunAt) ? 'Reorder levels calculated ' . esc(date('M j, Y', strtotime($lastRunAt))) : 'Reorder levels not calculated yet' ?></span>
         </div>
         <?php if ($isOwner): ?>
-            <a href="<?= site_url('admin/procurement-report') ?>" class="btn btn-outline-success ra-report-btn">Ordering Report</a>
+            <a href="<?= site_url('admin/procurement-report') ?>" class="btn btn-outline-success ra-report-btn">Procurement Report</a>
         <?php endif; ?>
     </div>
 
