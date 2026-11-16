@@ -87,9 +87,16 @@ class ReorderAlertController extends BaseController
         return view('admin/procurement_report', $data);
     }
 
-    /** Export PDF: every size matching the current search / filters (not only the page shown). Read-only. */
+    /**
+     * Export PDF: every size matching the current search / filters (not only the page shown). Read-only.
+     * Dompdf keeps the whole document in memory: all ~890 sizes need ~170MB, over the live
+     * server's 128M, so this request alone gets more (as Old Sales Records' PDF does).
+     */
     public function reportPdf()
     {
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(120);
+
         $filters   = ProcurementReport::filters($this->request->getGet() ?? []);
         $dss       = $this->dssParameterModel->current();
         $lastRunAt = (new DssRunner())->lastRunAt();

@@ -464,6 +464,27 @@ final class ReportsTest extends CIUnitTestCase
         $this->assertSame(AccountingReports::csvColumns('sales'), $csv[0], 'The CSV columns are unchanged.');
     }
 
+    public function testTheSalesJournalPdfIsOneSmallTablePerPageNotOneLongTable(): void
+    {
+        // Dompdf keeps a long table split over many pages in memory: a year's journal needed ~120MB
+        // (live limit 128M) and several years went over 512MB. A table per page keeps it far lower.
+        $money = ['gross' => 100.0, 'discount' => 0.0, 'net' => 100.0, 'cash' => 100.0, 'gcash' => 0.0];
+        $rows  = [];
+        for ($i = 1; $i <= 30; $i++) {
+            $rows[] = ['receipt_no' => (string) (5000 + $i), 'or_number' => null, 'date' => '2026-11-02', 'time' => '9:00 AM',
+                'cashier' => 'Owner', 'voided' => null, 'duplicate' => false] + $money;
+        }
+        $report = ['rows' => $rows, 'days' => [['date' => '2026-11-02', 'count' => 30] + $money], 'total' => ['count' => 30] + $money];
+        $pdf    = view('reports/pdf', ['type' => 'sales', 'from' => self::FROM, 'to' => self::TO, 'generatedAt' => 'now', 'report' => $report]);
+
+        // 30 receipts + 1 subtotal + 1 total = 32 rows: 22 on the first page, 10 on the second.
+        $this->assertSame(2, substr_count($pdf, '<thead>'), 'Each page repeats the header.');
+        $this->assertSame(1, substr_count($pdf, '<table class="page">'));
+        $this->assertSame(1, substr_count($pdf, 'Subtotal'));
+        $this->assertStringContainsString('#5030', $pdf);
+        $this->assertStringContainsString('Period total (30 receipts)', $pdf);
+    }
+
     // ---------------------------------------------------------------- POS: warn about a used OR number, still allow it
 
     /** @return array<string, array{0: string}> */

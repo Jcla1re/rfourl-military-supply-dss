@@ -436,6 +436,25 @@ final class ProcurementReportTest extends CIUnitTestCase
         }
     }
 
+    public function testPdfViewIsOneSmallTablePerPageNotOneLongTable(): void
+    {
+        // Dompdf keeps a long table split over ~35 pages in memory (all ~890 sizes needed ~380MB,
+        // over the live server's 128M); a table per page keeps it at ~170MB.
+        $rows = [];
+        for ($i = 1; $i <= 60; $i++) {
+            $rows[] = ['item_id' => sprintf('X-%04d', $i), 'item_name' => "Item {$i}", 'size' => 'M', 'class' => 'A', 'stock' => $i,
+                'rop' => 5, 'status' => 'In Stock', 'safety_stock' => 2, 'order_qty' => 10];
+        }
+        $html = view('reports/procurement_pdf', ['rows' => $rows, 'basis' => [['Ordering cost', '₱100 per order']], 'filterLabel' => '', 'generatedAt' => 'now']);
+        $x    = $this->xpath($html);
+
+        $this->assertSame(3, $x->query('//table[thead]')->length, '60 rows: 25 + 25 + 10, each table with its own header.');
+        $this->assertSame(2, $x->query('//table[contains(@class,"page")]')->length, 'Every table after the first starts a new page.');
+        $this->assertSame(60, $x->query('//table[thead]/tbody/tr')->length);
+        $this->assertStringContainsString('X-0060', $html);
+        $this->assertStringContainsString('Basis', $html);
+    }
+
     public function testViewingAndExportingWriteNothing(): void
     {
         // Reorder Now with no alert: the old page's sync would have raised one.
