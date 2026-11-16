@@ -86,14 +86,8 @@ final class StaffPasswordHistoryTest extends DemoTestCase
         $this->assertSame($suggestion, $this->flash('password_suggestion'));
         $this->assertNull(PasswordPolicy::check($suggestion));
         $this->assertMatchesRegularExpression('/^[A-Z][a-z]+-[A-Z][a-z]+\d{2}[!#$%&*]$/', $suggestion);
-        $this->assertFalse($this->userModelInUse($suggestion));
 
         return $suggestion;
-    }
-
-    private function userModelInUse(string $password): bool
-    {
-        return (new \App\Models\UserModel())->staffPasswordInUse($password);
     }
 
     /** The owner types a new password for the staff member in Manage Accounts; returns it. */
@@ -162,11 +156,13 @@ final class StaffPasswordHistoryTest extends DemoTestCase
         $this->assertTrue(password_verify('CashierPass123', $this->user($this->id['staff'])->password_hash));
     }
 
-    public function testTheUniquePasswordCheckAndItsWordingAreUnchanged(): void
+    public function testAnotherStaffMembersPasswordIsNoLongerRefused(): void
     {
+        // The unique-staff-password rule is gone (staff sign in with a username): only the history rule is left.
         $this->change('CashierPass123', 'DemoStaff123');
 
-        $this->assertSame("This password can't be used. Please choose a different one.", $this->flash('error'));
+        $this->assertNull($this->flash('error'));
+        $this->assertTrue(password_verify('DemoStaff123', $this->user($this->id['staff'])->password_hash));
     }
 
     public function testRefusedReuseIsLoggedWithoutAnyPassword(): void
@@ -195,13 +191,12 @@ final class StaffPasswordHistoryTest extends DemoTestCase
         $this->assertStringContainsString("['acctNew', 'acctConfirm']", $body);
     }
 
-    public function testSuggestionsAreFreshValidAndNotInUse(): void
+    public function testSuggestionsAreFreshAndValid(): void
     {
         $seen = [];
         for ($i = 0; $i < 20; $i++) {
             $s = PasswordHistory::suggest($this->id['staff']);
             $this->assertNull(PasswordPolicy::check($s));
-            $this->assertFalse($this->userModelInUse($s));
             $seen[$s] = true;
         }
         $this->assertGreaterThan(5, count($seen));

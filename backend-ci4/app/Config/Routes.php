@@ -1,34 +1,29 @@
 <?php
 
-$routes->get('/', 'AuthController::landing');
+// One sign-in page for everyone: the account decides the portal (Owner, Staff or Supplier).
+$routes->get('/', 'AuthController::showLogin');
+$routes->get('login', 'AuthController::showLogin');
+$routes->post('login', 'AuthController::attemptLogin');
 
-$routes->get('login/admin', 'AuthController::showAdminLogin');
-$routes->post('login/admin', 'AuthController::attemptAdminLogin');
+// Forgot password, one flow for everyone: 1 username or email, 2 check your email (code), 3 new password, done.
+$routes->get('login/forgot', 'AuthController::showForgot');
+$routes->post('login/forgot', 'AuthController::requestReset');
+$routes->get('login/forgot/check', 'AuthController::showCheckEmail');
+$routes->post('login/forgot/check', 'AuthController::verifyCode');
+$routes->post('login/forgot/resend', 'AuthController::resend');
+$routes->get('login/forgot/new-password', 'AuthController::showNewPassword');
+$routes->post('login/forgot/new-password', 'AuthController::saveNewPassword');
+$routes->get('login/forgot/done', 'AuthController::showDone');
 
-$routes->get('login/staff', 'AuthController::showStaffLogin');
-$routes->post('login/staff', 'AuthController::attemptStaffLogin');
-
-$routes->get('login/supplier', 'AuthController::showSupplierLogin');
-$routes->post('login/supplier', 'AuthController::attemptSupplierLogin');
+// The old per-role pages (bookmarks, old emails, a page left open): 302 to the new ones, keeping ?reason= and ?return=.
+$routes->match(['GET', 'POST'], 'login/(admin|staff|supplier)', 'AuthController::oldLogin');
+$routes->match(['GET', 'POST'], 'login/(admin|staff|supplier)/(forgot|otp|otp/resend|reset-password)', 'AuthController::oldForgot');
 
 $routes->post('logout', 'AuthController::logout');
 
 // For the page's own scripts; outside the role areas so they never count as activity (SessionController).
 $routes->get('session/status', 'SessionController::status');
 $routes->get('session/csrf', 'SessionController::csrf');
-
-// Staff has no self-service reset — it notifies the Admin instead (see Figma "Can't access your account?").
-// Registered before the generic (:segment) routes below so it takes precedence for the "staff" segment.
-$routes->get('login/staff/forgot', 'AuthController::showStaffForgot');
-$routes->post('login/staff/forgot', 'AuthController::notifyStaffForgot');
-
-$routes->get('login/(:segment)/forgot', 'AuthController::showForgotPassword/$1');
-$routes->post('login/(:segment)/forgot', 'AuthController::sendOtp/$1');
-$routes->get('login/(:segment)/otp', 'AuthController::showOtpVerify/$1');
-$routes->post('login/(:segment)/otp', 'AuthController::verifyOtp/$1');
-$routes->post('login/(:segment)/otp/resend', 'AuthController::resendOtp/$1');
-$routes->get('login/(:segment)/reset-password', 'AuthController::showResetPassword/$1');
-$routes->post('login/(:segment)/reset-password', 'AuthController::resetPassword/$1');
 
 // One-click Approve/Decline links from the staff-access-request email —
 // deliberately outside the roleauth-filtered admin group; gated by the

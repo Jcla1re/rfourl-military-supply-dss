@@ -123,16 +123,19 @@ class SupplierController extends BaseController
         // Validate the optional portal login BEFORE creating the supplier, so a
         // bad password or email does not leave a supplier with no account behind.
         $loginEmail = $this->request->getPost('login_email');
-        $username   = $this->request->getPost('username');
+        $username   = trim((string) $this->request->getPost('username'));
         $password   = $this->request->getPost('password');
         $confirm    = $this->request->getPost('confirm_password');
 
-        if ($username || $password || $loginEmail) {
-            if (! $this->validate([
+        if ($username !== '' || $password || $loginEmail) {
+            // The username is what they sign in with: trimmed, 4-50 letters, digits, _ or -, not taken.
+            $data = (array) $this->request->getPost();
+            $data['username'] = $username;
+            if (! $this->validateData($data, [
                 'login_email' => 'permit_empty|valid_email|is_unique[users.email]',
-                'username'    => 'required|is_unique[users.username]',
+                'username'    => 'required|min_length[4]|max_length[50]|alpha_dash|is_unique[users.username]',
                 'password'    => 'required',
-            ])) {
+            ], ['username' => ['is_unique' => 'That username is already taken.']])) {
                 return redirect()->back()->withInput()->with('error', implode(' ', $this->validator->getErrors()));
             }
             if ($error = PasswordPolicy::check($password)) {

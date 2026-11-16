@@ -338,8 +338,8 @@ final class StaffProfileTest extends DemoTestCase
     public function testOnlySignedInStaffCanUseTheseRoutes(): void
     {
         foreach (['staff/account/profile', 'staff/account/email/confirm', 'staff/account/email/cancel'] as $route) {
-            $this->post($route, ['full_name' => 'X'])->assertRedirectTo(site_url('login/staff'));
-            $this->actingAs('owner')->post($route, ['full_name' => 'X'])->assertRedirectTo(site_url('login/staff'));
+            $this->post($route, ['full_name' => 'X'])->assertRedirectTo(site_url('login'));
+            $this->actingAs('owner')->post($route, ['full_name' => 'X'])->assertRedirectTo(site_url('login'));
         }
 
         $this->assertSame('Real Cashier', $this->user($this->id['staff'])->full_name);

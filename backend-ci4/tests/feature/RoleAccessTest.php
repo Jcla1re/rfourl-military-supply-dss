@@ -31,7 +31,7 @@ final class RoleAccessTest extends CIUnitTestCase
      */
     public function testLoggedOutUserIsSentToLogin(string $path, string $role): void
     {
-        $this->get($path)->assertRedirectTo(site_url("login/{$role}"));
+        $this->get($path)->assertRedirectTo(site_url('login'));
     }
 
     public function testStaffCannotOpenAdminPage(): void
@@ -39,7 +39,7 @@ final class RoleAccessTest extends CIUnitTestCase
         $result = $this->withSession(['isLoggedIn' => true, 'role' => 'Staff', 'user_id' => 1])
             ->get('/admin/dashboard');
 
-        $result->assertRedirectTo(site_url('login/admin'));
+        $result->assertRedirectTo(site_url('login'));
     }
 
     public function testSupplierCannotOpenStaffPage(): void
@@ -47,6 +47,6 @@ final class RoleAccessTest extends CIUnitTestCase
         $result = $this->withSession(['isLoggedIn' => true, 'role' => 'Supplier', 'user_id' => 1])
             ->get('/staff/dashboard');
 
-        $result->assertRedirectTo(site_url('login/staff'));
+        $result->assertRedirectTo(site_url('login'));
     }
 }

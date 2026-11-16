@@ -289,8 +289,9 @@ class SettingsController extends BaseController
     }
 
     /**
-     * The owner changes a staff member's username (not a removed account). No owner password: staff
-     * sign in with their password only, so the username is not a credential (it is used for Forgot password).
+     * The owner changes a staff member's username (not a removed account). No owner password: the
+     * owner is already signed in, and the username alone opens nothing (it is shown to every
+     * colleague). The staff member must be told the new one before they next sign in.
      */
     public function updateStaffUsername($userId)
     {
@@ -369,11 +370,6 @@ class SettingsController extends BaseController
         if (PasswordHistory::reuses($staff, $newPass)) {
             return redirect()->to($back)->with('error', "That is one of {$staff['full_name']}'s recent passwords. Choose a different one.");
         }
-        // Staff sign in by password alone, so it must be unique (never say whose it is).
-        if ($this->userModel->staffPasswordInUse($newPass, (int) $staff['user_id'])) {
-            return redirect()->to($back)->with('error', "This password can't be used. Please choose a different one.");
-        }
-
         $wasLocked = ! $staff['is_active'];
         $reset     = new StaffPasswordReset();
         $db        = db_connect();
@@ -435,11 +431,15 @@ class SettingsController extends BaseController
             return $created($earlier);
         }
 
-        if (! $this->validate([
+        // The username is what they sign in with: same rules as renaming it (trimmed, 4-50 letters, digits, _ or -).
+        $data = (array) $this->request->getPost();
+        $data['username'] = trim((string) ($data['username'] ?? ''));
+        [$usernameRules, $usernameMessages] = $this->usernameRules(0);
+        if (! $this->validateData($data, [
             'full_name'     => 'required',
-            'username'      => 'required|is_unique[users.username]',
+            'username'      => $usernameRules['username'],
             'contact_email' => 'required|valid_email|is_unique[users.email]',
-        ])) {
+        ], $usernameMessages)) {
             return redirect()->to($back)->with('error', implode(' ', $this->validator->getErrors()));
         }
 
@@ -518,31 +518,10 @@ class SettingsController extends BaseController
             return DemoGuard::refuse('/admin/settings?tab=accounts');
         }
 
-        // Reactivating must not recreate a shared password. Hashes can't be
-        // compared to each other, so this can only catch the known seeded
-        // default (see staff:check-passwords); the login-time check covers the rest.
-        if (! $user['is_active'] && $this->sharesDefaultPasswordWithActiveStaff($user)) {
-            return redirect()->to('/admin/settings?tab=accounts')->with(
-                'error',
-                "{$user['full_name']} can't be reactivated because their password matches another active staff member's. Reset their password first."
-            );
-        }
-
         $this->userModel->update((int) $userId, ['is_active' => $user['is_active'] ? 0 : 1]);
         SecurityLogModel::log($user['is_active'] ? 'account_deactivated' : 'account_reactivated', null, 'staff: ' . $user['username']);
 
         return redirect()->to('/admin/settings?tab=accounts')->with('success', $user['is_active'] ? 'Staff account deactivated.' : 'Staff account reactivated.');
-    }
-
-    private function sharesDefaultPasswordWithActiveStaff(array $user): bool
-    {
-        $default = \App\Database\Seeds\LegacyDataSeeder::DEFAULT_PASSWORD;
-
-        if (! password_verify($default, $user['password_hash'])) {
-            return false;
-        }
-
-        return $this->userModel->staffMatchingPassword($default, true, (int) $user['user_id']) !== [];
     }
 
     /**

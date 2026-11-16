@@ -124,40 +124,45 @@ class UserModel extends Model
         return $this->where('role', 'Staff')->where('deleted_at', null);
     }
 
-    /**
-     * Staff login is password-only, so a password must identify exactly one
-     * person. Returns the non-removed Staff accounts whose password matches
-     * (bcrypt hashes can't be compared to each other, only verified against a
-     * plaintext). $activeOnly = false also checks deactivated accounts, which
-     * could be reactivated later.
-     *
-     * @return list<array>
-     */
-    public function staffMatchingPassword(string $password, bool $activeOnly = true, ?int $exceptUserId = null): array
+    /** How a typed username or email is compared: no spaces at the ends, any letter case. */
+    public static function normalise(?string $typed): string
     {
-        $builder = $this->activeStaff();
-        if ($activeOnly) {
-            $builder->where('is_active', 1);
-        }
-
-        $matches = [];
-        foreach ($builder->findAll() as $staff) {
-            if ($exceptUserId !== null && (int) $staff['user_id'] === $exceptUserId) {
-                continue;
-            }
-            // A temporary password waiting to be used (Forgot password) signs in too, so it counts like any other.
-            if (password_verify($password, $staff['password_hash'])
-                || (! empty($staff['temp_password_hash']) && password_verify($password, $staff['temp_password_hash']))) {
-                $matches[] = $staff;
-            }
-        }
-
-        return $matches;
+        return mb_strtolower(trim((string) $typed));
     }
 
-    /** True if another non-removed Staff account (active or not) already uses this password. */
-    public function staffPasswordInUse(string $password, ?int $exceptUserId = null): bool
+    /**
+     * The one account (any role) with this username, compared as normalise() does. Removed staff
+     * (deleted_at set) never sign in, so they are not found. Null when there is none, or (only
+     * possible with old data) more than one.
+     */
+    public function findForLogin(?string $typedUsername): ?array
     {
-        return $this->staffMatchingPassword($password, false, $exceptUserId) !== [];
+        $needle = self::normalise($typedUsername);
+        if ($needle === '') {
+            return null;
+        }
+
+        $rows = $this->where('LOWER(TRIM(username))', $needle)->where('deleted_at', null)->findAll(2);
+
+        return count($rows) === 1 ? $rows[0] : null;
+    }
+
+    /**
+     * Forgot password: the one active, non-removed account (any role) whose username OR email is
+     * $typed (compared as normalise() does). Null when there is none or more than one, so a
+     * shared or ambiguous address never gets anything.
+     */
+    public function findForReset(?string $typed): ?array
+    {
+        $needle = self::normalise($typed);
+        if ($needle === '') {
+            return null;
+        }
+
+        $rows = $this->where('deleted_at', null)->where('is_active', 1)
+            ->groupStart()->where('LOWER(TRIM(username))', $needle)->orWhere('LOWER(TRIM(email))', $needle)->groupEnd()
+            ->findAll(2);
+
+        return count($rows) === 1 ? $rows[0] : null;
     }
 }

@@ -23,6 +23,14 @@ class Auth extends BaseConfig
     public int $idleTestSeconds = 0;
 
     /**
+     * Forgot password, where PHP can't send the email after the response (mod_php: see
+     * App\Libraries\AfterResponse): every answer of the forgot form and of Resend takes at least this
+     * long, so a found account and an unknown one take the same time. It should be longer than a
+     * normal email send. The tests set it to 0 (phpunit.dist.xml).
+     */
+    public float $forgotMinSeconds = 3.0;
+
+    /**
      * Sent only by background polls that are not the user doing something (the DSS status poll, the
      * session status check). A request with it is still checked for the idle limit, but does not
      * count as activity. Search, saving and every other request still count.

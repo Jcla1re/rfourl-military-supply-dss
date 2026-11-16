@@ -161,9 +161,9 @@ final class CsrfFailureTest extends CIUnitTestCase
     {
         $this->csrf($production);
 
-        $result = $this->withSession([])->post('login/admin', ['csrf_test_name' => 'expired', 'username' => 'owner1', 'password' => 'secret-typed']);
+        $result = $this->withSession([])->post('login', ['csrf_test_name' => 'expired', 'username' => 'owner1', 'password' => 'secret-typed']);
 
-        $this->assertSame(site_url('login/admin'), $result->getRedirectUrl());
+        $this->assertSame(site_url('login'), $result->getRedirectUrl());
         $this->assertSame('This page needed a refresh. Please sign in again.', $_SESSION['error']);
         $this->assertSame(['username' => 'owner1'], $_SESSION['_ci_old_input']['post'], 'Never the password.');
         $this->assertArrayNotHasKey('isLoggedIn', $_SESSION);
@@ -176,7 +176,7 @@ final class CsrfFailureTest extends CIUnitTestCase
         $idle = $this->staff(['last_activity' => time() - 1801]);
 
         $page = $this->withSession($idle)->withHeaders(['Referer' => site_url('staff/sales')])->post('staff/sales/checkout', ['csrf_test_name' => 'x', 'item_id' => ['P-1'], 'quantity' => ['1']]);
-        $this->assertSame(site_url('login/staff'), $page->getRedirectUrl(), 'The login page, not "needed a refresh".');
+        $this->assertSame(site_url('login'), $page->getRedirectUrl(), 'The login page, not "needed a refresh".');
         $this->assertSame(['idle', '/staff/sales'], [$_SESSION['signed_out_reason'], $_SESSION['return_to']]);
 
         $ajax = $this->withSession($idle)->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->post('staff/sales/checkout', ['csrf_test_name' => 'x']);

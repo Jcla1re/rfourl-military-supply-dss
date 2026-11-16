@@ -392,7 +392,7 @@ final class ReportsTest extends CIUnitTestCase
         foreach (['admin/reports', 'admin/reports/pdf', 'admin/reports/csv'] as $url) {
             $this->asOwner()->get($url . '?type=sales')->assertStatus(200);
 
-            $this->asStaff()->get($url)->assertRedirectTo(site_url('login/admin'));
+            $this->asStaff()->get($url)->assertRedirectTo(site_url('login'));
             $this->withSession([
                 'isLoggedIn' => true, 'role' => 'Supplier', 'user_id' => (int) $this->db->table('users')->where('username', 'tgi')->get()->getRow()->user_id,
                 'username' => 'tgi', 'full_name' => 'Tactical Gear', 'supplier_id' => 'SUP-001', 'last_activity' => time(),
@@ -512,7 +512,7 @@ final class ReportsTest extends CIUnitTestCase
 
         $this->withSession([])->get('admin/sales/check-or?or_number=Z-9')->assertRedirect();
         $this->withSession([])->get('staff/sales/check-or?or_number=Z-9')->assertRedirect();
-        $this->asStaff()->get('admin/sales/check-or?or_number=Z-9')->assertRedirectTo(site_url('login/admin'));
+        $this->asStaff()->get('admin/sales/check-or?or_number=Z-9')->assertRedirectTo(site_url('login'));
     }
 
     /** @dataProvider posRoles */

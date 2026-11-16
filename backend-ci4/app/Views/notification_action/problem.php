@@ -23,7 +23,7 @@ $heading = $heading ?? 'Link Unavailable';
     <div class="auth-card">
         <h2><?= esc($heading) ?></h2>
         <p class="auth-hint"><?= esc($message) ?></p>
-        <div class="auth-back"><a href="<?= site_url('login/admin') ?>">Go to owner login</a></div>
+        <div class="auth-back"><a href="<?= site_url('login') ?>">Go to sign in</a></div>
     </div>
 </body>
 </html>

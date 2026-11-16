@@ -284,7 +284,7 @@ final class StaffPasswordAlertTest extends CIUnitTestCase
         $this->assertSame(1, $this->db->table('security_log')->where('event', 'account_locked_via_email')->countAllResults());
 
         // The staff member's open session stops working (RoleAuthFilter re-checks is_active).
-        $this->asStaff()->get('staff/account')->assertRedirectTo(site_url('login/staff'));
+        $this->asStaff()->get('staff/account')->assertRedirectTo(site_url('login'));
 
         // Used once: both the page and a second POST are refused.
         $this->get("notification-action/{$id}/{$token}/lock")->assertSee(self::INVALID);
@@ -419,7 +419,7 @@ final class StaffPasswordAlertTest extends CIUnitTestCase
     {
         [$id] = $this->alertLink();
 
-        $this->asStaff()->post("admin/notifications/lock/{$id}")->assertRedirectTo(site_url('login/admin'));
+        $this->asStaff()->post("admin/notifications/lock/{$id}")->assertRedirectTo(site_url('login'));
         $this->assertTrue($this->staffActive());
     }
 }

@@ -275,11 +275,6 @@ class AccountController extends BaseController
                 ->with('error', "You can't use your old password. Try something new, like: {$suggestion}")
                 ->with('password_suggestion', $suggestion);
         }
-        // Staff sign in by password alone, so it must be unique (never say whose it is).
-        if ($this->userModel->staffPasswordInUse($newPass, $userId)) {
-            return redirect()->to($back)->with('error', "This password can't be used. Please choose a different one.");
-        }
-
         PasswordHistory::record($userId, $user['password_hash']);
         $this->userModel->update($userId, ['password_hash' => password_hash($newPass, PASSWORD_DEFAULT)]);
         session()->regenerate(true);

@@ -35,7 +35,7 @@ final class DemoModeTest extends DemoTestCase
 
     public function testEveryLoginPageHasTheBannerAndTheRobotsTag(): void
     {
-        foreach (['/', 'login/admin', 'login/staff', 'login/supplier', 'login/admin/forgot', 'login/staff/forgot'] as $path) {
+        foreach (['/', 'login', 'login/forgot'] as $path) {
             $body = $this->get($path)->getBody();
             $this->assertStringContainsString('Demo version: data resets every night at 12:00 AM.', $body, $path);
             $this->assertStringContainsString('<meta name="robots" content="noindex, nofollow">', $body, $path);
@@ -44,18 +44,14 @@ final class DemoModeTest extends DemoTestCase
 
     public function testLoginPagesShowTheDemoAccountOnlyWhenAsked(): void
     {
-        $owner = $this->get('login/admin')->getBody();
-        $this->assertStringContainsString('demo_owner', $owner);
-        $this->assertStringContainsString('Demo-Owner-1', $owner);
-
-        $staff = $this->get('login/staff')->getBody();
-        $this->assertStringContainsString('Demo-Staff-1', $staff);
-        $this->assertStringNotContainsString('Demo-Owner-1', $staff);
-
-        $this->assertStringContainsString('demo_supplier', $this->get('login/supplier')->getBody());
+        // One sign-in page: all three demo logins under the form.
+        $page = $this->get('login')->getBody();
+        foreach (['demo_owner', 'Demo-Owner-1', 'demo_staff', 'Demo-Staff-1', 'demo_supplier'] as $shown) {
+            $this->assertStringContainsString($shown, $page);
+        }
 
         $this->demoOn(['DEMO_SHOW_CREDENTIALS' => 'false']);
-        $this->assertStringNotContainsString('Demo-Owner-1', $this->get('login/admin')->getBody());
+        $this->assertStringNotContainsString('Demo-Owner-1', $this->get('login')->getBody());
     }
 
     public function testTheBannerIsOnTheSignedInPagesToo(): void
@@ -169,7 +165,7 @@ final class DemoModeTest extends DemoTestCase
 
     public function testForgotPasswordIsRefusedForADemoAccount(): void
     {
-        $this->post('login/admin/forgot', ['email' => 'ourteam+owner@example.test'])->assertRedirectTo(site_url('login/admin/forgot'));
+        $this->post('login/forgot', ['identifier' => 'ourteam+owner@example.test'])->assertRedirectTo(site_url('login/forgot'));
 
         $this->assertRefused();
         $this->assertNull($this->user($this->id['demo_owner'])->reset_otp_hash);
@@ -178,7 +174,7 @@ final class DemoModeTest extends DemoTestCase
 
     public function testStaffForgotRequestIsRefusedForTheDemoStaff(): void
     {
-        $this->post('login/staff/forgot', ['staff_name' => 'demo_staff', 'reason' => 'x'])->assertRedirectTo(site_url('login/staff/forgot'));
+        $this->post('login/forgot', ['identifier' => 'demo_staff'])->assertRedirectTo(site_url('login/forgot'));
 
         $this->assertRefused();
         $this->assertSame(0, $this->db->table('notifications')->countAllResults());
@@ -284,7 +280,7 @@ final class DemoModeTest extends DemoTestCase
     public function testNotificationsAndStaffRequestsAreRedirectedToo(): void
     {
         (new EmailNotifier())->toUser(['email' => 'someone@real.test'], 'Order shipped', 'Your order is on its way.');
-        $this->post('login/staff/forgot', ['staff_name' => 'cashier_normal', 'reason' => 'forgot']);
+        $this->post('login/forgot', ['identifier' => 'cashier_normal']);
 
         $this->assertGreaterThanOrEqual(2, count($this->mailer->sent));
         foreach ($this->mailer->sent as $mail) {
@@ -296,7 +292,7 @@ final class DemoModeTest extends DemoTestCase
 
     public function testTheLoginCodeIsShownOnScreenAsWell(): void
     {
-        $this->post('login/admin/forgot', ['email' => 'owner@real.test'])->assertRedirectTo(site_url('login/admin/otp'));
+        $this->post('login/forgot', ['identifier' => 'owner@real.test'])->assertRedirectTo(site_url('login/forgot/check'));
 
         $secret = $this->flash('demo_secret');
         $this->assertSame('Demo code', $secret['label']);

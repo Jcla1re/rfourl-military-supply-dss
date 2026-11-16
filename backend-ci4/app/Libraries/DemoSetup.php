@@ -53,13 +53,6 @@ class DemoSetup
             $this->anonymiseSuppliers($db, $mailTo);
             $this->clearPersonalLogs($db);
 
-            // Staff sign in by password alone: the demo staff password must be unique.
-            if ($users->staffPasswordInUse($passwords['STAFF_PASSWORD'], $demoIds['demo_staff'])) {
-                $db->transRollback();
-
-                throw new \RuntimeException("DEMO_STAFF_PASSWORD matches another staff account's password. Choose a different one.");
-            }
-
             $db->transComplete();
             if (! $db->transStatus()) {
                 throw new \RuntimeException('Setup failed and was rolled back.');

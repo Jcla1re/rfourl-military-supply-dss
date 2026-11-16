@@ -318,9 +318,9 @@ final class CancelOrderTest extends CIUnitTestCase
         $id = $this->order('Order Confirmed');
 
         $this->withSession(['isLoggedIn' => true, 'role' => 'Staff', 'user_id' => 99, 'last_activity' => time()])
-            ->post("admin/orders/cancel/{$id}", ['reason' => 'Ordered by mistake'])->assertRedirectTo(site_url('login/admin'));
+            ->post("admin/orders/cancel/{$id}", ['reason' => 'Ordered by mistake'])->assertRedirectTo(site_url('login'));
         $this->withSession(['isLoggedIn' => true, 'role' => 'Supplier', 'user_id' => $this->supplierUserId, 'supplier_id' => 'SUP-001', 'last_activity' => time()])
-            ->post("admin/orders/cancel/{$id}", ['reason' => 'Ordered by mistake'])->assertRedirectTo(site_url('login/admin'));
+            ->post("admin/orders/cancel/{$id}", ['reason' => 'Ordered by mistake'])->assertRedirectTo(site_url('login'));
 
         $this->assertSame('Order Confirmed', $this->row($id)->status);
     }

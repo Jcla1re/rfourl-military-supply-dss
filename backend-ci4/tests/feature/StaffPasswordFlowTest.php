@@ -1,5 +1,6 @@
 <?php
 
+use App\Controllers\AuthController;
 use App\Libraries\AttemptStore;
 use App\Libraries\LoginLockout;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -28,8 +29,6 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
 
     protected $migrate = false;
     protected $refresh = false;
-
-    private const NEUTRAL = 'sent';
 
     private int $adminId;
     private int $staffId;
@@ -135,13 +134,36 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
 
     private function clearLimits(): void
     {
-        (new LoginLockout())->reset('staff');
-        AttemptStore::forget('staff_forgot_' . md5('0.0.0.0'));
+        $this->resetLockout();
+        $this->clearForgotLimits();
         foreach ([1, 2, 3, 4] as $id) {
             AttemptStore::forget('staff_forgot_acct_' . $id);
             AttemptStore::forget('staff_set_pw_' . $id);
             AttemptStore::forget('owner_reset_' . $id);
         }
+    }
+
+    private function resetLockout(): void
+    {
+        $lockout = new LoginLockout();
+        foreach (['cashier1', 'cashier2', 'owner1', 'newperson'] as $username) {
+            $lockout->reset($username);
+        }
+        $lockout->resetIp();
+    }
+
+    /** The Forgot password form's own limits (per client, per typed name), separate from the per-account one. */
+    private function clearForgotLimits(): void
+    {
+        AttemptStore::forget('forgot_ip_' . md5('0.0.0.0'));
+        foreach (['cashier1', 'cashier2', 'nobody here', 'locked1', 'shared@example.test', 'ana cruz'] as $typed) {
+            AttemptStore::forget('forgot_ident_' . md5($typed));
+        }
+    }
+
+    private function signIn(string $password, string $username = 'cashier1')
+    {
+        return $this->post('login', ['username' => $username, 'password' => $password]);
     }
 
     // ---------------------------------------------------------------- helpers
@@ -192,8 +214,8 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
     /** Staff asks for a reset with their username; returns the emailed temporary password. */
     private function forgot(string $name = 'cashier1'): ?string
     {
-        AttemptStore::forget('staff_forgot_' . md5('0.0.0.0'));
-        $this->post('login/staff/forgot', ['staff_name' => $name]);
+        $this->clearForgotLimits();
+        $this->post('login/forgot', ['identifier' => $name]);
 
         return $this->emailedPassword('cashier1@example.test');
     }
@@ -203,8 +225,8 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
     {
         $temp = $this->forgot();
         $this->assertNotNull($temp);
-        $this->post('login/staff', ['password' => $temp])->assertRedirectTo(site_url('/staff/set-password'));
-        (new LoginLockout())->reset('staff');
+        $this->signIn($temp)->assertRedirectTo(site_url('/staff/set-password'));
+        $this->resetLockout();
 
         return $temp;
     }
@@ -243,9 +265,9 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
 
     public function testForgotEmailsATemporaryPasswordDirectlyAndTheOldPasswordKeepsWorking(): void
     {
-        $result = $this->post('login/staff/forgot', ['staff_name' => 'cashier1']);
+        $result = $this->post('login/forgot', ['identifier' => 'cashier1']);
 
-        $result->assertSessionHas(self::NEUTRAL);
+        $result->assertRedirectTo(site_url('login/forgot/check'));
         $temp = $this->emailedPassword('cashier1@example.test');
         $this->assertNotNull($temp);
         $this->assertSame(12, strlen($temp));
@@ -265,43 +287,56 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->assertSame('0', (string) $row->must_change_password);
 
         // The old password still signs in, straight to the dashboard: nobody can lock a staff member out by asking.
-        $this->post('login/staff', ['password' => 'Cashier1Pass1'])->assertRedirectTo(site_url('/staff/dashboard'));
+        $this->signIn('Cashier1Pass1')->assertRedirectTo(site_url('/staff/dashboard'));
         $this->assertSame(1, $this->db->table('security_log')->where('event', 'password_forgot_requested')->countAllResults());
         $this->assertStringNotContainsString($temp, json_encode($this->db->table('security_log')->get()->getResultArray()));
         $this->assertStringNotContainsString($temp, json_encode($this->db->table('notifications')->get()->getResultArray()));
     }
 
-    public function testTheFullNameWorksToo(): void
+    public function testTheUsernameOrTheEmailWorksInAnyCaseWithSpaces(): void
     {
-        $this->post('login/staff/forgot', ['staff_name' => ' CASHIER1 '])->assertSessionHas(self::NEUTRAL);
+        $this->post('login/forgot', ['identifier' => ' CASHIER1 '])->assertRedirectTo(site_url('login/forgot/check'));
+        $this->assertNotNull($this->emailedPassword('cashier1@example.test'));
 
+        $this->mailer->sent = [];
+        AttemptStore::forget('staff_forgot_acct_' . $this->staffId);
+        $this->clearForgotLimits();
+        AttemptStore::forget('forgot_ident_' . md5('cashier1@example.test'));
+        $this->post('login/forgot', ['identifier' => 'Cashier1@Example.test'])->assertRedirectTo(site_url('login/forgot/check'));
         $this->assertNotNull($this->emailedPassword('cashier1@example.test'));
     }
 
-    public function testTheSameNeutralMessageForUnknownLockedAndAmbiguousNames(): void
+    public function testTheFullNameIsNoLongerAccepted(): void
     {
-        $this->db->table('users')->where('user_id', $this->otherId)->update(['full_name' => 'Cashier1']); // two people named Cashier1
+        $this->db->table('users')->where('user_id', $this->staffId)->update(['full_name' => 'Ana Cruz']);
+
+        $this->post('login/forgot', ['identifier' => 'Ana Cruz'])->assertRedirectTo(site_url('login/forgot/check'));
+
+        $this->assertSame([], $this->mailer->sent);
+        $this->assertNull($this->user($this->staffId)->temp_password_hash);
+    }
+
+    public function testTheSameAnswerForUnknownLockedAndAmbiguousNames(): void
+    {
         $locked = $this->makeUser('locked1', 'Locked Person', 'Staff', 'LockedPass123', 'locked@example.test');
         $this->db->table('users')->where('user_id', $locked)->update(['is_active' => 0]);
+        // Old data: two accounts on one email. Nobody gets anything for it.
+        $this->db->table('users')->whereIn('user_id', [$this->staffId, $this->otherId])->update(['email' => 'shared@example.test']);
 
-        foreach (['Nobody Here', 'Cashier1', 'locked1'] as $typed) {
-            AttemptStore::forget('staff_forgot_' . md5('0.0.0.0'));
-            $this->post('login/staff/forgot', ['staff_name' => $typed])->assertSessionHas(self::NEUTRAL);
+        foreach (['Nobody Here', 'locked1', 'shared@example.test'] as $typed) {
+            $this->clearForgotLimits();
+            $this->post('login/forgot', ['identifier' => $typed])->assertRedirectTo(site_url('login/forgot/check'));
         }
 
         $this->assertSame([], $this->mailer->sent, 'no email for names that do not match exactly one active account');
         $this->assertSame(0, $this->db->table('notifications')->countAllResults());
         $this->assertSame(0, $this->db->table('users')->where('temp_password_hash IS NOT NULL')->countAllResults());
-        $this->assertGreaterThanOrEqual(2, $this->db->table('security_log')->where('event', 'password_forgot_no_match')->countAllResults(), 'misses are logged');
-
-        // And the page says the same thing whatever happened.
-        $page = $this->withSession(['sent' => true, '__ci_vars' => ['sent' => 'new']])->get('login/staff/forgot')->getBody();
-        $this->assertStringContainsString('If the account exists and has an email on file, a temporary password has been sent.', $page);
+        $this->assertSame(3, $this->db->table('security_log')->where('event', 'password_forgot_no_match')->countAllResults(), 'misses are logged');
     }
 
     public function testAnEmptyNameAsksForOne(): void
     {
-        $this->post('login/staff/forgot', ['staff_name' => '  '])->assertSessionHas('error');
+        $this->post('login/forgot', ['identifier' => '  '])->assertSessionHas('error');
 
         $this->assertSame([], $this->mailer->sent);
     }
@@ -312,7 +347,7 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
             $this->db->table('notifications')->truncate();
             $this->db->table('users')->where('user_id', $this->staffId)->update(['email' => $email]);
 
-            $this->post('login/staff/forgot', ['staff_name' => 'cashier1'])->assertSessionHas(self::NEUTRAL);
+            $this->post('login/forgot', ['identifier' => 'cashier1'])->assertRedirectTo(site_url('login/forgot/check'));
 
             $this->assertSame([], $this->mailer->sent, 'nothing is sent when there is no usable email');
             $this->assertNull($this->user($this->staffId)->temp_password_hash);
@@ -329,8 +364,8 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
     public function testAtMostThreeRequestsPerAccountPerHour(): void
     {
         for ($i = 1; $i <= 5; $i++) {
-            AttemptStore::forget('staff_forgot_' . md5('0.0.0.0')); // the per-client limit is a separate rule
-            $this->post('login/staff/forgot', ['staff_name' => 'cashier1'])->assertSessionHas(self::NEUTRAL);
+            $this->clearForgotLimits(); // the per-client limit is a separate rule
+            $this->post('login/forgot', ['identifier' => 'cashier1'])->assertRedirectTo(site_url('login/forgot/check'));
         }
 
         $this->assertCount(3, $this->mailsTo('cashier1@example.test'));
@@ -338,8 +373,8 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->assertSame(0, $this->db->table('notifications')->countAllResults());
 
         // Another account is not affected.
-        AttemptStore::forget('staff_forgot_' . md5('0.0.0.0'));
-        $this->post('login/staff/forgot', ['staff_name' => 'cashier2'])->assertSessionHas(self::NEUTRAL);
+        $this->clearForgotLimits();
+        $this->post('login/forgot', ['identifier' => 'cashier2'])->assertRedirectTo(site_url('login/forgot/check'));
         $this->assertCount(1, $this->mailsTo('cashier2@example.test'));
     }
 
@@ -347,7 +382,7 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
     {
         $this->mailer->ok = false;
 
-        $this->post('login/staff/forgot', ['staff_name' => 'cashier1'])->assertSessionHas(self::NEUTRAL);
+        $this->post('login/forgot', ['identifier' => 'cashier1'])->assertRedirectTo(site_url('login/forgot/check'));
 
         $this->assertNull($this->user($this->staffId)->temp_password_hash);
         $this->assertSame(1, $this->db->table('security_log')->where('event', 'password_forgot_failed')->countAllResults());
@@ -369,7 +404,7 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->asStaff()->get('staff/set-password')->assertOK();
 
         // The old password no longer works now that the temporary one was used.
-        $this->post('login/staff', ['password' => 'Cashier1Pass1'])->assertSessionHas('error', 'Incorrect password. Please try again');
+        $this->signIn('Cashier1Pass1')->assertSessionHas('error', AuthController::WRONG);
     }
 
     public function testAnExpiredTemporaryPasswordIsRefusedAndTheOldOneStillWorks(): void
@@ -377,12 +412,12 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $temp = $this->forgot();
         $this->db->table('users')->where('user_id', $this->staffId)->update(['temp_password_expires_at' => date('Y-m-d H:i:s', time() - 60)]);
 
-        $result = $this->post('login/staff', ['password' => $temp]);
+        $result = $this->signIn($temp);
         $result->assertSessionHas('error', 'This temporary password has expired. Use "Forgot password?" to get a new one.');
         $result->assertSessionMissing('isLoggedIn');
 
-        (new LoginLockout())->reset('staff');
-        $this->post('login/staff', ['password' => 'Cashier1Pass1'])->assertRedirectTo(site_url('/staff/dashboard'));
+        $this->resetLockout();
+        $this->signIn('Cashier1Pass1')->assertRedirectTo(site_url('/staff/dashboard'));
     }
 
     public function testNewPasswordRulesAfterForgot(): void
@@ -392,18 +427,20 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->asStaff()->post('staff/set-password', ['new_password' => 'short', 'confirm_password' => 'short'])->assertSessionHas('error');
         $this->asStaff()->post('staff/set-password', ['new_password' => 'BrandNewPass9', 'confirm_password' => 'Different9Pass'])->assertSessionHas('error', 'Passwords do not match.');
         $this->asStaff()->post('staff/set-password', ['new_password' => $temp, 'confirm_password' => $temp])->assertSessionHas('error', 'Choose a different password from the temporary one.');
-        $this->asStaff()->post('staff/set-password', ['new_password' => 'Cashier2Pass2', 'confirm_password' => 'Cashier2Pass2'])
-            ->assertSessionHas('error', "This password can't be used. Please choose a different one.");
 
         $this->assertSame('1', (string) $this->user($this->staffId)->must_change_password);
+
+        // Another staff member's password is fine now (they sign in with a username).
+        $this->asStaff()->post('staff/set-password', ['new_password' => 'Cashier2Pass2', 'confirm_password' => 'Cashier2Pass2'])->assertRedirectTo(site_url('/staff/dashboard'));
     }
 
-    public function testAWaitingTemporaryPasswordIsNotAvailableToAnotherAccount(): void
+    public function testAWaitingTemporaryPasswordOnlyOpensItsOwnAccount(): void
     {
         $temp = $this->forgot();
 
-        // Staff sign in by password alone, so another account can't pick the same one.
-        $this->assertTrue((new \App\Models\UserModel())->staffPasswordInUse($temp, $this->otherId));
+        $this->signIn($temp, 'cashier2')->assertSessionHas('error', AuthController::WRONG);
+        $this->signIn($temp, 'nobody')->assertSessionHas('error', AuthController::WRONG);
+        $this->assertSame('0', (string) $this->user($this->staffId)->must_change_password, 'Nothing was used up.');
     }
 
     public function testAfterTheNewPasswordTheOwnerGetsOneEmailAndOneInAppAlert(): void
@@ -495,7 +532,7 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->assertSame('You locked the account of Cashier1 on ' . date('M j, Y, g:i A') . '.', $note->message);
 
         // The staff member is signed out at their next click.
-        $this->asStaff()->get('staff/account')->assertRedirectTo(site_url('login/staff'));
+        $this->asStaff()->get('staff/account')->assertRedirectTo(site_url('login'));
 
         // Accept no longer works, by link or in the app.
         $this->post("notification-action/{$id}/{$token}/accept")->assertDontSee('Confirmed.');
@@ -665,8 +702,6 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->ownerReset(['new_password' => 'short', 'confirm_password' => 'short'])->assertSessionHas('error');
         $this->ownerReset(['new_password' => 'NoDigitsHereAtAll', 'confirm_password' => 'NoDigitsHereAtAll'])->assertSessionHas('error');
         $this->ownerReset(['confirm_password' => 'Different123'])->assertSessionHas('error', 'Passwords do not match.');
-        $this->ownerReset(['new_password' => 'Cashier2Pass2', 'confirm_password' => 'Cashier2Pass2'])
-            ->assertSessionHas('error', "This password can't be used. Please choose a different one.");
         $this->ownerReset(['new_password' => 'Cashier1Pass1', 'confirm_password' => 'Cashier1Pass1'])
             ->assertSessionHas('error', "That is one of Cashier1's recent passwords. Choose a different one.");
 
@@ -687,7 +722,7 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->assertStringNotContainsString('OwnerChose123', json_encode($this->db->table('security_log')->get()->getResultArray()));
 
         // The staff member signs in with it and is sent to create their own.
-        $this->post('login/staff', ['password' => 'OwnerChose123'])->assertRedirectTo(site_url('/staff/set-password'));
+        $this->signIn('OwnerChose123')->assertRedirectTo(site_url('/staff/set-password'));
         $this->asStaff()->get('staff/dashboard')->assertRedirectTo(site_url('/staff/set-password'));
     }
 
@@ -695,8 +730,8 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
     {
         // Unlike Forgot password (where the old password keeps working beside the emailed one), an owner
         // reset may be for a compromised account: the old password must be dead the moment it is reset.
-        $this->post('login/staff', ['password' => 'Cashier1Pass1'])->assertRedirectTo(site_url('/staff/dashboard'));
-        (new LoginLockout())->reset('staff');
+        $this->signIn('Cashier1Pass1')->assertRedirectTo(site_url('/staff/dashboard'));
+        $this->resetLockout();
 
         $this->ownerReset();
 
@@ -704,15 +739,15 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->assertFalse(password_verify('Cashier1Pass1', $row->password_hash), 'the old password is gone from the account');
         $this->assertNull($row->temp_password_hash ?? null, 'and nothing keeps it alive beside the new one');
 
-        $this->post('login/staff', ['password' => 'Cashier1Pass1'])->assertSessionHas('error', 'Incorrect password. Please try again');
-        (new LoginLockout())->reset('staff');
+        $this->signIn('Cashier1Pass1')->assertSessionHas('error', AuthController::WRONG);
+        $this->resetLockout();
 
         // A session that was already open is confined to "Create new password" too.
         $this->asStaff()->get('staff/dashboard')->assertRedirectTo(site_url('/staff/set-password'));
         $this->asStaff()->get('staff/account')->assertRedirectTo(site_url('/staff/set-password'));
 
         // Only the owner's password gets in, and it leads straight to Create new password.
-        $this->post('login/staff', ['password' => 'OwnerChose123'])->assertRedirectTo(site_url('/staff/set-password'));
+        $this->signIn('OwnerChose123')->assertRedirectTo(site_url('/staff/set-password'));
     }
 
     public function testOwnerResetOfALockedAccountStillKillsTheOldPassword(): void
@@ -722,7 +757,7 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->ownerReset();
 
         $this->assertSame(1, (int) $this->user($this->staffId)->is_active);
-        $this->post('login/staff', ['password' => 'Cashier1Pass1'])->assertSessionHas('error', 'Incorrect password. Please try again');
+        $this->signIn('Cashier1Pass1')->assertSessionHas('error', AuthController::WRONG);
     }
 
     public function testOwnerResetEmailsTheStaffMemberWithoutThePassword(): void
@@ -752,13 +787,13 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
     public function testOwnerResetUnlocksALockedAccount(): void
     {
         $this->db->table('users')->where('user_id', $this->staffId)->update(['is_active' => 0]);
-        $this->post('login/staff', ['password' => 'Cashier1Pass1'])->assertSessionHas('error', 'Sorry, this account was locked by the Owner. Please contact the Owner.');
+        $this->signIn('Cashier1Pass1')->assertSessionHas('error', 'Sorry, this account was locked by the Owner. Please contact the Owner.');
 
         $this->ownerReset();
 
         $this->assertSame(1, (int) $this->user($this->staffId)->is_active);
-        (new LoginLockout())->reset('staff');
-        $this->post('login/staff', ['password' => 'OwnerChose123'])->assertRedirectTo(site_url('/staff/set-password'));
+        $this->resetLockout();
+        $this->signIn('OwnerChose123')->assertRedirectTo(site_url('/staff/set-password'));
     }
 
     public function testOwnerResetReplacesAWaitingForgotPassword(): void
@@ -769,7 +804,7 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->ownerReset();
 
         $this->assertNull($this->user($this->staffId)->temp_password_hash);
-        $this->post('login/staff', ['password' => $temp])->assertSessionHas('error', 'Incorrect password. Please try again');
+        $this->signIn($temp)->assertSessionHas('error', AuthController::WRONG);
     }
 
     public function testAfterAnOwnerResetTheStaffsNewPasswordAlertsTheOwnerInAppOnly(): void
@@ -836,7 +871,7 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $this->asOwner()->post('admin/settings/staff-accounts', ['full_name' => 'New Person', 'username' => 'newperson', 'contact_email' => 'juan@gmail.com']);
         $temp = $this->emailedPassword('juan@gmail.com');
 
-        $this->post('login/staff', ['password' => $temp])->assertRedirectTo(site_url('/staff/set-password'));
+        $this->signIn($temp, 'newperson')->assertRedirectTo(site_url('/staff/set-password'));
     }
 
     public function testExpiredInviteCanBeResent(): void
@@ -846,7 +881,7 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
         $old = $this->emailedPassword('juan@gmail.com');
 
         $this->db->table('users')->where('user_id', $id)->update(['temp_password_expires_at' => date('Y-m-d H:i:s', time() - 60)]);
-        $this->post('login/staff', ['password' => $old])->assertSessionHas('error', 'This temporary password has expired. Ask the owner for a new one.');
+        $this->signIn($old, 'newperson')->assertSessionHas('error', 'This temporary password has expired. Ask the owner for a new one.');
 
         $this->asOwner()->post("admin/settings/staff-accounts/resend/{$id}")->assertRedirectTo(site_url('/admin/settings?tab=accounts'));
 
@@ -879,10 +914,10 @@ final class StaffPasswordFlowTest extends CIUnitTestCase
 
     public function testStaffCannotUseTheOwnerRoutes(): void
     {
-        $this->asStaff()->post('admin/settings/staff-accounts', ['full_name' => 'X', 'username' => 'x', 'contact_email' => 'x@example.test'])->assertRedirectTo(site_url('login/admin'));
-        $this->asStaff()->post('admin/settings/staff-accounts/password/' . $this->otherId, [])->assertRedirectTo(site_url('login/admin'));
-        $this->asStaff()->post('admin/notifications/accept/1')->assertRedirectTo(site_url('login/admin'));
-        $this->asStaff()->post('admin/notifications/lock/1')->assertRedirectTo(site_url('login/admin'));
+        $this->asStaff()->post('admin/settings/staff-accounts', ['full_name' => 'X', 'username' => 'x', 'contact_email' => 'x@example.test'])->assertRedirectTo(site_url('login'));
+        $this->asStaff()->post('admin/settings/staff-accounts/password/' . $this->otherId, [])->assertRedirectTo(site_url('login'));
+        $this->asStaff()->post('admin/notifications/accept/1')->assertRedirectTo(site_url('login'));
+        $this->asStaff()->post('admin/notifications/lock/1')->assertRedirectTo(site_url('login'));
     }
 
     // ================================================================ the same form twice (OnceToken)

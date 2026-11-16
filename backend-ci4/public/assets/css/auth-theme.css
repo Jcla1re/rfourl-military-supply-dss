@@ -1,6 +1,10 @@
 /* public/assets/css/auth-theme.css */
 @import url('pw-toggle.css'); /* the show/hide password eye, shared with the app's own forms */
 
+/* The pages before signing in: the sign-in page, Forgot password and the staff "Set your password"
+   (the split layout, app/Views/auth/_layout.php), and the small cards of the email-link pages
+   (notification_action/*: .auth-body / .auth-card). */
+
 /* Corner-radius scale — same values as admin-theme.css (the login pages
    don't load that file). Keep the two in sync. */
 :root {
@@ -20,8 +24,14 @@
     --btn-focus-ring: var(--focus-ring);
     --btn-disabled-bg: #E8E5DC;
     --btn-disabled-text: #8A8D7E;
+
+    --brand-green: #4A6741;
+    --ink: #1F2617;
+    --muted: #5C6152;
+    --line: #D6D2C6;
 }
 
+/* ===== Email-link pages (notification_action/*): a small centred card ===== */
 body.auth-body {
     background: #f0ede6;
     min-height: 100vh;
@@ -29,14 +39,6 @@ body.auth-body {
     align-items: center;
     justify-content: center;
     font-family: 'Poppins', 'Segoe UI', sans-serif;
-}
-.auth-frame {
-    background: #fff;
-    border: 1px solid #333;
-    border-radius: var(--radius-card);
-    padding: 2rem;
-    max-width: 900px;
-    width: 100%;
 }
 .auth-card {
     background: #efe9df;
@@ -62,12 +64,17 @@ body.auth-body {
     width: 100%; padding: 0.6rem 0.75rem; margin-bottom: 1rem;
     border: 1px solid #ccc; border-radius: var(--radius-control); background: #fff;
 }
-.auth-card .forgot-link { text-align: right; font-size: 0.8rem; margin-top: -0.5rem; margin-bottom: 1rem; }
+.auth-error { color: #a33; text-align: center; font-size: 0.85rem; margin-top: 1rem; }
+.auth-hint { text-align: center; font-size: 0.85rem; color: #555; margin-bottom: 1.5rem; }
+.auth-back { text-align: center; font-size: 0.8rem; margin-top: 1rem; }
+.auth-back a { color: #666; }
+
+/* ===== The green button (both layouts) ===== */
 .btn-login {
     width: 100%; background: var(--btn-bg); color: var(--btn-text); border: none;
     padding: 0.8rem; border-radius: var(--radius-control); font-weight: var(--btn-font-weight);
     display: flex; align-items: center; justify-content: center; gap: 0;
-    cursor: pointer;
+    cursor: pointer; text-decoration: none; box-sizing: border-box;
     /* Same effect as the app's primary buttons (admin-theme.css "Motion polish"). */
     transition: transform 0.12s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, gap 0.2s ease;
 }
@@ -80,7 +87,7 @@ body.auth-body {
     transition: opacity 0.2s ease, width 0.2s ease, transform 0.2s ease, margin-left 0.2s ease;
 }
 .btn-login:hover:not(:disabled),
-.btn-login:focus-visible:not(:disabled) { background: var(--btn-bg-hover); gap: 6px; }
+.btn-login:focus-visible:not(:disabled) { background: var(--btn-bg-hover); gap: 6px; color: #fff; }
 .btn-login:hover:not(:disabled) .btn-login-arrow,
 .btn-login:focus-visible:not(:disabled) .btn-login-arrow {
     opacity: 0.9;
@@ -91,136 +98,48 @@ body.auth-body {
 .btn-login:active:not(:disabled) { background: var(--btn-bg-active); transform: translateY(0); }
 /* Keyboard focus ring: see "Keyboard focus" at the end of this file. */
 .btn-login:disabled { background: var(--btn-disabled-bg); color: var(--btn-disabled-text); cursor: not-allowed; }
-.auth-error { color: #a33; text-align: center; font-size: 0.85rem; margin-top: 1rem; }
-.auth-success { color: #2f6431; text-align: center; font-size: 0.85rem; margin-top: 1rem; }
-.auth-notice {
-    background: #fdf3d6; border: 1px solid #e6cf8a; color: #6b5510;
-    border-radius: var(--radius-control); padding: 0.6rem 0.8rem; font-size: 0.85rem; text-align: center; margin-bottom: 1rem;
-}
-.auth-hint { text-align: center; font-size: 0.85rem; color: #555; margin-bottom: 1.5rem; }
-.otp-boxes { display: flex; justify-content: center; gap: 0.6rem; margin: 1.5rem 0; }
-.otp-boxes input {
-    width: 3rem; height: 3.4rem; text-align: center; font-size: 1.4rem; font-weight: 700;
-    border: 1px solid #ccc; border-radius: var(--radius-control); background: #fff;
-}
-.auth-resend { text-align: center; font-size: 0.85rem; margin-top: 1rem; }
-.auth-resend button { border: none; background: none; color: #4a7a3a; font-weight: 700; cursor: pointer; padding: 0; }
-.auth-back { text-align: center; font-size: 0.8rem; margin-top: 1rem; }
-.auth-back a { color: #666; }
-.role-select-card {
-    background: #efe9df; border-radius: var(--radius-card); padding: 2rem;
-    max-width: 320px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem;
-}
-/* Sign-in page — full-screen sliding split layout */
-html, body.landing-body {
-    height: 100%;
-}
 
-.landing-body {
+/* Sign in: Poppins 16px semibold, white; 41px tall. */
+.split-body .btn-login,
+.auth-body .btn-login {
+    font-size: 16px; font-weight: 600; color: #fff;
+    height: 41px; padding-top: 0; padding-bottom: 0; line-height: 1;
+}
+.split-body .btn-login:disabled { color: var(--btn-disabled-text); }
+
+/* ===== The split layout: form on the left, store photo on the right ===== */
+.split-body {
     margin: 0;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    font-family: 'Poppins', 'Segoe UI', sans-serif;
-}
-
-.landing-shell {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
     background: #fff;
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    color: var(--ink);
 }
+.split-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    min-height: 100vh;
+}
+.split-form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 40px;
+    box-sizing: border-box;
+}
+.split-form-inner { width: 100%; max-width: 440px; }
 
-.dark-panel {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 50%;
-    height: 100%;
-    z-index: 2;
+.split-photo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 48px 80px 96px;
     box-sizing: border-box;
     color: #fff;
     background-image: linear-gradient(rgba(44, 58, 30, 0.82), rgba(44, 58, 30, 0.82)), url('/assets/img/landing-shop-bg.jpg');
     background-size: cover;
     background-position: center bottom;
-    transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
-}
-
-.dark-panel.slid {
-    transform: translateX(100%);
-}
-
-.content-panel {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 50%;
-    height: 100%;
-    z-index: 1;
-    box-sizing: border-box;
-    background: #fff;
-    transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
-}
-
-.content-panel.slid {
-    transform: translateX(-100%);
-}
-
-.no-transition {
-    transition: none !important;
-}
-
-/* Crossfade: views in a panel stack on top of each other (so the layout
-   doesn't jump) and fade between each other instead of an instant swap.
-   The side being covered fades out quickly; the side being revealed
-   fades in a bit slower, after a short delay, so it appears once the
-   panel has mostly slid into place rather than mid-slide. visibility is
-   included in the transition (at 0 duration, timed to the relevant edge)
-   so hidden content can't be tabbed into. */
-.panel-content {
-    position: absolute;
-    top: 50%;
-    left: 40px;
-    right: 40px;
-    max-width: 480px;
-    margin: 0 auto;
-    transform: translateY(-50%);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.25s ease, visibility 0s linear 0.25s;
-}
-
-.panel-content.is-active {
-    opacity: 1;
-    visibility: visible;
-    transition: opacity 0.4s ease 0.32s, visibility 0s linear 0.32s;
-}
-
-.dark-view {
-    position: absolute;
-    top: 50%;
-    left: 80px;
-    right: 40px;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.25s ease, visibility 0s linear 0.25s;
-}
-
-.dark-view.is-active {
-    opacity: 1;
-    visibility: visible;
-    transition: opacity 0.4s ease 0.32s, visibility 0s linear 0.32s;
-}
-
-.panel-content h2 {
-    font-size: 2.2rem;
-    font-weight: 800;
-    margin: 0 0 6px;
-    color: #1c1c1c;
 }
 
 .landing-logo-box {
@@ -232,213 +151,95 @@ html, body.landing-body {
     align-items: center;
     justify-content: center;
     padding: 8px;
+    box-sizing: border-box;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     margin-bottom: 28px;
 }
-
-.landing-logo-box img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    border-radius: 10px;
-}
-
+.landing-logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; }
 .landing-brand h1 {
     font-size: 2.4rem;
     font-weight: 800;
+    letter-spacing: -0.02em;
     line-height: 1.15;
     margin: 0 0 14px;
 }
-
 .landing-tagline {
     font-size: 1.05rem;
     color: rgba(255, 255, 255, 0.85);
-    max-width: 560px; /* one line; balance (below) only kicks in on narrow screens */
+    max-width: 560px;
     margin: 0;
+    text-wrap: balance;
 }
-
 .landing-footer-line {
     position: absolute;
     left: 80px;
+    right: 40px;
     bottom: 40px;
     font-size: 13px;
     color: #B9C4AD;
 }
 
-.landing-subtitle {
-    color: #666;
-    margin: 0 0 28px;
-}
+/* Only on narrow screens, where the photo is hidden: the logo and name above the form. */
+.split-mobile-brand { display: none; align-items: center; gap: 10px; margin-bottom: 28px; font-weight: 700; color: var(--brand-green); }
+.split-mobile-brand img { width: 40px; height: 40px; border-radius: var(--radius-icon); object-fit: contain; }
 
-.role-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.role-card {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 16px;
-    padding: 18px 20px;
-    border: 1px solid #e2e0d8;
-    border-radius: var(--radius-card);
-    background: none;
-    font: inherit;
-    text-align: left;
-    text-decoration: none;
-    color: inherit;
-    cursor: pointer;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-
-/* Hover and keyboard focus look the same: the icon tile turns solid green so it doesn't blend
-   into the light green card. No movement. */
-.role-card:hover,
-.role-card:focus-visible {
-    border-color: #9DBF8F;
-    background: #eef5ea;
-}
-/* Keyboard focus: the shared green ring, instead of the browser's dark outline. */
-.role-card:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
-}
-.role-card:hover .role-icon,
-.role-card:focus-visible .role-icon {
-    background: #4A6741;
-    color: #ffffff;
-}
-
-.role-icon {
-    width: 46px;
-    height: 46px;
-    flex-shrink: 0;
-    border-radius: var(--radius-icon);
-    background: #e9f1e4;
-    color: #4b6a3f;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.role-text {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.role-text strong {
-    font-size: 1.05rem;
+/* Titles and text */
+.split-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 6px;
     color: #1c1c1c;
 }
+.split-sub { color: var(--muted); margin: 0 0 24px; line-height: 1.5; }
 
-.role-text span {
-    font-size: 0.85rem;
-    color: #666;
-    line-height: 1.4;
-}
-
-.role-arrow {
-    color: #999;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-}
-
-.role-card:hover .role-arrow,
-.role-card:focus-visible .role-arrow {
-    color: #4A6741;
-}
-
-.back-to-roles {
-    background: none;
-    border: none;
-    padding: 0;
-    margin-bottom: 20px;
-    color: #666;
-    font-size: 0.85rem;
-    cursor: pointer;
-    display: flex;
-    width: fit-content;
-    align-items: center;
-    gap: 6px;
-}
-
-.back-to-roles:hover {
-    color: #4b6a3f;
-}
-
-.landing-logo-box-sm {
-    width: 90px;
-    height: 90px;
-    margin-bottom: 24px;
-}
-
-.signing-in-label {
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #B9C4AD;
-    margin-bottom: 6px;
-}
-
-.signing-in-role {
-    font-size: 2.6rem;
-    font-weight: 800;
-    color: #fff;
-    margin: 0 0 14px;
-}
-
-.signing-in-desc {
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.8);
-    max-width: 560px; /* each role description fits on one line; balance (below) only kicks in on narrow screens */
-    margin: 0 0 28px;
-}
-
-/* Login form views */
-.login-form-view label {
-    font-size: 0.85rem;
-    margin-bottom: 0.25rem;
-    display: block;
-    color: #444;
-}
-
-.portal-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #e9f1e4;
-    color: #355e3b;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 6px 14px;
-    border-radius: var(--radius-pill);
-    margin-bottom: 20px;
-}
-
-.form-subtitle {
-    color: #666;
-    margin: 0 0 28px;
-}
-
-.field-group {
+/* "← Back to sign in" and the 3-step progress bar (Forgot password) */
+.split-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 500; color: var(--brand-green); text-decoration: none;
     margin-bottom: 18px;
 }
+.split-back:hover, .split-back:focus-visible { text-decoration: underline; }
+.split-steps {
+    list-style: none; padding: 0; margin: 0 0 28px;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+.split-steps li { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 500; color: #8A8D7E; }
+.split-step-bar { display: block; height: 4px; border-radius: var(--radius-pill); background: #E8E5DC; }
+.split-steps li.is-done .split-step-bar,
+.split-steps li.is-current .split-step-bar { background: var(--btn-bg); }
+.split-steps li.is-current { color: var(--brand-green); font-weight: 600; }
+.split-steps li.is-done { color: var(--muted); }
 
-.input-icon-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
+/* Message boxes above the fields: red (wrong password, locked), amber (idle notice), green. */
+.auth-alert,
+.split-body .auth-notice {
+    border-radius: var(--radius-control);
+    padding: 0.7rem 0.9rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    margin: 0 0 18px;
+    text-align: left;
+}
+.auth-alert.is-error { background: #FBEAE8; border: 1px solid #EBB9B3; color: #8A1F16; }
+.auth-alert.is-success { background: #E4F2E0; border: 1px solid #B8D9AE; color: #2f6431; }
+.auth-notice { background: #fdf3d6; border: 1px solid #e6cf8a; color: #6b5510; border-radius: var(--radius-control); padding: 0.6rem 0.8rem; font-size: 0.85rem; margin-bottom: 1rem; }
+.auth-tries { margin-top: 4px; font-size: 0.8rem; font-weight: 500; opacity: 0.9; }
+.split-body .idle-test-mode { margin: 0 0 18px !important; max-width: none !important; }
+.auth-use-suggestion {
+    margin-left: 8px; border: 1px solid currentColor; background: transparent; color: inherit;
+    border-radius: var(--radius-icon); padding: 2px 10px; font-size: 13px; cursor: pointer;
+}
+.split-body .auth-signed-in {
+    margin: 0 0 18px; padding: 0.6rem 0.9rem; border-radius: var(--radius-control);
+    background: #F4F2EC; border: 1px solid #E8E5DC; font-size: 14px; color: #3A4030;
 }
 
+/* Fields */
+.split-fields { margin: 0; }
+.field-group { margin-bottom: 18px; }
+.field-group label { display: block; font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 7px; }
+.input-icon-wrap { position: relative; display: flex; align-items: center; }
 .input-icon-wrap > i {
     position: absolute;
     left: 14px;
@@ -446,54 +247,83 @@ html, body.landing-body {
     font-size: 1rem;
     pointer-events: none;
 }
-
 .input-icon-wrap input {
     width: 100%;
-    padding: 0.75rem 0.85rem 0.75rem 2.6rem;
-    border: 1px solid #D6D2C6;
+    height: 41px;
+    padding: 0 0.85rem 0 2.6rem;
+    border: 1px solid var(--line);
     border-radius: var(--radius-control);
     background: #fff;
     box-sizing: border-box;
+    font-size: 15px;
+    color: var(--ink);
 }
-
 /* The password text stops before the eye button (5px gap + 32px button + 7px). */
-.input-icon-wrap:has(.pw-toggle) input {
-    padding-right: 44px;
-}
-
-/* Set / reset password: the same eye in the plain .auth-card fields. The wrapper takes the
-   field's bottom margin so the button stays centred on the input. */
-.pw-field {
-    position: relative;
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-.auth-card .pw-field input {
-    margin-bottom: 0;
-    padding-right: 44px;
-}
-
+.input-icon-wrap:has(.pw-toggle) input { padding-right: 44px; }
 /* The eye button itself and its autofill hooks: pw-toggle.css (imported above). */
 
-.form-row-between {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    margin: 4px 0 20px;
+.form-row-between { display: flex; align-items: center; justify-content: flex-end; margin: 4px 0 20px; }
+/* Forgot password?: 14px medium, green, underline only on hover / keyboard focus. */
+.forgot-link-inline { font-size: 14px; font-weight: 500; color: var(--brand-green); text-decoration: none; }
+.forgot-link-inline:hover,
+.forgot-link-inline:focus-visible { color: var(--brand-green); text-decoration: underline; }
+
+/* Step 2: the two small cards, the six code boxes and Resend */
+.split-cards { display: grid; gap: 10px; margin: 0 0 22px; }
+.split-card {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 14px; border: 1px solid #E8E5DC; border-radius: var(--radius-control); background: #FAF9F5;
+}
+.split-card i { flex-shrink: 0; width: 32px; height: 32px; border-radius: var(--radius-icon); background: #e9f1e4; color: var(--brand-green); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.split-card p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+.split-card strong { color: var(--ink); font-weight: 600; }
+.split-card a { color: var(--brand-green); font-weight: 500; }
+
+.otp-boxes { border: 0; padding: 0; margin: 0 0 20px; display: flex; justify-content: space-between; gap: 8px; }
+.otp-boxes legend { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 7px; padding: 0; }
+.otp-boxes input {
+    width: 100%; max-width: 56px; height: 56px; box-sizing: border-box;
+    text-align: center; font-size: 1.4rem; font-weight: 700; color: var(--ink);
+    border: 1px solid var(--line); border-radius: var(--radius-control); background: #fff;
+}
+.split-resend { margin-top: 16px; text-align: center; font-size: 14px; color: var(--muted); }
+.split-resend [hidden] { display: none; }
+.split-resend button,
+.split-signout button {
+    border: none; background: none; padding: 0; cursor: pointer;
+    font: inherit; font-weight: 600; color: var(--brand-green);
+}
+.split-resend button:hover, .split-resend button:focus-visible,
+.split-signout button:hover, .split-signout button:focus-visible { text-decoration: underline; }
+.split-signout { margin-top: 18px; text-align: center; font-size: 14px; }
+
+/* Step 3 and Set your password: the rule checks */
+.pw-rules { list-style: none; padding: 0; margin: -4px 0 22px; display: grid; gap: 6px; font-size: 13.5px; color: var(--muted); }
+.pw-rules li { display: flex; align-items: center; gap: 8px; }
+.pw-rules li i { color: #C9C5B8; transition: color 0.15s ease; }
+.pw-rules li.is-met { color: #2f6431; }
+.pw-rules li.is-met i { color: var(--btn-bg); }
+.pw-rules li.is-server i { color: #8A8D7E; }
+
+/* Password changed */
+.split-done { text-align: center; }
+.split-done-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 64px; height: 64px; border-radius: 50%; margin-bottom: 18px;
+    background: #e4f2e0; color: #2f6431; font-size: 2rem;
 }
 
-.forgot-link-inline {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #1c1c1c;
+/* Narrow screens: the form only, with the logo above it. */
+@media (max-width: 860px) {
+    .split-shell { grid-template-columns: 1fr; }
+    .split-photo { display: none; }
+    .split-form { align-items: flex-start; padding: 32px 16px; }
+    .split-mobile-brand { display: flex; }
+    .split-title { font-size: 1.8rem; }
+    .otp-boxes { gap: 6px; }
+    .otp-boxes input { height: 50px; }
 }
 
-.auth-tries { margin-top: 4px; font-size: 0.78rem; font-weight: 500; opacity: 0.9; }
-
-.forgot-link-inline:hover {
-    color: #4b6a3f;
-}
 /* Hide the browser's built-in password reveal/clear buttons (Edge/IE) —
    the password field already has its own eye toggle. */
 input[type="password"]::-ms-reveal,
@@ -501,87 +331,52 @@ input[type="password"]::-ms-clear {
     display: none;
 }
 
-/* ===== Login pages: app fonts and form typography =====
-   Poppins throughout (each page loads it). Controls don't inherit fonts by default. */
-.landing-body button,
-.landing-body input,
-.landing-body select,
-.landing-body textarea,
+/* ===== Fonts: Poppins throughout. Controls don't inherit fonts by default. ===== */
+.split-body button,
+.split-body input,
 .auth-body button,
 .auth-body input,
 .auth-body select,
 .auth-body textarea { font-family: inherit; }
 
-/* Big titles: same as the app's page titles (e.g. "Inventory"): Poppins 800, -0.02em. */
-.landing-brand h1,
-.panel-content h2,
-.signing-in-role { font-family: 'Poppins', 'Segoe UI', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
-
-/* No lonely last word in the photo-panel descriptions. */
-.landing-tagline,
-.signing-in-desc { text-wrap: balance; }
-
-/* Sign in: Poppins 16px semibold, white; same 41px height as before. */
-.landing-body .btn-login,
-.auth-body .btn-login {
-    font-size: 16px; font-weight: 600; color: #fff;
-    height: 41px; padding-top: 0; padding-bottom: 0; line-height: 1;
-}
-
-/* Labels: 14px semibold, 7px above the input. */
-.login-form-view label { font-size: 14px; font-weight: 600; color: #1F2617; margin-bottom: 7px; }
-
-/* Inputs: Poppins 15px; stay white when the browser autofills them. */
-.input-icon-wrap input { font-size: 15px; color: #1F2617; height: 41px; padding-top: 0; padding-bottom: 0; } /* same 41px as before */
+/* Inputs stay white when the browser autofills them. */
 .input-icon-wrap input:-webkit-autofill,
 .input-icon-wrap input:-webkit-autofill:hover,
 .input-icon-wrap input:-webkit-autofill:focus,
+.otp-boxes input:-webkit-autofill,
 .auth-card input:-webkit-autofill,
 .auth-card input:-webkit-autofill:hover,
 .auth-card input:-webkit-autofill:focus {
     -webkit-box-shadow: 0 0 0 1000px #fff inset;
     box-shadow: 0 0 0 1000px #fff inset;
-    -webkit-text-fill-color: #1F2617;
-    caret-color: #1F2617;
+    -webkit-text-fill-color: var(--ink);
+    caret-color: var(--ink);
     transition: background-color 9999s ease-out 0s;
 }
 .input-icon-wrap input:-webkit-autofill::first-line,
 .auth-card input:-webkit-autofill::first-line { font-family: 'Poppins', 'Segoe UI', sans-serif; font-size: 15px; }
 
-/* Forgot password?: 14px medium, green, underline only on hover / keyboard focus. */
-.forgot-link-inline { font-size: 14px; font-weight: 500; color: #4A6741; text-decoration: none; }
-.forgot-link-inline:hover,
-.forgot-link-inline:focus-visible { color: #4A6741; text-decoration: underline; }
-
-/* ===== Forgot password / Code verification / Reset password (and Staff "Can't access") =====
-   Same typography as the sign-in pages. Sizes stay as before (inputs 36px, button 41px). */
+/* ===== Email-link cards: same typography as the sign-in page ===== */
 .auth-card h2 { font-family: 'Poppins', 'Segoe UI', sans-serif; font-weight: 800; letter-spacing: -0.02em; color: #1c1c1c; }
-.auth-card label { font-size: 14px; font-weight: 600; color: #1F2617; margin-bottom: 7px; }
-/* Inputs fill the card's inner width exactly (padding and border counted inside), 41px tall like
-   the sign-in pages. */
-.auth-card input { font-size: 15px; color: #1F2617; box-sizing: border-box; width: 100%; height: 41px; padding-top: 0; padding-bottom: 0; }
-/* All password-flow cards share the Forgot password card's width: 420px content + 40px padding
-   each side = 500px (narrower only on very small screens). */
+.auth-card label { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 7px; }
+.auth-card input { font-size: 15px; color: var(--ink); box-sizing: border-box; width: 100%; height: 41px; padding-top: 0; padding-bottom: 0; }
 .auth-body .auth-card { width: 420px; max-width: calc(100vw - 112px); }
-.auth-back a,
-.auth-resend button { font-size: 14px; font-weight: 500; color: #4A6741; text-decoration: none; }
+.auth-back a { font-size: 14px; font-weight: 500; color: var(--brand-green); text-decoration: none; }
 .auth-back a:hover,
-.auth-back a:focus-visible,
-.auth-resend button:hover,
-.auth-resend button:focus-visible { color: #4A6741; text-decoration: underline; }
+.auth-back a:focus-visible { color: var(--brand-green); text-decoration: underline; }
 
 /* ===== Keyboard focus: the same style as the app (admin-theme.css isn't loaded on these pages) =====
    No dark outline: a soft green ring, and a green border where the element has one. ":not(#focus-boost)"
    only raises the priority (no element has that id), so these win over the older outlines above. */
-:root :focus-visible:not(#focus-boost):not(.role-card) {
+:root :focus-visible:not(#focus-boost) {
     outline: none;
-    border-color: #4A6741;
+    border-color: var(--brand-green);
     box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
 }
 /* Text inputs: green on mouse focus too (like the item form). */
 :root input:not([type="checkbox"]):not([type="radio"]):focus:not(#focus-boost) {
     outline: none;
-    border-color: #4A6741;
+    border-color: var(--brand-green);
     box-shadow: 0 0 0 3px rgba(74, 103, 65, .18);
 }
 /* Autofilled (saved password) inputs keep their white fill under the ring, so the browser's

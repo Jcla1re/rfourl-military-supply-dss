@@ -187,7 +187,7 @@ final class ReorderAlertsPageTest extends CIUnitTestCase
     {
         $this->db->table('users')->where('user_id', $this->ownerId)->update(['password_hash' => password_hash('Secret#123', PASSWORD_DEFAULT), 'last_login' => '2026-11-05 08:30:00']);
 
-        $this->post('login/admin', ['username' => 'owner1', 'password' => 'Secret#123'])->assertRedirectTo('/admin/dashboard');
+        $this->post('login', ['username' => 'owner1', 'password' => 'Secret#123'])->assertRedirectTo('/admin/dashboard');
 
         $this->assertSame('2026-11-05 08:30:00', $_SESSION['previous_login'] ?? null);
         $this->assertNotSame('2026-11-05 08:30:00', $this->db->table('users')->where('user_id', $this->ownerId)->get()->getRow()->last_login);

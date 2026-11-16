@@ -2,8 +2,6 @@
 
 namespace App\Libraries;
 
-use App\Models\UserModel;
-
 /**
  * The last passwords a staff member chose for themselves, so they can't go straight back to one.
  * Only hashes are stored, and only passwords the person picked: an owner-issued temporary password
@@ -76,13 +74,11 @@ class PasswordHistory
     }
 
     /**
-     * An easy-to-type password such as "Mango-Tiger47!" that passes the password rules and is not
-     * in use by another staff account. Never log or store the result.
+     * An easy-to-type password such as "Mango-Tiger47!" that passes the password rules. Never log or
+     * store the result. ($userId is kept for the callers; it no longer changes anything.)
      */
     public static function suggest(?int $userId = null): string
     {
-        $users = new UserModel();
-
         for ($i = 0; $i < 50; $i++) {
             $first  = self::WORDS[random_int(0, count(self::WORDS) - 1)];
             $second = self::WORDS[random_int(0, count(self::WORDS) - 1)];
@@ -92,7 +88,7 @@ class PasswordHistory
 
             $candidate = $first . '-' . $second . random_int(10, 99) . self::SYMBOLS[random_int(0, count(self::SYMBOLS) - 1)];
 
-            if (PasswordPolicy::check($candidate) === null && ! $users->staffPasswordInUse($candidate, $userId)) {
+            if (PasswordPolicy::check($candidate) === null) {
                 return $candidate;
             }
         }

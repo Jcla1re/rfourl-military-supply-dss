@@ -75,7 +75,7 @@ final class IdleWatcherTest extends CIUnitTestCase
     {
         $this->db->table('users')->where('user_id', $this->ownerId)->update(['password_hash' => password_hash('Owner-Pass-1', PASSWORD_DEFAULT)]);
 
-        return $this->withSession($session)->post('login/admin', ['username' => 'owner1', 'password' => 'Owner-Pass-1']);
+        return $this->withSession($session)->post('login', ['username' => 'owner1', 'password' => 'Owner-Pass-1']);
     }
 
     // ---------------------------------------------------------------- what the layouts give the watcher
@@ -84,9 +84,9 @@ final class IdleWatcherTest extends CIUnitTestCase
     {
         $supplier = $this->db->table('users')->where('username', 'tgi')->get()->getRow();
         $pages    = [
-            'Admin'    => [$this->owner(), 'admin/inventory', 'login/admin', $this->ownerId],
-            'Staff'    => [['isLoggedIn' => true, 'role' => 'Staff', 'user_id' => $this->staffId, 'username' => 'staff1', 'full_name' => 'Staff', 'supplier_id' => null, 'last_activity' => time()], 'staff/inventory', 'login/staff', $this->staffId],
-            'Supplier' => [['isLoggedIn' => true, 'role' => 'Supplier', 'user_id' => (int) $supplier->user_id, 'username' => 'tgi', 'full_name' => 'Tactical Gear', 'supplier_id' => 'SUP-001', 'last_activity' => time()], 'supplier/profile', 'login/supplier', (int) $supplier->user_id],
+            'Admin'    => [$this->owner(), 'admin/inventory', 'login', $this->ownerId],
+            'Staff'    => [['isLoggedIn' => true, 'role' => 'Staff', 'user_id' => $this->staffId, 'username' => 'staff1', 'full_name' => 'Staff', 'supplier_id' => null, 'last_activity' => time()], 'staff/inventory', 'login', $this->staffId],
+            'Supplier' => [['isLoggedIn' => true, 'role' => 'Supplier', 'user_id' => (int) $supplier->user_id, 'username' => 'tgi', 'full_name' => 'Tactical Gear', 'supplier_id' => 'SUP-001', 'last_activity' => time()], 'supplier/profile', 'login', (int) $supplier->user_id],
         ];
 
         foreach ($pages as $role => [$session, $url, $login, $userId]) {

@@ -1,73 +1,57 @@
 <?php
-// Shown after signing in with a temporary password: the only page a staff member can open until they set their own.
+// Shown after signing in with a temporary password: the only page a staff member can open until they
+// set their own. Same split layout as the sign-in page.
 $errorMsg   = session()->getFlashdata('error');
 $suggestion = session()->getFlashdata('password_suggestion');
-$invite   = ($kind ?? '') === 'invite';
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <link rel="icon" href="/favicon.ico?v=4" sizes="32x32">
-    <link rel="icon" href="/favicon.svg?v=4" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/assets/img/favicon/apple-touch-icon.png?v=4">
-    <meta name="apple-mobile-web-app-title" content="RfourL MS" />
-    <link rel="manifest" href="/assets/img/favicon/site.webmanifest?v=4">
-    <title>Set Your Password | RfourL</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous" rel="stylesheet">
-    <link href="/assets/css/auth-theme.css" rel="stylesheet">
-<?= view('partials/demo_head') ?>
-</head>
-<body class="auth-body">
-<?= view('partials/demo_banner') ?>
-    <div class="auth-card">
-        <h2>Set your password</h2>
-        <?php if (! empty($fullName)): ?>
-            <p class="auth-signed-in">Signed in as <strong><?= esc($fullName) ?></strong> (@<?= esc($username ?? '') ?>)</p>
-        <?php endif; ?>
-        <p class="auth-hint"><?= $invite ? 'Welcome! Choose your own password to continue.' : 'Choose your own password to continue.' ?></p>
+<?= $this->extend('auth/_layout') ?>
 
-        <?php if ($errorMsg): ?>
-            <div class="auth-error">
-                <?= esc((string) $errorMsg) ?>
-                <?php if (! empty($suggestion)): ?>
-                    <button type="button" class="btn btn-sm btn-outline-dark" id="useSuggestion" data-value="<?= esc($suggestion, 'attr') ?>" style="margin-left:8px;">Use this</button>
+<?= $this->section('title') ?>Set Your Password<?= $this->endSection() ?>
+
+<?= $this->section('content') ?>
+                <h2 class="split-title">Set your password</h2>
+                <p class="split-sub">You signed in with a temporary password. Choose your own to continue.</p>
+
+                <?php if (! empty($fullName)): ?>
+                    <div class="auth-signed-in">Signed in as <strong><?= esc($fullName) ?></strong> (@<?= esc($username ?? '') ?>)</div>
                 <?php endif; ?>
-            </div>
-        <?php endif; ?>
 
-        <form action="<?= site_url('staff/set-password') ?>" method="post">
-            <?= csrf_field() ?>
-            <label>New password:</label>
-            <div class="pw-field">
-                <input type="password" name="new_password" minlength="8" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" pattern="(?=.*[A-Za-z])(?=.*\d).{8,}" title="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" required autofocus autocomplete="new-password">
-                <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" tabindex="-1"><i class="bi bi-eye"></i></button>
-            </div>
-            <label>Confirm new password:</label>
-            <div class="pw-field">
-                <input type="password" name="confirm_password" minlength="8" required autocomplete="new-password">
-                <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" tabindex="-1"><i class="bi bi-eye"></i></button>
-            </div>
-            <button type="submit" class="btn-login">Save password</button>
-        </form>
+                <?php if ($errorMsg): ?>
+                    <div class="auth-alert is-error" role="alert">
+                        <?= esc((string) $errorMsg) ?>
+                        <?php if (! empty($suggestion)): ?>
+                            <button type="button" class="auth-use-suggestion" id="useSuggestion" data-value="<?= esc($suggestion, 'attr') ?>">Use this</button>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
 
-        <form method="post" action="<?= site_url('logout') ?>" class="auth-back" data-logout>
-            <?= csrf_field() ?>
-            <button type="submit" class="btn btn-link p-0">&larr; Sign out</button>
-        </form>
-    </div>
-    <script src="/assets/js/pw-toggle.js"></script>
+                <form action="<?= site_url('staff/set-password') ?>" method="post" class="split-fields">
+                    <?= csrf_field() ?>
+<?= view('auth/_password_fields', ['serverRule' => 'Not the temporary password or one of your last 3 (checked when you save)']) ?>
+                    <button type="submit" class="btn-login">
+                        <span>Save and continue</span> <i class="bi bi-arrow-right btn-login-arrow" aria-hidden="true"></i>
+                    </button>
+                </form>
+
+                <form method="post" action="<?= site_url('logout') ?>" class="split-signout" data-logout>
+                    <?= csrf_field() ?>
+                    <button type="submit"><i class="bi bi-arrow-left" aria-hidden="true"></i> Sign out</button>
+                </form>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+    <script src="/assets/js/auth-forms.js"></script>
     <script>
     // "Use this": fills the suggested password into both fields (no reload).
     (function () {
         var btn = document.getElementById('useSuggestion');
         if (!btn) return;
         btn.addEventListener('click', function () {
-            document.querySelectorAll('input[name=new_password], input[name=confirm_password]').forEach(function (i) { i.value = btn.dataset.value; });
+            document.querySelectorAll('input[name=new_password], input[name=confirm_password]').forEach(function (i) {
+                i.value = btn.dataset.value;
+                i.dispatchEvent(new Event('input', { bubbles: true }));
+            });
         });
     })();
     </script>
-</body>
-</html>
+<?= $this->endSection() ?>

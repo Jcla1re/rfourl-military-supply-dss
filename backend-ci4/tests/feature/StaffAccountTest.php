@@ -130,12 +130,13 @@ final class StaffAccountTest extends CIUnitTestCase
         $this->assertTrue(password_verify('Cashier1Pass1', $this->hashOf($this->staffId)));
     }
 
-    public function testPasswordUsedByAnotherStaffAccountIsRefused(): void
+    public function testAPasswordAnotherStaffMemberAlsoUsesIsAllowedNow(): void
     {
-        $result = $this->change('Cashier1Pass1', 'Cashier2Pass2');
+        // Staff sign in with a username now, so two of them may have the same password (and nobody is told).
+        $this->change('Cashier1Pass1', 'Cashier2Pass2');
 
-        $result->assertSessionHas('error', self::IN_USE);
-        $this->assertTrue(password_verify('Cashier1Pass1', $this->hashOf($this->staffId)));
+        $this->assertNotSame(self::IN_USE, $_SESSION['error'] ?? null);
+        $this->assertTrue(password_verify('Cashier2Pass2', $this->hashOf($this->staffId)));
     }
 
     public function testNewPasswordMustDifferFromCurrent(): void
@@ -176,15 +177,15 @@ final class StaffAccountTest extends CIUnitTestCase
 
     public function testStaffCannotReachAdminOrSupplierProfileRoutes(): void
     {
-        $this->asStaff()->get('admin/settings')->assertRedirectTo(site_url('login/admin'));
-        $this->asStaff()->post('admin/settings/owner-password', [])->assertRedirectTo(site_url('login/admin'));
-        $this->asStaff()->get('supplier/profile')->assertRedirectTo(site_url('login/supplier'));
-        $this->asStaff()->post('supplier/profile/password', [])->assertRedirectTo(site_url('login/supplier'));
+        $this->asStaff()->get('admin/settings')->assertRedirectTo(site_url('login'));
+        $this->asStaff()->post('admin/settings/owner-password', [])->assertRedirectTo(site_url('login'));
+        $this->asStaff()->get('supplier/profile')->assertRedirectTo(site_url('login'));
+        $this->asStaff()->post('supplier/profile/password', [])->assertRedirectTo(site_url('login'));
     }
 
     public function testOwnerCannotReachStaffAccountPage(): void
     {
-        $this->asOwner()->get('staff/account')->assertRedirectTo(site_url('login/staff'));
+        $this->asOwner()->get('staff/account')->assertRedirectTo(site_url('login'));
     }
 
     public function testOwnerPasswordChangeReturnsToMyProfileTab(): void

@@ -91,16 +91,16 @@ final class HelpPagesTest extends CIUnitTestCase
 
     public function testEachHelpPageIsSelfContainedPerRole(): void
     {
-        $this->actingAs('Staff', 2)->get('admin/help')->assertRedirectTo(site_url('login/admin'));
-        $this->actingAs('Staff', 2)->get('supplier/help')->assertRedirectTo(site_url('login/supplier'));
-        $this->actingAs('Admin', 1)->get('staff/help')->assertRedirectTo(site_url('login/staff'));
+        $this->actingAs('Staff', 2)->get('admin/help')->assertRedirectTo(site_url('login'));
+        $this->actingAs('Staff', 2)->get('supplier/help')->assertRedirectTo(site_url('login'));
+        $this->actingAs('Admin', 1)->get('staff/help')->assertRedirectTo(site_url('login'));
     }
 
     public function testLoggedOutVisitorsAreSentToLogin(): void
     {
-        $this->get('admin/help')->assertRedirectTo(site_url('login/admin'));
-        $this->get('staff/help')->assertRedirectTo(site_url('login/staff'));
-        $this->get('supplier/help')->assertRedirectTo(site_url('login/supplier'));
+        $this->get('admin/help')->assertRedirectTo(site_url('login'));
+        $this->get('staff/help')->assertRedirectTo(site_url('login'));
+        $this->get('supplier/help')->assertRedirectTo(site_url('login'));
     }
 
     public function testEveryGuideHasThreeToSevenSteps(): void

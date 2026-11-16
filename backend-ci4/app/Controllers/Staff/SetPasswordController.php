@@ -37,7 +37,7 @@ class SetPasswordController extends BaseController
             return $this->expired($user);
         }
 
-        // Staff sign in by password alone: say whose account the temporary password opened.
+        // Say whose account the temporary password opened.
         return view('staff/set_password', [
             'kind'     => $user['temp_password_kind'],
             'fullName' => (string) $user['full_name'],
@@ -81,11 +81,6 @@ class SetPasswordController extends BaseController
                 ->with('error', "You can't use your old password. Try something new, like: {$suggestion}")
                 ->with('password_suggestion', $suggestion);
         }
-        // Staff sign in by password alone, so it must be unique (never say whose it is).
-        if ($this->users->staffPasswordInUse($newPass, (int) $user['user_id'])) {
-            return redirect()->to($back)->with('error', "This password can't be used. Please choose a different one.");
-        }
-
         (new StaffPasswordReset())->complete($user, $newPass);
         AttemptStore::forget('staff_set_pw_' . $user['user_id']);
         session()->regenerate(true);
@@ -106,6 +101,6 @@ class SetPasswordController extends BaseController
         SecurityLogModel::log('login_blocked_temp_expired', $user);
         session()->remove(['isLoggedIn', 'user_id', 'role', 'username', 'full_name', 'last_activity']);
 
-        return redirect()->to('/login/staff')->with('error', 'This temporary password has expired. Ask the owner for a new one.');
+        return redirect()->to('/login')->with('error', 'This temporary password has expired. Ask the owner for a new one.');
     }
 }

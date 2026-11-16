@@ -260,6 +260,6 @@ final class TrendAnalysisPdfTest extends CIUnitTestCase
 
     public function testOnlyTheOwnerCanOpenIt(): void
     {
-        $this->get('admin/trend-analysis/pdf')->assertRedirectTo(site_url('login/admin'));
+        $this->get('admin/trend-analysis/pdf')->assertRedirectTo(site_url('login'));
     }
 }

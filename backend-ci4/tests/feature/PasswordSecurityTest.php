@@ -1,5 +1,6 @@
 <?php
 
+use App\Controllers\AuthController;
 use App\Libraries\AttemptStore;
 use App\Libraries\EmailNotifier;
 use App\Libraries\LoginLockout;
@@ -129,10 +130,12 @@ final class PasswordSecurityTest extends CIUnitTestCase
     private function clearLimits(): void
     {
         $lockout = new LoginLockout();
-        foreach (['admin', 'staff', 'supplier'] as $role) {
-            $lockout->reset($role);
+        foreach (['owner1', 'cashier1', 'tgi', 'owner_renamed', 'nobody'] as $username) {
+            $lockout->reset($username);
+            AttemptStore::forget('forgot_ident_' . md5($username));
         }
-        AttemptStore::forget('staff_forgot_' . md5('0.0.0.0'));
+        $lockout->resetIp();
+        AttemptStore::forget('forgot_ip_' . md5('0.0.0.0'));
         foreach ([1, 2, 3, 4, 5, 6] as $id) {
             AttemptStore::forget('owner_username_change_' . $id);
             AttemptStore::forget('staff_forgot_acct_' . $id);
@@ -240,16 +243,16 @@ final class PasswordSecurityTest extends CIUnitTestCase
         $this->assertCount(2, $mails, 'Only the staff member gets it.');
         $this->assertSame([], $this->sentTo('owner@example.test'));
         foreach ($mails as $m) {
-            $this->assertStringContainsString('Account: Ana Cruz (cashier1)', $m['body']);
+            $this->assertStringContainsString('Account: Ana Cruz (username: cashier1)', $m['body']);
             $this->assertStringContainsString('This replaces any earlier temporary password. Only the newest one works.', $m['body']);
         }
 
-        $this->post('login/staff', ['password' => $first])->assertRedirectTo(site_url('/'));
+        $this->post('login', ['username' => 'cashier1', 'password' => $first])->assertRedirectTo(site_url('login'));
         $this->assertNotSame(1, (int) $this->row($this->staffId)['must_change_password'], 'The older one no longer works.');
         $this->clearLimits();
 
         // The newest one, copied with a space and a line break at the end, signs in.
-        $this->post('login/staff', ['password' => $second . " \n"])->assertRedirectTo(site_url('/staff/set-password'));
+        $this->post('login', ['username' => 'cashier1', 'password' => $second . " \n"])->assertRedirectTo(site_url('/staff/set-password'));
         $this->assertSame(1, (int) $this->row($this->staffId)['must_change_password']);
     }
 
@@ -257,7 +260,7 @@ final class PasswordSecurityTest extends CIUnitTestCase
     {
         $this->db->table('users')->update(['password_hash' => password_hash('Spaced pass1 ', PASSWORD_DEFAULT)], ['user_id' => $this->staffId]);
 
-        $this->post('login/staff', ['password' => 'Spaced pass1 '])->assertRedirectTo(site_url('/staff/dashboard'));
+        $this->post('login', ['username' => 'cashier1', 'password' => 'Spaced pass1 '])->assertRedirectTo(site_url('/staff/dashboard'));
     }
 
     // ------------------------------------------------------------ 5. Signed in as
@@ -278,7 +281,7 @@ final class PasswordSecurityTest extends CIUnitTestCase
         $this->db->table('users')->update(['is_active' => 0], ['user_id' => $this->staffId]); // the Owner clicked Lock
 
         $response = $this->asStaff()->post('staff/sales/checkout', ['item_id' => ['P-1'], 'quantity' => ['2'], 'payment_method' => 'Cash', 'cash_received' => '100']);
-        $response->assertRedirectTo(site_url('/login/staff'));
+        $response->assertRedirectTo(site_url('login'));
         $this->assertSame('Your account was locked by the Owner. Please contact the Owner. Your last sale was not saved.', $_SESSION['error'] ?? null);
         $this->assertSame(0, $this->db->table('sales_transaction')->countAllResults(), 'No sale.');
         $this->assertSame(5, (int) $this->db->table('products')->where('item_id', 'P-1')->get()->getRow()->current_stock, 'Stock unchanged.');
@@ -293,8 +296,11 @@ final class PasswordSecurityTest extends CIUnitTestCase
     public function testAnOtpResetSendsOneEmailToThatAccount(string $role, string $userProp, string $email, string $contact): void
     {
         $userId = $this->{$userProp};
-        $this->withSession(['pwd_reset_user_id' => $userId, 'pwd_reset_role' => $role, 'pwd_reset_verified' => true, 'pwd_reset_touched' => time()])
-            ->post("login/{$role}/reset-password", ['new_password' => 'BrandNew123', 'confirm_password' => 'BrandNew123']);
+        $this->withSession(['pwd_reset' => [
+            'token' => 'abc', 'kind' => 'code', 'user_id' => $userId, 'ident' => 'x', 'verified' => true, 'burned' => false,
+            'sent_at' => time(), 'expires' => time() + 600, 'touched' => time(),
+        ]])->post('login/forgot/new-password', ['new_password' => 'BrandNew123', 'confirm_password' => 'BrandNew123'])
+            ->assertRedirectTo(site_url('login/forgot/done'));
 
         $this->assertTrue(password_verify('BrandNew123', $this->row($userId)['password_hash']));
         $this->assertCount(1, $this->mail->out, 'One email.');
@@ -332,7 +338,7 @@ final class PasswordSecurityTest extends CIUnitTestCase
     {
         $this->db->table('users')->update(['email' => ' Owner@Example.test '], ['user_id' => $this->staffId]); // old data
 
-        $this->post('login/staff/forgot', ['staff_name' => 'cashier1']);
+        $this->post('login/forgot', ['identifier' => 'cashier1']);
 
         $this->assertSame([], $this->mail->out, 'Nothing is emailed.');
         $this->assertNull($this->row($this->staffId)['temp_password_hash']);
@@ -368,57 +374,62 @@ final class PasswordSecurityTest extends CIUnitTestCase
 
     // ------------------------------------------------------------ 11. sign-in lockout feedback
 
-    private const WRONG = 'Incorrect password. Please try again';
+    private const WRONG = AuthController::WRONG;
 
     private function flash(string $key)
     {
         return $_SESSION[$key] ?? null;
     }
 
-    /** [role, post fields for a wrong password, fields for the right one, page after a correct sign-in] */
+    /** [username, its password, page after a correct sign-in] */
     public static function lockoutRoles(): array
     {
         return [
-            'owner'    => ['admin', ['username' => 'owner1', 'password' => 'wrong-password-1'], ['username' => 'owner1', 'password' => 'OwnerPass123'], '/admin/dashboard'],
-            'staff'    => ['staff', ['password' => 'wrong-password-1'], ['password' => 'Cashier1Pass1'], '/staff/dashboard'],
-            'supplier' => ['supplier', ['username' => 'tgi', 'password' => 'wrong-password-1'], ['username' => 'tgi', 'password' => 'SupplierPass1'], '/supplier/dashboard'],
+            'owner'    => ['owner1', 'OwnerPass123', '/admin/dashboard'],
+            'staff'    => ['cashier1', 'Cashier1Pass1', '/staff/dashboard'],
+            'supplier' => ['tgi', 'SupplierPass1', '/supplier/dashboard'],
         ];
     }
 
     /**
      * @dataProvider lockoutRoles
      */
-    public function testTheTriesLeftCountDownAndTheThirdWrongTryLocks(string $role, array $wrong, array $right, string $home): void
+    public function testTheTriesLeftCountDownAndTheThirdWrongTryLocks(string $username, string $password, string $home): void
     {
         $lockout = new LoginLockout();
+        $wrong   = ['username' => $username, 'password' => 'wrong-password-1'];
+        $right   = ['username' => $username, 'password' => $password];
 
-        $this->post("login/{$role}", $wrong);
+        $this->post('login', $wrong)->assertRedirectTo(site_url('login'));
         $this->assertSame(self::WRONG, $this->flash('error'));
         $this->assertSame(2, $this->flash('tries_left'));
-        $this->assertSame(0, $lockout->secondsRemaining($role));
+        $this->assertSame(0, $lockout->secondsRemaining($username));
 
         unset($_SESSION['tries_left']);
-        $this->post("login/{$role}", $wrong);
+        $this->post('login', $wrong);
         $this->assertSame(self::WRONG, $this->flash('error'));
         $this->assertSame(1, $this->flash('tries_left'));
-        $this->assertSame(0, $lockout->secondsRemaining($role));
+        $this->assertSame(0, $lockout->secondsRemaining($username));
 
         unset($_SESSION['tries_left'], $_SESSION['error']);
-        $this->post("login/{$role}", $wrong)->assertRedirectTo(site_url("login/{$role}/forgot"));
-        $this->assertSame('Incorrect password. That was 3 wrong tries in a row, so sign-in is locked. Wait ' . $lockout->secondsRemaining($role) . ' seconds or reset your password.', $this->flash('error'));
+        $this->post('login', $wrong)->assertRedirectTo(site_url('login'));
+        $seconds = $lockout->secondsRemaining($username);
+        $this->assertSame('That was 3 wrong tries, so sign-in is locked. Wait ' . $seconds . ' seconds, or reset your password with "Forgot password?".', $this->flash('error'));
+        $this->assertSame($seconds, $this->flash('lock_seconds'), 'The button counts down from this.');
         $this->assertNull($this->flash('tries_left'));
-        $this->assertGreaterThan(0, $lockout->secondsRemaining($role));
-        $this->assertLessThanOrEqual(LoginLockout::LOCKOUT_SECONDS, $lockout->secondsRemaining($role));
+        $this->assertGreaterThan(0, $seconds);
+        $this->assertLessThanOrEqual(LoginLockout::LOCKOUT_SECONDS, $seconds);
 
         // While locked, even the right password waits.
-        $this->post("login/{$role}", $right);
-        $this->assertStringContainsString('Too many tries. Wait', (string) $this->flash('error'));
+        unset($_SESSION['error'], $_SESSION['lock_seconds']);
+        $this->post('login', $right)->assertSessionMissing('isLoggedIn');
+        $this->assertStringStartsWith('That was 3 wrong tries, so sign-in is locked. Wait ', (string) $this->flash('error'));
 
         // After the wait, a correct sign-in works and the count starts again at 2.
-        $lockout->reset($role);
-        $this->post("login/{$role}", $right)->assertRedirectTo(site_url($home));
+        $lockout->reset($username);
+        $this->post('login', $right)->assertRedirectTo(site_url($home));
         unset($_SESSION['tries_left'], $_SESSION['error']);
-        $this->post("login/{$role}", $wrong);
+        $this->post('login', $wrong);
         $this->assertSame(2, $this->flash('tries_left'));
     }
 
@@ -428,44 +439,57 @@ final class PasswordSecurityTest extends CIUnitTestCase
         $this->assertSame(60, LoginLockout::LOCKOUT_SECONDS);
 
         $lockout = new LoginLockout();
-        $this->assertSame(3, $lockout->triesLeft('admin'));
-        $lockout->registerFailure('admin');
-        $this->assertSame(2, $lockout->triesLeft('admin'));
-        $lockout->registerFailure('admin');
-        $lockout->registerFailure('admin');
-        $this->assertSame(3, $lockout->triesLeft('admin'), 'the lock starts and the counter starts over');
-        $this->assertGreaterThan(0, $lockout->secondsRemaining('admin'));
+        $this->assertSame(3, $lockout->triesLeft('owner1'));
+        $lockout->registerFailure('owner1');
+        $this->assertSame(2, $lockout->triesLeft('owner1'));
+        $lockout->registerFailure('owner1');
+        $lockout->registerFailure('owner1');
+        $this->assertSame(3, $lockout->triesLeft('owner1'), 'the lock starts and the counter starts over');
+        $this->assertGreaterThan(0, $lockout->secondsRemaining('owner1'));
+        $this->assertSame(0, $lockout->secondsRemaining('cashier1'), 'Another username is not locked.');
     }
 
     public static function lockoutPages(): array
     {
         return [
-            'owner page'    => ['login/admin', 'admin'],
-            'staff page'    => ['login/staff', 'staff'],
-            'supplier page' => ['login/supplier', 'supplier'],
-            'landing page'  => ['/', 'staff'],
+            'sign-in page' => ['login'],
+            'landing page' => ['/'],
         ];
     }
 
     /**
      * @dataProvider lockoutPages
      */
-    public function testThePagesShowTheTriesLeftUnderTheMessage(string $path, string $role): void
+    public function testThePagesShowTheTriesLeftUnderTheMessage(string $path): void
     {
         foreach ([2 => '2 tries left before sign-in is locked for 60 seconds.', 1 => '1 try left before sign-in is locked for 60 seconds.'] as $left => $line) {
             $body = $this->withSession([
-                'error' => self::WRONG, 'tries_left' => $left, 'attempted_role' => $role,
-                '__ci_vars' => ['error' => 'new', 'tries_left' => 'new', 'attempted_role' => 'new'],
+                'error' => self::WRONG, 'tries_left' => $left,
+                '__ci_vars' => ['error' => 'new', 'tries_left' => 'new'],
             ])->get($path)->response()->getBody();
 
             $this->assertStringContainsString(self::WRONG, $body);
             $this->assertStringContainsString($line, $body);
+            $this->assertStringContainsString('class="auth-alert is-error"', $body, 'A red box above the fields.');
         }
+    }
+
+    public function testALockedPageDisablesTheButtonWithTheCountdown(): void
+    {
+        $body = (string) $this->withSession([
+            'error' => 'x', 'lock_seconds' => 42, '__ci_vars' => ['error' => 'new', 'lock_seconds' => 'new'],
+        ])->get('login')->response()->getBody();
+
+        $this->assertStringContainsString('disabled data-lock-seconds="42"', $body);
+        $this->assertStringContainsString("'Try again in ' + seconds + 's'", $body);
+
+        $plain = (string) $this->withSession([])->get('login')->response()->getBody();
+        $this->assertStringNotContainsString('data-lock-seconds', $plain);
     }
 
     public function testNoTriesLineWithoutAWrongTry(): void
     {
-        $this->assertStringNotContainsString('tries left before sign-in', $this->get('login/admin')->response()->getBody());
+        $this->assertStringNotContainsString('tries left before sign-in', $this->get('login')->response()->getBody());
     }
 
     // ------------------------------------------------------------ 12. the owner changes their own username
@@ -503,10 +527,10 @@ final class PasswordSecurityTest extends CIUnitTestCase
         $this->assertSame('owner_renamed', $_SESSION['username']);
         $this->assertSame('owner1 -> owner_renamed', $this->db->table('security_log')->where('event', 'username_changed')->get()->getRow()->detail);
 
-        $this->post('login/admin', ['username' => 'owner1', 'password' => 'OwnerPass123']);
+        $this->post('login', ['username' => 'owner1', 'password' => 'OwnerPass123']);
         $this->assertSame(self::WRONG, $this->flash('error'));
-        (new LoginLockout())->reset('admin');
-        $this->post('login/admin', ['username' => 'owner_renamed', 'password' => 'OwnerPass123'])->assertRedirectTo(site_url('/admin/dashboard'));
+        (new LoginLockout())->reset('owner1');
+        $this->post('login', ['username' => 'owner_renamed', 'password' => 'OwnerPass123'])->assertRedirectTo(site_url('/admin/dashboard'));
     }
 
     public function testKeepingTheSameOwnerUsernameIsNotATakenName(): void
@@ -547,8 +571,8 @@ final class PasswordSecurityTest extends CIUnitTestCase
 
     public function testStaffAndSuppliersCannotUseTheOwnerUsernameRoutes(): void
     {
-        $this->asStaff()->post('admin/settings/username', ['username' => 'sneaky', 'current_password' => 'x'])->assertRedirectTo(site_url('login/admin'));
-        $this->asStaff()->post("admin/settings/staff-accounts/username/{$this->staffId}", ['username' => 'sneaky'])->assertRedirectTo(site_url('login/admin'));
+        $this->asStaff()->post('admin/settings/username', ['username' => 'sneaky', 'current_password' => 'x'])->assertRedirectTo(site_url('login'));
+        $this->asStaff()->post("admin/settings/staff-accounts/username/{$this->staffId}", ['username' => 'sneaky'])->assertRedirectTo(site_url('login'));
         $this->assertSame('cashier1', $this->row($this->staffId)['username']);
     }
 
@@ -586,8 +610,8 @@ final class PasswordSecurityTest extends CIUnitTestCase
         $this->assertSame('owner1', $this->row($this->ownerId)['username']);
         $this->assertSame('staff: cashier1 -> cashier_renamed (by owner)', $this->db->table('security_log')->where('event', 'username_changed')->get()->getRow()->detail);
 
-        // The staff member still signs in with their password alone.
-        $this->post('login/staff', ['password' => 'Cashier1Pass1'])->assertRedirectTo(site_url('/staff/dashboard'));
+        // The staff member now signs in with the new username (and the same password).
+        $this->post('login', ['username' => 'cashier_renamed', 'password' => 'Cashier1Pass1'])->assertRedirectTo(site_url('/staff/dashboard'));
         $this->assertSame('cashier_renamed', $_SESSION['username']);
     }
 
@@ -622,7 +646,7 @@ final class PasswordSecurityTest extends CIUnitTestCase
         $this->assertStringContainsString('id="staffUsernameModal"', $view);
         $this->assertStringContainsString("site_url('admin/settings/staff-accounts/username/'", $view);
         $this->assertStringContainsString('Edit Username</button>', $view);
-        $this->assertStringContainsString('Staff sign in with their password only, so this does not change how they sign in. They use the username for Forgot password.', $view);
+        $this->assertStringContainsString('Staff sign in with their username and password. Tell them their new username before they next sign in.', $view);
         $this->assertStringContainsString('pattern="[A-Za-z0-9_\-]+" minlength="4" maxlength="50"', $view);
     }
 }

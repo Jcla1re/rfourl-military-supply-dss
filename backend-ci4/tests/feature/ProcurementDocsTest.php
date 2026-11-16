@@ -335,10 +335,10 @@ final class ProcurementDocsTest extends CIUnitTestCase
         $this->assertPdf($this->asOwner()->get('admin/orders/SO-0002/document/dr'));
 
         // staff and suppliers cannot use the owner's route; nobody signed in is sent to log in
-        $this->asStaff()->get('admin/orders/SO-0001/document/po')->assertRedirectTo(site_url('login/admin'));
+        $this->asStaff()->get('admin/orders/SO-0001/document/po')->assertRedirectTo(site_url('login'));
         $this->asSupplier()->get('admin/orders/SO-0001/document/po')->assertRedirect();
         $this->asOwner()->get('supplier/orders/SO-0001/document/po')->assertRedirect();
-        $this->withSession([])->get('admin/orders/SO-0001/document/po')->assertRedirectTo(site_url('login/admin'));
+        $this->withSession([])->get('admin/orders/SO-0001/document/po')->assertRedirectTo(site_url('login'));
         $this->withSession([])->get('supplier/orders/SO-0001/document/po')->assertRedirect();
     }
 

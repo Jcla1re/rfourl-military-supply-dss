@@ -15,7 +15,7 @@ use Config\Auth;
  *  - A background request (fetch / AJAX: X-Requested-With, or Accept: application/json) gets a short
  *    JSON answer, never the login page HTML: 401 {"signedOut": true, "reason": ..., "login": ...}.
  *    The page's App.fetch (public/assets/js/session-guard.js) then goes to the login page.
- *  - A normal page request is redirected to that role's login page as before; a GET page (or, for a
+ *  - A normal page request is redirected to the sign-in page (/login); a GET page (or, for a
  *    form post, the page the form was on) is kept as the page to return to after signing in.
  *
  * On an idle sign-out everything in the session is cleared except: the framework's own
@@ -102,12 +102,13 @@ final class SignedOut
         return str_contains(strtolower($request->getHeaderLine('Accept')), 'application/json');
     }
 
-    /** "/login/staff" for Staff, and so on (the Owner's portal is /login/admin). */
-    public static function loginPath(?string $role): string
+    /**
+     * The sign-in page: "/login" for every role (one page for everyone; the account decides the
+     * portal). $role is kept for the callers and changes nothing.
+     */
+    public static function loginPath(?string $role = null): string
     {
-        $segment = strtolower((string) $role);
-
-        return '/login/' . (in_array($segment, ['admin', 'staff', 'supplier'], true) ? $segment : 'admin');
+        return '/login';
     }
 
     /**

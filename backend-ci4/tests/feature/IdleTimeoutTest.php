@@ -28,6 +28,6 @@ final class IdleTimeoutTest extends CIUnitTestCase
             'last_activity' => time() - $limit - 60,
         ])->get('/staff/dashboard');
 
-        $result->assertRedirectTo(site_url('login/staff'));
+        $result->assertRedirectTo(site_url('login'));
     }
 }

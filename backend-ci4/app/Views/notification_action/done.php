@@ -27,7 +27,7 @@ $isLock = $action === 'lock';
         <?php else: ?>
             <p class="auth-hint">Confirmed. You said the password reset of <?= esc($staffName ?? 'the staff member') ?> was really them. Nothing else to do.</p>
         <?php endif; ?>
-        <div class="auth-back"><a href="<?= site_url('login/admin') ?>">Go to owner login</a></div>
+        <div class="auth-back"><a href="<?= site_url('login') ?>">Go to sign in</a></div>
     </div>
 </body>
 </html>

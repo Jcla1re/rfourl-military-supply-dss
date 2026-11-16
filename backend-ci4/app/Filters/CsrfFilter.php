@@ -17,8 +17,9 @@ use CodeIgniter\Security\Exceptions\SecurityException;
  *  - logout               still signs out (an expired token must not trap anyone signed in);
  *  - signed out / idle    the same as any signed-out request (SignedOut): 401 JSON for fetch / AJAX,
  *                         else the login page, with the page to return to;
- *  - a login form         back to that login page: "This page needed a refresh. Please sign in again."
- *                         (the username is kept, never the password);
+ *  - the sign-in form     back to /login: "This page needed a refresh. Please sign in again."
+ *                         (the username is kept, never the password); a Forgot password step: back
+ *                         to that step, "This page needed a refresh. Please try again.";
  *  - fetch / AJAX         419 JSON {"csrfExpired": true}: the page gets a fresh token (session/csrf);
  *  - any other form       back to the page it was on, everything typed kept (old input: never the
  *                         token, the one-time key or a password), with "This page needed a refresh.
@@ -81,9 +82,15 @@ class CsrfFilter extends CSRF
         $this->keepInput($request);
 
         if ($area === 'login' || $path === '') {
-            $back = str_starts_with($path, 'login/') ? '/' . $path : '/';
+            // The sign-in form, or a Forgot password step: back to that page (old /login/{role} URLs: /login).
+            if (str_starts_with($path . '/', 'login/forgot/')) {
+                $back = in_array($path, ['login/forgot/check', 'login/forgot/resend'], true) ? '/login/forgot/check'
+                    : ($path === 'login/forgot/new-password' ? '/login/forgot/new-password' : '/login/forgot');
 
-            return redirect()->to($back)->with('error', 'This page needed a refresh. Please sign in again.');
+                return redirect()->to($back)->with('error', 'This page needed a refresh. Please try again.');
+            }
+
+            return redirect()->to('/login')->with('error', 'This page needed a refresh. Please sign in again.');
         }
 
         $back = ReturnTo::clean($request->getHeaderLine('Referer'), $role)

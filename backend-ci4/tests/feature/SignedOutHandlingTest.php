@@ -78,7 +78,7 @@ final class SignedOutHandlingTest extends CIUnitTestCase
         $data = $this->json($result);
         $this->assertTrue($data['signedOut']);
         $this->assertSame('signed_out', $data['reason']);
-        $this->assertSame(site_url('login/' . explode('/', $url)[0]), $data['login']);
+        $this->assertSame(site_url('login'), $data['login']);
         $this->assertStringContainsString('no-store', $result->response()->getHeaderLine('Cache-Control'));
     }
 
@@ -107,7 +107,7 @@ final class SignedOutHandlingTest extends CIUnitTestCase
     {
         $result = $this->withSession($this->signedIn('Staff', 1801))->get('staff/log-transaction/return?x=1');
 
-        $this->assertSame(site_url('login/staff'), $result->getRedirectUrl());
+        $this->assertSame(site_url('login'), $result->getRedirectUrl());
         $this->assertSame('/staff/log-transaction/return?x=1', $_SESSION['return_to']);
         $this->assertSame('idle', $_SESSION['signed_out_reason']);
         $this->assertArrayNotHasKey('error', $_SESSION, 'The login page shows its own idle notice, no error.');
@@ -122,7 +122,7 @@ final class SignedOutHandlingTest extends CIUnitTestCase
             ->withHeaders(['Referer' => site_url('staff/log-transaction/return')])
             ->post('staff/log-transaction/store', ['type' => 'return', 'item_id' => 'P-1', 'qty_returned' => '1']);
 
-        $this->assertSame(site_url('login/staff'), $result->getRedirectUrl());
+        $this->assertSame(site_url('login'), $result->getRedirectUrl());
         $this->assertSame('/staff/log-transaction/return', $_SESSION['return_to']);
         $this->assertSame(0, $this->db->table('inventory_log')->where('log_type', 'RETURN')->countAllResults(), 'Nothing saved.');
     }
@@ -143,12 +143,12 @@ final class SignedOutHandlingTest extends CIUnitTestCase
         $wrong = $this->withSession($this->signedIn('Admin'))->withHeaders(self::XHR)->get('staff/inventory');
         $wrong->assertStatus(403);
         $this->assertSame(['signedOut' => false, 'reason' => 'no_access'], array_intersect_key($this->json($wrong), ['signedOut' => 1, 'reason' => 1]));
-        $this->assertSame(site_url('login/staff'), $this->json($wrong)['login']);
+        $this->assertSame(site_url('login'), $this->json($wrong)['login']);
     }
 
     public function testANormalPageStillRedirectsAsBefore(): void
     {
-        $this->get('staff/dashboard')->assertRedirectTo(site_url('login/staff'));
+        $this->get('staff/dashboard')->assertRedirectTo(site_url('login'));
         $this->assertSame('Please log in to continue.', $_SESSION['error'] ?? null);
         $this->assertSame('/staff/dashboard', $_SESSION['return_to']);
     }
@@ -201,7 +201,7 @@ final class SignedOutHandlingTest extends CIUnitTestCase
     {
         $data = $this->json($this->withSession($this->signedIn('Staff', 1801))->get('session/status'));
 
-        $this->assertSame(['signedIn' => false, 'reason' => 'idle', 'login' => site_url('login/staff')], $data);
+        $this->assertSame(['signedIn' => false, 'reason' => 'idle', 'login' => site_url('login')], $data);
         $this->assertArrayNotHasKey('isLoggedIn', $_SESSION);
         $this->assertSame(['signedIn' => false, 'reason' => 'signed_out', 'login' => null], $this->json($this->withSession([])->get('session/status')));
     }
@@ -225,12 +225,11 @@ final class SignedOutHandlingTest extends CIUnitTestCase
     {
         $notice = 'You were signed out after 30 minutes of inactivity. Sign in to continue where you left off.';
 
-        $this->assertStringContainsString($notice, (string) $this->withSession(['signed_out_reason' => 'idle'])->get('login/staff')->response()->getBody());
-        foreach (['admin', 'supplier'] as $portal) {
-            $this->assertStringContainsString($notice, (string) $this->withSession(['signed_out_reason' => 'idle'])->get('login/' . $portal)->response()->getBody());
-        }
-        $this->assertStringNotContainsString($notice, (string) $this->withSession(['signed_out_reason' => 'locked'])->get('login/staff')->response()->getBody());
-        $this->assertStringNotContainsString($notice, (string) $this->withSession([])->get('login/staff')->response()->getBody(), 'Not for a plain "please sign in".');
+        $this->assertStringContainsString($notice, (string) $this->withSession(['signed_out_reason' => 'idle'])->get('login')->response()->getBody());
+        // "/" is the same page.
+        $this->assertStringContainsString($notice, (string) $this->withSession(['signed_out_reason' => 'idle'])->get('/')->response()->getBody());
+        $this->assertStringNotContainsString($notice, (string) $this->withSession(['signed_out_reason' => 'locked'])->get('login')->response()->getBody());
+        $this->assertStringNotContainsString($notice, (string) $this->withSession([])->get('login')->response()->getBody(), 'Not for a plain "please sign in".');
     }
 
     public function testTheLogoutButtonNeverShowsTheIdleNotice(): void
@@ -238,14 +237,14 @@ final class SignedOutHandlingTest extends CIUnitTestCase
         $this->withSession($this->signedIn('Staff') + ['signed_out_reason' => 'idle'])->post('logout')->assertRedirectTo(site_url('/'));
 
         $this->assertArrayNotHasKey('signed_out_reason', $_SESSION ?? [], 'Logging out ends the whole session.');
-        $this->assertStringNotContainsString('of inactivity', (string) $this->withSession([])->get('login/staff')->response()->getBody());
+        $this->assertStringNotContainsString('of inactivity', (string) $this->withSession([])->get('login')->response()->getBody());
     }
 
     private function ownerSignsIn(array $session)
     {
         $this->db->table('users')->where('user_id', $this->ownerId)->update(['password_hash' => password_hash('Owner-Pass-1', PASSWORD_DEFAULT)]);
 
-        return $this->withSession($session)->post('login/admin', ['username' => 'owner1', 'password' => 'Owner-Pass-1']);
+        return $this->withSession($session)->post('login', ['username' => 'owner1', 'password' => 'Owner-Pass-1']);
     }
 
     public function testSigningInReturnsToThePageTheUserWasOn(): void
@@ -277,10 +276,10 @@ final class SignedOutHandlingTest extends CIUnitTestCase
 
     public function testTheLoginPageAcceptsTheReturnPageOnlyWhenItIsAllowed(): void
     {
-        $this->withSession([])->get('login/admin?return=' . urlencode('/admin/inventory?search=x'));
+        $this->withSession([])->get('login?return=' . urlencode('/admin/inventory?search=x'));
         $this->assertSame('/admin/inventory?search=x', $_SESSION['return_to']);
 
-        $this->withSession([])->get('login/admin?return=' . urlencode('https://evil.example/x'));
+        $this->withSession([])->get('login?return=' . urlencode('https://evil.example/x'));
         $this->assertArrayNotHasKey('return_to', $_SESSION);
     }
 
@@ -326,12 +325,15 @@ final class SignedOutHandlingTest extends CIUnitTestCase
 
     public function testAStartedPasswordResetStillEndsAfterThirtyMinutesWithoutAStep(): void
     {
-        $pending = ['pwd_reset_user_id' => $this->ownerId, 'pwd_reset_role' => 'admin', 'pwd_reset_verified' => true];
+        $pending = fn (int $touched) => ['pwd_reset' => [
+            'token' => 'abc', 'kind' => 'code', 'user_id' => $this->ownerId, 'ident' => 'owner1', 'verified' => true,
+            'burned' => false, 'sent_at' => time() - 100, 'expires' => time() + 500, 'touched' => $touched,
+        ]];
 
-        $this->withSession($pending + ['pwd_reset_touched' => time() - 1801])->get('login/admin/reset-password')->assertRedirectTo(site_url('login/admin/forgot'));
-        $this->assertArrayNotHasKey('pwd_reset_user_id', $_SESSION);
+        $this->withSession($pending(time() - 1801))->get('login/forgot/new-password')->assertRedirectTo(site_url('login/forgot'));
+        $this->assertArrayNotHasKey('pwd_reset', $_SESSION);
 
-        $this->withSession($pending + ['pwd_reset_touched' => time() - 1700])->get('login/admin/reset-password')->assertStatus(200);
-        $this->assertEqualsWithDelta(time(), $_SESSION['pwd_reset_touched'], 2, 'Each step keeps it going, as each request did before.');
+        $this->withSession($pending(time() - 1700))->get('login/forgot/new-password')->assertStatus(200);
+        $this->assertEqualsWithDelta(time(), $_SESSION['pwd_reset']['touched'], 2, 'Each step keeps it going, as each request did before.');
     }
 }

@@ -129,32 +129,58 @@ class StaffPasswordReset
     // ------------------------------------------------------------------ Flow 1: Forgot password
 
     /**
-     * Emails a temporary password to the staff member, valid 2 hours. Their current password is
-     * not touched and keeps working until the temporary one is used. All or nothing: if the email
-     * can't be sent, nothing is stored. Returns the plain password on success (for demo mode's
-     * on-screen box only), null on failure.
+     * Forgot password, part 1 (during the request): stores a new temporary password beside the
+     * current one, valid 2 hours. The current password is not touched and keeps working until the
+     * temporary one is used. Returns [plain password, its hash]; the plain one goes only to the
+     * email (sendForgot) and, in demo mode, the on-screen box.
+     *
+     * @return array{0: string, 1: string, 2: array<string, mixed>} [password, hash, the columns as they were]
      */
-    public function requestForgot(array $staff): ?string
+    public function prepareForgot(array $staff): array
     {
-        $db = db_connect();
-        $db->transStart();
+        $password = self::generate();
+        $hash     = password_hash($password, PASSWORD_DEFAULT);
+        $before   = [
+            'temp_password_hash'       => $staff['temp_password_hash'] ?? null,
+            'temp_password_kind'       => $staff['temp_password_kind'] ?? null,
+            'temp_password_expires_at' => $staff['temp_password_expires_at'] ?? null,
+        ];
 
-        $password = $this->uniquePassword((int) $staff['user_id']);
         $this->users->update((int) $staff['user_id'], [
-            'temp_password_hash'       => password_hash($password, PASSWORD_DEFAULT),
+            'temp_password_hash'       => $hash,
             'temp_password_kind'       => self::KIND_FORGOT,
             'temp_password_expires_at' => date('Y-m-d H:i:s', time() + self::FORGOT_TTL),
         ]);
 
-        if (! $this->emailPassword($staff, $password, self::KIND_FORGOT)) {
-            $db->transRollback();
+        return [$password, $hash, $before];
+    }
 
-            return null;
+    /**
+     * Forgot password, part 2 (after the response, see AfterResponse): emails it. Still all or
+     * nothing: if the email can't be sent, the account goes back to exactly how it was before
+     * prepareForgot() (only while that temporary password is still the stored one, so a newer
+     * request is left alone).
+     */
+    public function sendForgot(array $staff, string $password, string $hash, array $before): bool
+    {
+        if ($this->emailPassword($staff, $password, self::KIND_FORGOT)) {
+            return true;
         }
 
-        $db->transComplete();
+        db_connect()->table('users')
+            ->where('user_id', (int) $staff['user_id'])
+            ->where('temp_password_hash', $hash)
+            ->update($before);
 
-        return $password;
+        return false;
+    }
+
+    /** Both parts at once (the email is sent before returning). Returns the plain password, or null if not sent. */
+    public function requestForgot(array $staff): ?string
+    {
+        [$password, $hash, $before] = $this->prepareForgot($staff);
+
+        return $this->sendForgot($staff, $password, $hash, $before) ? $password : null;
     }
 
     /**
@@ -231,7 +257,7 @@ class StaffPasswordReset
     /** Sets a fresh temporary password for a new account (invite) and returns it (plain text, once). */
     public function issue(array $staff, string $kind): string
     {
-        $password = $this->uniquePassword((int) $staff['user_id']);
+        $password = self::generate();
 
         $this->users->update((int) $staff['user_id'], [
             'password_hash'            => password_hash($password, PASSWORD_DEFAULT),
@@ -275,13 +301,13 @@ class StaffPasswordReset
 
         $hours    = (int) (self::ttlFor($kind) / 3600);
         $name     = esc($staff['full_name'], 'html');
-        $loginUrl = site_url('login/staff');
+        $loginUrl = site_url('login');
         $intro    = $kind === self::KIND_INVITE
             ? 'Your RfourL Military Supply staff account is ready.'
             : 'You asked to reset your RfourL Military Supply password.';
 
-        // Which account it is for (staff sign in by password alone), and that only the newest one works.
-        $account  = 'Account: ' . $staff['full_name'] . ' (' . ($staff['username'] ?? '') . ')';
+        // Which account it is for (with the username they sign in with), and that only the newest one works.
+        $account  = 'Account: ' . $staff['full_name'] . ' (username: ' . ($staff['username'] ?? '') . ')';
         $replaces = 'This replaces any earlier temporary password. Only the newest one works.';
 
         $html = "<div style=\"font-family:'Poppins',Arial,sans-serif;\"><p>Hi {$name},</p><p>{$intro}</p>"
@@ -347,15 +373,5 @@ class StaffPasswordReset
         } catch (\Throwable $e) {
             log_message('error', 'Staff password done notice failed: ' . $e->getMessage());
         }
-    }
-
-    /** A random temporary password that no other staff account uses (staff sign in by password alone). */
-    private function uniquePassword(int $userId): string
-    {
-        do {
-            $password = self::generate();
-        } while ($this->users->staffPasswordInUse($password, $userId));
-
-        return $password;
     }
 }

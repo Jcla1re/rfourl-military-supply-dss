@@ -45,6 +45,8 @@
     <php>
         <server name="app.baseURL" value="http://example.com/"/>
         <server name="CODEIGNITER_SCREAM_DEPRECATIONS" value="0"/>
+        <!-- Forgot password: no timing padding in tests (Config\Auth::$forgotMinSeconds); one test sets it itself. -->
+        <env name="auth.forgotMinSeconds" value="0" force="true"/>
         <!-- Directory containing phpunit.xml -->
         <const name="HOMEPATH" value="./"/>
         <!-- Directory containing the Paths config file -->

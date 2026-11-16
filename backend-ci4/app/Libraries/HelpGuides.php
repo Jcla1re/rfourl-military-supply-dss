@@ -29,7 +29,7 @@ class HelpGuides
                     'Click Reset Password on the staff member\'s row.',
                     'Type the new password twice, then your own password.',
                     'Tick "I have informed (their name) about this reset", then click Reset.',
-                    'Tell the staff member the new password yourself. They get an email that it was reset, but it does not contain the password.',
+                    'Tell the staff member the new password yourself (and their username, if they don\'t know it). They get an email that it was reset, but it does not contain the password.',
                     'When they sign in with it, they must create their own password. If the account was locked, it is unlocked.',
                 ],
             ],
@@ -132,10 +132,10 @@ class HelpGuides
             [
                 'title' => 'I forgot my password',
                 'steps' => [
-                    'On the staff sign-in page, click "Forgot password?".',
-                    'Type your username or full name, then click Send temporary password.',
+                    'On the sign-in page, click "Forgot password?".',
+                    'Type your username or email, then click Continue.',
                     'Check your email for the temporary password. It works for 2 hours, and your old password keeps working until you use it.',
-                    'Sign in with the temporary password. You\'ll be asked to create your own new password.',
+                    'Sign in with your username and the temporary password. You\'ll be asked to create your own new password.',
                     'The owner is told that you reset it. If you have no email on file, ask the owner to reset it from Manage Accounts.',
                 ],
             ],

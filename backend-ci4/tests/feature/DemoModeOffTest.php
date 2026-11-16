@@ -65,13 +65,14 @@ final class DemoModeOffTest extends DemoTestCase
 
     public function testNoBannerRobotsTagOrDemoAccountCardOnAnyPage(): void
     {
-        foreach (['/', 'login/admin', 'login/staff', 'login/supplier', 'login/admin/forgot', 'login/staff/forgot'] as $path) {
+        foreach (['/', 'login', 'login/forgot'] as $path) {
             $body = $this->get($path)->getBody();
             $this->assertStringNotContainsString('Demo version', $body, $path);
             $this->assertStringNotContainsString('noindex', $body, $path);
             $this->assertStringNotContainsString('demo.css', $body, $path);
             $this->assertStringNotContainsString('Demo-Owner-1', $body, $path);
             $this->assertStringNotContainsString('Demo account', $body, $path);
+            $this->assertStringNotContainsString('demo-credentials', $body, $path);
         }
 
         $body = $this->actingAs('staff')->get('staff/account')->getBody();
@@ -127,7 +128,7 @@ final class DemoModeOffTest extends DemoTestCase
 
     public function testForgotPasswordWorksForEveryAccountAndShowsNoCodeOnScreen(): void
     {
-        $this->post('login/admin/forgot', ['email' => 'ourteam+owner@example.test'])->assertRedirectTo(site_url('login/admin/otp'));
+        $this->post('login/forgot', ['identifier' => 'ourteam+owner@example.test'])->assertRedirectTo(site_url('login/forgot/check'));
 
         $this->assertNull($this->flash('demo_secret'));
         $this->assertNotNull($this->user($this->id['demo_owner'])->reset_otp_hash);

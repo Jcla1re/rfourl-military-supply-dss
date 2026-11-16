@@ -3,270 +3,227 @@
 
 namespace App\Controllers;
 
+use App\Libraries\AfterResponse;
 use App\Libraries\AttemptStore;
 use App\Libraries\DemoGuard;
 use App\Libraries\EmailNotifier;
+use App\Libraries\LoginLockout;
 use App\Libraries\PasswordPolicy;
 use App\Libraries\ReturnTo;
 use App\Libraries\SavedCart;
 use App\Libraries\StaffPasswordAlert;
 use App\Libraries\StaffPasswordReset;
-use App\Libraries\LoginLockout;
 use App\Models\SecurityLogModel;
+use App\Models\SupplierModel;
 use App\Models\UserModel;
+use Config\Auth;
 
+/**
+ * One sign-in page and one Forgot password flow for everyone (Owner, Staff, Supplier).
+ *
+ * Sign in: username + password; the account decides the portal. Nothing tells a wrong username
+ * from a wrong password, by message or by time (a missing account is checked against DUMMY_HASH),
+ * and nothing about the role is shown before the password is proven.
+ *
+ * Forgot password: 1 username or email, 2 "Check your email" (a 6-digit code), 3 new password, done.
+ * Behind it: an Owner or Supplier gets a code; a Staff member gets a temporary password (and just
+ * signs in with it). Every answer is the same whether the account exists and whatever its role:
+ * an unknown or Staff identifier gets a "decoy" reset that behaves like a real one (a code that
+ * never matches, the same tries, expiry and resend countdown). Emails go after the response
+ * (AfterResponse), or the answer is padded to a fixed time where PHP can't do that.
+ */
 class AuthController extends BaseController
 {
-    protected $userModel;
-    protected LoginLockout $lockout;
+    public const WRONG         = 'Incorrect username or password.';
+    public const LOCKED        = 'That was 3 wrong tries, so sign-in is locked. Wait %d seconds, or reset your password with "Forgot password?".';
+    public const NETWORK_LOCKED = 'Too many wrong tries from this network, so sign-in is locked. Wait %d seconds, or reset your password with "Forgot password?".';
+
+    /**
+     * A bcrypt hash (cost 10, as PASSWORD_DEFAULT makes them) of a random string nobody knows. A
+     * username with no account, or a code that doesn't exist, is checked against it so it takes as
+     * long as a real check.
+     */
+    private const DUMMY_HASH = '$2y$10$/gqoD08NcC2Q5d4EhwtT6eYudryNmdXqW7ttYSYQwUZp5MVAGry5u';
+
+    protected UserModel $userModel;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
-        $this->lockout   = new LoginLockout();
     }
 
-    public function landing()
-    {
-        return view('auth/landing');
-    }
+    // ================================================================== sign in
 
-    // --- ADMIN ---
-    public function showAdminLogin()
+    /** "/" and "/login": the sign-in form (with the idle notice after an idle sign-out). */
+    public function showLogin()
     {
         $this->keepReturnTo();
 
-        return view('auth/login_admin');
+        return view('auth/login');
     }
 
-    public function attemptAdminLogin()
+    public function attemptLogin()
     {
-        $locked = $this->lockout->secondsRemaining('admin');
-        if ($locked > 0) {
-            return redirect()->back()->with('error', "Too many tries. Wait {$locked} seconds.")->with('attempted_role', 'admin');
+        $username = (string) $this->request->getPost('username');
+        $password = (string) $this->request->getPost('password');
+        $lockout  = new LoginLockout();
+
+        // The username stays in the field after a wrong try (never the password).
+        $back = redirect()->to('/login')->with('login_username', mb_substr(trim($username), 0, 50));
+
+        if (($seconds = $lockout->secondsRemaining($username)) > 0) {
+            return $this->lockedAnswer($back, $lockout, $username, $seconds);
+        }
+        if (trim($username) === '' || $password === '') {
+            return $back->with('error', 'Please fill in all fields');
         }
 
-        $username = $this->request->getPost('username');
-        $password = $this->request->getPost('password');
+        $user  = $this->userModel->findForLogin($username);
+        $match = $this->passwordMatch($user, $password);
 
-        if (trim((string) $username) === '' || (string) $password === '') {
-            return redirect()->back()->with('error', 'Please fill in all fields')->with('attempted_role', 'admin');
+        if ($match === null) {
+            return $this->failLogin($back, $lockout, $username, $user);
         }
 
-        $user = $this->userModel->findByUsername($username);
-
-        if (!$user || $user['role'] !== 'Admin') {
-            return $this->failLogin('admin');
-        }
-        if (!password_verify($password, $user['password_hash'])) {
-            return $this->failLogin('admin');
-        }
-        // Only revealed after the password is proven correct, so a stranger
-        // can't use this message to discover which usernames exist.
-        if (!$user['is_active']) {
-            SecurityLogModel::log('login_blocked_deactivated', $user);
-            return redirect()->back()->with('error', 'This account has been deactivated')->with('attempted_role', 'admin');
+        // From here on the password is proven, so the account's own situation may be shown.
+        if (! $this->isAccountActive($user)) {
+            return $back->with('error', $this->inactiveMessage($user));
         }
 
-        $this->lockout->reset('admin');
-        $this->logUserIn($user);
-        return redirect()->to($this->afterSignIn('Admin'));
-    }
+        if ($user['role'] === 'Staff') {
+            // The temporary password emailed by Forgot password: its first use replaces the account's
+            // password (the old one stops working) and leads to "Set your password".
+            if ($match === 'temp') {
+                if (StaffPasswordReset::waitingTempExpired($user)) {
+                    SecurityLogModel::log('login_blocked_temp_expired', $user);
 
-    // --- STAFF (password only; each staff member has their own unique password, which identifies them) ---
-    public function showStaffLogin()
-    {
-        $this->keepReturnTo();
-
-        return view('auth/login_staff');
-    }
-
-    public function attemptStaffLogin()
-    {
-        $locked = $this->lockout->secondsRemaining('staff');
-        if ($locked > 0) {
-            return redirect()->back()->with('error', "Too many tries. Wait {$locked} seconds.")->with('attempted_role', 'staff');
-        }
-
-        $password = $this->request->getPost('password');
-
-        if ((string) $password === '') {
-            return redirect()->back()->with('error', 'Please fill in all fields')->with('attempted_role', 'staff');
-        }
-
-        // No username: the password identifies the staff member. Only active,
-        // non-removed Staff accounts are considered. Exactly as typed first; if that matches
-        // nobody, without spaces or line breaks at the ends (copied from the temporary-password
-        // email). The policy allows such spaces, so a password that really has them still works.
-        $password = (string) $password;
-        $matches  = $this->userModel->staffMatchingPassword($password, true);
-        $trimmed  = trim($password);
-        if ($matches === [] && $trimmed !== $password && $trimmed !== '') {
-            $trimmedMatches = $this->userModel->staffMatchingPassword($trimmed, true);
-            if ($trimmedMatches !== []) {
-                $password = $trimmed;
-                $matches  = $trimmedMatches;
-            }
-        }
-
-        if (count($matches) > 1) {
-            // Old data can leave two accounts on the same password. Letting
-            // either in could attribute sales to the wrong cashier, so nobody
-            // signs in until the owner resets one of them.
-            SecurityLogModel::log('login_blocked_shared_password', ['role' => 'Staff', 'username' => null], count($matches) . ' active staff accounts share this password');
-
-            return redirect()->back()
-                ->with('error', "This password can't be used. Ask the owner to reset it.")
-                ->with('attempted_role', 'staff');
-        }
-
-        if (count($matches) === 0) {
-            // The password is right but the owner has locked the account. Removed accounts
-            // (deleted_at set) are not considered, and this is not a failed attempt.
-            $locked = array_values(array_filter(
-                $this->userModel->staffMatchingPassword((string) $password, false),
-                static fn ($u) => ! $u['is_active']
-            ));
-
-            if ($locked !== []) {
-                SecurityLogModel::log('login_blocked_locked', $locked[0]);
-
-                return redirect()->back()
-                    ->with('error', 'Sorry, this account was locked by the Owner. Please contact the Owner.')
-                    ->with('attempted_role', 'staff');
+                    return $back->with('error', 'This temporary password has expired. Use "Forgot password?" to get a new one.');
+                }
+                $user = (new StaffPasswordReset())->promoteTemp($user);
             }
 
-            return $this->failLogin('staff');
-        }
-
-        $user = $matches[0];
-
-        // The temporary password emailed by Forgot password: its first use replaces the account's
-        // password (the old one stops working) and leads to "Create new password" below.
-        if (StaffPasswordReset::isWaitingTemp($user, (string) $password)) {
-            if (StaffPasswordReset::waitingTempExpired($user)) {
+            // A temporary password stops working after its time is up (2 hours for Forgot password, 24 for an owner reset, 48 for a new account).
+            if (StaffPasswordReset::isExpired($user)) {
                 SecurityLogModel::log('login_blocked_temp_expired', $user);
 
-                return redirect()->back()
-                    ->with('error', 'This temporary password has expired. Use "Forgot password?" to get a new one.')
-                    ->with('attempted_role', 'staff');
+                return $back->with('error', 'This temporary password has expired. Ask the owner for a new one.');
             }
-            $user = (new StaffPasswordReset())->promoteTemp($user);
         }
 
-        // A temporary password stops working after its time is up (2 hours for Forgot password, 24 for an owner reset, 48 for a new account).
-        if (\App\Libraries\StaffPasswordReset::isExpired($user)) {
-            SecurityLogModel::log('login_blocked_temp_expired', $user);
-
-            return redirect()->back()
-                ->with('error', 'This temporary password has expired. Ask the owner for a new one.')
-                ->with('attempted_role', 'staff');
-        }
-
-        $this->lockout->reset('staff');
+        $lockout->reset($username);
         $this->logUserIn($user);
 
         // Temporary password: they must pick their own before anything else.
-        if (\App\Libraries\StaffPasswordReset::isPending($user)) {
+        if ($user['role'] === 'Staff' && StaffPasswordReset::isPending($user)) {
             $this->afterSignIn('Staff'); // the page to return to is dropped
+
             return redirect()->to('/staff/set-password');
         }
 
-        return redirect()->to($this->afterSignIn('Staff'));
-    }
-
-    // --- SUPPLIER ---
-    public function showSupplierLogin()
-    {
-        $this->keepReturnTo();
-
-        return view('auth/login_supplier');
-    }
-
-    public function attemptSupplierLogin()
-    {
-        $locked = $this->lockout->secondsRemaining('supplier');
-        if ($locked > 0) {
-            return redirect()->back()->with('error', "Too many tries. Wait {$locked} seconds.")->with('attempted_role', 'supplier');
-        }
-
-        $username = $this->request->getPost('username');
-        $password = $this->request->getPost('password');
-
-        if (trim((string) $username) === '' || (string) $password === '') {
-            return redirect()->back()->with('error', 'Please fill in all fields')->with('attempted_role', 'supplier');
-        }
-
-        $user = $this->userModel->findByUsername($username);
-
-        if (!$user || $user['role'] !== 'Supplier') {
-            return $this->failLogin('supplier');
-        }
-        if (!password_verify($password, $user['password_hash'])) {
-            return $this->failLogin('supplier');
-        }
-        if (! $this->isAccountActive($user)) {
-            SecurityLogModel::log('login_blocked_deactivated', $user);
-            $supplier = (new \App\Models\SupplierModel())->find($user['supplier_id']);
-            $message  = ($supplier && ! $supplier['is_active'])
-                ? 'This supplier account is archived. Please contact the owner.'
-                : 'This account has been deactivated';
-            return redirect()->back()->with('error', $message)->with('attempted_role', 'supplier');
-        }
-
-        $this->lockout->reset('supplier');
-        $this->logUserIn($user);
-        return redirect()->to($this->afterSignIn('Supplier'));
+        return redirect()->to($this->afterSignIn($user['role']));
     }
 
     /**
-     * Records a failed login attempt for this role and returns the
-     * appropriate redirect: the usual generic message, or the lockout
-     * countdown once MAX_ATTEMPTS is reached.
+     * Which of the account's passwords this is: 'password', 'temp' (a Staff member's waiting
+     * Forgot-password one) or null. Always two bcrypt checks per candidate, real or DUMMY_HASH, so
+     * the time doesn't depend on whether the account exists, its role, or a waiting temporary
+     * password. Tried as typed, then (when different) without spaces at the ends (copied from the
+     * temporary-password email); a password that really has them still works as typed.
      */
-    private function failLogin(string $role)
+    private function passwordMatch(?array $user, string $password): ?string
     {
-        $this->lockout->registerFailure($role);
-        $seconds = $this->lockout->secondsRemaining($role);
+        $candidates = [$password];
+        $trimmed    = trim($password);
+        if ($trimmed !== $password && $trimmed !== '') {
+            $candidates[] = $trimmed;
+        }
+
+        $mainHash = $user['password_hash'] ?? '';
+        $mainHash = $mainHash !== '' ? $mainHash : self::DUMMY_HASH;
+        $tempHash = ($user !== null && $user['role'] === 'Staff' && ! empty($user['temp_password_hash']))
+            ? $user['temp_password_hash'] : self::DUMMY_HASH;
+
+        foreach ($candidates as $candidate) {
+            $main = password_verify($candidate, $mainHash);
+            $temp = password_verify($candidate, $tempHash);
+
+            if ($user !== null && $main && $mainHash !== self::DUMMY_HASH) {
+                return 'password';
+            }
+            if ($user !== null && $temp && $tempHash !== self::DUMMY_HASH) {
+                return 'temp';
+            }
+        }
+
+        return null;
+    }
+
+    /** A wrong username or password: counted, then the same message whatever was wrong. */
+    private function failLogin($back, LoginLockout $lockout, string $username, ?array $user)
+    {
+        $lockout->registerFailure($username);
+        $seconds = $lockout->secondsRemaining($username);
 
         SecurityLogModel::log(
             $seconds > 0 ? 'login_locked' : 'login_failed',
-            ['role' => ucfirst($role), 'username' => $this->request->getPost('username')],
-            "{$role} login"
+            ['user_id' => $user['user_id'] ?? null, 'role' => $user['role'] ?? null, 'username' => mb_substr(UserModel::normalise($username), 0, 100)],
+            $user === null ? 'sign-in: no such username' : 'sign-in: wrong password'
         );
 
         if ($seconds > 0) {
-            return redirect()->to("/login/{$role}/forgot")
-                ->with('error', 'Incorrect password. That was ' . LoginLockout::MAX_ATTEMPTS . " wrong tries in a row, so sign-in is locked. Wait {$seconds} seconds or reset your password.");
+            return $this->lockedAnswer($back, $lockout, $username, $seconds);
         }
 
-        $message = 'Incorrect password. Please try again';
-
         // The text stays the same; the number of tries left is shown under it.
-        return redirect()->back()
-            ->with('error', $message)
-            ->with('tries_left', $this->lockout->triesLeft($role))
-            ->with('attempted_role', $role);
+        return $back->with('error', self::WRONG)->with('tries_left', $lockout->triesLeft($username));
+    }
+
+    /** Locked: the message, and the seconds for the button's "Try again in Ns". */
+    private function lockedAnswer($back, LoginLockout $lockout, string $username, int $seconds)
+    {
+        $message = $lockout->accountLocked($username) ? self::LOCKED : self::NETWORK_LOCKED;
+
+        return $back->with('error', sprintf($message, $seconds))->with('lock_seconds', $seconds);
     }
 
     /** A user is active only if their own flag is on and, for suppliers, the supplier record is too. */
     private function isAccountActive(array $user): bool
     {
-        if (! $user['is_active']) {
+        if (! $user['is_active'] || ! empty($user['deleted_at'])) {
             return false;
         }
         if ($user['role'] === 'Supplier') {
-            $supplier = (new \App\Models\SupplierModel())->find($user['supplier_id']);
+            $supplier = (new SupplierModel())->find($user['supplier_id']);
+
             return $supplier && $supplier['is_active'];
         }
 
         return true;
     }
 
+    /** Only after the password is proven: why this account can't sign in. */
+    private function inactiveMessage(array $user): string
+    {
+        if ($user['role'] === 'Staff') {
+            // Locked by the owner (removed accounts are never found). Not a failed try.
+            SecurityLogModel::log('login_blocked_locked', $user);
+
+            return 'Sorry, this account was locked by the Owner. Please contact the Owner.';
+        }
+
+        SecurityLogModel::log('login_blocked_deactivated', $user);
+
+        if ($user['role'] === 'Supplier' && $user['is_active']) {
+            return 'This supplier account is archived. Please contact the owner.';
+        }
+
+        return 'This account has been deactivated';
+    }
+
     /**
-     * A login page opened with ?return=/staff/sales (the page's script after an idle sign-out): kept
-     * as the page to return to, if ReturnTo accepts it. Kept in the session, so it survives a wrong
-     * password or a lockout wait.
+     * The sign-in page opened with ?return=/staff/sales (the page's script after an idle sign-out):
+     * kept as the page to return to, if ReturnTo accepts it. Kept in the session, so it survives a
+     * wrong password or a lockout wait.
      */
     private function keepReturnTo(): void
     {
@@ -295,6 +252,7 @@ class AuthController extends BaseController
         // New session ID on login so a pre-login session ID can't be reused
         // by an attacker (session fixation).
         session()->regenerate(true);
+        session()->remove(self::RESET_KEY);
         session()->set([
             'user_id'     => $user['user_id'],
             'username'    => $user['username'],
@@ -317,12 +275,51 @@ class AuthController extends BaseController
         // Everything goes, including the idle notice and the page to return to (never shown after this).
         session()->remove(array_keys($_SESSION ?? []));
         session()->destroy();
+
         return redirect()->to('/');
     }
 
-    // --- FORGOT PASSWORD (Admin & Supplier only — the Owner resets a staff member's password from Settings > User Accounts) ---
+    // ================================================================== old URLs
 
-    private const RESET_ROLES = ['admin' => 'Admin', 'supplier' => 'Supplier'];
+    /** /login/admin, /login/staff, /login/supplier (GET or a form posted from an old page): 302 to /login. */
+    public function oldLogin()
+    {
+        return redirect()->to($this->keepingQuery('/login'), 302);
+    }
+
+    /** The old per-role forgot / otp / reset-password pages: 302 to the start of the new flow. */
+    public function oldForgot()
+    {
+        return redirect()->to($this->keepingQuery('/login/forgot'), 302);
+    }
+
+    /** $path with the ?reason= and ?return= of this request, when there are any. */
+    private function keepingQuery(string $path): string
+    {
+        $keep = [];
+        foreach (['reason', 'return'] as $name) {
+            $value = $this->request->getGet($name);
+            if (is_string($value) && $value !== '') {
+                $keep[$name] = $value;
+            }
+        }
+
+        return $keep === [] ? $path : $path . '?' . http_build_query($keep);
+    }
+
+    // ================================================================== forgot password
+
+    /** The started reset in the session (see startReset()). */
+    private const RESET_KEY = 'pwd_reset';
+
+    /** A started reset ends after 30 minutes without a step in it. */
+    private const RESET_IDLE_SECONDS = 1800;
+
+    /** The code works 10 minutes. */
+    private const CODE_SECONDS = 600;
+
+    /** "Didn't get it? Resend in 0:60". */
+    public const RESEND_COOLDOWN = 60;
 
     // A 6-digit code only has 1,000,000 possibilities, so it is burned after
     // a handful of wrong guesses and a new one must be requested.
@@ -334,271 +331,107 @@ class AuthController extends BaseController
         return AttemptStore::hit($name . '_' . md5(strtolower($subject)), $seconds) <= $capacity;
     }
 
-    public function showForgotPassword($role)
+    /** Step 1: "Forgot password?" (username or email). */
+    public function showForgot()
     {
-        if (! isset(self::RESET_ROLES[$role])) {
-            return redirect()->to('/');
-        }
-
-        return view('auth/forgot_password', [
-            'role'  => $role,
-            'error' => session()->getFlashdata('error'),
-        ]);
+        return view('auth/forgot');
     }
 
-    public function sendOtp($role)
+    public function requestReset()
     {
-        if (! isset(self::RESET_ROLES[$role])) {
-            return redirect()->to('/');
+        $started = microtime(true);
+        $typed   = trim((string) $this->request->getPost('identifier'));
+        $back    = redirect()->to('/login/forgot')->with('forgot_identifier', mb_substr($typed, 0, 100));
+
+        if ($typed === '') {
+            return $back->with('error', 'Please enter your username or email.');
         }
 
-        $email = trim((string) $this->request->getPost('email'));
-
-        // Keyed on what was typed (not on whether the account exists), so the
-        // limit reveals nothing and stops anyone flooding an inbox with codes.
-        if (! $this->withinLimit('otp_ip', $this->request->getIPAddress(), 5, 600)
-            || ! $this->withinLimit('otp_mail', $email, 3, 600)) {
-            return redirect()->to("/login/{$role}/forgot")->with('error', 'Too many requests. Please wait a few minutes and try again.');
+        // Keyed on the client and on what was typed (never on whether it exists), so the limit
+        // reveals nothing and stops anyone flooding an inbox.
+        if (! $this->withinLimit('forgot_ip', $this->request->getIPAddress(), 5, 600)
+            || ! $this->withinLimit('forgot_ident', UserModel::normalise($typed), 3, 600)) {
+            return $back->with('error', 'Too many requests. Please wait a few minutes and try again.');
         }
 
-        $user  = $this->userModel->where('role', self::RESET_ROLES[$role])
-            ->where('email', $email)
-            ->where('is_active', 1)
-            ->first();
-
-        // Always show the same message so we don't reveal whether an email is registered.
-        $genericMessage = 'If that email is registered, a verification code has been sent to it.';
-
-        if (! $user) {
-            return redirect()->to("/login/{$role}/forgot")->with('error', $genericMessage);
+        if (($refused = $this->startReset($typed)) !== null) {
+            return $refused;
         }
 
-        // Demo mode: the demo accounts' passwords can't be reset.
-        if (DemoGuard::locksUser($user)) {
-            return DemoGuard::refuse("/login/{$role}/forgot", 'error');
-        }
+        AfterResponse::padTo($started, (float) config(Auth::class)->forgotMinSeconds);
 
-        $otp = (string) random_int(100000, 999999);
-
-        $this->userModel->update($user['user_id'], [
-            'reset_otp_hash'    => password_hash($otp, PASSWORD_DEFAULT),
-            'reset_otp_expires' => date('Y-m-d H:i:s', strtotime('+10 minutes')),
-        ]);
-        AttemptStore::forget('otp_attempts_' . $user['user_id']);
-
-        $this->deliverOtpEmail($user, $otp);
-
-        session()->set([
-            'pwd_reset_user_id'  => $user['user_id'],
-            'pwd_reset_role'     => $role,
-            'pwd_reset_verified' => false,
-            'pwd_reset_touched'  => time(),
-        ]);
-
-        return redirect()->to("/login/{$role}/otp");
-    }
-
-    public function showOtpVerify($role)
-    {
-        if (! $this->hasPendingReset($role)) {
-            return redirect()->to("/login/{$role}/forgot");
-        }
-
-        $user = $this->userModel->find(session()->get('pwd_reset_user_id'));
-
-        return view('auth/otp_verify', [
-            'role'   => $role,
-            'email'  => $user['email'] ?? '',
-            'error'  => session()->getFlashdata('error'),
-            'notice' => session()->getFlashdata('notice'),
-        ]);
-    }
-
-    public function verifyOtp($role)
-    {
-        if (! $this->hasPendingReset($role)) {
-            return redirect()->to("/login/{$role}/forgot");
-        }
-
-        $code = trim((string) $this->request->getPost('otp'));
-        $user = $this->userModel->find(session()->get('pwd_reset_user_id'));
-
-        if (! $user || empty($user['reset_otp_hash']) || empty($user['reset_otp_expires'])) {
-            return redirect()->to("/login/{$role}/otp")->with('error', 'Please request a new code.');
-        }
-
-        if (strtotime($user['reset_otp_expires']) < time()) {
-            return redirect()->to("/login/{$role}/otp")->with('error', 'This code has expired. Please request a new one.');
-        }
-
-        if (! password_verify($code, $user['reset_otp_hash'])) {
-            $attemptsKey = 'otp_attempts_' . $user['user_id'];
-
-            if (AttemptStore::hit($attemptsKey, 600) >= self::OTP_MAX_ATTEMPTS) {
-                $this->userModel->update($user['user_id'], ['reset_otp_hash' => null, 'reset_otp_expires' => null]);
-                AttemptStore::forget($attemptsKey);
-                SecurityLogModel::log('otp_locked', $user, 'too many wrong codes');
-
-                return redirect()->to("/login/{$role}/otp")->with('error', 'Too many incorrect attempts. Please request a new code.');
-            }
-
-            return redirect()->to("/login/{$role}/otp")->with('error', "Incorrect code, please try again.");
-        }
-
-        AttemptStore::forget('otp_attempts_' . $user['user_id']);
-        session()->set('pwd_reset_verified', true);
-
-        return redirect()->to("/login/{$role}/reset-password");
-    }
-
-    public function resendOtp($role)
-    {
-        if (! $this->hasPendingReset($role)) {
-            return redirect()->to("/login/{$role}/forgot");
-        }
-
-        $user = $this->userModel->find(session()->get('pwd_reset_user_id'));
-
-        if (DemoGuard::locksUser($user)) {
-            return DemoGuard::refuse("/login/{$role}/forgot", 'error');
-        }
-
-        if (! $this->withinLimit('otp_resend', (string) $user['user_id'], 3, 600)) {
-            return redirect()->to("/login/{$role}/otp")->with('error', 'Too many requests. Try again in a few minutes.');
-        }
-
-        $otp = (string) random_int(100000, 999999);
-
-        $this->userModel->update($user['user_id'], [
-            'reset_otp_hash'    => password_hash($otp, PASSWORD_DEFAULT),
-            'reset_otp_expires' => date('Y-m-d H:i:s', strtotime('+10 minutes')),
-        ]);
-        AttemptStore::forget('otp_attempts_' . $user['user_id']);
-
-        $delivered = $this->deliverOtpEmail($user, $otp);
-        $redirect  = redirect()->to("/login/{$role}/otp");
-
-        if ($delivered) {
-            return $redirect->with('notice', 'A new code has been sent.');
-        }
-
-        // The owner has nobody above them to contact; a supplier contacts the shop.
-        return $redirect->with('error', $role === 'supplier'
-            ? "We couldn't send the code to your email right now. Try again in a few minutes. If it keeps happening, contact RfourL Military Supply."
-            : "We couldn't send the code to your email right now. Check your internet connection and try again in a few minutes.");
-    }
-
-    public function showResetPassword($role)
-    {
-        if (! $this->hasPendingReset($role) || ! session()->get('pwd_reset_verified')) {
-            return redirect()->to("/login/{$role}/forgot");
-        }
-
-        return view('auth/reset_password', [
-            'role'  => $role,
-            'error' => session()->getFlashdata('error'),
-        ]);
-    }
-
-    public function resetPassword($role)
-    {
-        if (! $this->hasPendingReset($role) || ! session()->get('pwd_reset_verified')) {
-            return redirect()->to("/login/{$role}/forgot");
-        }
-
-        $newPass = (string) $this->request->getPost('new_password');
-        $confirm = (string) $this->request->getPost('confirm_password');
-
-        if ($error = PasswordPolicy::check($newPass)) {
-            return redirect()->to("/login/{$role}/reset-password")->with('error', $error);
-        }
-        if ($newPass !== $confirm) {
-            return redirect()->to("/login/{$role}/reset-password")->with('error', 'Passwords do not match.');
-        }
-
-        $userId = session()->get('pwd_reset_user_id');
-
-        if (DemoGuard::locksUser($this->userModel->find($userId))) {
-            return DemoGuard::refuse("/login/{$role}/forgot", 'error');
-        }
-
-        $this->userModel->update($userId, [
-            'password_hash'     => password_hash($newPass, PASSWORD_DEFAULT),
-            'reset_otp_hash'    => null,
-            'reset_otp_expires' => null,
-        ]);
-
-        $resetUser = $this->userModel->find($userId);
-        SecurityLogModel::log('password_reset', $resetUser, 'via emailed code');
-
-        // One email to this account's own address. No links, no codes.
-        (new EmailNotifier())->toUser(
-            $resetUser,
-            'Your RfourL password was changed',
-            'Your RfourL password was changed on ' . date('M j, Y, g:i A') . ". If this wasn't you, contact "
-                . ($role === 'admin' ? 'support' : 'the owner') . ' right away.'
-        );
-
-        session()->remove(['pwd_reset_user_id', 'pwd_reset_role', 'pwd_reset_verified', 'pwd_reset_touched']);
-
-        return redirect()->to("/login/{$role}")->with('success', 'Password reset. Please log in with your new password.');
-    }
-
-    // --- STAFF "Forgot password?" (they reset it themselves with an emailed temporary password) ---
-
-    public function showStaffForgot()
-    {
-        return view('auth/forgot_password_staff', [
-            'sent'  => session()->getFlashdata('sent'),
-            'error' => session()->getFlashdata('error'),
-        ]);
+        return redirect()->to('/login/forgot/check');
     }
 
     /**
-     * The staff member types their username or full name. If that is exactly one active account with a
-     * real email, a temporary password is emailed to them (valid 2 hours) and their current password
-     * keeps working until they use it. No owner approval. Whatever happens, the person sees the same
-     * neutral message, so the form can't be used to find out which names exist.
+     * Finds the account and sends what fits its role, then starts the reset in the session. Every
+     * outcome stores the same kind of reset; only the server knows which it is. Returns a response
+     * only for a demo account (demo mode), whose password can't be reset.
      */
-    public function notifyStaffForgot()
+    private function startReset(string $typed): ?\CodeIgniter\HTTP\RedirectResponse
     {
-        $back = '/login/staff/forgot';
-
-        // Caps how often one client can use the form (this says nothing about any account).
-        if (! $this->withinLimit('staff_forgot', $this->request->getIPAddress(), 3, 600)) {
-            return redirect()->to($back)->with('error', 'Too many requests. Please wait a few minutes and try again.');
+        $user = $this->userModel->findForReset($typed);
+        if ($user !== null && ! $this->isAccountActive($user)) {
+            $user = null;
         }
 
-        $staffName = trim((string) $this->request->getPost('staff_name'));
-        if ($staffName === '') {
-            return redirect()->to($back)->with('error', 'Please enter your username or name.');
+        // Demo mode: the demo accounts' passwords can't be reset (their logins are shown on the page anyway).
+        if ($user !== null && DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse('/login/forgot', 'error');
         }
 
-        $neutral = redirect()->to($back)->with('sent', true);
+        $kind = $user === null ? 'none' : ($user['role'] === 'Staff' ? 'temp' : 'code');
 
-        // Same matching as always: the typed name or username must be exactly one active staff account.
-        $needle  = mb_strtolower($staffName);
-        $matches = $this->userModel->activeStaff()->where('is_active', 1)
-            ->groupStart()->where('LOWER(full_name)', $needle)->orWhere('LOWER(username)', $needle)->groupEnd()
-            ->findAll();
+        match ($kind) {
+            'code'  => $this->sendCode($user),
+            'temp'  => $this->sendTemporaryPassword($user),
+            default => $this->noAccount(),
+        };
 
-        if (count($matches) !== 1) {
-            SecurityLogModel::log('password_forgot_no_match', ['role' => 'Staff', 'username' => null], count($matches) . ' active staff accounts matched');
+        $now = time();
+        session()->set(self::RESET_KEY, [
+            'token'    => bin2hex(random_bytes(8)),
+            'kind'     => $kind,
+            'user_id'  => $kind === 'code' ? (int) $user['user_id'] : null,
+            'ident'    => UserModel::normalise($typed),
+            'verified' => false,
+            'burned'   => false,
+            'sent_at'  => $now,
+            'expires'  => $now + self::CODE_SECONDS,
+            'touched'  => $now,
+        ]);
 
-            return $neutral;
-        }
-        $staff = $matches[0];
+        return null;
+    }
 
-        // Demo mode: the demo staff account's password can't be reset.
-        if (DemoGuard::locksUser($staff)) {
-            return DemoGuard::refuse($back, 'error');
-        }
+    /** Owner or Supplier: a new 6-digit code (10 minutes); the email goes after the response. */
+    private function sendCode(array $user): void
+    {
+        $otp = (string) random_int(100000, 999999);
 
+        $this->userModel->update($user['user_id'], [
+            'reset_otp_hash'    => password_hash($otp, PASSWORD_DEFAULT),
+            'reset_otp_expires' => date('Y-m-d H:i:s', time() + self::CODE_SECONDS),
+        ]);
+        AttemptStore::forget('otp_attempts_' . $user['user_id']);
+
+        // Demo mode: testers see the code on the next page, so they don't need the inbox.
+        DemoGuard::reveal('Demo code', $otp);
+
+        AfterResponse::defer(fn () => $this->deliverOtpEmail($user, $otp));
+    }
+
+    /**
+     * Staff: a temporary password emailed to them (2 hours); their current password keeps working
+     * until they use it. No owner approval. The email goes after the response.
+     */
+    private function sendTemporaryPassword(array $staff): void
+    {
         // At most 3 requests per account per hour; extra ones are logged and sent nothing.
         if (AttemptStore::hit('staff_forgot_acct_' . $staff['user_id'], 3600) > StaffPasswordReset::FORGOT_PER_HOUR) {
             SecurityLogModel::log('password_forgot_rate_limited', $staff, 'more than ' . StaffPasswordReset::FORGOT_PER_HOUR . ' requests in an hour');
 
-            return $neutral;
+            return;
         }
 
         // A staff email that is also an Owner's email never gets a temporary password (the Owner
@@ -610,7 +443,7 @@ class AuthController extends BaseController
                 "{$staff['full_name']}'s email is the same as the owner's, so no temporary password was sent. Give them their own email in Manage Accounts, or reset the password there."
             );
 
-            return $neutral;
+            return;
         }
 
         // No usable email: nothing to send, so the owner is told in the app.
@@ -621,57 +454,241 @@ class AuthController extends BaseController
                 "{$staff['full_name']} tried to reset their password but has no email on file. Reset it from Manage Accounts."
             );
 
-            return $neutral;
+            return;
         }
 
-        $password = (new StaffPasswordReset())->requestForgot($staff);
-        if ($password === null) {
-            log_message('error', "Forgot-password email could not be sent for user {$staff['user_id']}");
-            SecurityLogModel::log('password_forgot_failed', $staff, 'the email could not be sent');
-
-            return $neutral;
-        }
-
-        SecurityLogModel::log('password_forgot_requested', $staff, 'temporary password emailed');
+        $reset = new StaffPasswordReset();
+        [$password, $hash, $before] = $reset->prepareForgot($staff);
         DemoGuard::reveal("Temporary password for {$staff['full_name']}", $password);
 
-        return $neutral;
+        AfterResponse::defer(static function () use ($reset, $staff, $password, $hash, $before): void {
+            if ($reset->sendForgot($staff, $password, $hash, $before)) {
+                SecurityLogModel::log('password_forgot_requested', $staff, 'temporary password emailed');
+
+                return;
+            }
+            log_message('error', "Forgot-password email could not be sent for user {$staff['user_id']}");
+            SecurityLogModel::log('password_forgot_failed', $staff, 'the email could not be sent');
+        });
     }
 
-    /** Forgot password: how long a started reset stays usable without a step in it (as before, 30 minutes). */
-    private const RESET_IDLE_SECONDS = 1800;
-
-    /**
-     * A started password reset for this role. It ends after 30 minutes without a step in it, exactly as
-     * when it ended with the 30-minute session (the session itself now lives longer: Config\Session).
-     */
-    private function hasPendingReset(string $role): bool
+    /** No account: nothing is sent. One hash, so this takes about as long as making a code. */
+    private function noAccount(): void
     {
-        $session = session();
-        if ($session->get('pwd_reset_role') !== $role || ! $session->get('pwd_reset_user_id')) {
-            return false;
-        }
-        if (time() - (int) $session->get('pwd_reset_touched') > self::RESET_IDLE_SECONDS) {
-            $session->remove(['pwd_reset_user_id', 'pwd_reset_role', 'pwd_reset_verified', 'pwd_reset_touched']);
+        password_hash(bin2hex(random_bytes(8)), PASSWORD_DEFAULT);
+        SecurityLogModel::log('password_forgot_no_match', ['user_id' => null, 'role' => null, 'username' => null], 'no single active account matched');
+    }
 
-            return false;
+    /** Step 2: "Check your email" (the same page for everyone). */
+    public function showCheckEmail()
+    {
+        $reset = $this->pendingReset();
+        if ($reset === null) {
+            return redirect()->to('/login/forgot');
         }
-        $session->set('pwd_reset_touched', time());
 
-        return true;
+        return view('auth/forgot_check', [
+            'resendIn' => max(0, self::RESEND_COOLDOWN - (time() - (int) $reset['sent_at'])),
+        ]);
+    }
+
+    public function verifyCode()
+    {
+        $reset = $this->pendingReset();
+        if ($reset === null) {
+            return redirect()->to('/login/forgot');
+        }
+        $back = redirect()->to('/login/forgot/check');
+
+        $code = $this->request->getPost('code');
+        $code = preg_replace('/\D/', '', is_array($code) ? implode('', array_map('strval', $code)) : (string) $code);
+
+        if (strlen($code) !== 6) {
+            return $back->with('error', 'Enter the 6-digit code from the email.');
+        }
+        if ($reset['burned']) {
+            return $back->with('error', 'Please request a new code.');
+        }
+        if (time() > (int) $reset['expires']) {
+            return $back->with('error', 'This code has expired. Please request a new one.');
+        }
+
+        // A real code, or DUMMY_HASH (no account, a Staff member, or a code that is gone): the same check either way.
+        $user = $reset['kind'] === 'code' ? $this->userModel->find((int) $reset['user_id']) : null;
+        $hash = ($user && ! empty($user['reset_otp_hash']) && ! empty($user['reset_otp_expires']) && strtotime($user['reset_otp_expires']) >= time())
+            ? $user['reset_otp_hash'] : self::DUMMY_HASH;
+        $right = password_verify($code, $hash) && $hash !== self::DUMMY_HASH;
+
+        $attemptsKey = 'otp_attempts_' . ($user ? $user['user_id'] : 'reset_' . $reset['token']);
+
+        if (! $right) {
+            if (AttemptStore::hit($attemptsKey, self::CODE_SECONDS) >= self::OTP_MAX_ATTEMPTS) {
+                if ($user) {
+                    $this->userModel->update($user['user_id'], ['reset_otp_hash' => null, 'reset_otp_expires' => null]);
+                    SecurityLogModel::log('otp_locked', $user, 'too many wrong codes');
+                }
+                AttemptStore::forget($attemptsKey);
+                $this->updateReset(['burned' => true]);
+
+                return $back->with('error', 'Too many incorrect attempts. Please request a new code.');
+            }
+
+            return $back->with('error', 'Incorrect code, please try again.');
+        }
+
+        AttemptStore::forget($attemptsKey);
+        $this->updateReset(['verified' => true]);
+
+        return redirect()->to('/login/forgot/new-password');
     }
 
     /**
-     * Sends the OTP by email. Returns true if actually emailed. The code is
-     * never shown on-screen (except in demo mode); on failure it is only logged (without the code).
+     * "Resend": the same request again for the same username or email (a new code for an Owner or
+     * Supplier, a new temporary password for Staff, nothing otherwise), within the same limits,
+     * at most once a minute. The same answer always.
+     */
+    public function resend()
+    {
+        $started = microtime(true);
+        $reset   = $this->pendingReset();
+        if ($reset === null) {
+            return redirect()->to('/login/forgot');
+        }
+        $back = redirect()->to('/login/forgot/check');
+
+        $wait = self::RESEND_COOLDOWN - (time() - (int) $reset['sent_at']);
+        if ($wait > 0) {
+            return $back->with('error', "Please wait {$wait} seconds before asking again.");
+        }
+        if (! $this->withinLimit('forgot_resend', $reset['ident'], 3, 600)) {
+            return $back->with('error', 'Too many requests. Please wait a few minutes and try again.');
+        }
+
+        if (($refused = $this->startReset($reset['ident'])) !== null) {
+            return $refused;
+        }
+
+        AfterResponse::padTo($started, (float) config(Auth::class)->forgotMinSeconds);
+
+        return $back->with('notice', "If an account matches, we've sent the next step again. It can take a minute.");
+    }
+
+    /** Step 3: "Set a new password" (only after the right code). */
+    public function showNewPassword()
+    {
+        if ($this->verifiedReset() === null) {
+            return redirect()->to('/login/forgot');
+        }
+
+        return view('auth/forgot_new_password');
+    }
+
+    public function saveNewPassword()
+    {
+        $reset = $this->verifiedReset();
+        if ($reset === null) {
+            return redirect()->to('/login/forgot');
+        }
+        $back = redirect()->to('/login/forgot/new-password');
+
+        $newPass = (string) $this->request->getPost('new_password');
+        $confirm = (string) $this->request->getPost('confirm_password');
+
+        if ($error = PasswordPolicy::check($newPass)) {
+            return $back->with('error', $error);
+        }
+        if ($newPass !== $confirm) {
+            return $back->with('error', 'Passwords do not match.');
+        }
+
+        $user = $this->userModel->find((int) $reset['user_id']);
+        if (! $user) {
+            session()->remove(self::RESET_KEY);
+
+            return redirect()->to('/login/forgot');
+        }
+        if (DemoGuard::locksUser($user)) {
+            return DemoGuard::refuse('/login/forgot', 'error');
+        }
+        if (password_verify($newPass, $user['password_hash'])) {
+            return $back->with('error', 'Choose a different password from your current one.');
+        }
+
+        $this->userModel->update($user['user_id'], [
+            'password_hash'     => password_hash($newPass, PASSWORD_DEFAULT),
+            'reset_otp_hash'    => null,
+            'reset_otp_expires' => null,
+        ]);
+
+        $resetUser = $this->userModel->find($user['user_id']);
+        SecurityLogModel::log('password_reset', $resetUser, 'via emailed code');
+        (new LoginLockout())->reset($user['username']);
+        session()->remove(self::RESET_KEY);
+
+        // One email to this account's own address. No links, no codes. (After the password is set,
+        // so saying who to contact gives nothing away.)
+        $contact = $user['role'] === 'Admin' ? 'support' : 'the owner';
+        $when    = date('M j, Y, g:i A');
+        AfterResponse::defer(static fn () => (new EmailNotifier())->toUser(
+            $resetUser,
+            'Your RfourL password was changed',
+            "Your RfourL password was changed on {$when}. If this wasn't you, contact {$contact} right away."
+        ));
+
+        return redirect()->to('/login/forgot/done')->with('reset_done', true);
+    }
+
+    /** "Password changed". */
+    public function showDone()
+    {
+        if (! session()->getFlashdata('reset_done')) {
+            return redirect()->to('/login');
+        }
+
+        return view('auth/forgot_done');
+    }
+
+    /** The started reset, if it is still within RESET_IDLE_SECONDS of its last step (which this counts as). */
+    private function pendingReset(): ?array
+    {
+        $reset = session()->get(self::RESET_KEY);
+        if (! is_array($reset) || empty($reset['token'])) {
+            return null;
+        }
+        if (time() - (int) $reset['touched'] > self::RESET_IDLE_SECONDS) {
+            session()->remove(self::RESET_KEY);
+
+            return null;
+        }
+
+        return $this->updateReset(['touched' => time()]);
+    }
+
+    /** A started reset whose code was right (only ever an Owner or Supplier). */
+    private function verifiedReset(): ?array
+    {
+        $reset = $this->pendingReset();
+
+        return ($reset !== null && $reset['kind'] === 'code' && $reset['verified']) ? $reset : null;
+    }
+
+    private function updateReset(array $changes): array
+    {
+        $reset = array_merge((array) session()->get(self::RESET_KEY), $changes);
+        session()->set(self::RESET_KEY, $reset);
+
+        return $reset;
+    }
+
+    /**
+     * Sends the code by email (after the response, see AfterResponse). Returns true if emailed.
+     * The code is never shown on screen (except in demo mode) and never logged.
      */
     private function deliverOtpEmail(array $user, string $otp): bool
     {
-        // Demo mode: testers see the code on the next page, so they don't need the inbox.
-        DemoGuard::reveal('Demo code', $otp);
-
         if (empty($user['email'])) {
             log_message('error', "OTP not sent: no email on file for user {$user['user_id']}");
+
             return false;
         }
 

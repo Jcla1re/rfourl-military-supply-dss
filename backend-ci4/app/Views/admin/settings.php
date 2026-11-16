@@ -483,7 +483,7 @@ $tabs = [
                             </div>
                             <div class="modal-body">
                                 <div class="set-field mb-3"><label for="staffNewUsername">New username</label><input id="staffNewUsername" name="username" pattern="[A-Za-z0-9_\-]+" minlength="4" maxlength="50" title="4 to 50 letters, numbers, _ or -" required></div>
-                                <p class="text-muted small mb-0">Staff sign in with their password only, so this does not change how they sign in. They use the username for Forgot password.</p>
+                                <p class="text-muted small mb-0">Staff sign in with their username and password. Tell them their new username before they next sign in.</p>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -529,7 +529,7 @@ $tabs = [
 
             <div class="set-card">
                 <h5 class="fw-bold mb-2">Staff Passwords <?= help_tip('Staff passwords', [
-                    'Staff sign in with the password alone, so no two staff can have the same one.',
+                    'Staff sign in with their username and their own password.',
                     'If someone forgets theirs, click Reset Password on their row. A temporary password is emailed to them. You won\'t see it.',
                     'If an account has no email, the temporary password is shown to you once.',
                 ]) ?></h5>
