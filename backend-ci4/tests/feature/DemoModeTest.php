@@ -74,14 +74,22 @@ final class DemoModeTest extends DemoTestCase
     {
         $id = $this->id['demo_owner'];
 
-        $this->actingAs('demo_owner')->post('admin/settings/account', ['full_name' => 'Changed', 'email' => 'new@example.test'])
+        $this->actingAs('demo_owner')->post('admin/settings/account', ['full_name' => 'Changed', 'phone' => '0917 123 4567'])
             ->assertRedirectTo(site_url('admin/settings?tab=profile'));
         $this->assertRefused();
         $this->assertSame('Demo Owner', $this->user($id)->full_name);
+
+        // The email, username and password are one form now (admin/settings/sign-in).
+        $signIn = ['username' => 'demo_owner', 'email' => 'ourteam+owner@example.test', 'current_password' => 'DemoOwner123'];
+        unset($_SESSION['toast'], $_SESSION['error']);
+        $this->actingAs('demo_owner')->post('admin/settings/sign-in', ['email' => 'new@example.test', 'email_confirm' => 'new@example.test'] + $signIn)
+            ->assertRedirectTo(site_url('admin/settings?tab=profile'));
+        $this->assertRefused();
         $this->assertSame('ourteam+owner@example.test', $this->user($id)->email);
 
-        $this->actingAs('demo_owner')->post('admin/settings/owner-password', [
-            'current_password' => 'DemoOwner123', 'new_password' => 'BrandNewPass123', 'confirm_password' => 'BrandNewPass123',
+        unset($_SESSION['toast'], $_SESSION['error']);
+        $this->actingAs('demo_owner')->post('admin/settings/sign-in', $signIn + [
+            'new_password' => 'BrandNewPass123', 'new_password_confirm' => 'BrandNewPass123',
         ]);
         $this->assertRefused();
         $this->assertTrue(password_verify('DemoOwner123', $this->user($id)->password_hash));
@@ -89,7 +97,7 @@ final class DemoModeTest extends DemoTestCase
 
     public function testANormalOwnerCanStillEditTheirProfile(): void
     {
-        $this->actingAs('owner')->post('admin/settings/account', ['full_name' => 'Renamed Owner', 'email' => 'owner@real.test']);
+        $this->actingAs('owner')->post('admin/settings/account', ['full_name' => 'Renamed Owner', 'phone' => '']);
 
         $this->assertSame('Renamed Owner', $this->user($this->id['owner'])->full_name);
     }

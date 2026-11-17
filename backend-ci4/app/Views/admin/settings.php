@@ -6,6 +6,7 @@
 $dss = $dss ?? [];
 $admin = $admin ?? [];
 $staffAccounts = $staffAccounts ?? [];
+$fieldErrors = is_array($fieldErrors ?? null) ? $fieldErrors : [];
 $tab = $tab ?? 'profile';
 $tabs = [
     'profile'  => 'My Profile',
@@ -132,6 +133,20 @@ $tabs = [
 .pf-pen:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; }
 .pf-pen:disabled { opacity: .55; cursor: not-allowed; }
 .pf-view[hidden], .pf-form[hidden] { display: none !important; }
+/* A refused save: the message under its field (SettingsController::refuseForm). */
+.pf-form .pf-field input.is-invalid { border-color: #A1261B; }
+.pf-error { margin-top: 6px; font-size: 13px; color: #A1261B; }
+.pf-error:empty { margin-top: 0; }
+/* Full name counter: the same look as Add item's Item name ("25 / 60" on the label's line;
+   rules copied from assets/css/item-modal.css, which is the whole dialog stylesheet). */
+.im-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.im-count { font-size: 12px; line-height: 1; color: #5C6152; font-variant-numeric: tabular-nums; }
+.im-count.is-near { color: #8A6A00; }
+.im-count.is-over { color: #A1261B; }
+.pf-form .im-label-row { margin: 0 0 7px; }
+.pf-form .im-label-row label { margin: 0; }
+.pf-form .pf-field input.is-invalid:focus { border-color: #A1261B; box-shadow: 0 0 0 3px rgba(161, 38, 27, .15); }
+.pf-form > .pf-field[hidden] { display: none; }
 .set-detail .sec-val { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
 .set-detail .sec-val strong { word-break: break-all; }
 .sec-dots { letter-spacing: 3px; }
@@ -189,10 +204,33 @@ $tabs = [
 
     <div class="set-body">
         <?php if (!empty($success)): ?><div class="alert alert-success"><?= esc($success) ?></div><?php endif; ?>
-        <?php if (!empty($error)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
+        <?php if (!empty($error) && empty($fieldErrors)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
 
         <?php if ($tab === 'profile'): ?>
-            <?php $roleLabel = 'Owner'; // badge and Account Details show the same words ?>
+            <?php
+            $roleLabel = 'Owner'; // badge and Account Details show the same words
+
+            // A refused save (SettingsController::refuseForm) reopens its form with one message per field.
+            // 'form' = a message for the whole form (attempt limit, save failed).
+            $openForm  = $fieldErrors['form'] ?? null; // 'personal' | 'signin' | null
+            $errs      = (array) ($fieldErrors['fields'] ?? []);
+            $err       = static fn (string $form, string $field): ?string => $openForm === $form ? ($errs[$field] ?? null) : null;
+            $invalid   = static fn (string $form, string $field, string $id): string => $err($form, $field) !== null
+                ? ' class="is-invalid" aria-invalid="true" aria-describedby="' . $id . 'Err"' : '';
+            $errLine   = static fn (string $form, string $field, string $id): string => ($m = $err($form, $field)) !== null
+                ? '<div class="pf-error" id="' . $id . 'Err">' . esc($m) . '</div>' : '';
+            // What was typed before a refused save (never a password: those are not kept). Escaped where used.
+            $typed     = static fn (string $key, $default) => old($key, $default ?? '', false);
+
+            // The sign-in before this one (users.last_login is already this session's).
+            $prevLogin  = session()->get('previous_login');
+            $lastSignIn = ! empty($prevLogin) ? date('M j, Y g:i A', strtotime($prevLogin)) : 'This is your first sign-in';
+
+            $pfEdit = $openForm === 'personal';
+            $siEdit = $openForm === 'signin';
+            $siEmail        = (string) $typed('email', $admin['email'] ?? '');
+            $siEmailChanged = mb_strtolower(trim($siEmail)) !== mb_strtolower(trim((string) ($admin['email'] ?? '')));
+            ?>
             <h4>My Profile</h4>
             <div class="set-hint">Manage your personal information.</div>
 
@@ -202,16 +240,11 @@ $tabs = [
                     <div>
                         <div class="fw-bold fs-5"><?= esc($admin['full_name'] ?? '') ?></div>
                         <div class="set-role-pill">★ <?= esc($roleLabel) ?></div>
-                        <div class="text-muted small">Last login: <?= !empty($admin['last_login']) ? esc(date('M j, Y g:i A', strtotime($admin['last_login']))) : '—' ?></div>
+                        <div class="text-muted small">Last sign-in: <?= esc($lastSignIn) ?></div>
                     </div>
                 </div>
             </div>
 
-            <?php
-            // A failed Personal Information save (bad or taken email, missing current password) reopens the card in edit mode.
-            $pfEdit = ! empty($error) && stripos((string) $error, 'email') !== false;
-            $pfVal  = static fn (string $key) => old($key, $admin[$key] ?? '');
-            ?>
             <div class="row g-3 mb-3">
                 <div class="col-lg-7">
                     <div class="set-card h-100 mb-0" id="pfCard">
@@ -222,65 +255,41 @@ $tabs = [
 
                         <div class="pf-view" id="pfView"<?= $pfEdit ? ' hidden' : '' ?>>
                             <div class="set-detail"><span>Full Name</span><strong><?= esc($admin['full_name'] ?? '—') ?></strong></div>
-                            <div class="set-detail"><span>Email Address</span><strong><?= ($admin['email'] ?? '') !== '' ? esc($admin['email']) : '—' ?></strong></div>
                             <div class="set-detail"><span>Contact Number</span><strong><?= ($admin['phone'] ?? '') !== '' ? esc($admin['phone']) : '—' ?></strong></div>
                         </div>
 
-                        <?php // Role isn't editable here (it's in the badge and Account Details); Save only sends name, email and phone. ?>
-                        <form method="post" action="<?= site_url('admin/settings/account') ?>" class="pf-form" id="pfForm"<?= $pfEdit ? '' : ' hidden' ?>>
+                        <?php // Name and contact number only (SettingsController::updateAccount); the email is in Sign-in & Security. ?>
+                        <form method="post" action="<?= site_url('admin/settings/account') ?>" class="pf-form" id="pfForm" data-submit-once data-busy-label="Saving…"<?= $pfEdit ? '' : ' hidden' ?>>
                             <?= csrf_field() ?>
-                            <div class="pf-field">
-                                <label for="pfFullName">Full Name</label>
-                                <input id="pfFullName" name="full_name" value="<?= esc($pfVal('full_name'), 'attr') ?>" data-original="<?= esc($admin['full_name'] ?? '', 'attr') ?>" required>
-                            </div>
+                            <?php if (($m = $err('personal', 'form')) !== null): ?><div class="alert alert-danger" role="alert"><?= esc($m) ?></div><?php endif; ?>
                             <div class="pf-row">
+                                <?php
+                                // Soft limit, like Add item's Item name: typing past 60 is allowed, but the counter and
+                                // field turn red, the message shows and Save is disabled. The server checks the same limit.
+                                $pfName     = (string) $typed('full_name', $admin['full_name'] ?? '');
+                                $pfNameLen  = mb_strlen($pfName);
+                                $pfNameOver = $pfNameLen > 60;
+                                $pfNameMsg  = $err('personal', 'full_name') ?? ($pfNameOver ? 'Full name can be up to 60 characters.' : null);
+                                ?>
                                 <div class="pf-field">
-                                    <label for="pfEmail">Email Address</label>
-                                    <input id="pfEmail" name="email" type="email" value="<?= esc($pfVal('email'), 'attr') ?>" data-original="<?= esc($admin['email'] ?? '', 'attr') ?>">
+                                    <div class="im-label-row">
+                                        <label for="pfFullName">Full Name</label>
+                                        <small class="im-count<?= $pfNameOver ? ' is-over' : ($pfNameLen >= 50 ? ' is-near' : '') ?>" id="pfNameCount"><?= $pfNameLen ?> / 60</small>
+                                    </div>
+                                    <input id="pfFullName" name="full_name" value="<?= esc($pfName, 'attr') ?>" data-original="<?= esc($admin['full_name'] ?? '', 'attr') ?>" autocomplete="name" required aria-describedby="pfNameCount pfFullNameErr"<?= $pfNameMsg !== null ? ' class="is-invalid" aria-invalid="true"' : '' ?>>
+                                    <div class="pf-error" id="pfFullNameErr" role="alert"><?= $pfNameMsg !== null ? esc($pfNameMsg) : '' ?></div>
                                 </div>
                                 <div class="pf-field">
                                     <label for="pfPhone">Contact Number</label>
-                                    <input id="pfPhone" name="phone" value="<?= esc($pfVal('phone'), 'attr') ?>" data-original="<?= esc($admin['phone'] ?? '', 'attr') ?>" placeholder="e.g. 0917 123 4567">
+                                    <input id="pfPhone" name="phone" value="<?= esc($typed('phone', $admin['phone'] ?? ''), 'attr') ?>" data-original="<?= esc($admin['phone'] ?? '', 'attr') ?>" placeholder="e.g. 0917 123 4567" inputmode="tel" autocomplete="tel" maxlength="20"<?= $invalid('personal', 'phone', 'pfPhone') ?>>
+                                    <?= $errLine('personal', 'phone', 'pfPhone') ?>
                                 </div>
-                            </div>
-                            <?php // Shown once the email is edited: changing it needs the current password (SettingsController::updateAccount). ?>
-                            <div class="pf-field" id="pfEmailPwField" hidden>
-                                <label for="pfEmailPw">Current password (to change your email)</label>
-                                <input id="pfEmailPw" name="current_password" type="password" autocomplete="current-password">
                             </div>
                             <div class="pf-actions">
                                 <button type="button" class="btn btn-outline-dark pf-cancel" id="pfCancelBtn">Cancel</button>
                                 <button type="submit" class="btn btn-success pf-save"<?= demo_lock_attr($admin ?? null) ?>>Save</button>
                             </div>
                         </form>
-                        <script>
-                        (function () {
-                            const card = document.getElementById('pfCard'), view = document.getElementById('pfView'), form = document.getElementById('pfForm');
-                            const edit = document.getElementById('pfEditBtn'), cancel = document.getElementById('pfCancelBtn');
-                            const email = document.getElementById('pfEmail'), field = document.getElementById('pfEmailPwField'), pw = document.getElementById('pfEmailPw');
-                            // The current password is only asked for when the email is changed.
-                            const sync = () => {
-                                const changed = email.value.trim().toLowerCase() !== (email.dataset.original || '').trim().toLowerCase();
-                                field.hidden = !changed;
-                                pw.required = changed;
-                            };
-                            const show = (editing) => {
-                                view.hidden = editing;
-                                form.hidden = !editing;
-                                edit.hidden = editing;
-                                if (editing) { document.getElementById('pfFullName').focus(); } else { edit.focus(); }
-                            };
-                            edit.addEventListener('click', () => show(true));
-                            cancel.addEventListener('click', () => {
-                                form.querySelectorAll('input[data-original]').forEach((i) => { i.value = i.dataset.original; });
-                                pw.value = '';
-                                sync();
-                                show(false);
-                            });
-                            email.addEventListener('input', sync);
-                            sync();
-                        })();
-                        </script>
                     </div>
                 </div>
 
@@ -290,81 +299,128 @@ $tabs = [
                         <div class="set-detail"><span>Role</span><strong><?= esc($roleLabel) ?></strong></div>
                         <div class="set-detail"><span>Account Status</span><span class="status-pill acct <?= ! empty($admin['is_active']) ? 'green' : 'gray' ?>"><?= ! empty($admin['is_active']) ? 'Active' : 'Inactive' ?></span></div>
                         <div class="set-detail"><span>Member Since</span><strong><?= !empty($admin['created_at']) ? esc(date('F j, Y', strtotime($admin['created_at']))) : '—' ?></strong></div>
-                        <div class="set-detail"><span>Last Login</span><strong><?= !empty($admin['last_login']) ? esc(date('M j, Y g:i A', strtotime($admin['last_login']))) : '—' ?></strong></div>
+                        <div class="set-detail"><span>Last sign-in</span><strong><?= esc($lastSignIn) ?></strong></div>
                     </div>
                 </div>
             </div>
 
             <div class="set-card" id="pfSecurity">
-                <h5 class="pf-title">Sign-in &amp; Security</h5>
-                <div class="set-detail">
-                    <span>Username</span>
-                    <div class="sec-val">
-                        <strong><?= esc($admin['username'] ?? '—') ?></strong>
-                        <button type="button" class="pf-pen" aria-label="Change username" data-tooltip="Change username" data-tooltip-pos="above" data-bs-toggle="modal" data-bs-target="#ownerUsernameModal"<?= demo_lock_attr($admin ?? null) ?>><i class="bi bi-pencil" aria-hidden="true"></i></button>
-                    </div>
+                <div class="pf-head">
+                    <h5 class="pf-title">Sign-in &amp; Security</h5>
+                    <button type="button" class="pf-pen" id="siEditBtn" aria-label="Edit sign-in details" data-tooltip="Edit" data-tooltip-pos="above"<?= $siEdit ? ' hidden' : '' ?><?= demo_lock_attr($admin ?? null) ?>><i class="bi bi-pencil" aria-hidden="true"></i></button>
                 </div>
-                <div class="set-detail">
-                    <span>Password</span>
-                    <div class="sec-val">
-                        <strong class="sec-dots" aria-label="Hidden">••••••••</strong>
-                        <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#ownerPasswordModal"<?= demo_lock_attr($admin ?? null) ?>><i class="bi bi-key" aria-hidden="true"></i> Change password</button>
-                    </div>
+
+                <div class="pf-view" id="siView"<?= $siEdit ? ' hidden' : '' ?>>
+                    <div class="set-detail"><span>Username</span><div class="sec-val"><strong><?= esc($admin['username'] ?? '—') ?></strong></div></div>
+                    <div class="set-detail"><span>Email Address</span><div class="sec-val"><strong><?= ($admin['email'] ?? '') !== '' ? esc($admin['email']) : '—' ?></strong></div></div>
+                    <div class="set-detail"><span>Password</span><div class="sec-val"><strong class="sec-dots" aria-label="Hidden">••••••••</strong></div></div>
                 </div>
+
+                <?php // Username, email and password in one form; the current password is asked for once (SettingsController::updateSignIn). ?>
+                <form method="post" action="<?= site_url('admin/settings/sign-in') ?>" class="pf-form" id="siForm" data-submit-once data-busy-label="Saving…"<?= $siEdit ? '' : ' hidden' ?>>
+                    <?= csrf_field() ?>
+                    <?php if (($m = $err('signin', 'form')) !== null): ?><div class="alert alert-danger" role="alert"><?= esc($m) ?></div><?php endif; ?>
+                    <div class="pf-row">
+                        <div class="pf-field">
+                            <label for="siUsername">Username</label>
+                            <input id="siUsername" name="username" value="<?= esc($typed('username', $admin['username'] ?? ''), 'attr') ?>" data-original="<?= esc($admin['username'] ?? '', 'attr') ?>" pattern="[A-Za-z0-9_\-]+" minlength="4" maxlength="50" title="4 to 50 letters, numbers, _ or -" required autocomplete="username"<?= $invalid('signin', 'username', 'siUsername') ?>>
+                            <?= $errLine('signin', 'username', 'siUsername') ?>
+                        </div>
+                        <div class="pf-field">
+                            <label for="siEmail">Email Address</label>
+                            <input id="siEmail" name="email" type="email" value="<?= esc($siEmail, 'attr') ?>" data-original="<?= esc($admin['email'] ?? '', 'attr') ?>" maxlength="100" required autocomplete="email"<?= $invalid('signin', 'email', 'siEmail') ?>>
+                            <?= $errLine('signin', 'email', 'siEmail') ?>
+                        </div>
+                    </div>
+                    <?php // Shown once the email is edited: the new address is typed twice. ?>
+                    <div class="pf-field" id="siEmailConfirmField"<?= $siEmailChanged ? '' : ' hidden' ?>>
+                        <label for="siEmailConfirm">Type the new email again</label>
+                        <input id="siEmailConfirm" name="email_confirm" type="email" value="<?= esc((string) $typed('email_confirm', ''), 'attr') ?>" maxlength="100" autocomplete="off"<?= $invalid('signin', 'email_confirm', 'siEmailConfirm') ?>>
+                        <?= $errLine('signin', 'email_confirm', 'siEmailConfirm') ?>
+                    </div>
+                    <div class="pf-row">
+                        <div class="pf-field">
+                            <label for="siNewPassword">New password <span class="text-muted fw-normal">(leave blank to keep it)</span></label>
+                            <input id="siNewPassword" name="new_password" type="password" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" autocomplete="new-password"<?= $invalid('signin', 'new_password', 'siNewPassword') ?>>
+                            <?= $errLine('signin', 'new_password', 'siNewPassword') ?>
+                        </div>
+                        <div class="pf-field">
+                            <label for="siNewPasswordConfirm">Confirm new password</label>
+                            <input id="siNewPasswordConfirm" name="new_password_confirm" type="password" autocomplete="new-password"<?= $invalid('signin', 'new_password_confirm', 'siNewPasswordConfirm') ?>>
+                            <?= $errLine('signin', 'new_password_confirm', 'siNewPasswordConfirm') ?>
+                        </div>
+                    </div>
+                    <div class="pf-field">
+                        <label for="siCurrentPassword">Current password</label>
+                        <input id="siCurrentPassword" name="current_password" type="password" required autocomplete="current-password"<?= $invalid('signin', 'current_password', 'siCurrentPassword') ?>>
+                        <?= $errLine('signin', 'current_password', 'siCurrentPassword') ?>
+                    </div>
+                    <div class="pf-actions">
+                        <button type="button" class="btn btn-outline-dark pf-cancel" id="siCancelBtn">Cancel</button>
+                        <button type="submit" class="btn btn-success pf-save"<?= demo_lock_attr($admin ?? null) ?>>Save</button>
+                    </div>
+                </form>
                 <p class="text-muted small mb-0 mt-3">For your security, changing your username, email or password asks for your current password.</p>
             </div>
 
-            <div class="modal fade" id="ownerPasswordModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <form method="post" action="<?= site_url('admin/settings/owner-password') ?>" id="ownerPasswordForm">
-                            <?= csrf_field() ?>
-                            <div class="modal-header">
-                                <h5 class="modal-title">Change Password</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="set-field mb-3"><label for="pwCurrent">Current password</label><input id="pwCurrent" name="current_password" type="password" required autocomplete="current-password"></div>
-                                <div class="set-field mb-3"><label for="pwNew">New password</label><input id="pwNew" name="new_password" type="password" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" required autocomplete="new-password"></div>
-                                <div class="set-field mb-2"><label for="pwConfirm">Confirm new password</label><input id="pwConfirm" name="confirm_password" type="password" required autocomplete="new-password"></div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-outline-dark pf-cancel" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-success pf-save"<?= demo_lock_attr($admin ?? null) ?>>Save</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
             <script>
-                // Nothing typed stays behind when the dialog is closed.
-                document.getElementById('ownerPasswordModal').addEventListener('hidden.bs.modal', function () {
-                    this.querySelectorAll('input').forEach(function (i) { i.value = ''; });
-                });
-            </script>
+            (function () {
+                // Each card: a view, a form that opens with the pen, and Cancel that puts the saved values back.
+                function card(prefix, firstField, onReset) {
+                    const view = document.getElementById(prefix + 'View'), form = document.getElementById(prefix + 'Form');
+                    const edit = document.getElementById(prefix + 'EditBtn'), cancel = document.getElementById(prefix + 'CancelBtn');
+                    const show = (editing) => {
+                        view.hidden = editing;
+                        form.hidden = !editing;
+                        edit.hidden = editing;
+                        if (editing) { document.getElementById(firstField).focus(); } else { edit.focus(); }
+                    };
+                    edit.addEventListener('click', () => show(true));
+                    cancel.addEventListener('click', () => {
+                        form.querySelectorAll('input[data-original]').forEach((i) => { i.value = i.dataset.original; });
+                        form.querySelectorAll('input[type=password]').forEach((i) => { i.value = ''; });
+                        form.querySelectorAll('.is-invalid').forEach((i) => { i.classList.remove('is-invalid'); i.removeAttribute('aria-invalid'); });
+                        form.querySelectorAll('.pf-error').forEach((e) => { e.textContent = ''; });
+                        form.querySelectorAll('.alert').forEach((e) => { e.remove(); });
+                        if (onReset) { onReset(); }
+                        show(false);
+                    });
+                }
 
-            <div class="modal fade" id="ownerUsernameModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <form method="post" action="<?= site_url('admin/settings/username') ?>">
-                            <?= csrf_field() ?>
-                            <div class="modal-header">
-                                <h5 class="modal-title">Change Username</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="set-field mb-3"><label for="ownerNewUsername">New username</label><input id="ownerNewUsername" name="username" value="<?= esc($admin['username'] ?? '', 'attr') ?>" pattern="[A-Za-z0-9_\-]+" minlength="4" maxlength="50" title="4 to 50 letters, numbers, _ or -" required autocomplete="username"></div>
-                                <div class="set-field mb-2"><label for="ownerUsernamePw">Current password</label><input id="ownerUsernamePw" name="current_password" type="password" required autocomplete="current-password"></div>
-                                <p class="text-muted small mb-0">Use the new username the next time you sign in.</p>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-success">Save</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+                // The new email is typed twice; the second box only shows once the email is changed.
+                const email = document.getElementById('siEmail'), confirmField = document.getElementById('siEmailConfirmField'), confirm = document.getElementById('siEmailConfirm');
+                const syncEmail = () => {
+                    const changed = email.value.trim().toLowerCase() !== (email.dataset.original || '').trim().toLowerCase();
+                    confirmField.hidden = !changed;
+                    if (!changed) { confirm.value = ''; }
+                };
+                email.addEventListener('input', syncEmail);
+
+                // Full name counter, as in Add item (Item name): "n / 60" counted in characters, amber from 50,
+                // red past 60 with the message under the field and Save disabled. Typing is never blocked.
+                const NAME_MAX = 60, NAME_OVER_MSG = 'Full name can be up to 60 characters.';
+                const name = document.getElementById('pfFullName'), nameCount = document.getElementById('pfNameCount');
+                const nameErr = document.getElementById('pfFullNameErr'), nameSave = document.querySelector('#pfForm button[type="submit"]');
+                const saveLocked = nameSave.disabled; // the demo owner's Save stays disabled
+                const syncName = (edited) => {
+                    const len = [...name.value].length, over = len > NAME_MAX;
+                    nameCount.textContent = `${len} / ${NAME_MAX}`;
+                    nameCount.classList.toggle('is-near', len >= 50 && !over);
+                    nameCount.classList.toggle('is-over', over);
+                    // A message from the server goes away once the name is edited; the limit shows right away.
+                    const msg = over ? NAME_OVER_MSG : (edited ? '' : nameErr.textContent);
+                    if (nameErr.textContent !== msg) { nameErr.textContent = msg; }
+                    name.classList.toggle('is-invalid', msg !== '');
+                    name.setAttribute('aria-invalid', msg !== '' ? 'true' : 'false');
+                    nameSave.disabled = saveLocked || over;
+                };
+                name.addEventListener('input', () => syncName(true));
+                syncName(false);
+
+                card('pf', 'pfFullName', () => syncName(true));
+                card('si', 'siUsername', syncEmail);
+            })();
+            </script>
 
         <?php elseif ($tab === 'accounts'): ?>
             <h4>Manage Accounts</h4>
@@ -467,7 +523,7 @@ $tabs = [
                     document.getElementById('resetStaffPwForm').action = btn.dataset.action;
                     document.getElementById('resetStaffPwName').textContent = btn.dataset.name;
                     document.getElementById('resetStaffPwName2').textContent = btn.dataset.name;
-                    this.querySelectorAll('input[type=password]').forEach(function (i) { i.value = ''; });
+                    this.querySelectorAll('input[type="password"]').forEach(function (i) { i.value = ''; });
                     document.getElementById('resetInformed').checked = false;
                 });
             </script>

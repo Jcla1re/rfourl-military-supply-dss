@@ -84,7 +84,7 @@ final class DemoModeOffTest extends DemoTestCase
     {
         $this->assertFalse(DemoGuard::locksUser((array) $this->user($this->id['demo_owner'])));
 
-        $this->actingAs('demo_owner')->post('admin/settings/account', ['full_name' => 'Renamed', 'email' => 'ourteam+owner@example.test']);
+        $this->actingAs('demo_owner')->post('admin/settings/account', ['full_name' => 'Renamed', 'phone' => '']);
         $this->assertSame('Renamed', $this->user($this->id['demo_owner'])->full_name);
 
         $this->actingAs('owner')->post('admin/settings/staff-accounts/toggle/' . $this->id['demo_staff']);

@@ -65,11 +65,13 @@ final class StaffAccountTest extends CIUnitTestCase
         $this->adminId = $this->makeUser('owner1', 'Admin', 'OwnerPass123');
 
         AttemptStore::forget('staff_pw_change_' . $this->staffId);
+        AttemptStore::forget('owner_signin_change_' . $this->adminId);
     }
 
     protected function tearDown(): void
     {
         AttemptStore::forget('staff_pw_change_' . $this->staffId);
+        AttemptStore::forget('owner_signin_change_' . $this->adminId);
         \Config\Database::forge()->dropTable('users', true);
         \Config\Database::forge()->dropTable('notifications', true);
 
@@ -178,7 +180,7 @@ final class StaffAccountTest extends CIUnitTestCase
     public function testStaffCannotReachAdminOrSupplierProfileRoutes(): void
     {
         $this->asStaff()->get('admin/settings')->assertRedirectTo(site_url('login'));
-        $this->asStaff()->post('admin/settings/owner-password', [])->assertRedirectTo(site_url('login'));
+        $this->asStaff()->post('admin/settings/sign-in', [])->assertRedirectTo(site_url('login'));
         $this->asStaff()->get('supplier/profile')->assertRedirectTo(site_url('login'));
         $this->asStaff()->post('supplier/profile/password', [])->assertRedirectTo(site_url('login'));
     }
@@ -190,20 +192,26 @@ final class StaffAccountTest extends CIUnitTestCase
 
     public function testOwnerPasswordChangeReturnsToMyProfileTab(): void
     {
-        $ok = $this->asOwner()->post('admin/settings/owner-password', [
-            'current_password' => 'OwnerPass123',
-            'new_password'     => 'OwnerNewPass45',
-            'confirm_password' => 'OwnerNewPass45',
+        // The owner's password is part of the one sign-in form now (admin/settings/sign-in).
+        $this->db->table('users')->where('user_id', $this->adminId)->update(['email' => 'owner1@example.test']);
+        $form = ['username' => 'owner1', 'email' => 'owner1@example.test'];
+
+        $ok = $this->asOwner()->post('admin/settings/sign-in', $form + [
+            'current_password'     => 'OwnerPass123',
+            'new_password'         => 'OwnerNewPass45',
+            'new_password_confirm' => 'OwnerNewPass45',
         ]);
         $ok->assertRedirectTo(site_url('/admin/settings?tab=profile'));
-        $ok->assertSessionHas('success');
+        $ok->assertSessionHas('success', 'Password changed.');
+        $this->assertTrue(password_verify('OwnerNewPass45', $this->hashOf($this->adminId)));
 
-        $bad = $this->asOwner()->post('admin/settings/owner-password', [
-            'current_password' => 'wrong',
-            'new_password'     => 'OwnerNewPass46',
-            'confirm_password' => 'OwnerNewPass46',
+        $bad = $this->asOwner()->post('admin/settings/sign-in', $form + [
+            'current_password'     => 'wrong',
+            'new_password'         => 'OwnerNewPass46',
+            'new_password_confirm' => 'OwnerNewPass46',
         ]);
         $bad->assertRedirectTo(site_url('/admin/settings?tab=profile'));
         $bad->assertSessionHas('error');
+        $this->assertTrue(password_verify('OwnerNewPass45', $this->hashOf($this->adminId)), 'a wrong current password changes nothing');
     }
 }
