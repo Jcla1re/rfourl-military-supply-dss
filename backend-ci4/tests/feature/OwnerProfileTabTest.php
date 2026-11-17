@@ -100,6 +100,8 @@ final class OwnerProfileTabTest extends DemoTestCase
         $svg = $x->query('./*[local-name()="svg"]', $button)->item(0);
         $this->assertNotNull($svg, 'the pen icon');
         $this->assertSame('true', $svg->getAttribute('aria-hidden'));
+        $this->assertSame('16', $svg->getAttribute('width'), 'drawn at 16px, never 0');
+        $this->assertSame('16', $svg->getAttribute('height'));
         $this->assertSame(['M12 20h9', 'M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'], array_map(static fn ($p) => $p->getAttribute('d'), iterator_to_array($x->query('./*[local-name()="path"]', $svg))));
     }
 

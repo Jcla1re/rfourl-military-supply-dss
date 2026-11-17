@@ -310,7 +310,7 @@ $tabs = [
                     <section class="set-card" id="pfCard" aria-labelledby="pfTitle">
                         <div class="pf-head">
                             <h2 class="pf-title" id="pfTitle">Personal information</h2>
-                            <button type="button" class="pf-edit" id="pfEditBtn" aria-label="Edit personal information"<?= $pfEdit ? ' hidden' : '' ?><?= demo_lock_attr($admin ?? null) ?>><?= view('partials/_pen_icon', ['size' => 16], ['saveData' => false]) ?>Edit</button>
+                            <button type="button" class="pf-edit" id="pfEditBtn" aria-label="Edit personal information"<?= $pfEdit ? ' hidden' : '' ?><?= demo_lock_attr($admin ?? null) ?>><?= view('partials/_pen_icon', ['penIconSize' => 16], ['saveData' => false]) ?>Edit</button>
                         </div>
 
                         <dl class="pf-view pf-rows" id="pfView"<?= $pfEdit ? ' hidden' : '' ?>>
@@ -360,7 +360,7 @@ $tabs = [
                     <section class="set-card" id="pfSecurity" aria-labelledby="siTitle">
                         <div class="pf-head">
                             <h2 class="pf-title" id="siTitle">Sign-in &amp; security</h2>
-                            <button type="button" class="pf-edit" id="siEditBtn" aria-label="Edit sign-in and security"<?= $siEdit ? ' hidden' : '' ?><?= demo_lock_attr($admin ?? null) ?>><?= view('partials/_pen_icon', ['size' => 16], ['saveData' => false]) ?>Edit</button>
+                            <button type="button" class="pf-edit" id="siEditBtn" aria-label="Edit sign-in and security"<?= $siEdit ? ' hidden' : '' ?><?= demo_lock_attr($admin ?? null) ?>><?= view('partials/_pen_icon', ['penIconSize' => 16], ['saveData' => false]) ?>Edit</button>
                         </div>
                         <p class="pf-sub">Changing your username, email or password asks for your current password.</p>
 

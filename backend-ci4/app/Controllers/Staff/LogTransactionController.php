@@ -78,7 +78,7 @@ class LogTransactionController extends BaseController
             'active'   => 'log_transaction',
             'type'     => $type,
             'typeInfo' => self::TYPES[$type],
-            'products' => $this->productModel->where('is_active', 1)->orderBy('item_name', 'ASC')->findAll(),
+            'products' => $this->itemsByNameThenSize(),
             'recent'   => $this->inventoryLogModel
                 ->select('inventory_log.*, products.item_name')
                 ->join('products', 'products.item_id = inventory_log.item_id', 'left')
@@ -328,5 +328,15 @@ class LogTransactionController extends BaseController
         $message = "{$staffName} logged a " . strtolower($label['type']) . " for {$itemName} ({$delta} units). New stock: {$newStock}. {$notes}";
 
         $this->notificationModel->push('Admin', $label['type'], $label['title'], trim($message), null, 'staff_activity');
+    }
+
+    /** Active items for the item list: by name (case-insensitive, as the SQL had it), then size in natural order. */
+    private function itemsByNameThenSize(): array
+    {
+        $items = $this->productModel->where('is_active', 1)->orderBy('item_name', 'ASC')->orderBy('item_id', 'ASC')->findAll();
+        usort($items, static fn ($a, $b) => [mb_strtolower((string) $a['item_name']), ProductModel::sizeKey($a['size'] ?? null)]
+            <=> [mb_strtolower((string) $b['item_name']), ProductModel::sizeKey($b['size'] ?? null)]);
+
+        return $items;
     }
 }

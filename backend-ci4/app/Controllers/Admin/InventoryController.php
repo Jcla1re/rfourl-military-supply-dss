@@ -113,7 +113,7 @@ class InventoryController extends BaseController
             if ($size) {
                 $rows = array_values(array_filter($rows, fn ($p) => ($p['size'] ?? '') === $size));
             }
-            usort($rows, fn ($a, $b) => [$a['item_name'], $a['size'] ?? ''] <=> [$b['item_name'], $b['size'] ?? '']);
+            usort($rows, [ProductModel::class, 'compareNameThenSize']); // name, then size in natural order
             $groups = $this->productModel->groupRows($rows);
             if ($statusFilter && $status) {
                 $groups = array_values(array_filter($groups, fn ($g) => $g['status']['label'] === $status));

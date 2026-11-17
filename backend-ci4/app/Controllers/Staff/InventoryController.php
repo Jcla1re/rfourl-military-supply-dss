@@ -87,7 +87,7 @@ class InventoryController extends BaseController
             $filtered = array_values(array_filter($filtered, fn ($p) => ($p['size'] ?? '') === $size));
         }
 
-        usort($filtered, fn ($a, $b) => [$a['item_name'], $a['size'] ?? ''] <=> [$b['item_name'], $b['size'] ?? '']);
+        usort($filtered, [ProductModel::class, 'compareNameThenSize']); // name, then size in natural order
 
         $groups = $this->productModel->groupRows($filtered);
         // Status filter works on the item's worst status (same rule as the

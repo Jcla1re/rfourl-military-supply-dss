@@ -144,7 +144,7 @@ class ReorderBoard
             $stock = (int) $r['current_stock'];
             $rop   = (int) ($r['manual_rop_warning'] ?? 0);
 
-            return [$stock <= 0 ? 0 : 1, $rop > 0 ? $stock / $rop : 999999, (string) $r['item_name'], (string) ($r['size'] ?? ''), (int) ($r['alert_id'] ?? 0)];
+            return [$stock <= 0 ? 0 : 1, $rop > 0 ? $stock / $rop : 999999, (string) $r['item_name'], ProductModel::sizeKey($r['size'] ?? null), (int) ($r['alert_id'] ?? 0)];
         };
 
         return $key($a) <=> $key($b);
@@ -189,7 +189,7 @@ class ReorderBoard
             $cards[$key]['sizes'][] = $r;
         }
         foreach ($cards as &$card) {
-            usort($card['sizes'], static fn ($a, $b) => [(string) $a['item_name'], (string) ($a['size'] ?? '')] <=> [(string) $b['item_name'], (string) ($b['size'] ?? '')]);
+            usort($card['sizes'], [ProductModel::class, 'compareNameThenSize']); // name, then size in natural order
         }
         unset($card);
 
@@ -222,7 +222,7 @@ class ReorderBoard
             $r['expected_date'] ? 0 : 1,
             $r['expected_date'] ? strtotime($r['expected_date']) : 0,
             (string) $r['item_name'],
-            (string) ($r['size'] ?? ''),
+            ProductModel::sizeKey($r['size'] ?? null),
         ];
 
         return $key($a) <=> $key($b);

@@ -115,7 +115,7 @@ class ProcurementReport
             ];
         }
 
-        usort($rows, static fn ($a, $b) => [$a['item_name'], $a['size'] ?? ''] <=> [$b['item_name'], $b['size'] ?? '']);
+        usort($rows, [ProductModel::class, 'compareNameThenSize']); // name, then size in natural order (screen, PDF and CSV)
 
         return $rows;
     }

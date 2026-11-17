@@ -180,9 +180,13 @@ class ProductModel extends Model
      */
     public function groupedActive(): array
     {
+        // Row order as it always was (name, then size as text), so the POS cards keep their order:
+        // a card goes where its item's first row is. groupRows() then puts the sizes inside each
+        // card in natural order (sizeKey()). item_id only makes exact ties stable.
         $products = $this->where('is_active', 1)
             ->orderBy('item_name', 'ASC')
             ->orderBy('size', 'ASC')
+            ->orderBy('item_id', 'ASC')
             ->findAll();
 
         return $this->groupRows($products);
@@ -277,31 +281,89 @@ class ProductModel extends Model
         return $size !== '' ? "{$name} · Size {$size}" : $name;
     }
 
-    /** Letter sizes, smallest first (2XL = XXL, 3XL = XXXL). */
-    private const LETTER_RANK = ['XS' => 0, 'S' => 1, 'M' => 2, 'L' => 3, 'XL' => 4, '2XL' => 5, 'XXL' => 5, '3XL' => 6, 'XXXL' => 6, '4XL' => 7];
+    /** sizeKey() groups, in display order. */
+    public const SIZE_NONE   = 0;
+    public const SIZE_LETTER = 1;
+    public const SIZE_SET    = 2;
+    public const SIZE_NUMBER = 3;
+    public const SIZE_OTHER  = 4;
+
+    /** @var array<string, array> sizeKey() results by raw value: each value's key is worked out once. */
+    private static array $sizeKeys = [];
 
     /**
-     * Natural size order: letter sizes XS → S → M → L → XL → 2XL → 3XL, then
-     * letter+waist sets ("L+33") by letter then waist, then numbers ascending
-     * (4, 5 … 10, 10.5, 11), then anything else alphabetically.
+     * Rank of a letter size, smallest first: … XXS, XS, S, M, L, XL, 2XL (= XXL), 3XL (= XXXL), 4XL, 5XL …
+     * Upper case, trimmed input. Null when it isn't a letter size.
      */
+    private static function letterRank(string $u): ?int
+    {
+        if ($u === 'M') {
+            return 0;
+        }
+        // "S"/"L" with any number of X's in front, or a count: XS, XXS, 2XS, XL, XXL, 2XL, 3XL…
+        if (! preg_match('/^(?:(\d+)X|(X*))([SL])$/', $u, $m)) {
+            return null;
+        }
+        $x = $m[1] !== '' ? (int) $m[1] : strlen($m[2]);
+
+        return $m[3] === 'S' ? -1 - $x : 1 + $x; // S = -1, XS = -2 …; L = 1, XL = 2, 2XL = XXL = 3 …
+    }
+
+    /**
+     * Sort key for one size (compare keys with <=>). Natural size order:
+     *   1. no size (NULL, "", "—", "-")
+     *   2. letter sizes: XXS, XS, S, M, L, XL, 2XL = XXL, 3XL = XXXL, 4XL, 5XL …
+     *   3. letter/number sets ("L/33" or "L+33"), right after the letter sizes: by letter, then number
+     *   4. numbers by value (4, 5, 5.5, 6 … 10, 10.5 … 30 … 44, 56)
+     *   5. anything else, alphabetically
+     * Trimmed and case-insensitive. Equal keys (e.g. "2XL" and "XXL") are broken by the trimmed
+     * text, case-insensitive, so the order never varies between loads.
+     *
+     * @return array{0: int, 1: float|int, 2: float|int, 3: string, 4: string}
+     */
+    public static function sizeKey(?string $size): array
+    {
+        $raw = (string) $size;
+        if (isset(self::$sizeKeys[$raw])) {
+            return self::$sizeKeys[$raw];
+        }
+
+        $t   = trim($raw);
+        $u   = mb_strtoupper($t);
+        $tie = mb_strtolower($t);
+
+        if ($t === '' || $t === '—' || $t === '-') {
+            $key = [self::SIZE_NONE, 0, 0, '', $tie]; // NULL and "" are the same; then "-", "—"
+        } elseif (($rank = self::letterRank($u)) !== null) {
+            $key = [self::SIZE_LETTER, $rank, 0, '', $tie];
+        } elseif (preg_match('/^(.+?)\s*[\/+]\s*(\d+(?:\.\d+)?)$/', $u, $m) && ($rank = self::letterRank(trim($m[1]))) !== null) {
+            $key = [self::SIZE_SET, $rank, (float) $m[2], '', $tie];
+        } elseif (is_numeric($t)) {
+            $key = [self::SIZE_NUMBER, (float) $t, 0, '', $tie];
+        } else {
+            $key = [self::SIZE_OTHER, 0, 0, $tie, $tie];
+        }
+
+        return self::$sizeKeys[$raw] = $key;
+    }
+
+    /** Compares two sizes in natural size order (see sizeKey()). */
+    public static function compareSizes(?string $a, ?string $b): int
+    {
+        return self::sizeKey($a) <=> self::sizeKey($b);
+    }
+
+    /** Row order used by lists: item name (as given), then size in natural order. */
+    public static function compareNameThenSize(array $a, array $b): int
+    {
+        return [(string) ($a['item_name'] ?? ''), self::sizeKey($a['size'] ?? null)]
+            <=> [(string) ($b['item_name'] ?? ''), self::sizeKey($b['size'] ?? null)];
+    }
+
+    /** Sizes in natural size order (see sizeKey()). */
     public static function sortSizes(array $sizes): array
     {
-        $key = static function (string $s): array {
-            $u = strtoupper(trim($s));
-            if (isset(self::LETTER_RANK[$u])) {
-                return [0, self::LETTER_RANK[$u], 0, ''];
-            }
-            if (preg_match('/^([A-Z0-9]+)\+(\d+(?:\.\d+)?)$/', $u, $m) && isset(self::LETTER_RANK[$m[1]])) {
-                return [1, self::LETTER_RANK[$m[1]], (float) $m[2], ''];
-            }
-            if (is_numeric($u)) {
-                return [2, (float) $u, 0, ''];
-            }
-
-            return [3, 0, 0, $u];
-        };
-        usort($sizes, static fn ($a, $b) => $key((string) $a) <=> $key((string) $b));
+        usort($sizes, static fn ($a, $b) => self::compareSizes($a === null ? null : (string) $a, $b === null ? null : (string) $b));
 
         return $sizes;
     }
@@ -323,7 +385,7 @@ class ProductModel extends Model
     /**
      * Size filter options for the selected category (only sizes that exist
      * there, naturally sorted). With All categories they're grouped:
-     * Clothing (letters), Clothing + waist ("L+33"), Waist (28–44), Shoes,
+     * Clothing (letters), Clothing + waist ("L/33" or "L+33"), Waist (28–44), Shoes,
      * Other. 'disabled' is true when the category has no sized items.
      *
      * @return array{disabled: bool, groups: array<string, string[]>, all: string[]}
@@ -342,10 +404,10 @@ class ProductModel extends Model
         $all       = self::sortSizes(array_values(array_unique(array_merge([], ...array_values($byCategory ?: [[]])))));
         $groups    = ['Clothing' => [], 'Clothing + waist' => [], 'Waist' => [], 'Shoes' => [], 'Other' => []];
         foreach ($all as $s) {
-            $u = strtoupper($s);
-            if (isset(self::LETTER_RANK[$u])) {
+            $kind = self::sizeKey($s)[0];
+            if ($kind === self::SIZE_LETTER) {
                 $groups['Clothing'][] = $s;
-            } elseif (str_contains($s, '+')) {
+            } elseif ($kind === self::SIZE_SET) {
                 $groups['Clothing + waist'][] = $s;
             } elseif (isset($shoeSizes[$s])) {
                 $groups['Shoes'][] = $s;
@@ -423,6 +485,13 @@ class ProductModel extends Model
             $groups[$key]['variants'][]   = $p;
             $groups[$key]['total_stock'] += (int) $p['current_stock'];
         }
+
+        // Each item's sizes in natural size order (XS, S, M, L … ; 5, 5.5, 6 …), whatever order the
+        // rows came in. usort is stable, and sizeKey() breaks equal keys by text, so this never varies.
+        foreach ($groups as &$group) {
+            usort($group['variants'], static fn (array $a, array $b): int => self::compareSizes($a['size'] ?? null, $b['size'] ?? null));
+        }
+        unset($group);
 
         // Worst size first; among sizes that need reordering, one that is NOT
         // already on order wins (it's the one that still needs action).
