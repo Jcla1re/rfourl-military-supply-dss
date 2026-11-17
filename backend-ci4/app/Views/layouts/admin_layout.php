@@ -159,9 +159,14 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
 
         <div class="user-footer">
             <a href="<?= site_url('admin/settings?tab=profile') ?>" class="user-footer-link <?= (($active ?? '') === 'settings' && ($tab ?? 'profile') === 'profile') ? 'active' : '' ?>" title="My account">
-                <i class="bi bi-person-circle fs-4"></i>
+                <?php $footerName = (string) session()->get('full_name'); $footerInitials = initials($footerName); ?>
+                <?php if ($footerInitials !== ''): ?>
+                    <span class="user-avatar" aria-hidden="true"><?= esc($footerInitials) ?></span>
+                <?php else: ?>
+                    <i class="bi bi-person-circle fs-4"></i>
+                <?php endif; ?>
                 <div class="user-text">
-                    <div style="font-weight:600; color:#fff; font-size:0.9rem;"><?= esc(session()->get('full_name')) ?></div>
+                    <div class="user-name" title="<?= esc($footerName, 'attr') ?>"><?= esc($footerName) ?></div>
                     <small><?= esc(session()->get('role') === 'Admin' ? 'Owner' : session()->get('role')) ?></small>
                 </div>
             </a>
@@ -170,7 +175,8 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
                 'profileUrl' => site_url('admin/settings?tab=profile'),
                 'name'       => (string) session()->get('full_name'),
                 'role'       => (string) (session()->get('role') === 'Admin' ? 'Owner' : session()->get('role')),
-            ]) ?>
+                'avatarInitials' => $footerInitials, // the Owner's initials avatar (Staff and Supplier keep the icon)
+            ], ['saveData' => false]) ?>
         </div>
     </div>
 

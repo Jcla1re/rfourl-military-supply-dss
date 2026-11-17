@@ -4,8 +4,9 @@ use App\Libraries\PasswordPolicy;
 use Tests\Support\DemoTestCase;
 
 /**
- * Settings > My Profile for the Owner: two cards that each open their own form with a pen.
- * Personal Information (name + contact number) posts to admin/settings/account; Sign-in & Security
+ * Settings > My Profile for the Owner: a "who you are" card on the left (initials avatar, name, Owner
+ * pill, account facts) and two cards on the right that each open their own form with Edit.
+ * Personal information (name + contact number) posts to admin/settings/account; Sign-in & security
  * (username, email, password, current password once) posts to admin/settings/sign-in. A refused save
  * reopens only its own form, with the message under the field.
  *
@@ -69,37 +70,140 @@ final class OwnerProfileTabTest extends DemoTestCase
         return new DOMXPath($dom);
     }
 
-    /** @return array<string, string> label => value of every row in this card or block */
+    /** @return array<string, string> label => value of every row (<dt> / <dd>) in this card or block */
     private function rows(DOMXPath $x, DOMNode $scope): array
     {
         $out = [];
-        foreach ($x->query('.//div[contains(@class,"set-detail")]', $scope) as $row) {
-            $out[trim($x->query('./span', $row)->item(0)->textContent)] = trim(preg_replace('/\s+/', ' ', $x->query('./strong|./span[2]|./div/strong', $row)->item(0)->textContent));
+        foreach ($x->query('.//div[dt]', $scope) as $row) {
+            $out[trim($x->query('./dt', $row)->item(0)->textContent)] = trim(preg_replace('/\s+/', ' ', $x->query('./dd', $row)->item(0)->textContent));
         }
 
         return $out;
     }
 
-    // ---------------------------------------------------------------- Personal Information: view mode first
+    /** The left "who you are" card. */
+    private function whoCard(DOMXPath $x): DOMNode
+    {
+        $card = $x->query('//section[contains(@class,"pf-who")]')->item(0);
+        $this->assertNotNull($card);
 
-    public function testPersonalInformationStartsInViewModeWithAnEditPen(): void
+        return $card;
+    }
+
+    /** The Edit button: Inventory's pen (the same inline SVG) and the word "Edit". */
+    private function assertEditButton(DOMXPath $x, DOMNode $button, string $label): void
+    {
+        $this->assertSame($label, $button->getAttribute('aria-label'));
+        $this->assertSame('button', $button->getAttribute('type'));
+        $this->assertStringContainsString('pf-edit', $button->getAttribute('class'));
+        $this->assertSame('Edit', trim($button->textContent));
+        $svg = $x->query('./*[local-name()="svg"]', $button)->item(0);
+        $this->assertNotNull($svg, 'the pen icon');
+        $this->assertSame('true', $svg->getAttribute('aria-hidden'));
+        $this->assertSame(['M12 20h9', 'M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'], array_map(static fn ($p) => $p->getAttribute('d'), iterator_to_array($x->query('./*[local-name()="path"]', $svg))));
+    }
+
+    // ---------------------------------------------------------------- page structure
+
+    public function testThePageHasTheTwoColumnLayoutWithoutTheOldTitleOrCards(): void
+    {
+        $html = $this->profile();
+        $x    = $this->dom($html);
+
+        // The header tabs are unchanged.
+        $tabs = $x->query('//div[contains(@class,"set-tabs")][contains(@class,"sticky-tabs")]/a');
+        $this->assertSame(['My Profile', 'Manage Accounts', 'Notifications', 'DSS Parameter', 'Data & Records'], array_map(static fn ($a) => trim($a->textContent), iterator_to_array($tabs)));
+
+        // No page title / subtitle, no top header card, no Account Details card.
+        $this->assertStringNotContainsString('Manage your personal information.', $html);
+        $this->assertSame(0, $x->query('//h4[normalize-space()="My Profile"]')->length);
+        $this->assertStringNotContainsString('Account Details', $html);
+        $this->assertStringNotContainsString('set-profile-head', $html);
+        $this->assertStringNotContainsString('★', $html);
+
+        // Left card first, then the right column with the two cards.
+        $layout = $x->query('//div[contains(@class,"pf-layout")]')->item(0);
+        $this->assertNotNull($layout);
+        $children = $x->query('./*', $layout);
+        $this->assertSame(2, $children->length);
+        $this->assertStringContainsString('pf-who', $children->item(0)->getAttribute('class'));
+        $this->assertStringContainsString('pf-main', $children->item(1)->getAttribute('class'));
+        $this->assertSame(['pfCard', 'pfSecurity'], array_map(static fn ($c) => $c->getAttribute('id'), iterator_to_array($x->query('./section', $children->item(1)))));
+        $this->assertStringContainsString('.pf-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: stretch; }', $html);
+        $this->assertStringContainsString('@media (max-width: 900px) { .pf-layout { grid-template-columns: minmax(0, 1fr); } }', $html);
+
+        // Card titles: sentence case.
+        $this->assertSame(['Personal information', 'Sign-in & security'], array_map(static fn ($h) => trim($h->textContent), iterator_to_array($x->query('//h2[contains(@class,"pf-title")]'))));
+    }
+
+    public function testTheLeftCardShowsTheInitialsAvatarNameOwnerPillAndAccountFacts(): void
+    {
+        $x    = $this->dom($this->profile());
+        $card = $this->whoCard($x);
+
+        $avatar = $x->query('.//div[contains(@class,"pf-avatar")]', $card)->item(0);
+        $this->assertSame('img', $avatar->getAttribute('role'));
+        $this->assertSame('Real Owner', $avatar->getAttribute('aria-label'));
+        $this->assertSame('RO', trim($avatar->textContent));
+        $this->assertSame('true', $x->query('./span', $avatar)->item(0)->getAttribute('aria-hidden'));
+        $this->assertSame('Real Owner', trim($x->query('.//div[contains(@class,"pf-who-name")]', $card)->item(0)->textContent));
+
+        // The Owner pill exactly as on Manage Accounts: the one neutral role pill, no inline colour, no star.
+        $pill = $x->query('.//span[contains(@class,"acct-role-pill")]', $card)->item(0);
+        $this->assertSame('acct-role-pill', $pill->getAttribute('class'));
+        $this->assertFalse($pill->hasAttribute('style'), 'no yellow Owner background');
+        $this->assertSame('Owner', trim($pill->textContent));
+
+        // Last sign-in is the one before this session (session.previous_login), not users.last_login.
+        $this->assertSame(
+            ['Account status' => 'Active', 'Member since' => 'January 15, 2025', 'Last sign-in' => 'Nov 7, 2026 3:21 PM'],
+            $this->rows($x, $card)
+        );
+        $this->assertSame(1, $x->query('.//dd/span[contains(@class,"status-pill")][contains(@class,"acct")][contains(@class,"green")]', $card)->length, 'green dot + Active');
+        $this->assertStringNotContainsString('Username', $card->textContent);
+        $this->assertSame(0, $x->query('.//input|.//button', $card)->length, 'nothing to edit here');
+    }
+
+    public function testTheLeftCardKeepsItsSizeWhileACardIsEdited(): void
+    {
+        // View mode: the left card stretches with the right column (no lock class).
+        $html = $this->profile();
+        $who  = $this->whoCard($this->dom($html));
+        $this->assertSame('set-card pf-who', $who->getAttribute('class'));
+        $this->assertSame('pfWho', $who->getAttribute('id'));
+
+        // Opening a card locks the view-mode height; Cancel removes it; one column never locks.
+        $this->assertStringContainsString("edit.addEventListener('click', () => { lockWho(); show(true); });", $html);
+        $this->assertStringContainsString("who.style.height = who.getBoundingClientRect().height + 'px';", $html);
+        $this->assertStringContainsString("oneColumn = window.matchMedia('(max-width: 900px)')", $html);
+        $this->assertMatchesRegularExpression('/show\(false\);\s+unlockWho\(\);/', $html);
+        $this->assertStringContainsString('.pf-who.is-locked,', $html);
+        $this->assertStringContainsString('@media (max-width: 900px) { .pf-who.is-locked { height: auto !important; } }', $html);
+
+        // A refused save reopens a form after the reload: the card uses its own height, no stretch.
+        foreach (['personal' => 'phone', 'signin' => 'username'] as $form => $field) {
+            $x = $this->dom($this->profile(['field_errors' => ['form' => $form, 'fields' => [$field => 'Not valid.']]]));
+            $this->assertSame('set-card pf-who is-natural', $this->whoCard($x)->getAttribute('class'), $form);
+        }
+    }
+
+    // ---------------------------------------------------------------- Personal information: view mode first
+
+    public function testPersonalInformationStartsInViewModeWithAnEditButton(): void
     {
         $x = $this->dom($this->profile());
 
-        // The read-only rows: name and contact number (the email moved to Sign-in & Security).
-        $view = $x->query('//div[@id="pfView"]')->item(0);
+        // The read-only rows: name and contact number (the email is in Sign-in & security).
+        $view = $x->query('//dl[@id="pfView"]')->item(0);
         $this->assertNotNull($view);
         $this->assertFalse($view->hasAttribute('hidden'), 'view mode is showing');
-        $this->assertSame(['Full Name' => 'Real Owner', 'Contact Number' => '0917 123 4567'], $this->rows($x, $view));
+        $this->assertSame(['Full name' => 'Real Owner', 'Contact number' => '0917 123 4567'], $this->rows($x, $view));
 
-        // The pen.
+        // Edit.
         $pen = $x->query('//button[@id="pfEditBtn"]')->item(0);
         $this->assertNotNull($pen);
-        $this->assertSame('Edit personal information', $pen->getAttribute('aria-label'));
-        $this->assertSame('Edit', $pen->getAttribute('data-tooltip'));
-        $this->assertSame('button', $pen->getAttribute('type'));
+        $this->assertEditButton($x, $pen, 'Edit personal information');
         $this->assertFalse($pen->hasAttribute('hidden'));
-        $this->assertSame(1, $x->query('.//i[contains(@class,"bi-pencil")]', $pen)->length);
 
         // The inputs exist but the form is closed; no email and no password here.
         $form = $x->query('//form[@id="pfForm"]')->item(0);
@@ -113,8 +217,26 @@ final class OwnerProfileTabTest extends DemoTestCase
 
         // Cancel and Save, with a CSRF field in the form.
         $this->assertSame('Cancel', trim($x->query('.//button[@id="pfCancelBtn"]', $form)->item(0)->textContent));
-        $this->assertSame('Save', trim($x->query('.//button[@type="submit"]', $form)->item(0)->textContent));
+        $this->assertSame('Save changes', trim($x->query('.//button[@type="submit"]', $form)->item(0)->textContent));
         $this->assertSame(1, $x->query('.//input[@type="hidden"][@name="csrf_test_name"]', $form)->length);
+
+        // Sentence-case labels in the 180px label column, the footer like Add item.
+        $this->assertSame(['Full name', 'Contact number'], array_map(static fn ($l) => trim($l->textContent), iterator_to_array($x->query('.//label', $form))));
+        $this->assertSame(1, $x->query('.//div[contains(@class,"pf-foot")]/span[contains(@class,"pf-changes")][@aria-live="polite"]', $form)->length);
+    }
+
+    public function testTheContactNumberIsShownGroupedButSavedAsIs(): void
+    {
+        foreach (['09852145866' => '0985 214 5866', '0985-214-5866' => '0985 214 5866', '+639852145866' => '+639852145866', '12345' => '12345'] as $saved => $shown) {
+            $saved = (string) $saved; // PHP turns the '12345' key into an int
+            $this->db->table('users')->where('user_id', $this->id['owner'])->update(['phone' => $saved]);
+            $x = $this->dom($this->profile());
+
+            $this->assertSame($shown, $this->rows($x, $x->query('//dl[@id="pfView"]')->item(0))['Contact number'], $saved);
+            $input = $x->query('//input[@id="pfPhone"]')->item(0);
+            $this->assertSame($saved, $input->getAttribute('value'), 'the form keeps the saved value');
+            $this->assertSame($saved, $input->getAttribute('data-original'));
+        }
     }
 
     public function testTheFullNameHasTheAddItemStyleCounterAndNoHardLimit(): void
@@ -125,7 +247,7 @@ final class OwnerProfileTabTest extends DemoTestCase
         // "n / 60" on the label's line, like Item name in Add item.
         $row   = $x->query('//form[@id="pfForm"]//div[contains(@class,"im-label-row")]')->item(0);
         $count = $x->query('.//small[@id="pfNameCount"]', $row)->item(0);
-        $this->assertSame('Full Name', trim($x->query('./label[@for="pfFullName"]', $row)->item(0)->textContent));
+        $this->assertSame('Full name', trim($x->query('./label[@for="pfFullName"]', $row)->item(0)->textContent));
         $this->assertSame('10 / 60', trim($count->textContent), '"Real Owner" is 10 characters');
         $this->assertSame('im-count', $count->getAttribute('class'));
 
@@ -140,7 +262,8 @@ final class OwnerProfileTabTest extends DemoTestCase
         $this->assertStringContainsString("NAME_MAX = 60, NAME_OVER_MSG = 'Full name can be up to 60 characters.'", $html);
         $this->assertStringContainsString("nameCount.classList.toggle('is-near', len >= 50 && !over);", $html);
         $this->assertStringContainsString("nameCount.classList.toggle('is-over', over);", $html);
-        $this->assertStringContainsString('nameSave.disabled = saveLocked || over;', $html);
+        $this->assertStringContainsString('if (personal) { personal.sync(); } // Save disabled while over the limit', $html);
+        $this->assertStringContainsString('save.disabled = saveLocked || n > 0 || !changed();', $html);
     }
 
     public function testAFullNameOverSixtyIsShownRedWhenThePageOpens(): void
@@ -168,7 +291,7 @@ final class OwnerProfileTabTest extends DemoTestCase
 
         $x = $this->dom($this->profile());
 
-        $this->assertSame('—', $this->rows($x, $x->query('//div[@id="pfView"]')->item(0))['Contact Number']);
+        $this->assertSame('—', $this->rows($x, $x->query('//dl[@id="pfView"]')->item(0))['Contact number']);
     }
 
     public function testTheEditScriptKeepsTheEmailConfirmRuleAndCancelRestoresTheValues(): void
@@ -183,6 +306,23 @@ final class OwnerProfileTabTest extends DemoTestCase
         $this->assertSame(4, substr_count($html, 'data-original='), 'name, phone, username and email remember their saved values');
     }
 
+    public function testSaveWaitsForARealChangeAndShowsTheErrorCount(): void
+    {
+        $html = $this->profile();
+
+        // Compared to the saved values (changing a field back disables Save again).
+        $this->assertStringContainsString('const personalChanged = () => name.value.trim() !== name.dataset.original.trim()', $html);
+        $this->assertStringContainsString('|| phoneDigits(phone.value) !== phoneDigits(phone.dataset.original);', $html);
+        // A new password counts as a change; the current password alone does not.
+        $this->assertStringContainsString("|| newPass.value !== '' || newPass2.value !== '';", $html);
+        $this->assertStringNotContainsString("getElementById('siCurrentPassword')", $html);
+        $this->assertStringContainsString('const text = n > 0 ? `Fix ${n} ${n === 1 ? \'error\' : \'errors\'} to save` : \'\';', $html);
+        // Only one card edits at a time: the other card's Edit is disabled meanwhile.
+        $this->assertStringContainsString('const locked = !!open && open !== c;', $html);
+        // The readable disabled look.
+        $this->assertStringContainsString(':root .pf-tab .pf-save.btn:disabled { background-color: #B9D3AE; border-color: #B9D3AE; color: #fff; opacity: 1; }', $html);
+    }
+
     // ---------------------------------------------------------------- a refused save reopens only its own form
 
     public function testARefusedPersonalSaveReopensThatFormWithTheMessageUnderTheField(): void
@@ -193,9 +333,9 @@ final class OwnerProfileTabTest extends DemoTestCase
             '_ci_old_input' => ['get' => [], 'post' => ['full_name' => 'Real Owner', 'phone' => '12345']],
         ]));
 
-        $this->assertTrue($x->query('//div[@id="pfView"]')->item(0)->hasAttribute('hidden'));
+        $this->assertTrue($x->query('//dl[@id="pfView"]')->item(0)->hasAttribute('hidden'));
         $this->assertFalse($x->query('//form[@id="pfForm"]')->item(0)->hasAttribute('hidden'));
-        $this->assertTrue($x->query('//button[@id="pfEditBtn"]')->item(0)->hasAttribute('hidden'), 'the pen is hidden while editing');
+        $this->assertTrue($x->query('//button[@id="pfEditBtn"]')->item(0)->hasAttribute('hidden'), 'Edit is hidden while editing');
         $this->assertTrue($x->query('//form[@id="siForm"]')->item(0)->hasAttribute('hidden'), 'the other form stays closed');
 
         $phone = $x->query('//input[@id="pfPhone"]')->item(0);
@@ -215,7 +355,7 @@ final class OwnerProfileTabTest extends DemoTestCase
             '_ci_old_input' => ['get' => [], 'post' => ['username' => 'owner_new', 'email' => 'new@real.test', 'email_confirm' => 'nwe@real.test']],
         ]));
 
-        $this->assertTrue($x->query('//div[@id="siView"]')->item(0)->hasAttribute('hidden'));
+        $this->assertTrue($x->query('//dl[@id="siView"]')->item(0)->hasAttribute('hidden'));
         $this->assertFalse($x->query('//form[@id="siForm"]')->item(0)->hasAttribute('hidden'));
         $this->assertTrue($x->query('//form[@id="pfForm"]')->item(0)->hasAttribute('hidden'), 'the other form stays closed');
         $this->assertSame('owner_new', $x->query('//input[@id="siUsername"]')->item(0)->getAttribute('value'));
@@ -255,47 +395,30 @@ final class OwnerProfileTabTest extends DemoTestCase
         }
     }
 
-    // ---------------------------------------------------------------- Account Details and Sign-in & Security
-
-    public function testAccountDetailsIsReadOnlyAndShowsThePreviousSignIn(): void
-    {
-        $x    = $this->dom($this->profile());
-        $card = $x->query('//h5[normalize-space()="Account Details"]/ancestor::div[contains(@class,"set-card")][1]')->item(0);
-
-        // Last sign-in is the one before this session (session.previous_login), not users.last_login.
-        $this->assertSame(
-            ['Role' => 'Owner', 'Account Status' => 'Active', 'Member Since' => 'January 15, 2025', 'Last sign-in' => 'Nov 7, 2026 3:21 PM'],
-            $this->rows($x, $card)
-        );
-        $this->assertStringNotContainsString('Username', $card->textContent);
-        $this->assertSame(0, $x->query('.//input|.//button', $card)->length, 'nothing to edit here');
-        $this->assertStringContainsString('Last sign-in: Nov 7, 2026 3:21 PM', preg_replace('/\s+/', ' ', $x->query('//div[contains(@class,"set-profile-head")]')->item(0)->textContent));
-    }
+    // ---------------------------------------------------------------- Sign-in & security
 
     public function testTheFirstSignInSaysSo(): void
     {
-        $x    = $this->dom($this->profile([], ['previous_login' => null]));
-        $card = $x->query('//h5[normalize-space()="Account Details"]/ancestor::div[contains(@class,"set-card")][1]')->item(0);
+        $x = $this->dom($this->profile([], ['previous_login' => null]));
 
-        $this->assertSame('This is your first sign-in', $this->rows($x, $card)['Last sign-in']);
+        $this->assertSame('This is your first sign-in', $this->rows($x, $this->whoCard($x))['Last sign-in']);
     }
 
     public function testSignInAndSecurityHasUsernameEmailPasswordOneEditButtonAndTheNote(): void
     {
         $x    = $this->dom($this->profile());
-        $card = $x->query('//div[@id="pfSecurity"]')->item(0);
+        $card = $x->query('//section[@id="pfSecurity"]')->item(0);
         $this->assertNotNull($card);
-        $this->assertSame('Sign-in & Security', trim($x->query('.//h5', $card)->item(0)->textContent));
+        $this->assertSame('Sign-in & security', trim($x->query('.//h2', $card)->item(0)->textContent));
 
-        $this->assertSame(['Username' => 'owner_normal', 'Email Address' => 'owner@real.test', 'Password' => '••••••••'], $this->rows($x, $x->query('.//div[@id="siView"]', $card)->item(0)));
-        $text = preg_replace('/\s+/', ' ', $card->textContent);
-        $this->assertStringContainsString('For your security, changing your username, email or password asks for your current password.', $text);
+        $this->assertSame(['Username' => 'owner_normal', 'Email' => 'owner@real.test', 'Password' => '••••••••'], $this->rows($x, $x->query('.//dl[@id="siView"]', $card)->item(0)));
+        // The one gray line under the title.
+        $this->assertSame('Changing your username, email or password asks for your current password.', trim($x->query('./p[contains(@class,"pf-sub")]', $card)->item(0)->textContent));
 
         // One Edit button for the whole card; no dialogs any more.
-        $this->assertSame(1, $x->query('.//button[@type="button"][contains(@class,"pf-pen")]', $card)->length);
+        $this->assertSame(1, $x->query('.//button[@type="button"][contains(@class,"pf-edit")]', $card)->length);
         $pen = $x->query('.//button[@id="siEditBtn"]', $card)->item(0);
-        $this->assertSame('Edit sign-in details', $pen->getAttribute('aria-label'));
-        $this->assertSame(1, $x->query('.//i[contains(@class,"bi-pencil")]', $pen)->length);
+        $this->assertEditButton($x, $pen, 'Edit sign-in and security');
         $this->assertSame(0, $x->query('//*[@data-bs-toggle="modal"][contains(@data-bs-target,"owner")]')->length, 'the old username / password dialogs are gone');
     }
 
@@ -333,7 +456,36 @@ final class OwnerProfileTabTest extends DemoTestCase
         $this->assertFalse($x->query('.//input[@name="new_password"]', $form)->item(0)->hasAttribute('required'), 'blank keeps the current password');
         $this->assertSame(PasswordPolicy::HINT, $x->query('.//input[@name="new_password"]', $form)->item(0)->getAttribute('placeholder'));
         $this->assertSame('Cancel', trim($x->query('.//button[@id="siCancelBtn"]', $form)->item(0)->textContent));
-        $this->assertSame('Save', trim($x->query('.//button[@type="submit"]', $form)->item(0)->textContent));
+        $this->assertSame('Save changes', trim($x->query('.//button[@type="submit"]', $form)->item(0)->textContent));
+
+        // Sentence-case labels; the current password last, in its light box with its hint.
+        $this->assertSame(
+            ['Username', 'Email', 'Confirm email', 'New password', 'Repeat new password', 'Current password'],
+            array_map(static fn ($l) => trim($l->textContent), iterator_to_array($x->query('.//label', $form)))
+        );
+        $box = $x->query('.//div[contains(@class,"pf-current")]', $form)->item(0);
+        $this->assertSame(1, $x->query('.//input[@name="current_password"]', $box)->length);
+        $this->assertSame(0, $x->query('following-sibling::div[contains(@class,"pf-field")]', $box)->length, 'nothing after the current password');
+
+        // Hints under the fields, read out with them.
+        foreach (['siUsername' => '4–50 letters, numbers, - or _', 'siNewPassword' => 'Leave blank to keep your current password.', 'siCurrentPassword' => 'Needed to save any change in this section.'] as $id => $hint) {
+            $this->assertSame($hint, trim($x->query("//div[@id=\"{$id}Hint\"]")->item(0)->textContent), $id);
+            $this->assertSame("{$id}Hint", $x->query("//input[@id=\"{$id}\"]")->item(0)->getAttribute('aria-describedby'), $id);
+        }
+    }
+
+    public function testASignInErrorIsTiedToItsFieldAfterTheHint(): void
+    {
+        $x = $this->dom($this->profile([
+            'error'        => 'The current password is incorrect.',
+            'field_errors' => ['form' => 'signin', 'fields' => ['current_password' => 'The current password is incorrect.']],
+        ]));
+
+        $input = $x->query('//input[@id="siCurrentPassword"]')->item(0);
+        $this->assertSame('true', $input->getAttribute('aria-invalid'));
+        $this->assertSame('siCurrentPasswordHint siCurrentPasswordErr', $input->getAttribute('aria-describedby'));
+        $this->assertSame('The current password is incorrect.', trim($x->query('//div[@id="siCurrentPasswordErr"]')->item(0)->textContent));
+        $this->assertSame('', $input->getAttribute('value'));
     }
 
     public function testOnlyTheTwoProfileFormsPostToSettingsRoutes(): void
@@ -357,6 +509,46 @@ final class OwnerProfileTabTest extends DemoTestCase
         $this->assertStringContainsString('<link href="/assets/css/pw-toggle.css" rel="stylesheet">', $html);
         $this->assertSame(0, substr_count($html, 'class="pw-toggle"'));
         $this->assertSame(3, substr_count($html, 'type="password"'), 'new password, its confirm, and the current password');
+    }
+
+    // ---------------------------------------------------------------- sidebar footer and Manage Accounts
+
+    public function testTheOwnerSidebarShowsTheInitialsAvatarAndAOneLineName(): void
+    {
+        $x = $this->dom($this->profile([], ['full_name' => 'Richelle D. Paras']));
+
+        // Expanded footer: the avatar (hidden from screen readers: the name is next to it) and the name with its title.
+        $link = $x->query('//div[contains(@class,"user-footer")]/a[contains(@class,"user-footer-link")]')->item(0);
+        $avatar = $x->query('./span[@class="user-avatar"]', $link)->item(0);
+        $this->assertNotNull($avatar);
+        $this->assertSame('RP', trim($avatar->textContent));
+        $this->assertSame('true', $avatar->getAttribute('aria-hidden'));
+        $this->assertSame(0, $x->query('.//i[contains(@class,"bi-person-circle")]', $link)->length, 'no person icon');
+        $name = $x->query('.//div[@class="user-name"]', $link)->item(0);
+        $this->assertSame('Richelle D. Paras', trim($name->textContent));
+        $this->assertSame('Richelle D. Paras', $name->getAttribute('title'));
+
+        // Collapsed sidebar: the account menu button shows the same avatar; its label stays "Account menu".
+        $button = $x->query('//button[@id="accountMenuBtn"]')->item(0);
+        $this->assertSame('Account menu', $button->getAttribute('aria-label'));
+        $this->assertSame('RP', trim($x->query('./span[@class="user-avatar"][@aria-hidden="true"]', $button)->item(0)->textContent));
+        $this->assertSame(0, $x->query('.//i', $button)->length);
+    }
+
+    public function testManageAccountsUsesTheSameInitials(): void
+    {
+        $body = $this->withSession([
+            'isLoggedIn' => true, 'role' => 'Admin', 'user_id' => $this->id['owner'], 'username' => 'owner_normal', 'full_name' => 'Real Owner', 'last_activity' => time(),
+        ])->get('admin/settings?tab=accounts')->response()->getBody();
+        $x = $this->dom($body);
+
+        $first = $x->query('//div[contains(@class,"acct-row")][1]/div[contains(@class,"acct-avatar")]')->item(0);
+        $this->assertSame('RO', trim($first->textContent));
+        $this->assertSame('true', $first->getAttribute('aria-hidden'));
+        $this->assertSame(1, $x->query('//span[@class="acct-role-pill"][not(@style)][normalize-space()="Owner"]')->length, 'the Owner pill My Profile reuses');
+        $this->assertStringNotContainsString('fdf1c0', $body);
+        // Owner and Staff pills share one neutral style at weight 600.
+        $this->assertStringContainsString('.acct-role-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 4px 12px; font-size: 12px; font-weight: 600; }', $body);
     }
 
     // ---------------------------------------------------------------- the demo owner

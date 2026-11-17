@@ -53,15 +53,11 @@ $tabs = [
 .set-tabs a.active {
     background: #F3F1EB;
     color: #1E2616;
-    font-weight: 600;
+    font-weight: 500;
     border: none;
 }
 
 .set-body { padding: 24px; }
-.set-detail { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 11px 0; border-bottom: 1px solid #f2f2f2; font-size: 14px; }
-.set-detail:last-child { border-bottom: none; }
-.set-detail span { color: #5C6152; font-weight: 400; }
-.set-detail strong { text-align: right; word-break: break-word; font-weight: 500; color: #1F2617; }
 .set-body h4 { font-weight: 800; }
 .set-hint { color: #666; margin-bottom: 20px; }
 /* Data & Records tab (exact design spec). Poppins like the rest of the app. */
@@ -106,61 +102,114 @@ $tabs = [
 .rec-box-sub { font-size: 14px; color: #5C6152; margin: 2px 0 0; line-height: 1.5; }
 
 .set-card { background: #fff; border-radius: var(--radius-card); padding: 22px 26px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 20px; }
-.set-profile-head { display: flex; align-items: center; gap: 18px; }
-.set-avatar { width: 64px; height: 64px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #999; }
-.set-role-pill { display: inline-flex; align-items: center; gap: 6px; background: #e9e7e1; border-radius: var(--radius-pill); padding: 4px 14px; font-size: 13px; font-weight: 600; margin: 4px 0; }
 .set-field label { font-weight: 600; margin-bottom: 6px; display: block; }
 .set-field input, .set-field select { width: 100%; padding: 11px; border: 1px solid #ccc; border-radius: var(--radius-control); }
-/* My Profile */
-.set-body .pf-title { font-size: 19px; font-weight: 600; color: #1F2617; margin: 0 0 16px; }
-.pf-form .pf-field label { display: block; margin: 0 0 7px; font-size: 14px; font-weight: 600; color: #1F2617; }
+
+/* ===== My Profile (Owner) =====
+   Left: who you are (avatar, name, role, account facts). Right: Personal information and
+   Sign-in & security, each with a view and an inline form opened by its Edit button.
+   Titles 600 and sentence case; no 700 here. */
+.pf-tab { font-family: 'Poppins', sans-serif; }
+.pf-tab :is(button, input, h2) { font-family: inherit; }
+.pf-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: stretch; }
+@media (max-width: 900px) { .pf-layout { grid-template-columns: minmax(0, 1fr); } }
+/* While a card on the right is in edit mode the left card doesn't change: .is-locked keeps the
+   height it had in view mode (inline height, set by the script below); .is-natural (a refused save
+   reopened a form, so no view-mode height to measure) uses its own height. One column: no locking. */
+.pf-who.is-locked,
+.pf-who.is-natural { align-self: start; }
+@media (max-width: 900px) { .pf-who.is-locked { height: auto !important; } }
+.pf-layout .set-card { margin-bottom: 0; }
+.pf-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+/* Left card */
+.pf-who { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; }
+.pf-avatar {
+    width: 76px; height: 76px; flex-shrink: 0; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: #EAF1E3; color: #2F5A27; font-size: 26px; font-weight: 600; line-height: 1;
+    user-select: none;
+}
+.pf-who-name { margin: 14px 0 8px; max-width: 100%; font-size: 18px; font-weight: 600; line-height: 1.35; color: #1F2617; overflow-wrap: anywhere; }
+.pf-who-divider { align-self: stretch; height: 1px; margin: 20px 0 16px; border: 0; background: #F0EDE6; opacity: 1; }
+/* The facts: left-aligned, label above value, the full card width (the avatar, name and pill stay centred). */
+.pf-facts { align-self: stretch; display: flex; flex-direction: column; gap: 14px; margin: 0; text-align: left; }
+.pf-facts dt { margin: 0 0 3px; font-size: 12px; font-weight: 400; color: #5C6152; }
+.pf-facts dd { margin: 0; font-size: 14px; color: #1F2617; overflow-wrap: anywhere; }
+
+/* Right cards: title (+ gray line) on the left, Edit on the right */
+.pf-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+.pf-tab .pf-title { margin: 0; font-size: 16px; font-weight: 600; line-height: 36px; color: #1F2617; }
+.pf-sub { margin: -6px 0 0; font-size: 13px; line-height: 1.5; color: #5C6152; }
+/* Edit: the app's white secondary button, with Inventory's pen. Keyboard focus: the shared ring. */
+.pf-edit {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+    height: 36px; padding: 0 14px; border: 1px solid #D6D2C6; border-radius: var(--radius-control);
+    background: #fff; color: #1F2617; font-size: 14px; font-weight: 500; line-height: 1; cursor: pointer;
+    transition: background-color .15s ease;
+}
+.pf-edit:hover:not(:disabled) { background: #F7F5F0; }
+.pf-edit svg { width: 16px; height: 16px; flex: none; }
+.pf-edit:disabled { color: var(--btn-disabled-text); cursor: not-allowed; }
+.pf-edit[hidden], .pf-view[hidden], .pf-form[hidden] { display: none !important; }
+
+/* View rows: label column 180px, the value right next to it */
+.pf-rows { margin: 0; }
+.pf-rows > div { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 16px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid #F0EDE6; }
+.pf-rows > div:last-child { border-bottom: 0; padding-bottom: 2px; }
+.pf-rows dt { margin: 0; font-size: 14px; font-weight: 400; color: #5C6152; }
+.pf-rows dd { margin: 0; font-size: 14.5px; color: #1F2617; overflow-wrap: anywhere; }
+.sec-dots { letter-spacing: 3px; }
+
+/* Edit forms: the same 180px label column, the input next to it */
+.pf-form { margin-top: 8px; }
+.pf-form .pf-field { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 6px 16px; align-items: start; margin-bottom: 16px; }
+.pf-form .pf-field[hidden] { display: none; }
+.pf-form .pf-field > label,
+.pf-form .im-label-row { padding-top: 13px; }
+.pf-form label { margin: 0; font-size: 14px; font-weight: 500; color: #1F2617; }
+.pf-control { min-width: 0; }
 .pf-form .pf-field input {
-    width: 100%; height: 46px; padding: 0 14px; font-family: inherit; font-size: 15px; color: #1F2617;
+    width: 100%; height: 46px; padding: 0 14px; font-size: 15px; color: #1F2617;
     border: 1px solid #D6D2C6; border-radius: 10px; background: #fff;
 }
 .pf-form .pf-field input:focus { outline: none; border-color: #71AA60; box-shadow: 0 0 0 3px rgba(113, 170, 96, .25); }
-.pf-form > .pf-field { margin-bottom: 18px; }
-.pf-row { display: grid; grid-template-columns: 3fr 2fr; gap: 18px; } /* long email addresses need the room */
-@media (max-width: 800px) { .pf-row { grid-template-columns: 1fr; } }
-.pf-actions { display: flex; justify-content: flex-end; margin-top: 20px; }
-.pf-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
-.pf-head { min-height: 34px; }
-.pf-head .pf-title { margin: 0; }
-.pf-form .pf-row { margin-bottom: 18px; }
-/* Small square icon buttons (edit / change): transparent at rest, beige on hover and keyboard focus. */
-.pf-pen { width: 34px; height: 34px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: none; border-radius: 8px; background: transparent; color: #5C6152; font-size: 16px; line-height: 1; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
-.pf-pen:hover, .pf-pen:focus-visible { background: #F2F0EA; color: #1F2617; }
-.pf-pen:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; }
-.pf-pen:disabled { opacity: .55; cursor: not-allowed; }
-.pf-view[hidden], .pf-form[hidden] { display: none !important; }
-/* A refused save: the message under its field (SettingsController::refuseForm). */
+.pf-hint { margin-top: 6px; font-size: 13px; line-height: 1.45; color: #5C6152; }
+/* A refused save or a live check: the message under its field. */
 .pf-form .pf-field input.is-invalid { border-color: #A1261B; }
+.pf-form .pf-field input.is-invalid:focus { border-color: #A1261B; box-shadow: 0 0 0 3px rgba(161, 38, 27, .15); }
 .pf-error { margin-top: 6px; font-size: 13px; color: #A1261B; }
 .pf-error:empty { margin-top: 0; }
+/* Current password: last, in a light box (aligned with the fields above it). */
+.pf-current { margin: 4px -16px 0; padding: 14px 16px; border-radius: 10px; background: #F7F5F0; }
+.pf-current .pf-field { margin-bottom: 0; grid-template-columns: 180px minmax(0, 1fr); }
 /* Full name counter: the same look as Add item's Item name ("25 / 60" on the label's line;
    rules copied from assets/css/item-modal.css, which is the whole dialog stylesheet). */
 .im-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .im-count { font-size: 12px; line-height: 1; color: #5C6152; font-variant-numeric: tabular-nums; }
 .im-count.is-near { color: #8A6A00; }
 .im-count.is-over { color: #A1261B; }
-.pf-form .im-label-row { margin: 0 0 7px; }
 .pf-form .im-label-row label { margin: 0; }
-.pf-form .pf-field input.is-invalid:focus { border-color: #A1261B; box-shadow: 0 0 0 3px rgba(161, 38, 27, .15); }
-.pf-form > .pf-field[hidden] { display: none; }
-.set-detail .sec-val { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
-.set-detail .sec-val strong { word-break: break-all; }
-.sec-dots { letter-spacing: 3px; }
-.pf-cancel { background: #fff; }
-.pf-actions { gap: 10px; }
+
+/* Footer, like Add item: "Fix n errors to save" on the left, then Cancel and Save changes. */
+.pf-foot { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #F0EDE6; }
+.pf-changes { margin-right: auto; font-size: 13px; color: #A1261B; }
+.pf-foot-actions { display: flex; gap: 10px; }
+.pf-cancel,
+.pf-tab .pf-save.btn { height: 40px; padding: 0 18px; border-radius: var(--radius-control); font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; }
+.pf-cancel { border: 1px solid #D6D2C6; background: #fff; color: #1F2617; cursor: pointer; transition: background-color .15s ease; }
+.pf-cancel:hover { background: #F7F5F0; }
+/* Save changes while it can't be used (nothing changed yet, an error, saving): light green, still readable. */
+:root .pf-tab .pf-save.btn:disabled { background-color: #B9D3AE; border-color: #B9D3AE; color: #fff; opacity: 1; }
+
 @media (max-width: 576px) {
-    .pf-pen { width: 40px; height: 40px; }
-    .sec-val .btn, .pf-actions .btn { min-height: 40px; }
-    .set-detail { flex-wrap: wrap; }
-    .set-detail strong { font-size: 13px; }
+    .pf-rows > div,
+    .pf-form .pf-field,
+    .pf-current .pf-field { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .pf-form .pf-field > label,
+    .pf-form .im-label-row { padding-top: 0; }
+    .pf-cancel, .pf-tab .pf-save.btn { min-height: 44px; }
 }
-.pf-save { background: #71AA60; border-color: #71AA60; }
-.pf-save:hover, .pf-save:focus { background: #5F9850; border-color: #5F9850; }
-.set-detail .status-pill { align-self: center; }
 /* Account status pills (My Profile and Manage Accounts): the shared .status-pill, sized 13px. */
 .status-pill.acct { font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: var(--radius-pill); gap: 6px; white-space: nowrap; }
 .status-pill.acct::before { width: 6px; height: 6px; }
@@ -174,7 +223,8 @@ $tabs = [
 .acct-avatar { width: 42px; height: 42px; border-radius: 50%; background: #f0efe9; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 .acct-name { font-weight: 700; }
 .acct-email { color: #777; font-size: 13px; }
-.acct-role-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 4px 12px; font-size: 12px; font-weight: 700; }
+/* Role pill (Owner and Staff alike; My Profile and Manage Accounts): one neutral style. */
+.acct-role-pill { background: #e9e7e1; border-radius: var(--radius-pill); padding: 4px 12px; font-size: 12px; font-weight: 600; }
 
 .notif-pref-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #eee; }
 .notif-pref-row:last-child { border-bottom: none; }
@@ -208,15 +258,22 @@ $tabs = [
 
         <?php if ($tab === 'profile'): ?>
             <?php
-            $roleLabel = 'Owner'; // badge and Account Details show the same words
+            $roleLabel = 'Owner';
+            $fullName  = (string) ($admin['full_name'] ?? '');
+            $initials  = initials($fullName);
 
             // A refused save (SettingsController::refuseForm) reopens its form with one message per field.
             // 'form' = a message for the whole form (attempt limit, save failed).
             $openForm  = $fieldErrors['form'] ?? null; // 'personal' | 'signin' | null
             $errs      = (array) ($fieldErrors['fields'] ?? []);
             $err       = static fn (string $form, string $field): ?string => $openForm === $form ? ($errs[$field] ?? null) : null;
-            $invalid   = static fn (string $form, string $field, string $id): string => $err($form, $field) !== null
-                ? ' class="is-invalid" aria-invalid="true" aria-describedby="' . $id . 'Err"' : '';
+            // The field's red state, tied to its hint (if any) and its error line.
+            $invalid   = static function (string $form, string $field, string $id, bool $hint = false) use ($err): string {
+                $bad = $err($form, $field) !== null;
+                $ids = trim(($hint ? $id . 'Hint ' : '') . ($bad ? $id . 'Err' : ''));
+
+                return ($bad ? ' class="is-invalid" aria-invalid="true"' : '') . ($ids !== '' ? ' aria-describedby="' . $ids . '"' : '');
+            };
             $errLine   = static fn (string $form, string $field, string $id): string => ($m = $err($form, $field)) !== null
                 ? '<div class="pf-error" id="' . $id . 'Err">' . esc($m) . '</div>' : '';
             // What was typed before a refused save (never a password: those are not kept). Escaped where used.
@@ -226,156 +283,202 @@ $tabs = [
             $prevLogin  = session()->get('previous_login');
             $lastSignIn = ! empty($prevLogin) ? date('M j, Y g:i A', strtotime($prevLogin)) : 'This is your first sign-in';
 
+            // Contact number shown grouped (0985 214 5866) when it is an 11-digit 09 number; the saved value is unchanged.
+            $phone        = (string) ($admin['phone'] ?? '');
+            $phoneDigits  = preg_replace('/\D+/', '', $phone);
+            $phoneDisplay = preg_match('/^09\d{9}$/', $phoneDigits) ? substr($phoneDigits, 0, 4) . ' ' . substr($phoneDigits, 4, 3) . ' ' . substr($phoneDigits, 7) : $phone;
+
             $pfEdit = $openForm === 'personal';
             $siEdit = $openForm === 'signin';
             $siEmail        = (string) $typed('email', $admin['email'] ?? '');
             $siEmailChanged = mb_strtolower(trim($siEmail)) !== mb_strtolower(trim((string) ($admin['email'] ?? '')));
             ?>
-            <h4>My Profile</h4>
-            <div class="set-hint">Manage your personal information.</div>
+            <div class="pf-tab pf-layout">
+                <section class="set-card pf-who<?= ($pfEdit || $siEdit) ? ' is-natural' : '' ?>" id="pfWho" aria-label="Your account">
+                    <div class="pf-avatar" role="img" aria-label="<?= esc($fullName, 'attr') ?>"><span aria-hidden="true"><?= esc($initials) ?></span></div>
+                    <div class="pf-who-name"><?= esc($fullName) ?></div>
+                    <span class="acct-role-pill"><?= esc($roleLabel) ?></span>
+                    <hr class="pf-who-divider">
+                    <dl class="pf-facts">
+                        <div><dt>Account status</dt><dd><span class="status-pill acct <?= ! empty($admin['is_active']) ? 'green' : 'gray' ?>"><?= ! empty($admin['is_active']) ? 'Active' : 'Inactive' ?></span></dd></div>
+                        <div><dt>Member since</dt><dd><?= ! empty($admin['created_at']) ? esc(date('F j, Y', strtotime($admin['created_at']))) : '—' ?></dd></div>
+                        <div><dt>Last sign-in</dt><dd><?= esc($lastSignIn) ?></dd></div>
+                    </dl>
+                </section>
 
-            <div class="set-card">
-                <div class="set-profile-head">
-                    <div class="set-avatar"><i class="bi bi-person-fill"></i></div>
-                    <div>
-                        <div class="fw-bold fs-5"><?= esc($admin['full_name'] ?? '') ?></div>
-                        <div class="set-role-pill">★ <?= esc($roleLabel) ?></div>
-                        <div class="text-muted small">Last sign-in: <?= esc($lastSignIn) ?></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row g-3 mb-3">
-                <div class="col-lg-7">
-                    <div class="set-card h-100 mb-0" id="pfCard">
+                <div class="pf-main">
+                    <section class="set-card" id="pfCard" aria-labelledby="pfTitle">
                         <div class="pf-head">
-                            <h5 class="pf-title">Personal Information</h5>
-                            <button type="button" class="pf-pen" id="pfEditBtn" aria-label="Edit personal information" data-tooltip="Edit" data-tooltip-pos="above"<?= $pfEdit ? ' hidden' : '' ?><?= demo_lock_attr($admin ?? null) ?>><i class="bi bi-pencil" aria-hidden="true"></i></button>
+                            <h2 class="pf-title" id="pfTitle">Personal information</h2>
+                            <button type="button" class="pf-edit" id="pfEditBtn" aria-label="Edit personal information"<?= $pfEdit ? ' hidden' : '' ?><?= demo_lock_attr($admin ?? null) ?>><?= view('partials/_pen_icon', ['size' => 16], ['saveData' => false]) ?>Edit</button>
                         </div>
 
-                        <div class="pf-view" id="pfView"<?= $pfEdit ? ' hidden' : '' ?>>
-                            <div class="set-detail"><span>Full Name</span><strong><?= esc($admin['full_name'] ?? '—') ?></strong></div>
-                            <div class="set-detail"><span>Contact Number</span><strong><?= ($admin['phone'] ?? '') !== '' ? esc($admin['phone']) : '—' ?></strong></div>
-                        </div>
+                        <dl class="pf-view pf-rows" id="pfView"<?= $pfEdit ? ' hidden' : '' ?>>
+                            <div><dt>Full name</dt><dd><?= $fullName !== '' ? esc($fullName) : '—' ?></dd></div>
+                            <div><dt>Contact number</dt><dd><?= $phone !== '' ? esc($phoneDisplay) : '—' ?></dd></div>
+                        </dl>
 
-                        <?php // Name and contact number only (SettingsController::updateAccount); the email is in Sign-in & Security. ?>
+                        <?php // Name and contact number only (SettingsController::updateAccount); the email is in Sign-in & security. ?>
                         <form method="post" action="<?= site_url('admin/settings/account') ?>" class="pf-form" id="pfForm" data-submit-once data-busy-label="Saving…"<?= $pfEdit ? '' : ' hidden' ?>>
                             <?= csrf_field() ?>
                             <?php if (($m = $err('personal', 'form')) !== null): ?><div class="alert alert-danger" role="alert"><?= esc($m) ?></div><?php endif; ?>
-                            <div class="pf-row">
-                                <?php
-                                // Soft limit, like Add item's Item name: typing past 60 is allowed, but the counter and
-                                // field turn red, the message shows and Save is disabled. The server checks the same limit.
-                                $pfName     = (string) $typed('full_name', $admin['full_name'] ?? '');
-                                $pfNameLen  = mb_strlen($pfName);
-                                $pfNameOver = $pfNameLen > 60;
-                                $pfNameMsg  = $err('personal', 'full_name') ?? ($pfNameOver ? 'Full name can be up to 60 characters.' : null);
-                                ?>
-                                <div class="pf-field">
-                                    <div class="im-label-row">
-                                        <label for="pfFullName">Full Name</label>
-                                        <small class="im-count<?= $pfNameOver ? ' is-over' : ($pfNameLen >= 50 ? ' is-near' : '') ?>" id="pfNameCount"><?= $pfNameLen ?> / 60</small>
-                                    </div>
-                                    <input id="pfFullName" name="full_name" value="<?= esc($pfName, 'attr') ?>" data-original="<?= esc($admin['full_name'] ?? '', 'attr') ?>" autocomplete="name" required aria-describedby="pfNameCount pfFullNameErr"<?= $pfNameMsg !== null ? ' class="is-invalid" aria-invalid="true"' : '' ?>>
+                            <?php
+                            // Soft limit, like Add item's Item name: typing past 60 is allowed, but the counter and
+                            // field turn red, the message shows and Save is disabled. The server checks the same limit.
+                            $pfName     = (string) $typed('full_name', $fullName);
+                            $pfNameLen  = mb_strlen($pfName);
+                            $pfNameOver = $pfNameLen > 60;
+                            $pfNameMsg  = $err('personal', 'full_name') ?? ($pfNameOver ? 'Full name can be up to 60 characters.' : null);
+                            ?>
+                            <div class="pf-field">
+                                <div class="im-label-row">
+                                    <label for="pfFullName">Full name</label>
+                                    <small class="im-count<?= $pfNameOver ? ' is-over' : ($pfNameLen >= 50 ? ' is-near' : '') ?>" id="pfNameCount"><?= $pfNameLen ?> / 60</small>
+                                </div>
+                                <div class="pf-control">
+                                    <input id="pfFullName" name="full_name" value="<?= esc($pfName, 'attr') ?>" data-original="<?= esc($fullName, 'attr') ?>" autocomplete="name" required aria-describedby="pfNameCount pfFullNameErr"<?= $pfNameMsg !== null ? ' class="is-invalid" aria-invalid="true"' : '' ?>>
                                     <div class="pf-error" id="pfFullNameErr" role="alert"><?= $pfNameMsg !== null ? esc($pfNameMsg) : '' ?></div>
                                 </div>
-                                <div class="pf-field">
-                                    <label for="pfPhone">Contact Number</label>
-                                    <input id="pfPhone" name="phone" value="<?= esc($typed('phone', $admin['phone'] ?? ''), 'attr') ?>" data-original="<?= esc($admin['phone'] ?? '', 'attr') ?>" placeholder="e.g. 0917 123 4567" inputmode="tel" autocomplete="tel" maxlength="20"<?= $invalid('personal', 'phone', 'pfPhone') ?>>
+                            </div>
+                            <div class="pf-field">
+                                <label for="pfPhone">Contact number</label>
+                                <div class="pf-control">
+                                    <input id="pfPhone" name="phone" value="<?= esc($typed('phone', $phone), 'attr') ?>" data-original="<?= esc($phone, 'attr') ?>" placeholder="e.g. 0917 123 4567" inputmode="tel" autocomplete="tel" maxlength="20"<?= $invalid('personal', 'phone', 'pfPhone') ?>>
                                     <?= $errLine('personal', 'phone', 'pfPhone') ?>
                                 </div>
                             </div>
-                            <div class="pf-actions">
-                                <button type="button" class="btn btn-outline-dark pf-cancel" id="pfCancelBtn">Cancel</button>
-                                <button type="submit" class="btn btn-success pf-save"<?= demo_lock_attr($admin ?? null) ?>>Save</button>
+                            <div class="pf-foot">
+                                <span class="pf-changes" aria-live="polite"></span>
+                                <div class="pf-foot-actions">
+                                    <button type="button" class="pf-cancel" id="pfCancelBtn">Cancel</button>
+                                    <button type="submit" class="btn btn-success pf-save"<?= demo_lock_attr($admin ?? null) ?>>Save changes</button>
+                                </div>
                             </div>
                         </form>
-                    </div>
-                </div>
+                    </section>
 
-                <div class="col-lg-5">
-                    <div class="set-card h-100 mb-0">
-                        <div class="pf-head"><h5 class="pf-title">Account Details</h5></div>
-                        <div class="set-detail"><span>Role</span><strong><?= esc($roleLabel) ?></strong></div>
-                        <div class="set-detail"><span>Account Status</span><span class="status-pill acct <?= ! empty($admin['is_active']) ? 'green' : 'gray' ?>"><?= ! empty($admin['is_active']) ? 'Active' : 'Inactive' ?></span></div>
-                        <div class="set-detail"><span>Member Since</span><strong><?= !empty($admin['created_at']) ? esc(date('F j, Y', strtotime($admin['created_at']))) : '—' ?></strong></div>
-                        <div class="set-detail"><span>Last sign-in</span><strong><?= esc($lastSignIn) ?></strong></div>
-                    </div>
-                </div>
-            </div>
+                    <section class="set-card" id="pfSecurity" aria-labelledby="siTitle">
+                        <div class="pf-head">
+                            <h2 class="pf-title" id="siTitle">Sign-in &amp; security</h2>
+                            <button type="button" class="pf-edit" id="siEditBtn" aria-label="Edit sign-in and security"<?= $siEdit ? ' hidden' : '' ?><?= demo_lock_attr($admin ?? null) ?>><?= view('partials/_pen_icon', ['size' => 16], ['saveData' => false]) ?>Edit</button>
+                        </div>
+                        <p class="pf-sub">Changing your username, email or password asks for your current password.</p>
 
-            <div class="set-card" id="pfSecurity">
-                <div class="pf-head">
-                    <h5 class="pf-title">Sign-in &amp; Security</h5>
-                    <button type="button" class="pf-pen" id="siEditBtn" aria-label="Edit sign-in details" data-tooltip="Edit" data-tooltip-pos="above"<?= $siEdit ? ' hidden' : '' ?><?= demo_lock_attr($admin ?? null) ?>><i class="bi bi-pencil" aria-hidden="true"></i></button>
-                </div>
+                        <dl class="pf-view pf-rows" id="siView"<?= $siEdit ? ' hidden' : '' ?>>
+                            <div><dt>Username</dt><dd><?= esc($admin['username'] ?? '—') ?></dd></div>
+                            <div><dt>Email</dt><dd><?= ($admin['email'] ?? '') !== '' ? esc($admin['email']) : '—' ?></dd></div>
+                            <div><dt>Password</dt><dd><span class="sec-dots" role="img" aria-label="Hidden">••••••••</span></dd></div>
+                        </dl>
 
-                <div class="pf-view" id="siView"<?= $siEdit ? ' hidden' : '' ?>>
-                    <div class="set-detail"><span>Username</span><div class="sec-val"><strong><?= esc($admin['username'] ?? '—') ?></strong></div></div>
-                    <div class="set-detail"><span>Email Address</span><div class="sec-val"><strong><?= ($admin['email'] ?? '') !== '' ? esc($admin['email']) : '—' ?></strong></div></div>
-                    <div class="set-detail"><span>Password</span><div class="sec-val"><strong class="sec-dots" aria-label="Hidden">••••••••</strong></div></div>
+                        <?php // Username, email and password in one form; the current password is asked for once (SettingsController::updateSignIn). ?>
+                        <form method="post" action="<?= site_url('admin/settings/sign-in') ?>" class="pf-form" id="siForm" data-submit-once data-busy-label="Saving…"<?= $siEdit ? '' : ' hidden' ?>>
+                            <?= csrf_field() ?>
+                            <?php if (($m = $err('signin', 'form')) !== null): ?><div class="alert alert-danger" role="alert"><?= esc($m) ?></div><?php endif; ?>
+                            <div class="pf-field">
+                                <label for="siUsername">Username</label>
+                                <div class="pf-control">
+                                    <input id="siUsername" name="username" value="<?= esc($typed('username', $admin['username'] ?? ''), 'attr') ?>" data-original="<?= esc($admin['username'] ?? '', 'attr') ?>" pattern="[A-Za-z0-9_\-]+" minlength="4" maxlength="50" title="4 to 50 letters, numbers, _ or -" required autocomplete="username"<?= $invalid('signin', 'username', 'siUsername', true) ?>>
+                                    <div class="pf-hint" id="siUsernameHint">4–50 letters, numbers, - or _</div>
+                                    <?= $errLine('signin', 'username', 'siUsername') ?>
+                                </div>
+                            </div>
+                            <div class="pf-field">
+                                <label for="siEmail">Email</label>
+                                <div class="pf-control">
+                                    <input id="siEmail" name="email" type="email" value="<?= esc($siEmail, 'attr') ?>" data-original="<?= esc($admin['email'] ?? '', 'attr') ?>" maxlength="100" required autocomplete="email"<?= $invalid('signin', 'email', 'siEmail') ?>>
+                                    <?= $errLine('signin', 'email', 'siEmail') ?>
+                                </div>
+                            </div>
+                            <?php // Shown once the email is edited: the new address is typed twice. ?>
+                            <div class="pf-field" id="siEmailConfirmField"<?= $siEmailChanged ? '' : ' hidden' ?>>
+                                <label for="siEmailConfirm">Confirm email</label>
+                                <div class="pf-control">
+                                    <input id="siEmailConfirm" name="email_confirm" type="email" value="<?= esc((string) $typed('email_confirm', ''), 'attr') ?>" maxlength="100" autocomplete="off"<?= $invalid('signin', 'email_confirm', 'siEmailConfirm') ?>>
+                                    <?= $errLine('signin', 'email_confirm', 'siEmailConfirm') ?>
+                                </div>
+                            </div>
+                            <div class="pf-field">
+                                <label for="siNewPassword">New password</label>
+                                <div class="pf-control">
+                                    <input id="siNewPassword" name="new_password" type="password" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" autocomplete="new-password"<?= $invalid('signin', 'new_password', 'siNewPassword', true) ?>>
+                                    <div class="pf-hint" id="siNewPasswordHint">Leave blank to keep your current password.</div>
+                                    <?= $errLine('signin', 'new_password', 'siNewPassword') ?>
+                                </div>
+                            </div>
+                            <div class="pf-field">
+                                <label for="siNewPasswordConfirm">Repeat new password</label>
+                                <div class="pf-control">
+                                    <input id="siNewPasswordConfirm" name="new_password_confirm" type="password" autocomplete="new-password"<?= $invalid('signin', 'new_password_confirm', 'siNewPasswordConfirm') ?>>
+                                    <?= $errLine('signin', 'new_password_confirm', 'siNewPasswordConfirm') ?>
+                                </div>
+                            </div>
+                            <div class="pf-current">
+                                <div class="pf-field">
+                                    <label for="siCurrentPassword">Current password</label>
+                                    <div class="pf-control">
+                                        <input id="siCurrentPassword" name="current_password" type="password" required autocomplete="current-password"<?= $invalid('signin', 'current_password', 'siCurrentPassword', true) ?>>
+                                        <div class="pf-hint" id="siCurrentPasswordHint">Needed to save any change in this section.</div>
+                                        <?= $errLine('signin', 'current_password', 'siCurrentPassword') ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pf-foot">
+                                <span class="pf-changes" aria-live="polite"></span>
+                                <div class="pf-foot-actions">
+                                    <button type="button" class="pf-cancel" id="siCancelBtn">Cancel</button>
+                                    <button type="submit" class="btn btn-success pf-save"<?= demo_lock_attr($admin ?? null) ?>>Save changes</button>
+                                </div>
+                            </div>
+                        </form>
+                    </section>
                 </div>
-
-                <?php // Username, email and password in one form; the current password is asked for once (SettingsController::updateSignIn). ?>
-                <form method="post" action="<?= site_url('admin/settings/sign-in') ?>" class="pf-form" id="siForm" data-submit-once data-busy-label="Saving…"<?= $siEdit ? '' : ' hidden' ?>>
-                    <?= csrf_field() ?>
-                    <?php if (($m = $err('signin', 'form')) !== null): ?><div class="alert alert-danger" role="alert"><?= esc($m) ?></div><?php endif; ?>
-                    <div class="pf-row">
-                        <div class="pf-field">
-                            <label for="siUsername">Username</label>
-                            <input id="siUsername" name="username" value="<?= esc($typed('username', $admin['username'] ?? ''), 'attr') ?>" data-original="<?= esc($admin['username'] ?? '', 'attr') ?>" pattern="[A-Za-z0-9_\-]+" minlength="4" maxlength="50" title="4 to 50 letters, numbers, _ or -" required autocomplete="username"<?= $invalid('signin', 'username', 'siUsername') ?>>
-                            <?= $errLine('signin', 'username', 'siUsername') ?>
-                        </div>
-                        <div class="pf-field">
-                            <label for="siEmail">Email Address</label>
-                            <input id="siEmail" name="email" type="email" value="<?= esc($siEmail, 'attr') ?>" data-original="<?= esc($admin['email'] ?? '', 'attr') ?>" maxlength="100" required autocomplete="email"<?= $invalid('signin', 'email', 'siEmail') ?>>
-                            <?= $errLine('signin', 'email', 'siEmail') ?>
-                        </div>
-                    </div>
-                    <?php // Shown once the email is edited: the new address is typed twice. ?>
-                    <div class="pf-field" id="siEmailConfirmField"<?= $siEmailChanged ? '' : ' hidden' ?>>
-                        <label for="siEmailConfirm">Type the new email again</label>
-                        <input id="siEmailConfirm" name="email_confirm" type="email" value="<?= esc((string) $typed('email_confirm', ''), 'attr') ?>" maxlength="100" autocomplete="off"<?= $invalid('signin', 'email_confirm', 'siEmailConfirm') ?>>
-                        <?= $errLine('signin', 'email_confirm', 'siEmailConfirm') ?>
-                    </div>
-                    <div class="pf-row">
-                        <div class="pf-field">
-                            <label for="siNewPassword">New password <span class="text-muted fw-normal">(leave blank to keep it)</span></label>
-                            <input id="siNewPassword" name="new_password" type="password" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" autocomplete="new-password"<?= $invalid('signin', 'new_password', 'siNewPassword') ?>>
-                            <?= $errLine('signin', 'new_password', 'siNewPassword') ?>
-                        </div>
-                        <div class="pf-field">
-                            <label for="siNewPasswordConfirm">Confirm new password</label>
-                            <input id="siNewPasswordConfirm" name="new_password_confirm" type="password" autocomplete="new-password"<?= $invalid('signin', 'new_password_confirm', 'siNewPasswordConfirm') ?>>
-                            <?= $errLine('signin', 'new_password_confirm', 'siNewPasswordConfirm') ?>
-                        </div>
-                    </div>
-                    <div class="pf-field">
-                        <label for="siCurrentPassword">Current password</label>
-                        <input id="siCurrentPassword" name="current_password" type="password" required autocomplete="current-password"<?= $invalid('signin', 'current_password', 'siCurrentPassword') ?>>
-                        <?= $errLine('signin', 'current_password', 'siCurrentPassword') ?>
-                    </div>
-                    <div class="pf-actions">
-                        <button type="button" class="btn btn-outline-dark pf-cancel" id="siCancelBtn">Cancel</button>
-                        <button type="submit" class="btn btn-success pf-save"<?= demo_lock_attr($admin ?? null) ?>>Save</button>
-                    </div>
-                </form>
-                <p class="text-muted small mb-0 mt-3">For your security, changing your username, email or password asks for your current password.</p>
             </div>
 
             <script>
             (function () {
-                // Each card: a view, a form that opens with the pen, and Cancel that puts the saved values back.
-                function card(prefix, firstField, onReset) {
+                // Each card: a view, a form that opens with Edit, and Cancel that puts the saved values back.
+                // Save changes stays disabled until a value differs from the saved one (changing it back
+                // disables it again) and while any message shows under a field. Only one card edits at a time.
+                const cards = [];
+
+                // The left card keeps its view-mode size while a card on the right is edited: measured
+                // just before the form opens and set as an inline height (with align-self: start, CSS
+                // .is-locked). Cancel removes it; Save reloads the page. One column (900px and below): no lock.
+                const who = document.getElementById('pfWho'), oneColumn = window.matchMedia('(max-width: 900px)');
+                const lockWho = () => {
+                    if (oneColumn.matches || who.classList.contains('is-locked') || who.classList.contains('is-natural')) { return; }
+                    who.style.height = who.getBoundingClientRect().height + 'px';
+                    who.classList.add('is-locked');
+                };
+                const unlockWho = () => {
+                    if (cards.some((c) => c.isOpen())) { return; }
+                    who.style.height = '';
+                    who.classList.remove('is-locked', 'is-natural'); // back in view mode: stretch again
+                };
+                const visibleErrors = (form) => [...form.querySelectorAll('.pf-error')]
+                    .filter((e) => e.textContent.trim() !== '' && !e.closest('[hidden]')).length;
+
+                function card(prefix, firstField, changed, onReset) {
                     const view = document.getElementById(prefix + 'View'), form = document.getElementById(prefix + 'Form');
                     const edit = document.getElementById(prefix + 'EditBtn'), cancel = document.getElementById(prefix + 'CancelBtn');
+                    const save = form.querySelector('button[type="submit"]'), note = form.querySelector('.pf-changes');
+                    const editLocked = edit.disabled, saveLocked = save.disabled; // the demo owner's buttons stay disabled
+                    const self = { form, edit, editLocked, isOpen: () => !form.hidden };
+
+                    self.sync = () => {
+                        const n = visibleErrors(form);
+                        const text = n > 0 ? `Fix ${n} ${n === 1 ? 'error' : 'errors'} to save` : '';
+                        if (note.textContent !== text) { note.textContent = text; }
+                        if (!form.hasAttribute('aria-busy')) { save.disabled = saveLocked || n > 0 || !changed(); }
+                    };
                     const show = (editing) => {
                         view.hidden = editing;
                         form.hidden = !editing;
                         edit.hidden = editing;
+                        lockOthers();
                         if (editing) { document.getElementById(firstField).focus(); } else { edit.focus(); }
                     };
-                    edit.addEventListener('click', () => show(true));
+                    edit.addEventListener('click', () => { lockWho(); show(true); });
                     cancel.addEventListener('click', () => {
                         form.querySelectorAll('input[data-original]').forEach((i) => { i.value = i.dataset.original; });
                         form.querySelectorAll('input[type=password]').forEach((i) => { i.value = ''; });
@@ -383,7 +486,33 @@ $tabs = [
                         form.querySelectorAll('.pf-error').forEach((e) => { e.textContent = ''; });
                         form.querySelectorAll('.alert').forEach((e) => { e.remove(); });
                         if (onReset) { onReset(); }
+                        self.sync();
                         show(false);
+                        unlockWho();
+                    });
+                    // A message from the server goes away once its field is edited (the full name has its own check below).
+                    form.addEventListener('input', (e) => {
+                        const input = e.target;
+                        if (input.id !== 'pfFullName' && input.classList.contains('is-invalid')) {
+                            const msg = document.getElementById(input.id + 'Err');
+                            if (msg) { msg.textContent = ''; }
+                            input.classList.remove('is-invalid');
+                            input.removeAttribute('aria-invalid');
+                        }
+                        self.sync();
+                    });
+                    cards.push(self);
+                    return self;
+                }
+
+                // While one card is in edit mode, the other card's Edit button is disabled.
+                function lockOthers() {
+                    const open = cards.find((c) => c.isOpen());
+                    cards.forEach((c) => {
+                        if (c.editLocked) { return; }
+                        const locked = !!open && open !== c;
+                        c.edit.disabled = locked;
+                        if (locked) { c.edit.title = 'Save or cancel the other section first'; } else { c.edit.removeAttribute('title'); }
                     });
                 }
 
@@ -396,12 +525,23 @@ $tabs = [
                 };
                 email.addEventListener('input', syncEmail);
 
+                // What counts as a change (the server's "Nothing changed yet." stays as the backup).
+                const name = document.getElementById('pfFullName'), phone = document.getElementById('pfPhone');
+                const phoneDigits = (v) => { const d = v.replace(/\D+/g, ''); return /^63\d{10}$/.test(d) ? '0' + d.slice(2) : d; };
+                const personalChanged = () => name.value.trim() !== name.dataset.original.trim()
+                    || phoneDigits(phone.value) !== phoneDigits(phone.dataset.original);
+                const username = document.getElementById('siUsername');
+                const newPass = document.getElementById('siNewPassword'), newPass2 = document.getElementById('siNewPasswordConfirm');
+                // A new password counts as a change; the current password alone does not.
+                const signInChanged = () => username.value.trim() !== username.dataset.original
+                    || email.value.trim().toLowerCase() !== (email.dataset.original || '').trim().toLowerCase()
+                    || newPass.value !== '' || newPass2.value !== '';
+
                 // Full name counter, as in Add item (Item name): "n / 60" counted in characters, amber from 50,
                 // red past 60 with the message under the field and Save disabled. Typing is never blocked.
                 const NAME_MAX = 60, NAME_OVER_MSG = 'Full name can be up to 60 characters.';
-                const name = document.getElementById('pfFullName'), nameCount = document.getElementById('pfNameCount');
-                const nameErr = document.getElementById('pfFullNameErr'), nameSave = document.querySelector('#pfForm button[type="submit"]');
-                const saveLocked = nameSave.disabled; // the demo owner's Save stays disabled
+                const nameCount = document.getElementById('pfNameCount'), nameErr = document.getElementById('pfFullNameErr');
+                let personal = null;
                 const syncName = (edited) => {
                     const len = [...name.value].length, over = len > NAME_MAX;
                     nameCount.textContent = `${len} / ${NAME_MAX}`;
@@ -412,16 +552,17 @@ $tabs = [
                     if (nameErr.textContent !== msg) { nameErr.textContent = msg; }
                     name.classList.toggle('is-invalid', msg !== '');
                     name.setAttribute('aria-invalid', msg !== '' ? 'true' : 'false');
-                    nameSave.disabled = saveLocked || over;
+                    if (personal) { personal.sync(); } // Save disabled while over the limit
                 };
                 name.addEventListener('input', () => syncName(true));
-                syncName(false);
 
-                card('pf', 'pfFullName', () => syncName(true));
-                card('si', 'siUsername', syncEmail);
+                personal = card('pf', 'pfFullName', personalChanged, () => syncName(true));
+                card('si', 'siUsername', signInChanged, syncEmail);
+                syncName(false);
+                cards.forEach((c) => c.sync());
+                lockOthers();
             })();
             </script>
-
         <?php elseif ($tab === 'accounts'): ?>
             <h4>Manage Accounts</h4>
             <div class="set-hint">Add, remove or reset staff accounts.</div>
@@ -433,19 +574,19 @@ $tabs = [
                 </div>
 
                 <div class="acct-row">
-                    <div class="acct-avatar"><?= esc(strtoupper(substr($admin['full_name'] ?? 'A', 0, 1))) ?></div>
+                    <div class="acct-avatar" aria-hidden="true"><?= esc(initials($admin['full_name'] ?? '')) ?></div>
                     <div class="flex-grow-1">
                         <div class="acct-name"><?= esc($admin['full_name'] ?? '') ?></div>
                         <div class="acct-email"><?= esc($admin['email'] ?? '') ?></div>
                     </div>
-                    <span class="acct-role-pill" style="background:#fdf1c0;">Owner</span>
+                    <span class="acct-role-pill">Owner</span>
                     <span class="status-pill acct green">Active</span>
                     <span class="text-muted small">(You)</span>
                 </div>
 
                 <?php foreach ($staffAccounts as $s): ?>
                     <div class="acct-row">
-                        <div class="acct-avatar"><?= esc(strtoupper(substr($s['full_name'], 0, 1))) ?></div>
+                        <div class="acct-avatar" aria-hidden="true"><?= esc(initials($s['full_name'])) ?></div>
                         <div class="flex-grow-1">
                             <div class="acct-name"><?= esc($s['full_name']) ?></div>
                             <div class="acct-email">@<?= esc($s['username']) ?><?= ! empty($s['email']) ? ' &middot; ' . esc($s['email']) : '' ?></div>
