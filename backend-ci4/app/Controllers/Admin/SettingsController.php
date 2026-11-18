@@ -141,6 +141,8 @@ class SettingsController extends BaseController
             'z_score'               => 'required|numeric',
             'demand_lookback_days'  => 'required|integer|greater_than[0]',
             'minimum_order_qty'     => 'required|integer|greater_than[0]',
+            // Optional in the request (an older form omits it): blank keeps what is saved.
+            'owner_usual_order_qty' => 'permit_empty|integer|greater_than[0]|less_than[100000]',
         ];
 
         if (! $this->validate($rules)) {
@@ -156,6 +158,10 @@ class SettingsController extends BaseController
             'minimum_order_qty'     => (int) $this->request->getPost('minimum_order_qty'),
             'updated_by'            => session()->get('user_id'),
         ];
+        $usual = trim((string) $this->request->getPost('owner_usual_order_qty'));
+        if ($usual !== '') {
+            $payload['owner_usual_order_qty'] = (int) $usual;
+        }
 
         $current = $this->dssParameterModel->current();
 

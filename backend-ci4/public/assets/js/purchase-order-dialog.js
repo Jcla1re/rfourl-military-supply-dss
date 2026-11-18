@@ -169,6 +169,13 @@
         el.querySelector('.po-line-numbers').textContent = [
             `${l.on_hand} on hand`, `Reorder at ${l.rop}`, `Safety stock ${l.safety ?? '—'}`, `Suggested ${l.eoq ?? '—'} (EOQ)`,
         ].join(' · ');
+        // The supplier's minimum, when it is above the EOQ: what it means, or a warning when it is a very big order.
+        const minNote = el.querySelector('.po-line-minimum');
+        if (l.supplier_note) {
+            minNote.textContent = l.supplier_note.text;
+            minNote.classList.toggle('is-warning', l.supplier_note.level === 'warning');
+            minNote.hidden = false;
+        }
         const q = el.querySelector('input[name="quantity[]"]'), c = el.querySelector('input[name="unit_price[]"]');
         q.id = `poQty${n}`; c.id = `poCost${n}`;
         el.querySelector('.po-qty-label').htmlFor = q.id;

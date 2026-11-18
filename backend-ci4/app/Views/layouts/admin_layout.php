@@ -131,6 +131,13 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Adm
                 </span>
                 <span class="nav-label">Suppliers</span>
             </a>
+            <a href="<?= site_url('admin/procurement-report') ?>" class="nav-link <?= ($active ?? '') === 'procurement_report' ? 'active' : '' ?>" data-tooltip="Procurement Report">
+                <span class="nav-icon">
+                    <i class="bi bi-graph-down-arrow icon-outline"></i>
+                    <i class="bi bi-graph-down-arrow icon-fill"></i>
+                </span>
+                <span class="nav-label">Procurement Report</span>
+            </a>
 
             <div class="nav-section-label">SYSTEM</div>
             <a href="<?= site_url('admin/settings') ?>" class="nav-link <?= ($active ?? '') === 'settings' ? 'active' : '' ?>" data-tooltip="Settings">

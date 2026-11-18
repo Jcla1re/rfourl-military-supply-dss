@@ -414,6 +414,11 @@ a.stat-pill[aria-pressed="true"]:hover { box-shadow: inset 0 0 0 2px currentColo
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        <div class="im-field">
+                            <label for="supplier_min_qty">Supplier minimum order (optional)</label>
+                            <input id="supplier_min_qty" name="supplier_min_qty" type="number" min="1" step="1" placeholder="None" aria-describedby="supplierMinHelp">
+                            <small class="im-help" id="supplierMinHelp">The smallest order this supplier accepts. Leave blank if there is none. It applies to every size of this item.</small>
+                        </div>
                     </div>
                 </section>
 
@@ -640,6 +645,7 @@ function formValues() {
         size: size,
         category: document.getElementById('category').value,
         supplier_id: document.getElementById('supplier_id').value,
+        supplier_min_qty: document.getElementById('supplier_min_qty').value.trim(),
         current_stock: String(Number(stockInput.value || 0)),
         manual_rop_warning: String(Number(ropInput.value || 0)),
         unit_cost: String(Number(costInput.value || 0)),
@@ -882,6 +888,7 @@ document.addEventListener('click', event => {
     // The item's current size, whether or not it's among the suggestions.
     document.getElementById('sizeText').value = item.size || '';
     document.getElementById('supplier_id').value = item.supplier_id || '';
+    document.getElementById('supplier_min_qty').value = item.supplier_min_qty || '';
     costInput.value = item.unit_cost || 0;
     priceInput.value = item.selling_price || 0;
     stockInput.value = item.current_stock || 0;

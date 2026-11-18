@@ -14,6 +14,11 @@ $activeFilters = (int) ($activeFilters ?? 0);
 $exportQuery   = $exportQuery ?? [];
 $exportSuffix  = $exportQuery ? '?' . http_build_query($exportQuery) : '';
 $keepPer       = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' => $_GET['per_page']]) : '';
+$tab           = ($tab ?? 'table') === 'comparison' ? 'comparison' : 'table';
+$tabLink       = static fn (string $t): string => site_url('admin/procurement-report') . ($t === 'comparison' ? '?tab=comparison' : '');
+if ($tab === 'comparison') {
+    $keepPer = '?tab=comparison'; // "Clear all" stays on this tab
+}
 ?>
 
 <link href="/assets/css/inventory-table.css" rel="stylesheet">
@@ -53,6 +58,9 @@ $keepPer       = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' =
 .pr-table th,
 .pr-table th.col-term { white-space: nowrap; }
 
+/* The supplier's minimum order is above the EOQ: a line under the item, red when it is very large. */
+.pr-min-note { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: #6B6E60; white-space: normal; }
+.pr-min-note.is-warning { color: #8A1C1C; font-weight: 600; }
 /* Default values (no reorder point yet / only the minimum order): muted gray. */
 .pr-table td.pr-default { color: #8A8D7E; }
 
@@ -64,9 +72,49 @@ $keepPer       = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' =
 .abc-badge.cls-a { background: #2C3A1E; color: #fff; }
 .abc-badge.cls-b { background: #71AA60; color: #fff; }
 .abc-badge.cls-c { background: #E4EFDF; color: #2F4A22; }
+
+/* Tabs: plain links, so the tab is in the URL. */
+.pr-tabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid #dcdad2; }
+.pr-tab { padding: 10px 16px; font-size: 14px; font-weight: 600; color: #5C6152; text-decoration: none; border-bottom: 3px solid transparent; margin-bottom: -1px; border-radius: 8px 8px 0 0; }
+.pr-tab:hover { color: #1F2617; background: #F2F0EA; }
+.pr-tab:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; }
+.pr-tab.active { color: #2F5A27; border-bottom-color: #4b6a3f; }
+
+/* Cost comparison */
+.pc-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 4px 0 16px; }
+@media (max-width: 1100px) { .pc-cards { grid-template-columns: repeat(2, 1fr); } }
+.pc-card { background: #fff; border-radius: var(--radius-card); box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+.pc-card-label { color: #5C6152; font-size: 13px; }
+.pc-card-value { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pc-card-value small { font-size: 13px; font-weight: 600; }
+.pc-card.is-saving .pc-card-value { color: #2F5A27; }
+.pc-card.is-negative .pc-card-value { color: #8A1C1C; }
+.pc-scroll { max-height: 520px; overflow: auto; }
+.pc-table { table-layout: auto; }
+.pc-table thead th { position: sticky; top: 0; z-index: 1; background: #3d5230; color: #fff; white-space: nowrap; }
+.pc-sort { all: unset; cursor: pointer; font-weight: 600; }
+.pc-sort:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+th[aria-sort="ascending"] .pc-sort::after { content: ' ▲'; font-size: 10px; }
+th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
+.pc-row { cursor: pointer; }
+.pc-row.is-selected td { background: #E4EFDF; }
+.pc-row:focus-visible { outline: 2px solid #4b6a3f; outline-offset: -2px; }
+.pc-savings { color: #2F5A27; font-weight: 600; }
+.pc-savings.is-negative { color: #8A1C1C; }
+.pc-savings small { font-weight: 400; color: inherit; }
+.pc-chart-card { background: #fff; border-radius: var(--radius-card); box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 16px 18px; margin-top: 16px; }
+.pc-chart-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+.pc-chart-sub { color: #5C6152; font-size: 13px; }
+.pc-chart-box { position: relative; height: 300px; }
+.pc-chart-orders { margin: 8px 0 0; color: #3d4333; font-size: 13px; }
 </style>
 
 <div class="page-wrap">
+    <nav class="pr-tabs" aria-label="Procurement Report">
+        <a class="pr-tab<?= $tab === 'table' ? ' active' : '' ?>" href="<?= $tabLink('table') ?>"<?= $tab === 'table' ? ' aria-current="page"' : '' ?>>Report</a>
+        <a class="pr-tab<?= $tab === 'comparison' ? ' active' : '' ?>" href="<?= $tabLink('comparison') ?>"<?= $tab === 'comparison' ? ' aria-current="page"' : '' ?>>Cost comparison</a>
+    </nav>
+
     <div class="pr-top">
         <div class="pr-top-left">
         <?php // Same "← Back" button as the Log Transaction forms (.lt-back, admin-theme.css); back to Reorder Alerts, which opens this report. ?>
@@ -119,7 +167,7 @@ $keepPer       = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' =
         </a>
     </div>
 
-    <?= view('admin/_procurement_table', get_defined_vars()) ?>
+    <?= $tab === 'comparison' ? view('admin/_procurement_comparison', get_defined_vars()) : view('admin/_procurement_table', get_defined_vars()) ?>
 </div>
 
 <script>
@@ -138,6 +186,7 @@ $keepPer       = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' =
         link.setAttribute('aria-label', `Clear all filters (${count} active)`);
 
         const params = new URLSearchParams();
+        if (q.get('tab')) params.set('tab', q.get('tab'));
         FILTER_KEYS.forEach(k => { if (q.get(k)) params.set(k, q.get(k)); });
         const suffix = params.toString() ? '?' + params.toString() : '';
         ['exportPdf', 'exportCsv'].forEach(id => {
@@ -213,6 +262,80 @@ $keepPer       = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' =
         searchInput.value = '';
         searchInput.dispatchEvent(new Event('input'));
         searchInput.focus();
+    });
+
+    // ---- Cost comparison: sortable table, and the cost curve of the row clicked ----------------
+    let tcChart = null;
+    const peso = n => '₱' + Math.round(n).toLocaleString('en-PH');
+
+    document.addEventListener('click', event => {
+        const button = event.target.closest('.pc-sort');
+        if (!button) return;
+        const table = document.getElementById('pcTable');
+        const body = table.tBodies[0];
+        const col = Number(button.dataset.col), numeric = button.dataset.sort === 'num';
+        const dir = button.closest('th').getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending';
+        table.querySelectorAll('th').forEach(th => th.removeAttribute('aria-sort'));
+        button.closest('th').setAttribute('aria-sort', dir);
+        const value = row => { const v = row.children[col].dataset.v; return numeric ? parseFloat(v) : v; };
+        [...body.querySelectorAll('tr.pc-row')]
+            .sort((a, b) => {
+                const x = value(a), y = value(b);
+                const c = numeric ? x - y : String(x).localeCompare(String(y));
+                return dir === 'ascending' ? c : -c;
+            })
+            .forEach(row => body.appendChild(row));
+    });
+
+    function drawCurve(row) {
+        const wrap = document.getElementById('procurementResults');
+        const S = parseFloat(wrap.dataset.orderingCost), H = parseFloat(wrap.dataset.holdingCost);
+        const D = Number(row.dataset.d), qOwner = Number(row.dataset.qOwner), qSys = Number(row.dataset.qSys);
+        const tc = q => D / q * S + q / 2 * H;
+        const eoq = H > 0 ? Math.sqrt(2 * D * S / H) : qSys;
+        const maxQ = 3 * Math.max(qOwner, qSys), step = Math.max(1, Math.ceil(maxQ / 90));
+        const curve = [];
+        for (let q = 1; q <= maxQ; q += step) curve.push({ x: q, y: tc(q) });
+        const datasets = [
+            { label: 'Yearly cost', data: curve, borderColor: '#3d5230', borderWidth: 2.5, pointRadius: 0, tension: 0.15 },
+            { label: `Owner's usual order (${qOwner})`, data: [{ x: qOwner, y: tc(qOwner) }], showLine: false, pointRadius: 8, pointHoverRadius: 9, backgroundColor: '#b9791f', borderColor: '#fff', borderWidth: 2 },
+            { label: 'EOQ (lowest cost)', data: [{ x: eoq, y: tc(eoq) }], showLine: false, pointRadius: 8, pointHoverRadius: 9, backgroundColor: '#2F5A27', borderColor: '#fff', borderWidth: 2 },
+        ];
+        if (Math.abs(qSys - eoq) >= 1) {
+            datasets.push({ label: `PDSS order qty (${qSys}, minimum applied)`, data: [{ x: qSys, y: tc(qSys) }], showLine: false, pointRadius: 7, pointStyle: 'rectRot', backgroundColor: '#5b8def', borderColor: '#fff', borderWidth: 2 });
+        }
+        if (tcChart) tcChart.destroy();
+        tcChart = new Chart(document.getElementById('pcChart'), {
+            type: 'line',
+            data: { datasets },
+            options: {
+                maintainAspectRatio: false,
+                animation: false,
+                parsing: false,
+                interaction: { mode: 'nearest', intersect: false },
+                plugins: {
+                    legend: { position: 'top', align: 'start', labels: { boxWidth: 14 } },
+                    tooltip: { callbacks: { title: items => `Order ${Math.round(items[0].parsed.x)} at a time`, label: item => `${item.dataset.label}: ${peso(item.parsed.y)} a year` } },
+                },
+                scales: {
+                    x: { type: 'linear', min: 0, title: { display: true, text: 'Order quantity (Q)' }, grid: { display: false } },
+                    y: { beginAtZero: true, title: { display: true, text: 'Yearly cost' }, grid: { color: '#eee' }, ticks: { callback: v => peso(v) } },
+                },
+            },
+        });
+        document.getElementById('pcChartTitle').textContent = row.dataset.item;
+        document.getElementById('pcChartSub').textContent = `Yearly cost of ordering Q at a time (ordering cost + storage), from ${D.toLocaleString('en-PH')} items sold a year.`;
+        document.getElementById('pcChartOrders').textContent = `Orders a year: ${qOwner} at a time = ${row.dataset.ordersOwner}; ${qSys} at a time (PDSS) = ${row.dataset.ordersSys}.`;
+        document.querySelectorAll('.pc-row.is-selected').forEach(r => r.classList.remove('is-selected'));
+        row.classList.add('is-selected');
+    }
+    document.addEventListener('click', event => {
+        const row = event.target.closest('tr.pc-row');
+        if (row) drawCurve(row);
+    });
+    document.addEventListener('keydown', event => {
+        const row = event.target.closest && event.target.closest('tr.pc-row');
+        if (row && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); drawCurve(row); }
     });
 
     searchInput.addEventListener('input', () => {

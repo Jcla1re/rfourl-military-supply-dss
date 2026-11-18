@@ -64,6 +64,12 @@ $statusPill   = static fn (array $r): string => match (true) {
 // On hand: just the number (the stock-level bar is in Inventory's row detail).
 $onHand = static fn (array $r): string => '<span class="ra-num">' . (int) $r['current_stock'] . '</span>';
 $rop = static fn (array $r): int => (int) ($r['manual_rop_warning'] ?? 0);
+// The supplier's minimum order above the EOQ (App\Libraries\SupplierMinimum): what it covers, or a warning when it is very large.
+$minNote = static function (array $r) use ($dss): string {
+    $note = \App\Libraries\SupplierMinimum::forProduct($r, is_array($r['computation'] ?? null) ? $r['computation'] : null, $dss ?: null);
+
+    return $note ? '<span class="ra-sub ra-min-note' . ($note['level'] === 'warning' ? ' is-warning' : '') . '">' . esc($note['text']) . '</span>' : '';
+};
 // Shown under the name when the Reorder at and Status columns don't fit (narrow content).
 $narrowMeta = static fn (array $r): string => '<span class="ra-narrow">' . $statusPill($r) . '<span>Reorder at ' . $rop($r) . '</span></span>';
 // The shared purchase order dialog's data for one size (App\Libraries\PurchaseOrderLine).
@@ -244,6 +250,7 @@ $lateBadge = static fn (int $days): string => $days > 0 ? '<span class="status-p
                                         <span class="ra-name"<?= $nameTip($r) ?>><?= esc($r['item_name']) ?><?= $r['is_new'] ? $newTag : '' ?></span>
                                         <?php if ($sizeText !== ''): ?><span class="ra-sub ra-inline-size">Size <?= esc($sizeText) ?></span><?php endif; ?>
                                     <?php endif; ?>
+                                    <?= $minNote($r) ?>
                                     <?= $narrowMeta($r) ?>
                                 </div>
                                 <div class="ra-c-size"><?= esc($sizeText !== '' ? $sizeText : '—') ?><?= $multi && $r['is_new'] ? $newTag : '' ?></div>

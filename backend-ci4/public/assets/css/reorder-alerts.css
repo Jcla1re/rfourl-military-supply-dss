@@ -98,6 +98,8 @@
 .ra-c-item { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .ra-name { font-weight: 600; color: #1F2617; overflow-wrap: anywhere; }
 .ra-sub { color: #6B6E60; font-size: 13px; overflow-wrap: anywhere; }
+.ra-sub.ra-min-note { margin-top: 2px; }
+.ra-sub.ra-min-note.is-warning { color: #8A1C1C; font-weight: 600; }
 .ra-size-label { font-weight: 600; color: #1F2617; }
 .ra-num { font-variant-numeric: tabular-nums; }
 .ra-c-size { font-weight: 600; color: #1F2617; }

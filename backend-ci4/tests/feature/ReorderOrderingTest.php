@@ -147,7 +147,7 @@ final class ReorderOrderingTest extends CIUnitTestCase
         preg_match_all('/data-line=(["\'])(.*?)\1/', $html, $m);
         $lines = array_column(array_map(static fn ($a) => json_decode(html_entity_decode($a, ENT_QUOTES), true), $m[2]), null, 'item_id');
         $this->assertSame(
-            ['item_id' => 'P-S', 'name' => 'Pants · Size S', 'size' => 'S', 'category' => 'Clothes', 'status' => 'Reorder Now', 'status_class' => 'red', 'on_hand' => 0, 'rop' => 3, 'safety' => 1, 'eoq' => 12, 'cost' => 125.5, 'supplier_id' => 'SUP-001', 'supplier' => 'Tactical Gear Inc', 'lead' => 5],
+            ['item_id' => 'P-S', 'name' => 'Pants · Size S', 'size' => 'S', 'category' => 'Clothes', 'status' => 'Reorder Now', 'status_class' => 'red', 'on_hand' => 0, 'rop' => 3, 'safety' => 1, 'eoq' => 12, 'cost' => 125.5, 'supplier_id' => 'SUP-001', 'supplier' => 'Tactical Gear Inc', 'lead' => 5, 'supplier_min' => null, 'supplier_note' => null],
             $lines['P-S']
         );
         $this->assertMatchesRegularExpression('/<button type="button" class="btn btn-outline-success btn-sm" data-order-all>Order all sizes<\/button>/', $html, 'Order all sizes is live.');

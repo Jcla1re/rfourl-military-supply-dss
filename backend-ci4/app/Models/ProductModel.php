@@ -15,6 +15,7 @@ class ProductModel extends Model
     protected $allowedFields = [
         'item_id',
         'supplier_id',
+        'supplier_min_qty', // the supplier's smallest order for this item (NULL = none); dss:run keeps Order Qty at or above it
         'item_name',
         'category',
         'size',

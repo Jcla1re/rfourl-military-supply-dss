@@ -117,6 +117,7 @@ class SupplierController extends BaseController
     public function store()
     {
         $rules = [
+            'payment_terms' => 'permit_empty|in_list[Cash,Check,Other]',
             'company_name'   => 'required|max_length[100]',
             'lead_time_days' => 'required|integer|greater_than_equal_to[1]',
             'contact_email'  => 'permit_empty|valid_email',
@@ -167,6 +168,8 @@ class SupplierController extends BaseController
             'is_active'          => $status === 'Inactive' ? 0 : 1,
         ]);
 
+        $this->savePaymentTerms($newId);
+
         if ($username && $password) {
             $this->userModel->insert([
                 'supplier_id'   => $newId,
@@ -192,6 +195,7 @@ class SupplierController extends BaseController
         }
 
         $rules = [
+            'payment_terms' => 'permit_empty|in_list[Cash,Check,Other]',
             'company_name'   => 'required|max_length[100]',
             'lead_time_days' => 'required|integer|greater_than_equal_to[1]',
             'contact_email'  => 'permit_empty|valid_email',
@@ -222,7 +226,20 @@ class SupplierController extends BaseController
             'is_active'          => $status === 'Inactive' ? 0 : 1,
         ]);
 
+        $this->savePaymentTerms((string) $supplierId);
+
         return redirect()->to('/admin/suppliers')->with('success', 'Supplier updated successfully.');
+    }
+
+    /** The optional Payment terms (Cash / Check / Other); a form that does not send the field leaves them as they are. */
+    private function savePaymentTerms(string $supplierId): void
+    {
+        $posted = $this->request->getPost('payment_terms');
+        if ($posted === null) {
+            return;
+        }
+        $terms = in_array($posted, \App\Models\SupplierModel::PAYMENT_TERMS, true) ? $posted : null;
+        $this->supplierModel->update($supplierId, ['payment_terms' => $terms]);
     }
 
     public function delete($supplierId)

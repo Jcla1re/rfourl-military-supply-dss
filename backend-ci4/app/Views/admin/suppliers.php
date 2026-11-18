@@ -125,6 +125,7 @@ $formatPhone = static function (?string $phone): string {
                     <div class="sup-card-foot">
                         <div><span><i class="bi bi-clock"></i> Delivery time</span><?= esc($s['lead_time_days']) ?> days</div>
                         <div><span><i class="bi bi-telephone"></i> Contact</span><?= esc($formatPhone($s['contact_number'] ?? null)) ?></div>
+                        <div class="sup-terms"><span><i class="bi bi-cash-coin"></i> Terms</span><?= ! empty($s['payment_terms']) ? esc($s['payment_terms']) : '—' ?></div>
                         <div><span><i class="bi bi-box-seam"></i> Products</span><?= esc($s['product_count']) ?></div>
                         <?php if ($archived): ?>
                             <div><span><i class="bi bi-archive"></i> Archived on</span><?= ! empty($s['updated_at']) ? esc(date('M j, Y', strtotime($s['updated_at']))) : '—' ?></div>

@@ -76,6 +76,7 @@ $showSearchBar = $searchTerm !== '' && empty($showArchived) && ! empty($products
                             'category'           => $v['category'] ?? '',
                             'size'               => $v['size'] ?? '',
                             'supplier_id'        => $v['supplier_id'] ?? '',
+                            'supplier_min_qty'   => isset($v['supplier_min_qty']) ? (int) $v['supplier_min_qty'] : null,
                             'unit_cost'          => (float) ($v['unit_cost'] ?? 0),
                             'selling_price'      => (float) ($v['selling_price'] ?? 0),
                             'current_stock'      => (int) ($v['current_stock'] ?? 0),

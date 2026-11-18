@@ -15,6 +15,7 @@
         <tr><td class="k">PO date</td><td class="v"><?= esc($dates['order'] ?: '—') ?></td></tr>
         <tr><td class="k">Expected delivery date</td><td class="v"><strong><?= esc($dates['expected'] ?: '—') ?></strong></td></tr>
         <tr><td class="k">Prepared by</td><td class="v"><?= esc($prepared_by ?: '—') ?></td></tr>
+        <?php if (! empty($supplier['payment_terms'])): ?><tr><td class="k">Terms</td><td class="v"><?= esc($supplier['payment_terms']) ?></td></tr><?php endif; ?>
     </table>
 
     <table class="items">

@@ -214,8 +214,9 @@ class InventoryController extends BaseController
         $newId = $this->productModel->generateNextId();
         // A typed Reorder At is the Owner's ('manual'): a DSS run that gives 0 keeps it.
         $typedRop = (int) ($this->request->getPost('manual_rop_warning') ?: 0);
+        [$hasSupplierMin, $supplierMin] = $this->postedSupplierMin();
 
-        $this->productModel->insert([
+        $row = [
             'item_id'            => $newId,
             'supplier_id'        => $this->request->getPost('supplier_id') ?: null,
             'item_name'          => $this->request->getPost('item_name'),
@@ -227,7 +228,16 @@ class InventoryController extends BaseController
             'manual_rop_warning' => $typedRop,
             'rop_source'         => $typedRop > 0 ? 'manual' : 'dss',
             'is_active'          => 1,
-        ]);
+        ];
+        if ($hasSupplierMin) {
+            $row['supplier_min_qty'] = $supplierMin;
+        }
+        $this->productModel->insert($row);
+
+        // A minimum typed on a new size is the item's: its other sizes take it too (a blank one leaves them as they are).
+        if ($hasSupplierMin && $supplierMin !== null) {
+            $this->setSupplierMinForItem((string) $this->request->getPost('item_name'), (string) $this->request->getPost('category'), $supplierMin);
+        }
 
         if ((int) $this->request->getPost('current_stock') > 0) {
             $this->inventoryLogModel->record(
@@ -265,6 +275,31 @@ class InventoryController extends BaseController
      * characters (counted after trimming), a category, and a unit cost and
      * selling price above 0. Size, supplier, on hand and Reorder At stay optional.
      */
+    private const SUPPLIER_MIN_ERROR = 'Supplier minimum order must be a whole number of 1 or more, or left blank.';
+
+    /**
+     * The optional "Supplier minimum order" from the item form: [sent?, value]. A form that does not
+     * have the field leaves it alone; a blank field means "no minimum" (null).
+     *
+     * @return array{0: bool, 1: int|null}
+     */
+    private function postedSupplierMin(): array
+    {
+        $posted = $this->request->getPost('supplier_min_qty');
+        if ($posted === null) {
+            return [false, null];
+        }
+        $posted = trim((string) $posted);
+
+        return [true, $posted === '' ? null : (int) $posted];
+    }
+
+    /** Every size of an item shares its supplier minimum: same name and category (active or archived). */
+    private function setSupplierMinForItem(string $itemName, string $category, ?int $minimum): void
+    {
+        $this->productModel->builder()->where('item_name', $itemName)->where('category', $category)->update(['supplier_min_qty' => $minimum]);
+    }
+
     private function validateItem(): bool
     {
         $data              = (array) $this->request->getPost();
@@ -278,6 +313,7 @@ class InventoryController extends BaseController
             'selling_price' => ['rules' => 'required|numeric|greater_than[0]', 'errors' => ['required' => 'Enter a selling price.', 'numeric' => 'Enter a selling price.', 'greater_than' => 'Enter a selling price.']],
             'current_stock' => 'permit_empty|integer|greater_than_equal_to[0]',
             'size'          => 'permit_empty|max_length[10]',
+            'supplier_min_qty' => ['rules' => 'permit_empty|integer|greater_than[0]|less_than[1000000]', 'errors' => ['integer' => self::SUPPLIER_MIN_ERROR, 'greater_than' => self::SUPPLIER_MIN_ERROR, 'less_than' => self::SUPPLIER_MIN_ERROR]],
         ]);
     }
 
@@ -371,6 +407,13 @@ class InventoryController extends BaseController
         $ropSource = $product['rop_source'] ?? null;
         if ((int) $rop !== (int) ($product['manual_rop_warning'] ?? 0)) {
             $ropSource = (int) $rop > 0 ? 'manual' : 'dss';
+        }
+
+        // The supplier minimum belongs to the item, not one size: saving it here sets every size of the item
+        // (found by its name and category as they were before this save).
+        [$hasSupplierMin, $supplierMin] = $this->postedSupplierMin();
+        if ($hasSupplierMin) {
+            $this->setSupplierMinForItem((string) $product['item_name'], (string) $product['category'], $supplierMin);
         }
 
         $this->productModel->update($itemId, [

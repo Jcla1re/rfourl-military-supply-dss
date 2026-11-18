@@ -134,6 +134,7 @@
             <button type="button" class="po-line-remove" data-po-remove data-tooltip="Remove from order" data-tooltip-pos="above" hidden><i class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <p class="po-line-numbers"></p>
+        <p class="po-line-minimum" role="note" hidden></p>
         <div class="po-line-row">
             <div class="im-field po-qty-field">
                 <label class="po-qty-label">Quantity</label>

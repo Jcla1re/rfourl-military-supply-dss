@@ -97,6 +97,15 @@ $action = $isEdit ? site_url('admin/suppliers/update/' . $supplier['supplier_id'
                     <input name="preferred_courier" value="<?= esc($supplier['preferred_courier'] ?? '') ?>" placeholder="e.g. JNT Express">
                 </div>
                 <div class="sf-field">
+                    <label for="payment_terms">Payment terms (optional)</label>
+                    <select id="payment_terms" name="payment_terms">
+                        <option value="">Not set</option>
+                        <?php foreach (\App\Models\SupplierModel::PAYMENT_TERMS as $terms): ?>
+                            <option value="<?= esc($terms, 'attr') ?>" <?= ($supplier['payment_terms'] ?? '') === $terms ? 'selected' : '' ?>><?= esc($terms) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="sf-field">
                     <label>Demand Lookback</label>
                     <input value="<?= esc($dss['demand_lookback_days'] ?? 90) ?> days (system-wide)" readonly style="color:#888;">
                 </div>

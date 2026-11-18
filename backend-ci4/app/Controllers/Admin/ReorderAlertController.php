@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Libraries\DssRunner;
+use App\Libraries\ProcurementComparison;
 use App\Libraries\ProcurementReport;
 use App\Libraries\ReorderBoard;
 use App\Libraries\Toast;
@@ -55,6 +56,10 @@ class ReorderAlertController extends BaseController
     {
         $filters = ProcurementReport::filters($this->request->getGet() ?? []);
         $dss     = $this->dssParameterModel->current();
+
+        if ($this->isComparisonTab()) {
+            return $this->comparison($filters, $dss);
+        }
         $rows    = ProcurementReport::rows($filters, $dss);
 
         $perPage = (int) ($this->request->getGet('per_page') ?? self::PER_PAGE_OPTIONS[0]);
@@ -67,7 +72,8 @@ class ReorderAlertController extends BaseController
 
         $data = $filters + [
             'title'          => 'Procurement Report',
-            'active'         => 'reorder_alerts',
+            'active'         => 'procurement_report',
+            'tab'            => 'table',
             'rows'           => array_slice($rows, ($page - 1) * $perPage, $perPage),
             'totalItems'     => $totalItems,
             'currentPage'    => $page,
@@ -85,6 +91,33 @@ class ReorderAlertController extends BaseController
         }
 
         return view('admin/procurement_report', $data);
+    }
+
+    private function isComparisonTab(): bool
+    {
+        return $this->request->getGet('tab') === 'comparison';
+    }
+
+    /** The Cost comparison tab: the owner's usual order quantity against the system's Order Qty, per size with sales. */
+    private function comparison(array $filters, array $dss)
+    {
+        $rows = ProcurementComparison::rows($filters, $dss);
+
+        $data = $filters + [
+            'title'         => 'Procurement Report',
+            'active'        => 'procurement_report',
+            'tab'           => 'comparison',
+            'rows'          => $rows,
+            'totals'        => ProcurementComparison::totals($rows),
+            'ownerQty'      => ProcurementComparison::ownerQty($dss),
+            'orderingCost'  => (float) ($dss['ordering_cost'] ?? 0),
+            'holdingCost'   => (float) ($dss['holding_cost_per_unit'] ?? 0),
+            'lastRunAt'     => (new DssRunner())->lastRunAt(),
+            'activeFilters' => ProcurementReport::activeFilterCount($filters),
+            'exportQuery'   => ['tab' => 'comparison'] + ProcurementReport::query($filters),
+        ];
+
+        return $this->request->isAJAX() ? view('admin/_procurement_comparison', $data) : view('admin/procurement_report', $data);
     }
 
     /**
@@ -110,6 +143,25 @@ class ReorderAlertController extends BaseController
 
         $dompdf = new \Dompdf\Dompdf($options);
         $dompdf->setPaper('a4', 'landscape');
+
+        if ($this->isComparisonTab()) {
+            $rows = ProcurementComparison::rows($filters, $dss);
+            $dompdf->loadHtml(view('reports/procurement_comparison_pdf', [
+                'rows'        => $rows,
+                'totals'      => ProcurementComparison::totals($rows),
+                'ownerQty'    => ProcurementComparison::ownerQty($dss),
+                'basis'       => ProcurementComparison::basis($lastRunAt, $dss),
+                'filterLabel' => ProcurementReport::filterLabel($filters),
+                'generatedAt' => date('M j, Y g:i A'),
+            ]));
+            $dompdf->render();
+
+            return $this->response
+                ->setHeader('Content-Type', 'application/pdf')
+                ->setHeader('Content-Disposition', 'attachment; filename="cost-comparison-' . date('Y-m-d') . '.pdf"')
+                ->setBody($dompdf->output());
+        }
+
         $dompdf->loadHtml(view('reports/procurement_pdf', [
             'rows'        => ProcurementReport::rows($filters, $dss),
             'basis'       => ProcurementReport::basis($lastRunAt, $dss),
@@ -129,6 +181,13 @@ class ReorderAlertController extends BaseController
     {
         $filters = ProcurementReport::filters($this->request->getGet() ?? []);
         $dss     = $this->dssParameterModel->current();
+
+        if ($this->isComparisonTab()) {
+            return $this->response
+                ->setHeader('Content-Type', 'text/csv; charset=utf-8')
+                ->setHeader('Content-Disposition', 'attachment; filename="cost-comparison-' . date('Y-m-d') . '.csv"')
+                ->setBody(ProcurementComparison::csv(ProcurementComparison::rows($filters, $dss), ProcurementComparison::basis((new DssRunner())->lastRunAt(), $dss)));
+        }
 
         return $this->response
             ->setHeader('Content-Type', 'text/csv; charset=utf-8')

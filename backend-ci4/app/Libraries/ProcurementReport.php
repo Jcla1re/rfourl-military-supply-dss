@@ -112,6 +112,11 @@ class ProcurementReport
                 'safety_stock'      => $c !== null && $c['safety_stock'] !== null ? (int) $c['safety_stock'] : null,
                 'order_qty'         => $eoq,
                 'order_qty_default' => self::isMinimumOrder($c, $dss),
+                // Added for the Cost comparison tab and the supplier-minimum note (App\Libraries\SupplierMinimum).
+                'annual_demand'     => $c !== null ? (int) ($c['annual_demand'] ?? 0) : 0,
+                'eoq_raw'           => $c !== null && isset($c['eoq_raw']) ? (int) $c['eoq_raw'] : null,
+                'supplier_min'      => ! empty($p['supplier_min_qty']) ? (int) $p['supplier_min_qty'] : null,
+                'supplier_note'     => SupplierMinimum::forProduct($p, $c, $dss),
             ];
         }
 

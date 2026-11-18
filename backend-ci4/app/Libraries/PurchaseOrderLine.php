@@ -30,6 +30,7 @@ class PurchaseOrderLine
         $safety = $p['safety_stock'] ?? $computation['safety_stock'] ?? null;
         $lead   = $p['lead_time_days'] ?? $computation['lead_time_days'] ?? $supplier['lead_time_days'] ?? null;
         $size   = trim((string) ($p['size'] ?? ''));
+        $note   = SupplierMinimum::forProduct($p, $computation !== [] ? $computation : null);
 
         return [
             'item_id'      => (string) $p['item_id'],
@@ -46,6 +47,9 @@ class PurchaseOrderLine
             'supplier_id'  => $supplier ? (string) $supplier['supplier_id'] : '',
             'supplier'     => $supplier['company_name'] ?? '',
             'lead'         => $lead ? (int) $lead : null,
+            // The supplier's own minimum for this item and, when it is above the EOQ, what it means (App\Libraries\SupplierMinimum).
+            'supplier_min' => ! empty($p['supplier_min_qty']) ? (int) $p['supplier_min_qty'] : null,
+            'supplier_note' => $note ? ['level' => $note['level'], 'text' => $note['text']] : null,
         ];
     }
 }

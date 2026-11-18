@@ -85,6 +85,15 @@ class DssFormulas
     }
 
     /**
+     * The Order Qty dss:run saves: the EOQ, but never below the system minimum order qty or the supplier's
+     * own minimum for the item (null / 0 = the supplier has none).
+     */
+    public static function orderQty(int $eoqRaw, int $systemMinimum, ?int $supplierMinimum = null): int
+    {
+        return max($eoqRaw, $systemMinimum, (int) $supplierMinimum);
+    }
+
+    /**
      * EOQ = sqrt(2DS / H). Returns 0 (no recommendation) when demand or
      * holding cost is not positive, so there is never a division by zero.
      */

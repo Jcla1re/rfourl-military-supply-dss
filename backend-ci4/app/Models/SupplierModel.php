@@ -13,12 +13,16 @@ class SupplierModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
 
+    /** The payment terms a supplier can be given (optional). */
+    public const PAYMENT_TERMS = ['Cash', 'Check', 'Other'];
+
     protected $allowedFields = [
         'supplier_id',
         'company_name',
         'category',
         'lead_time_days',
         'preferred_courier',
+        'payment_terms',
         'contact_person',
         'contact_email',
         'contact_number',

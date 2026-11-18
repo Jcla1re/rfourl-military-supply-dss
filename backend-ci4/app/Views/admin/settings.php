@@ -640,9 +640,14 @@ $tabs = [
                             <small class="text-muted">Cost to keep one item for a year.</small>
                         </div>
                         <div class="set-field mb-3">
-                            <label>Minimum Order Qty</label>
+                            <label>System minimum order qty</label>
                             <input name="minimum_order_qty" type="number" min="1" value="<?= esc($dss['minimum_order_qty'] ?? 5) ?>" required>
-                            <small class="text-muted">Smallest order the system will suggest. <?= help_tip('Minimum Order Qty', 'An item with no recent sales would get an Order Qty of 0. This makes sure a reorder is still suggested.') ?></small>
+                            <small class="text-muted">Smallest order the system will suggest. <?= help_tip('System minimum order qty', ['An item with no recent sales would get an Order Qty of 0. This makes sure a reorder is still suggested.', 'A supplier can also have its own minimum for an item (Inventory > Edit item). The Order Qty is never below either one.']) ?></small>
+                        </div>
+                        <div class="set-field mb-3">
+                            <label for="ownerUsualOrderQty">Owner's usual order qty</label>
+                            <input id="ownerUsualOrderQty" name="owner_usual_order_qty" type="number" min="1" step="1" value="<?= esc($dss['owner_usual_order_qty'] ?? \App\Models\DssParameterModel::DEFAULT_OWNER_USUAL_ORDER_QTY) ?>">
+                            <small class="text-muted">What you usually order at a time. <?= help_tip("Owner's usual order qty", ['Used only by the Procurement Report > Cost comparison, to compare the yearly cost of ordering this much with the Order Qty the system suggests.', 'It does not change any Order Qty.']) ?></small>
                         </div>
                         <p class="small text-muted mb-0">How is this worked out? <?= help_tip('How Order Qty is worked out', [
                             'Order Qty = √(2 × D × S ÷ H)',

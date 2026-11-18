@@ -18,6 +18,9 @@
 .po-line-meta { color: #5C6152; font-size: 13px; }
 .po-line-status { flex-shrink: 0; white-space: nowrap; }
 .po-line-numbers { margin: 10px 0 12px; color: #5C6152; font-size: 13px; }
+/* The supplier's minimum is above the EOQ: a quiet note, or a warning when it is more than 6 months of sales. */
+.po-line-minimum { margin: -4px 0 12px; padding: 8px 12px; border-radius: 8px; background: #F2F0EA; color: #3d4333; font-size: 13px; }
+.po-line-minimum.is-warning { background: #FDE8E8; color: #8A1C1C; font-weight: 600; }
 
 /* Quantity | Unit cost | Line total, on one row. */
 .po-line-row { display: grid; grid-template-columns: auto minmax(0, 170px) minmax(0, 1fr); align-items: start; gap: 6px 16px; }

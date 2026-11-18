@@ -194,7 +194,8 @@ class DssRun extends BaseCommand
             // whole lookback window, or newly added) computes EOQ = 0,
             // which recommends "order nothing" for an item that may well
             // need restocking right now.
-            $eoq = max($eoqRaw, $minimumOrderQty);
+            // ...and at the supplier's own minimum for this item, when it has one (products.supplier_min_qty).
+            $eoq = \App\Libraries\DssFormulas::orderQty($eoqRaw, $minimumOrderQty, isset($p['supplier_min_qty']) ? (int) $p['supplier_min_qty'] : null);
 
             // The live status/alerts read products.manual_rop_warning, so the
             // engine's ROP is written there (DssFormulas::reorderPointUpdate):

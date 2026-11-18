@@ -120,7 +120,7 @@ final class OrdersPageOrderTest extends CIUnitTestCase
         $this->assertSame(['SUP-001', 'SUP-002'], array_keys($catalog));
         $this->assertSame(['P-S', 'P-M'], array_column($catalog['SUP-001'], 'item_id'));
         $this->assertSame(['C-1'], array_column($catalog['SUP-002'], 'item_id'));
-        $this->assertSame(['item_id' => 'P-S', 'name' => 'Pants · Size S', 'size' => 'S', 'category' => 'Clothes', 'status' => 'Reorder Now', 'status_class' => 'red', 'on_hand' => 0, 'rop' => 3, 'safety' => 1, 'eoq' => 12, 'cost' => 50, 'supplier_id' => 'SUP-001', 'supplier' => 'Tactical Gear Inc', 'lead' => 5], $catalog['SUP-001'][0]);
+        $this->assertSame(['item_id' => 'P-S', 'name' => 'Pants · Size S', 'size' => 'S', 'category' => 'Clothes', 'status' => 'Reorder Now', 'status_class' => 'red', 'on_hand' => 0, 'rop' => 3, 'safety' => 1, 'eoq' => 12, 'cost' => 50, 'supplier_id' => 'SUP-001', 'supplier' => 'Tactical Gear Inc', 'lead' => 5, 'supplier_min' => null, 'supplier_note' => null], $catalog['SUP-001'][0]);
     }
 
     public function testInventoryAndReorderAlertsStillHaveNoPriorityField(): void
