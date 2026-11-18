@@ -263,6 +263,35 @@ final class DeclutteredPagesTest extends CIUnitTestCase
         $this->assertNotNull($x->query('.//button[contains(@class,"edit-row")]', $row)->item(0), 'Edit is still on the row.');
     }
 
+    /**
+     * Each row's Edit button shows the pen (partials/_pen_icon.php), the same 18px SVG as before
+     * Phase B, on the full page and in the live-search fragment (AJAX). Regression: the page's
+     * 'size' (the size filter, often '') leaked into the partial and drew the pen at 0 x 0.
+     */
+    public function testOwnerInventoryEditButtonsShowThePen(): void
+    {
+        $pages = [
+            'full page'          => $this->owner('admin/inventory'),
+            'full page, size'    => $this->owner('admin/inventory?size=M'),
+            'live-search (AJAX)' => (string) $this->asOwner()->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])->get('admin/inventory?search=')->response()->getBody(),
+        ];
+        $this->assertStringNotContainsString('<html', $pages['live-search (AJAX)'], 'the fragment, not the page');
+
+        foreach ($pages as $label => $html) {
+            $x       = $this->html($html);
+            $buttons = $x->query('//button[contains(@class,"edit-row")]');
+            $this->assertGreaterThan(0, $buttons->length, $label);
+            foreach ($buttons as $button) {
+                $svg = $x->query('./*[local-name()="svg"]', $button)->item(0);
+                $this->assertNotNull($svg, "{$label}: the pen is in the button");
+                foreach (['width' => '18', 'height' => '18', 'viewbox' => '0 0 24 24', 'fill' => 'none', 'stroke' => 'currentColor', 'stroke-width' => '1.8', 'aria-hidden' => 'true', 'focusable' => 'false'] as $attr => $value) {
+                    $this->assertSame($value, $svg->getAttribute($attr), "{$label}: {$attr}");
+                }
+                $this->assertSame(['M12 20h9', 'M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'], array_map(static fn ($p) => $p->getAttribute('d'), iterator_to_array($x->query('./*[local-name()="path"]', $svg))), $label);
+            }
+        }
+    }
+
     public function testOwnerInventoryDetailRowHoldsTheMovedColumns(): void
     {
         $x      = $this->html($this->owner('admin/inventory'));

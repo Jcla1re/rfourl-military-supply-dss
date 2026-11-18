@@ -17,8 +17,8 @@
 }
 
 /* Sticky column header row. Only .main-scroll scrolls (the green header sits above
-   it), and the category tabs scroll away, so the row sticks flush under the green
-   header (--sticky-top is 0 on this page). The whole row is sticky, not each cell,
+   it), and the category tabs scroll away (page tab bars never stick), so the row
+   sticks flush under the green header (--sticky-top is 0). The whole row is sticky, not each cell,
    so all header cells share one layer and meet without hairline seams. */
 @media (min-width: 992px) {
     .inv-table thead {

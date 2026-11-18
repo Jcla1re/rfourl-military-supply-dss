@@ -88,9 +88,8 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->post('settings/run-engine', 'SettingsController::runEngine');
     $routes->post('settings/retention', 'SettingsController::updateRetention');
     $routes->post('settings/notification-preference', 'SettingsController::updateNotificationPreference');
-    $routes->post('settings/account', 'SettingsController::updateAccount');
-    $routes->post('settings/owner-password', 'SettingsController::changeOwnerPassword');
-    $routes->post('settings/username', 'SettingsController::updateUsername');
+    $routes->post('settings/account', 'SettingsController::updateAccount');   // My Profile: name + contact number
+    $routes->post('settings/sign-in', 'SettingsController::updateSignIn');    // My Profile: username, email, password (one form)
     $routes->post('settings/staff-accounts', 'SettingsController::addStaffAccount');
     $routes->post('settings/staff-accounts/password/(:segment)', 'SettingsController::resetStaffPassword/$1');
     $routes->post('settings/staff-accounts/username/(:segment)', 'SettingsController::updateStaffUsername/$1');

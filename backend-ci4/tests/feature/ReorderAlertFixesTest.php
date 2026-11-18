@@ -211,10 +211,12 @@ final class ReorderAlertFixesTest extends CIUnitTestCase
         $full2 = $this->alert('P-7', 'Active', '2026-11-02 10:00:00');
         $full1 = $this->alert('P-6', 'Active', '2026-11-01 10:00:00');
 
+        // The model's SQL breaks the last tie by size as text (M before S); the page re-sorts in
+        // natural size order (ProductModel::sizeKey: S before M). Everything else is the same.
         $expected = [$zero1, $zero2, $low, $half1, $half2, $full1, $full2];
 
         $this->assertSame($expected, array_map('intval', array_column((new ReorderAlertModel())->openAlerts(), 'alert_id')));
-        $this->assertSame($expected, $this->listedOnOwnerPage());
+        $this->assertSame([$zero1, $zero2, $low, $half1, $half2, $full2, $full1], $this->listedOnOwnerPage(), 'Pants S before Pants M');
 
         $staff = $this->asStaff()->get('staff/reorder-alerts')->getBody();
         $this->assertLessThan(strpos($staff, 'Mike Half'), strpos($staff, 'Bravo Zero'));

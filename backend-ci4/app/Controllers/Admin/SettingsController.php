@@ -53,6 +53,8 @@ class SettingsController extends BaseController
             'staffAccounts' => $this->userModel->activeStaff()->findAll(),
             'success'       => session()->getFlashdata('success'),
             'error'         => session()->getFlashdata('error'),
+            // A refused My Profile form: ['form' => 'personal'|'signin', 'fields' => [name => message]].
+            'fieldErrors'   => session()->getFlashdata('field_errors'),
         ];
 
         if ($tab === 'records') {
@@ -174,78 +176,98 @@ class SettingsController extends BaseController
         return redirect()->to('/admin/settings?tab=dss')->with('success', 'Order settings saved.');
     }
 
+    private const PROFILE_BACK = '/admin/settings?tab=profile';
+
+    /** Sign-in form: saves that reach the current-password check, per window (format errors don't count). */
+    private const SIGNIN_TRIES  = 5;
+    private const SIGNIN_WINDOW = 600;
+
+    /**
+     * Personal information: full name and contact number. Neither opens anything, so no password
+     * is asked for. The email is part of the sign-in form (updateSignIn()).
+     */
     public function updateAccount()
     {
-        $userId = session()->get('user_id');
+        $userId = (int) session()->get('user_id');
         $user   = $this->userModel->find($userId);
 
         if (! $user) {
             return redirect()->to('/admin/settings')->with('error', 'Account not found.');
         }
         if (DemoGuard::locksUser($user)) {
-            return DemoGuard::refuse('/admin/settings?tab=profile');
+            return DemoGuard::refuse(self::PROFILE_BACK);
         }
 
-        if (! $this->validate([
-            'email' => "permit_empty|valid_email|is_unique[users.email,user_id,{$userId}]",
-        ])) {
-            return redirect()->to('/admin/settings?tab=profile')->with('error', implode(' ', $this->validator->getErrors()));
+        // Trimmed, inner runs of spaces collapsed to one.
+        $name   = trim((string) preg_replace('/\s+/u', ' ', (string) $this->request->getPost('full_name')));
+        $phone  = self::normalisePhone($this->request->getPost('phone'));
+        $errors = [];
+
+        // Only a new name is checked, so an older name that breaks today's rules (e.g. over 60
+        // characters) never stops the contact number from being saved.
+        $nameChanged = $name !== (string) $user['full_name'];
+        if ($name === '') {
+            $errors['full_name'] = 'Enter your full name.';
+        } elseif ($nameChanged && mb_strlen($name) > 60) {
+            $errors['full_name'] = 'Full name can be up to 60 characters.';
+        } elseif ($nameChanged && mb_strlen($name) < 2) {
+            $errors['full_name'] = 'Full name must be at least 2 characters.';
+        } elseif ($nameChanged && (! preg_match("/^[\\p{L}\\p{M} .'\\-]+$/u", $name) || ! preg_match('/\p{L}/u', $name))) {
+            $errors['full_name'] = "Use only letters, spaces and . - ' in your name.";
+        }
+        if ($phone === false) {
+            $errors['phone'] = 'Use an 11-digit mobile number like 0917 123 4567.';
+        }
+        if ($errors !== []) {
+            return $this->refuseForm('personal', $errors);
         }
 
-        $update = [
-            'full_name' => $this->request->getPost('full_name'),
-            'email'     => trim((string) $this->request->getPost('email')) ?: null,
-            'phone'     => $this->request->getPost('phone') ?: null,
-        ];
-        $oldEmail     = $user['email'] ?? null;
-        $emailChanged = strcasecmp((string) $oldEmail, (string) $update['email']) !== 0;
-
-        // Changing the email (the address Forgot password sends to) needs the current password,
-        // like the Supplier's login email. Name and number don't.
-        if ($emailChanged) {
-            if (AttemptStore::hit('owner_email_change_' . $userId, 600) > 5) {
-                return redirect()->to('/admin/settings?tab=profile')->with('error', 'Too many attempts. Please wait a few minutes and try again.');
-            }
-            if (! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
-                SecurityLogModel::log('email_change_failed', null, 'owner profile email: wrong current password');
-
-                return redirect()->to('/admin/settings?tab=profile')->with('error', 'Enter your current password to change your email.');
-            }
+        $changes = [];
+        if ($name !== (string) $user['full_name']) {
+            $changes['full_name'] = $name;
+        }
+        if ($phone !== ($user['phone'] ?? null)) {
+            $changes['phone'] = $phone;
+        }
+        if ($changes === []) {
+            return redirect()->to(self::PROFILE_BACK)->with('toast', Toast::info('Nothing changed yet.', 'Edit your name or contact number, then click Save.'));
         }
 
-        $this->userModel->update($userId, $update);
-        session()->set('full_name', $update['full_name']);
-        if ($emailChanged) {
-            SecurityLogModel::log('email_changed', null, 'owner profile email');
-            // The old address is told. No links, no codes.
-            if (! empty($oldEmail)) {
-                (new EmailNotifier())->toUser(
-                    ['email' => $oldEmail],
-                    'Your RfourL account email was changed',
-                    'The email on your RfourL owner account was changed on ' . date('M j, Y, g:i A') . ". If this wasn't you, contact support right away."
-                );
-            }
+        // Only a real save may report success or change the name shown in the sidebar.
+        if (! $this->userModel->update($userId, $changes)) {
+            return $this->refuseForm('personal', ['form' => "Your changes couldn't be saved. Please try again."]);
         }
+        if (isset($changes['full_name'])) {
+            session()->set('full_name', $name);
+        }
+        SecurityLogModel::log('profile_updated', null, 'owner updated own ' . implode(' and ', array_map(
+            static fn ($c) => $c === 'full_name' ? 'name' : 'contact number',
+            array_keys($changes)
+        )));
 
-        return redirect()->to('/admin/settings?tab=profile')->with('success', 'Profile updated.');
+        return redirect()->to(self::PROFILE_BACK)->with('success', 'Profile updated.');
     }
 
-    public function changeOwnerPassword()
+    /**
+     * "0917 123 4567", "0917-123-4567" or "+63 917 123 4567" -> "09171234567". Null when blank;
+     * false when it is not an 11-digit mobile number starting with 09 (after removing spaces and hyphens).
+     */
+    private static function normalisePhone($typed): string|false|null
     {
-        $user = $this->userModel->find((int) session()->get('user_id'));
-
-        if (DemoGuard::locksUser($user)) {
-            return DemoGuard::refuse('/admin/settings?tab=profile');
+        $typed = trim((string) $typed);
+        if ($typed === '') {
+            return null;
+        }
+        if (! preg_match('/^[0-9 +\-]+$/', $typed)) {
+            return false;
         }
 
-        // The Owner must prove they know the current password, so a stolen
-        // or left-open session cannot be used to lock the Owner out.
-        if (! $user || ! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
-            SecurityLogModel::log('password_change_failed', null, 'wrong current password');
-            return redirect()->to('/admin/settings?tab=profile')->with('error', 'Current password is incorrect.');
+        $digits = str_replace([' ', '-'], '', $typed);
+        if (str_starts_with($digits, '+63')) {
+            $digits = '0' . substr($digits, 3);
         }
 
-        return $this->changePasswordFor((int) $user['user_id'], 'owner');
+        return preg_match('/^09\d{9}$/', $digits) ? $digits : false;
     }
 
     /** One rule set for every username change: 4-50 letters, digits, "_" or "-", not used by anyone else. */
@@ -258,40 +280,176 @@ class SettingsController extends BaseController
     }
 
     /**
-     * The owner changes their own username. Needs the current password, like a supplier changing theirs.
+     * Sign-in & security: username, email and password in one form, with the current password asked
+     * for once. Order: nothing changed -> field checks -> attempt limit -> current password -> new
+     * password not the current one -> save. Format errors never count as an attempt.
      */
-    public function updateUsername()
+    public function updateSignIn()
     {
-        $back = '/admin/settings?tab=profile';
         $id   = (int) session()->get('user_id');
         $user = $this->userModel->find($id);
 
+        if (! $user) {
+            return redirect()->to('/admin/settings')->with('error', 'Account not found.');
+        }
         if (DemoGuard::locksUser($user)) {
-            return DemoGuard::refuse($back);
-        }
-        if (AttemptStore::hit('owner_username_change_' . $id, 600) > 5) {
-            return redirect()->to($back)->with('error', 'Too many attempts. Please wait a few minutes and try again.');
-        }
-        if (! $user || ! password_verify((string) $this->request->getPost('current_password'), $user['password_hash'])) {
-            SecurityLogModel::log('username_change_failed', null, 'wrong current password');
-
-            return redirect()->to($back)->with('error', 'Current password is incorrect.');
+            return DemoGuard::refuse(self::PROFILE_BACK);
         }
 
-        [$rules, $messages] = $this->usernameRules($id);
-        if (! $this->validate($rules, $messages)) {
-            return redirect()->to($back)->with('error', implode(' ', $this->validator->getErrors()));
+        $post     = fn (string $key) => (string) $this->request->getPost($key);
+        $username = trim($post('username'));
+        $email    = mb_strtolower(trim($post('email')));
+        $confirm  = mb_strtolower(trim($post('email_confirm')));
+        $newPass  = $post('new_password');
+        $newPass2 = $post('new_password_confirm');
+        $current  = $post('current_password');
+
+        $oldEmail        = $user['email'] ?? null;
+        $usernameChanged = $username !== (string) $user['username'];
+        $emailChanged    = $email !== mb_strtolower(trim((string) $oldEmail));
+        $passwordChanged = $newPass !== '' || $newPass2 !== '';
+
+        // a) Nothing to do: no attempt counted.
+        if (! $usernameChanged && ! $emailChanged && ! $passwordChanged) {
+            return redirect()->to(self::PROFILE_BACK)->with('toast', Toast::info('Nothing changed yet.', 'Change your username, email or password, then click Save.'));
         }
 
-        $new = trim((string) $this->request->getPost('username'));
-        // The data is checked above; the model's own username rule can't tell "this account" from another one on update.
-        $this->userModel->skipValidation(true)->update($id, ['username' => $new]);
+        // b) Field checks (never counted as an attempt).
+        $errors = [];
+        if ($usernameChanged) {
+            [$rules, $messages] = $this->usernameRules($id);
+            if (! $this->validateData(['username' => $username], $rules, $messages)) {
+                $errors['username'] = $this->validator->getError('username');
+            }
+        }
+        if ($emailChanged || $email === '') {
+            if ($error = $this->emailError($email, $id)) {
+                $errors['email'] = $error;
+            } elseif ($confirm !== $email) {
+                $errors['email_confirm'] = "The two emails don't match.";
+            }
+        }
+        if ($passwordChanged) {
+            if ($error = PasswordPolicy::check($newPass)) {
+                $errors['new_password'] = $error;
+            } elseif ($newPass !== $newPass2) {
+                $errors['new_password_confirm'] = 'Passwords do not match.';
+            }
+        }
+        if ($current === '') {
+            $errors['current_password'] = 'Enter your current password to save these changes.';
+        }
+        if ($errors !== []) {
+            return $this->refuseForm('signin', $errors);
+        }
+
+        // c) One attempt counter for the whole form, counted before the password is checked.
+        $limitKey = 'owner_signin_change_' . $id;
+        if (AttemptStore::hit($limitKey, self::SIGNIN_WINDOW) > self::SIGNIN_TRIES) {
+            return $this->refuseForm('signin', ['form' => 'Too many attempts. Please wait a few minutes and try again.']);
+        }
+
+        // d) The current password.
+        if (! password_verify($current, $user['password_hash'])) {
+            SecurityLogModel::log('signin_change_failed', null, 'owner sign-in details: wrong current password');
+
+            return $this->refuseForm('signin', ['current_password' => 'Current password is incorrect.']);
+        }
+        AttemptStore::forget($limitKey);
+
+        // e) A new password must really be new.
+        if ($passwordChanged && password_verify($newPass, $user['password_hash'])) {
+            return $this->refuseForm('signin', ['new_password' => 'Your new password must be different from your current one.']);
+        }
+
+        // f) Save what changed. Checked above; the model's own username rule can't tell "this account"
+        //    from another one on update.
+        $changes = [];
+        if ($usernameChanged) {
+            $changes['username'] = $username;
+        }
+        if ($emailChanged) {
+            $changes['email'] = $email;
+        }
+        if ($passwordChanged) {
+            $changes['password_hash'] = password_hash($newPass, PASSWORD_DEFAULT);
+        }
+        $saved = $this->userModel->skipValidation(true)->update($id, $changes);
         $this->userModel->skipValidation(false);
-        session()->set('username', $new);
-        AttemptStore::forget('owner_username_change_' . $id);
-        SecurityLogModel::log('username_changed', $user, "{$user['username']} -> {$new}");
+        if (! $saved) {
+            return $this->refuseForm('signin', ['form' => "Your changes couldn't be saved. Please try again."]);
+        }
 
-        return redirect()->to($back)->with('success', 'Username updated. Use it the next time you sign in.');
+        if ($usernameChanged) {
+            session()->set('username', $username);
+            SecurityLogModel::log('username_changed', $user, "{$user['username']} -> {$username}");
+        }
+        if ($emailChanged) {
+            SecurityLogModel::log('email_changed', null, 'owner sign-in email');
+            // The old address is told. No links, no codes.
+            if (! empty($oldEmail)) {
+                (new EmailNotifier())->toUser(
+                    ['email' => $oldEmail],
+                    'Your RfourL account email was changed',
+                    'The email on your RfourL owner account was changed on ' . date('M j, Y, g:i A') . ". If this wasn't you, contact support right away."
+                );
+            }
+        }
+        if ($passwordChanged) {
+            session()->regenerate(true);
+            SecurityLogModel::log('password_changed', null, 'owner changed own password');
+        }
+
+        // g) Say what changed.
+        $what    = array_keys(array_filter(['Username' => $usernameChanged, 'Email' => $emailChanged, 'Password' => $passwordChanged]));
+        $message = count($what) === 1 ? "{$what[0]} changed." : 'Sign-in details updated.';
+        if ($usernameChanged) {
+            $message .= ' Use your new username the next time you sign in.';
+        }
+
+        return redirect()->to(self::PROFILE_BACK)->with('success', $message);
+    }
+
+    /** Null when $email (already trimmed and lowercased) can be the owner's sign-in email. */
+    private function emailError(string $email, int $exceptUserId): ?string
+    {
+        if ($email === '') {
+            return 'Enter your email address.';
+        }
+        if (mb_strlen($email) > 100) {
+            return 'The email can be up to 100 characters.';
+        }
+        // valid_email, and the part after the last dot is 2-24 letters (".com", ".ph", not ".c0m").
+        if (! $this->validateData(['email' => $email], ['email' => 'valid_email']) || ! preg_match('/\.[a-z]{2,24}$/', $email)) {
+            return 'Enter a real email address, like name@example.com.';
+        }
+        // Any letter case or spaces, the way Forgot password compares them.
+        if ($this->userModel->where('LOWER(TRIM(email))', $email)->where('user_id !=', $exceptUserId)->countAllResults() > 0) {
+            return 'That email is already used by another account.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Back to My Profile with one message per field ('form' = a message for the whole form), the
+     * form reopened, and what was typed kept, except the token, the one-time key and every field
+     * whose name contains "pass".
+     */
+    private function refuseForm(string $form, array $errors)
+    {
+        $post = (array) $this->request->getPost();
+        foreach (array_keys($post) as $key) {
+            if ($key === config('Security')->tokenName || $key === OnceToken::FIELD || $key === \App\Filters\CsrfFilter::LABEL_FIELD
+                || stripos((string) $key, 'pass') !== false) {
+                unset($post[$key]);
+            }
+        }
+        session()->setFlashdata('_ci_old_input', ['get' => [], 'post' => $post]);
+
+        return redirect()->to(self::PROFILE_BACK)
+            ->with('error', implode(' ', $errors))
+            ->with('field_errors', ['form' => $form, 'fields' => $errors]);
     }
 
     /**
@@ -395,24 +553,6 @@ class SettingsController extends BaseController
             'Password reset',
             "{$staff['full_name']} must create their own password when they sign in with it." . ($wasLocked ? ' The account is unlocked.' : '')
         ));
-    }
-
-    private function changePasswordFor(int $userId, string $label)
-    {
-        $newPass = $this->request->getPost('new_password');
-        $confirm = $this->request->getPost('confirm_password');
-
-        if ($error = PasswordPolicy::check($newPass)) {
-            return redirect()->to('/admin/settings?tab=profile')->with('error', $error);
-        }
-        if ($newPass !== $confirm) {
-            return redirect()->to('/admin/settings?tab=profile')->with('error', 'Passwords do not match.');
-        }
-
-        $this->userModel->update($userId, ['password_hash' => password_hash($newPass, PASSWORD_DEFAULT)]);
-        SecurityLogModel::log('password_changed', null, "{$label} password changed by admin session");
-
-        return redirect()->to('/admin/settings?tab=profile')->with('success', ucfirst($label) . ' password updated.');
     }
 
     /**

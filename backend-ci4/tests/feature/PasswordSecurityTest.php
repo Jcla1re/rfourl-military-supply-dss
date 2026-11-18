@@ -138,6 +138,7 @@ final class PasswordSecurityTest extends CIUnitTestCase
         AttemptStore::forget('forgot_ip_' . md5('0.0.0.0'));
         foreach ([1, 2, 3, 4, 5, 6] as $id) {
             AttemptStore::forget('owner_username_change_' . $id);
+            AttemptStore::forget('owner_signin_change_' . $id);
             AttemptStore::forget('staff_forgot_acct_' . $id);
             AttemptStore::forget('owner_email_change_' . $id);
             AttemptStore::forget('staff_email_change_' . $id);
@@ -211,23 +212,25 @@ final class PasswordSecurityTest extends CIUnitTestCase
 
     public function testTheOwnerNeedsTheirPasswordToChangeTheirEmail(): void
     {
-        $post = ['full_name' => 'Owner One', 'email' => 'owner.new@example.test', 'phone' => ''];
+        // The email is part of the sign-in form now (admin/settings/sign-in), typed twice.
+        $post = ['username' => 'owner1', 'email' => 'owner.new@example.test', 'email_confirm' => 'owner.new@example.test'];
 
-        $this->asOwner()->post('admin/settings/account', $post);
+        $this->asOwner()->post('admin/settings/sign-in', $post);
         $this->assertSame('owner@example.test', $this->row($this->ownerId)['email'], 'No password: refused.');
-        $this->asOwner()->post('admin/settings/account', $post + ['current_password' => 'wrong-one-1']);
+        $this->asOwner()->post('admin/settings/sign-in', $post + ['current_password' => 'wrong-one-1']);
         $this->assertSame('owner@example.test', $this->row($this->ownerId)['email'], 'Wrong password: refused.');
         $this->assertSame([], $this->mail->out);
 
-        $this->asOwner()->post('admin/settings/account', $post + ['current_password' => 'OwnerPass123']);
+        $this->asOwner()->post('admin/settings/sign-in', $post + ['current_password' => 'OwnerPass123']);
         $this->assertSame('owner.new@example.test', $this->row($this->ownerId)['email']);
+        $this->assertSame('Email changed.', $this->flash('success'));
         $told = $this->sentTo('owner@example.test');
         $this->assertCount(1, $told, 'The old address is told.');
         $this->assertStringContainsString('was changed', $told[0]['body']);
         $this->assertStringNotContainsString('http', $told[0]['body'], 'No links.');
 
-        // Name only: no password needed.
-        $this->asOwner()->post('admin/settings/account', ['full_name' => 'Owner Renamed', 'email' => 'owner.new@example.test', 'phone' => '']);
+        // Name only: no password needed (Personal information).
+        $this->asOwner()->post('admin/settings/account', ['full_name' => 'Owner Renamed', 'phone' => '']);
         $this->assertSame('Owner Renamed', $this->row($this->ownerId)['full_name']);
     }
 
@@ -496,14 +499,14 @@ final class PasswordSecurityTest extends CIUnitTestCase
 
     private function ownerUsername(array $fields = [])
     {
-        return $this->asOwner()->post('admin/settings/username', $fields + ['username' => 'owner_renamed', 'current_password' => 'OwnerPass123']);
+        return $this->asOwner()->post('admin/settings/sign-in', $fields + ['username' => 'owner_renamed', 'email' => 'owner@example.test', 'current_password' => 'OwnerPass123']);
     }
 
     public function testOwnerUsernameChangeIsRefusedForAWrongPasswordATakenNameAndABadName(): void
     {
         $this->ownerUsername(['current_password' => 'wrong'])->assertRedirectTo(site_url('admin/settings?tab=profile'));
         $this->assertSame('Current password is incorrect.', $this->flash('error'));
-        $this->assertSame(1, $this->db->table('security_log')->where('event', 'username_change_failed')->countAllResults());
+        $this->assertSame(1, $this->db->table('security_log')->where('event', 'signin_change_failed')->countAllResults());
 
         unset($_SESSION['error']);
         $this->ownerUsername(['username' => 'cashier1']);
@@ -522,7 +525,7 @@ final class PasswordSecurityTest extends CIUnitTestCase
     {
         $this->ownerUsername()->assertRedirectTo(site_url('admin/settings?tab=profile'));
 
-        $this->assertSame('Username updated. Use it the next time you sign in.', $this->flash('success'));
+        $this->assertSame('Username changed. Use your new username the next time you sign in.', $this->flash('success'));
         $this->assertSame('owner_renamed', $this->row($this->ownerId)['username']);
         $this->assertSame('owner_renamed', $_SESSION['username']);
         $this->assertSame('owner1 -> owner_renamed', $this->db->table('security_log')->where('event', 'username_changed')->get()->getRow()->detail);
@@ -539,6 +542,7 @@ final class PasswordSecurityTest extends CIUnitTestCase
 
         $this->assertNotSame('That username is already taken.', $this->flash('error'));
         $this->assertSame('owner1', $this->row($this->ownerId)['username']);
+        $this->assertSame('Nothing changed yet.', $this->flash('toast')['title'] ?? null, 'the same username is simply nothing to save');
     }
 
     public function testOwnerUsernameChangesAreRateLimited(): void
@@ -559,7 +563,7 @@ final class PasswordSecurityTest extends CIUnitTestCase
         $this->db->table('users')->whereIn('user_id', [$demoOwner, $demoStaff])->update(['is_demo' => 1]);
 
         $this->withSession(['isLoggedIn' => true, 'role' => 'Admin', 'user_id' => $demoOwner, 'username' => 'demo_owner', 'full_name' => 'Demo Owner', 'last_activity' => time()])
-            ->post('admin/settings/username', ['username' => 'someone_else', 'current_password' => 'DemoOwner123']);
+            ->post('admin/settings/sign-in', ['username' => 'someone_else', 'email' => 'demo@example.test', 'current_password' => 'DemoOwner123']);
         $this->assertStringContainsString('Disabled in the demo version.', json_encode([$this->flash('toast'), $this->flash('error')]));
         $this->assertSame('demo_owner', $this->row($demoOwner)['username']);
 
@@ -571,7 +575,10 @@ final class PasswordSecurityTest extends CIUnitTestCase
 
     public function testStaffAndSuppliersCannotUseTheOwnerUsernameRoutes(): void
     {
-        $this->asStaff()->post('admin/settings/username', ['username' => 'sneaky', 'current_password' => 'x'])->assertRedirectTo(site_url('login'));
+        $this->asStaff()->post('admin/settings/sign-in', ['username' => 'sneaky', 'current_password' => 'x'])->assertRedirectTo(site_url('login'));
+        $this->withSession(['isLoggedIn' => true, 'role' => 'Supplier', 'user_id' => $this->supplierUserId, 'username' => 'tgi', 'supplier_id' => 'SUP-001', 'last_activity' => time()])
+            ->post('admin/settings/sign-in', ['username' => 'sneaky', 'current_password' => 'SupplierPass1'])->assertRedirectTo(site_url('login'));
+        $this->assertSame('tgi', $this->row($this->supplierUserId)['username']);
         $this->asStaff()->post("admin/settings/staff-accounts/username/{$this->staffId}", ['username' => 'sneaky'])->assertRedirectTo(site_url('login'));
         $this->assertSame('cashier1', $this->row($this->staffId)['username']);
     }
@@ -641,12 +648,329 @@ final class PasswordSecurityTest extends CIUnitTestCase
         // The Settings page needs far more of the schema than these tests build, so check the markup in the view file.
         $view = (string) file_get_contents(APPPATH . 'Views/admin/settings.php');
 
-        $this->assertStringContainsString('id="ownerUsernameModal"', $view);
-        $this->assertStringContainsString("site_url('admin/settings/username')", $view);
+        $this->assertStringContainsString('id="siForm"', $view);
+        $this->assertStringContainsString("site_url('admin/settings/sign-in')", $view);
+        $this->assertStringNotContainsString("site_url('admin/settings/username')", $view);
+        $this->assertStringNotContainsString("site_url('admin/settings/owner-password')", $view);
         $this->assertStringContainsString('id="staffUsernameModal"', $view);
         $this->assertStringContainsString("site_url('admin/settings/staff-accounts/username/'", $view);
         $this->assertStringContainsString('Edit Username</button>', $view);
         $this->assertStringContainsString('Staff sign in with their username and password. Tell them their new username before they next sign in.', $view);
         $this->assertStringContainsString('pattern="[A-Za-z0-9_\-]+" minlength="4" maxlength="50"', $view);
+    }
+
+    // ------------------------------------------------------------ 14. Owner My Profile: Personal information
+
+    private function personal(array $fields)
+    {
+        unset($_SESSION['error'], $_SESSION['success'], $_SESSION['toast'], $_SESSION['field_errors']);
+
+        return $this->asOwner()->post('admin/settings/account', $fields + ['full_name' => 'Owner One', 'phone' => '']);
+    }
+
+    public function testABlankNameIsRefusedNothingIsSavedAndNoEmailIsSent(): void
+    {
+        $this->db->table('users')->where('user_id', $this->ownerId)->update(['phone' => '09171234567']);
+
+        foreach (['', '   ', "\t \n"] as $blank) {
+            $this->personal(['full_name' => $blank, 'phone' => '0918 765 4321'])->assertRedirectTo(site_url('admin/settings?tab=profile'));
+
+            $this->assertSame('Enter your full name.', $this->flash('field_errors')['fields']['full_name'] ?? null, json_encode($blank));
+            $this->assertSame('personal', $this->flash('field_errors')['form']);
+            $this->assertNull($this->flash('success'), 'no success message');
+            $row = $this->row($this->ownerId);
+            $this->assertSame('Owner One', $row['full_name']);
+            $this->assertSame('09171234567', $row['phone'], 'nothing else in the form was saved either');
+            $this->assertSame('Owner One', $_SESSION['full_name'], 'the sidebar name is not blanked');
+        }
+        $this->assertSame([], $this->mail->out, 'no email');
+    }
+
+    public function testNameRules(): void
+    {
+        foreach (['A' => 'Full name must be at least 2 characters.', str_repeat('a', 61) => 'Full name can be up to 60 characters.',
+            'Robert 2' => "Use only letters, spaces and . - ' in your name.", 'Ana <b>' => "Use only letters, spaces and . - ' in your name.",
+            "--. '" => "Use only letters, spaces and . - ' in your name."] as $bad => $message) {
+            $this->personal(['full_name' => $bad]);
+            $this->assertSame($message, $this->flash('field_errors')['fields']['full_name'] ?? null, $bad);
+            $this->assertSame('Owner One', $this->row($this->ownerId)['full_name']);
+        }
+
+        // Letters with accents and Ñ, . - ' allowed; ends trimmed, inner spaces collapsed.
+        foreach (["  José   Ñoño-Dela Cruz, Jr " => null, "Ma. Teresa O'Brien-Santos" => "Ma. Teresa O'Brien-Santos"] as $good => $saved) {
+            $this->personal(['full_name' => $good]);
+            if ($saved === null) {
+                $this->assertNotNull($this->flash('field_errors'), 'a comma is not allowed');
+                continue;
+            }
+            $this->assertSame('Profile updated.', $this->flash('success'), $good);
+            $this->assertSame($saved, $this->row($this->ownerId)['full_name']);
+            $this->assertSame($saved, $_SESSION['full_name']);
+        }
+
+        $this->personal(['full_name' => "  José   Ñoño-Dela  Cruz "]);
+        $this->assertSame('José Ñoño-Dela Cruz', $this->row($this->ownerId)['full_name']);
+    }
+
+    public function testTheFullNameLimitIsSixtyCharactersCountingEachLetterOnce(): void
+    {
+        // 60 is fine, 61 is refused.
+        $this->personal(['full_name' => str_repeat('a', 60)]);
+        $this->assertSame('Profile updated.', $this->flash('success'));
+        $this->assertSame(str_repeat('a', 60), $this->row($this->ownerId)['full_name']);
+
+        $this->personal(['full_name' => str_repeat('b', 61)]);
+        $this->assertSame('Full name can be up to 60 characters.', $this->flash('field_errors')['fields']['full_name'] ?? null);
+        $this->assertSame(str_repeat('a', 60), $this->row($this->ownerId)['full_name']);
+
+        // "Ñ" is 2 bytes but one character: 60 of them (120 bytes) are allowed, 61 are not.
+        $this->assertSame(120, strlen(str_repeat('Ñ', 60)));
+        $this->personal(['full_name' => str_repeat('Ñ', 60)]);
+        $this->assertSame('Profile updated.', $this->flash('success'));
+        $this->assertSame(str_repeat('Ñ', 60), $this->row($this->ownerId)['full_name']);
+
+        $this->personal(['full_name' => str_repeat('Ñ', 61)]);
+        $this->assertSame('Full name can be up to 60 characters.', $this->flash('field_errors')['fields']['full_name'] ?? null);
+
+        // Spaces collapse before counting: 60 letters with extra spaces at the ends and in a run still fit.
+        $this->personal(['full_name' => '  ' . str_repeat('c', 30) . '     ' . str_repeat('d', 29) . '  ']);
+        $this->assertSame(str_repeat('c', 30) . ' ' . str_repeat('d', 29), $this->row($this->ownerId)['full_name']);
+    }
+
+    public function testAnOlderNameOverSixtyCanStillSaveTheContactNumber(): void
+    {
+        $long = str_repeat('Ana ', 20) . 'Cruz'; // 84 characters, saved before the limit
+        $this->db->table('users')->where('user_id', $this->ownerId)->update(['full_name' => $long]);
+
+        $this->personal(['full_name' => $long, 'phone' => '0917 123 4567']);
+
+        $this->assertSame('Profile updated.', $this->flash('success'));
+        $row = $this->row($this->ownerId);
+        $this->assertSame('09171234567', $row['phone']);
+        $this->assertSame($long, $row['full_name'], 'the name is kept as it is');
+
+        // A new name over 60 is still refused.
+        $this->personal(['full_name' => $long . ' Jr', 'phone' => '0917 123 4567']);
+        $this->assertSame('Full name can be up to 60 characters.', $this->flash('field_errors')['fields']['full_name'] ?? null);
+    }
+
+    public function testABadContactNumberIsRefused(): void
+    {
+        $this->db->table('users')->where('user_id', $this->ownerId)->update(['phone' => '09171234567']);
+
+        foreach (['12345', '0917 123 456', '0917 123 45678', '0817 123 4567', '0917abc4567', '(0917) 123 4567', '+1 555 123 4567', '63 917 123 4567', '0917+1234567'] as $bad) {
+            $this->personal(['phone' => $bad]);
+            $this->assertSame('Use an 11-digit mobile number like 0917 123 4567.', $this->flash('field_errors')['fields']['phone'] ?? null, $bad);
+            $this->assertSame('09171234567', $this->row($this->ownerId)['phone'], $bad);
+        }
+    }
+
+    public function testTheContactNumberIsStoredAsElevenDigits(): void
+    {
+        foreach (['+63 917 123 4567' => '09171234567', '+639181234567' => '09181234567', '0919-123-4567' => '09191234567', ' 0920 123 4567 ' => '09201234567', '' => null] as $typed => $stored) {
+            $this->personal(['phone' => $typed]);
+            $this->assertSame($stored, $this->row($this->ownerId)['phone'], $typed);
+        }
+    }
+
+    public function testPersonalInformationWithNothingChangedSaysSo(): void
+    {
+        $this->personal([])->assertRedirectTo(site_url('admin/settings?tab=profile'));
+
+        $this->assertSame('Nothing changed yet.', $this->flash('toast')['title'] ?? null);
+        $this->assertNull($this->flash('success'));
+    }
+
+    // ------------------------------------------------------------ 15. Owner My Profile: the one sign-in form
+
+    private function signIn(array $fields)
+    {
+        unset($_SESSION['error'], $_SESSION['success'], $_SESSION['toast'], $_SESSION['field_errors'], $_SESSION['_ci_old_input']);
+
+        return $this->asOwner()->post('admin/settings/sign-in', $fields + ['username' => 'owner1', 'email' => 'owner@example.test', 'current_password' => 'OwnerPass123']);
+    }
+
+    private function signInError(string $field): ?string
+    {
+        return $this->flash('field_errors')['fields'][$field] ?? null;
+    }
+
+    public function testNothingChangedSaysSoAndCountsNoAttempt(): void
+    {
+        // Same values (the email in another case and with spaces is the same email), blank new password.
+        foreach ([[], ['email' => ' OWNER@example.test '], ['username' => ' owner1 '], ['current_password' => 'wrong']] as $fields) {
+            $this->signIn($fields)->assertRedirectTo(site_url('admin/settings?tab=profile'));
+            $this->assertSame('Nothing changed yet.', $this->flash('toast')['title'] ?? null, json_encode($fields));
+        }
+        $this->assertSame(0, AttemptStore::count('owner_signin_change_' . $this->ownerId));
+        $this->assertSame(0, $this->db->table('security_log')->where('event', 'signin_change_failed')->countAllResults());
+    }
+
+    public function testEmailRules(): void
+    {
+        $this->user('other', 'Other Person', 'Staff', 'OtherPass123', 'Taken@Example.test');
+
+        foreach ([
+            ''                       => 'Enter your email address.',
+            'not-an-email'           => 'Enter a real email address, like name@example.com.',
+            'owner@example'          => 'Enter a real email address, like name@example.com.',
+            'owner@example.c0m'      => 'Enter a real email address, like name@example.com.',
+            'owner@example.c'        => 'Enter a real email address, like name@example.com.',
+            'owner@example.' . str_repeat('a', 25) => 'Enter a real email address, like name@example.com.',
+            ' taken@example.TEST '   => 'That email is already used by another account.',
+            'ana@example.test'       => 'That email is already used by another account.',
+        ] as $bad => $message) {
+            $this->signIn(['email' => $bad, 'email_confirm' => $bad]);
+            $this->assertSame($message, $this->signInError('email'), $bad);
+            $this->assertSame('owner@example.test', $this->row($this->ownerId)['email'], $bad);
+        }
+
+        // A changed email must be typed twice, the same.
+        foreach (['', 'owner.nwe@example.test'] as $confirm) {
+            $this->signIn(['email' => 'owner.new@example.test', 'email_confirm' => $confirm]);
+            $this->assertSame("The two emails don't match.", $this->signInError('email_confirm'), $confirm);
+        }
+        $this->assertSame('owner@example.test', $this->row($this->ownerId)['email']);
+
+        // Saved trimmed and lowercased (the confirm compares the same way); a 2-24 letter ending is fine.
+        $this->signIn(['email' => ' Owner.New@Example.Museum ', 'email_confirm' => 'owner.new@example.museum']);
+        $this->assertSame('Email changed.', $this->flash('success'));
+        $this->assertSame('owner.new@example.museum', $this->row($this->ownerId)['email']);
+    }
+
+    public function testAnOwnerWithNoEmailMustAddOneToSaveAnything(): void
+    {
+        $this->db->table('users')->where('user_id', $this->ownerId)->update(['email' => null]);
+
+        $this->signIn(['email' => '', 'new_password' => 'NewOwnerPass9', 'new_password_confirm' => 'NewOwnerPass9']);
+        $this->assertSame('Enter your email address.', $this->signInError('email'));
+        $this->assertTrue(password_verify('OwnerPass123', $this->row($this->ownerId)['password_hash']));
+    }
+
+    public function testTheCurrentPasswordIsRequiredForEveryChange(): void
+    {
+        foreach ([['username' => 'owner_new'], ['email' => 'o2@example.test', 'email_confirm' => 'o2@example.test'], ['new_password' => 'NewOwnerPass9', 'new_password_confirm' => 'NewOwnerPass9']] as $change) {
+            $this->signIn($change + ['current_password' => '']);
+            $this->assertSame('Enter your current password to save these changes.', $this->signInError('current_password'), json_encode($change));
+
+            $this->signIn($change + ['current_password' => 'wrong-guess-1']);
+            $this->assertSame('Current password is incorrect.', $this->signInError('current_password'), json_encode($change));
+        }
+
+        $row = $this->row($this->ownerId);
+        $this->assertSame('owner1', $row['username']);
+        $this->assertSame('owner@example.test', $row['email']);
+        $this->assertTrue(password_verify('OwnerPass123', $row['password_hash']));
+        $this->assertSame(3, $this->db->table('security_log')->where('event', 'signin_change_failed')->countAllResults(), 'each wrong password is logged; a blank one is a field error');
+        $this->assertSame([], $this->mail->out);
+    }
+
+    public function testNewPasswordRules(): void
+    {
+        $this->signIn(['new_password' => 'short1', 'new_password_confirm' => 'short1']);
+        $this->assertSame('Password must be at least 8 characters and include a letter and a number.', $this->signInError('new_password'));
+
+        $this->signIn(['new_password' => 'NewOwnerPass9', 'new_password_confirm' => 'NewOwnerPass8']);
+        $this->assertSame('Passwords do not match.', $this->signInError('new_password_confirm'));
+
+        $this->signIn(['new_password' => '', 'new_password_confirm' => 'NewOwnerPass9']);
+        $this->assertNotNull($this->signInError('new_password'), 'a confirm without a new password is not ignored');
+
+        $this->assertTrue(password_verify('OwnerPass123', $this->row($this->ownerId)['password_hash']));
+        $this->assertSame(0, AttemptStore::count('owner_signin_change_' . $this->ownerId), 'format errors are not attempts');
+    }
+
+    public function testTheNewPasswordCannotBeTheCurrentOne(): void
+    {
+        $before = $this->row($this->ownerId)['password_hash'];
+
+        $this->signIn(['new_password' => 'OwnerPass123', 'new_password_confirm' => 'OwnerPass123']);
+
+        $this->assertSame('Your new password must be different from your current one.', $this->signInError('new_password'));
+        $this->assertSame($before, $this->row($this->ownerId)['password_hash']);
+        $this->assertNull($this->flash('success'));
+    }
+
+    public function testAPasswordChangeSavesLogsAndKeepsTheOtherDetails(): void
+    {
+        $this->signIn(['new_password' => 'NewOwnerPass9', 'new_password_confirm' => 'NewOwnerPass9'])->assertRedirectTo(site_url('admin/settings?tab=profile'));
+
+        $this->assertSame('Password changed.', $this->flash('success'));
+        $row = $this->row($this->ownerId);
+        $this->assertTrue(password_verify('NewOwnerPass9', $row['password_hash']));
+        $this->assertSame(['owner1', 'owner@example.test'], [$row['username'], $row['email']]);
+        $this->assertSame(1, $this->db->table('security_log')->where('event', 'password_changed')->countAllResults());
+        $this->assertSame([], $this->mail->out, 'no email for a password change (as before)');
+
+        // Only the new password signs in now.
+        $this->post('login', ['username' => 'owner1', 'password' => 'OwnerPass123']);
+        $this->assertSame(self::WRONG, $this->flash('error'));
+        (new LoginLockout())->reset('owner1');
+        $this->post('login', ['username' => 'owner1', 'password' => 'NewOwnerPass9'])->assertRedirectTo(site_url('/admin/dashboard'));
+    }
+
+    public function testEverythingAtOnceIsOneSaveWithOneMessage(): void
+    {
+        $this->signIn([
+            'username' => 'owner_renamed', 'email' => 'owner.new@example.test', 'email_confirm' => 'owner.new@example.test',
+            'new_password' => 'NewOwnerPass9', 'new_password_confirm' => 'NewOwnerPass9',
+        ]);
+
+        $this->assertSame('Sign-in details updated. Use your new username the next time you sign in.', $this->flash('success'));
+        $row = $this->row($this->ownerId);
+        $this->assertSame(['owner_renamed', 'owner.new@example.test'], [$row['username'], $row['email']]);
+        $this->assertTrue(password_verify('NewOwnerPass9', $row['password_hash']));
+        $this->assertSame('owner_renamed', $_SESSION['username']);
+        $this->assertCount(1, $this->sentTo('owner@example.test'), 'the old address is told about the email');
+    }
+
+    public function testFormatErrorsDoNotCountButWrongPasswordsHitTheLimit(): void
+    {
+        // Ten format errors: none is an attempt.
+        for ($i = 0; $i < 10; $i++) {
+            $this->signIn(['username' => 'bad name!']);
+            $this->signIn(['email' => 'nope', 'email_confirm' => 'nope']);
+        }
+        $this->assertSame(0, AttemptStore::count('owner_signin_change_' . $this->ownerId));
+
+        // Five wrong passwords are told so; the sixth try is refused even with the right password.
+        for ($i = 0; $i < 5; $i++) {
+            $this->signIn(['username' => 'owner_new', 'current_password' => 'wrong-' . $i]);
+            $this->assertSame('Current password is incorrect.', $this->signInError('current_password'));
+        }
+        $this->signIn(['username' => 'owner_new']);
+        $this->assertSame('Too many attempts. Please wait a few minutes and try again.', $this->signInError('form'));
+        $this->assertSame('owner1', $this->row($this->ownerId)['username']);
+    }
+
+    public function testTheRightPasswordClearsTheCounter(): void
+    {
+        for ($i = 0; $i < 4; $i++) {
+            $this->signIn(['username' => 'owner_new', 'current_password' => 'wrong-' . $i]);
+        }
+        $this->signIn(['username' => 'owner_new']);
+        $this->assertSame('owner_new', $this->row($this->ownerId)['username']);
+        $this->assertSame(0, AttemptStore::count('owner_signin_change_' . $this->ownerId));
+    }
+
+    public function testARefusedSaveKeepsWhatWasTypedButNeverAPassword(): void
+    {
+        $this->signIn([
+            'username' => 'owner_new', 'email' => 'o2@example.test', 'email_confirm' => 'o2@example.test',
+            'new_password' => 'NewOwnerPass9', 'new_password_confirm' => 'NewOwnerPass9', 'current_password' => 'wrong-guess',
+        ]);
+
+        $kept = $_SESSION['_ci_old_input']['post'] ?? [];
+        $this->assertSame(['username' => 'owner_new', 'email' => 'o2@example.test', 'email_confirm' => 'o2@example.test'], $kept);
+        $this->assertSame('signin', $this->flash('field_errors')['form']);
+    }
+
+    public function testTheOldOwnerUsernameAndPasswordRoutesAreGone(): void
+    {
+        $routes = service('routes')->loadRoutes()->getRoutes('POST');
+        foreach (['admin/settings/username', 'admin/settings/owner-password'] as $old) {
+            $this->assertArrayNotHasKey($old, $routes);
+        }
+        $this->assertArrayHasKey('admin/settings/sign-in', $routes);
     }
 }

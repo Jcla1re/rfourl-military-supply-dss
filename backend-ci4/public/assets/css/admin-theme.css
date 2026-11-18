@@ -686,6 +686,20 @@ body {
     padding: 0.35rem;
 }
 
+/* Owner footer (admin layout): initials avatar (as on My Profile, 36px) and the name on one line,
+   cut with an ellipsis (the full name is in its title). Staff and Supplier keep the person icon. */
+.sidebar .user-avatar {
+    width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #EAF1E3; color: #2F5A27; font-family: inherit; /* the app font (Poppins) */
+    font-size: 13px; font-weight: 600; line-height: 1; letter-spacing: .02em; user-select: none;
+}
+.sidebar .user-text:has(> .user-name) { min-width: 0; }
+.sidebar .user-name {
+    font-weight: 600; color: #fff; font-size: 0.9rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
 /* ===== Account menu (collapsed sidebar; partials/_account_menu.php + assets/js/account-menu.js) =====
    Collapsed: the avatar link is replaced by an "Account menu" button. Expanded: unchanged. */
 .sidebar .account-menu-btn { display: none; }
@@ -1603,14 +1617,14 @@ body {
    vertical lines. */
 .data-table.is-stuck thead tr { box-shadow: 0 2px 6px rgba(31, 38, 23, .08); }
 
-/* ===== Sticky page tabs and table headers =====
-   Only .main-scroll scrolls (see .app-shell). Page-level tab bars carry
-   .sticky-tabs and stay under the green header; list-table headers stick right
-   under them. public/assets/js/sticky-offset.js measures the tab bar and sets
-   --sticky-top on .main-scroll (0 when the page has no tabs). */
+/* ===== Page tabs and sticky table headers =====
+   Only .main-scroll scrolls (see .app-shell); the green header sits above it and is the
+   only part that stays put. Page-level tab bars carry .sticky-tabs but scroll with the page
+   (like Inventory's tabs); list-table headers stick flush under the green header.
+   public/assets/js/sticky-offset.js sets --sticky-top on .main-scroll from the bars that
+   really are sticky, so it is 0 on every page today. */
 .sticky-tabs {
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 20; /* above sticky table headers (10); below modals (1050+), toasts and tooltips */
     background: var(--content-bg);
     /* The bar sits inside the page's 24px padding: the side shadows (same colour, no blur)
@@ -1621,16 +1635,6 @@ body {
 .set-tabs.sticky-tabs,
 .ord-tabs.sticky-tabs,
 .pos-tabs.sticky-tabs { box-shadow: none; }
-
-/* A second row of filters that stacks under the page tabs (POS categories, ABC classes). */
-.sticky-subtabs {
-    position: sticky;
-    top: var(--sticky-top, 0px);
-    z-index: 15;
-    background: var(--sticky-sub-bg, var(--content-bg));
-    padding-top: 8px;
-    margin-top: -8px;
-}
 
 @media (min-width: 992px) {
     /* Overflow on the wrapper would make the header stick to the wrapper instead of .main-scroll. */

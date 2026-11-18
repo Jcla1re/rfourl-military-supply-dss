@@ -190,10 +190,9 @@ class StockOrderController extends BaseController
         $supplierMap = array_column($this->supplierModel->findAll(), null, 'supplier_id');
 
         $products = $this->productModel->where('is_active', 1)->where('supplier_id IS NOT NULL')->where('supplier_id !=', '')->findAll();
-        // By name, then sizes in their usual order (S, M, L, ...).
-        $rank = array_flip(ProductModel::sortSizes(array_values(array_unique(array_map(static fn ($p) => (string) ($p['size'] ?? ''), $products)))));
-        usort($products, static fn ($a, $b) => [strtolower((string) $a['item_name']), $rank[(string) ($a['size'] ?? '')] ?? 0]
-            <=> [strtolower((string) $b['item_name']), $rank[(string) ($b['size'] ?? '')] ?? 0]);
+        // By name, then sizes in natural order (ProductModel::sizeKey(): S, M, L … ; 5, 5.5, 6 …).
+        usort($products, static fn ($a, $b) => [strtolower((string) $a['item_name']), ProductModel::sizeKey($a['size'] ?? null)]
+            <=> [strtolower((string) $b['item_name']), ProductModel::sizeKey($b['size'] ?? null)]);
 
         $catalog = [];
         foreach ($products as $p) {

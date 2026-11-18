@@ -129,6 +129,16 @@ final class StaffProfileTest extends DemoTestCase
         $this->assertStringContainsString('Your username and role are set by the owner.', $body);
     }
 
+    public function testTheStaffSidebarKeepsThePersonIconNotTheOwnersInitialsAvatar(): void
+    {
+        $body = $this->staff()->get('staff/account')->getBody();
+
+        $this->assertStringNotContainsString('class="user-avatar"', $body);
+        $this->assertStringNotContainsString('class="user-name"', $body);
+        $this->assertStringContainsString('<i class="bi bi-person-circle fs-4"></i>', $body, 'the expanded footer');
+        $this->assertStringContainsString('<i class="bi bi-person-circle" aria-hidden="true"></i>', $body, 'the collapsed account menu button');
+    }
+
     public function testValidation(): void
     {
         $cases = [

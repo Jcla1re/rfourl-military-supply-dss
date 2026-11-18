@@ -5,10 +5,16 @@
 // The expanded sidebar keeps its own name / role link and Log out button.
 // Behaviour: assets/js/account-menu.js. Styles: admin-theme.css ("Account menu").
 //
-// Expects: $profileUrl, $name, $role.
+// Expects: $profileUrl, $name, $role. Optional: $avatarInitials (admin layout only): the button
+// shows the initials avatar instead of the person icon.
+$avatarInitials = (string) ($avatarInitials ?? '');
 ?>
 <button type="button" class="account-menu-btn" id="accountMenuBtn" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="accountMenu">
-    <i class="bi bi-person-circle" aria-hidden="true"></i>
+    <?php if ($avatarInitials !== ''): ?>
+        <span class="user-avatar" aria-hidden="true"><?= esc($avatarInitials) ?></span>
+    <?php else: ?>
+        <i class="bi bi-person-circle" aria-hidden="true"></i>
+    <?php endif; ?>
 </button>
 <div class="account-menu" id="accountMenu" role="menu" aria-labelledby="accountMenuName" hidden>
     <div class="account-menu-head">

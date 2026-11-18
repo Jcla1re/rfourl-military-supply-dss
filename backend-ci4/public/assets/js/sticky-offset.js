@@ -1,10 +1,11 @@
-// Sticky page tabs + table headers share one offset: the table header must stick
-// directly under the tab bar, so it needs the tab bar's real height.
+// Sticky table headers (and side panels) stick at --sticky-top on .main-scroll.
 //
-// Measures the visible .sticky-tabs bars (page-level tab bars; not tabs inside
-// modals) and publishes the tallest as --sticky-top on .main-scroll (0 when the
-// page has none). admin-theme.css reads it for `thead` and for sticky side panels.
-// Re-measured whenever a bar resizes (window width, wrapping, font load).
+// Page tab bars (.sticky-tabs; not tabs inside modals) scroll with the page today
+// (admin-theme.css: position: relative), so --sticky-top is 0 and headers stick
+// flush under the green header. Only a bar whose computed position is sticky is
+// counted: a bar made sticky again would publish its height here, and the table
+// headers would stick right under it. admin-theme.css reads it for `thead` and for
+// sticky side panels. Re-measured whenever a bar resizes (window width, wrapping, font load).
 (function () {
     var scroller = document.querySelector('.main-scroll');
     if (!scroller) return;
@@ -20,6 +21,7 @@
     function measure() {
         var height = 0;
         bars().forEach(function (el) {
+            if (getComputedStyle(el).position !== 'sticky') return; // scrolls with the page: no offset
             var box = el.getBoundingClientRect();
             if (box.width > 0 && box.height > 0) height = Math.max(height, box.height);
         });
