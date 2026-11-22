@@ -150,7 +150,7 @@ class InventoryController extends BaseController
             'pageTitle'           => 'Inventory',
             'active'              => 'inventory',
             'products'            => $products,
-            'suppliers'           => $this->supplierModel->where('is_active', 1)->findAll(),
+            'suppliers'           => $this->supplierModel->real()->where('is_active', 1)->findAll(), // sample suppliers are never a main supplier
             'supplierMap'         => array_column($this->supplierModel->findAll(), null, 'supplier_id'), // the order dialog's data
             'inStockCount'        => $inStockCount,
             'lowStockCount'       => $lowStockCount,
@@ -201,10 +201,21 @@ class InventoryController extends BaseController
         return $this->answerModal($this->storeItem());
     }
 
+    private const SAMPLE_SUPPLIER_ERROR = 'Sample suppliers are only for price comparison. Choose a real supplier.';
+
+    /** A sample supplier (php spark sample-suppliers) can never be an item's main supplier. */
+    private function isSampleSupplier($supplierId): bool
+    {
+        return (string) $supplierId !== '' && (bool) ($this->supplierModel->find((string) $supplierId)['is_sample'] ?? 0);
+    }
+
     private function storeItem()
     {
         if (! $this->validateItem()) {
             return redirect()->to($this->listUrl())->with('toast', Toast::error("Couldn't add item", implode(' ', $this->validator->getErrors())));
+        }
+        if ($this->isSampleSupplier($this->request->getPost('supplier_id'))) {
+            return redirect()->to($this->listUrl())->with('toast', Toast::error("Couldn't add item", self::SAMPLE_SUPPLIER_ERROR));
         }
 
         if ($this->isDuplicateItem((string) $this->request->getPost('item_name'), $this->postedSize(null), null)) {
@@ -386,6 +397,9 @@ class InventoryController extends BaseController
 
         if (! $this->validateItem()) {
             return redirect()->to($this->listUrl())->with('toast', Toast::error("Couldn't save changes", implode(' ', $this->validator->getErrors())));
+        }
+        if ($this->isSampleSupplier($this->request->getPost('supplier_id'))) {
+            return redirect()->to($this->listUrl())->with('toast', Toast::error("Couldn't save changes", self::SAMPLE_SUPPLIER_ERROR));
         }
 
         if ($this->isDuplicateItem((string) $this->request->getPost('item_name'), $this->postedSize($product['size']), (string) $itemId)) {

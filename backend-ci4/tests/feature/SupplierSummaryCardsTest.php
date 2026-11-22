@@ -122,4 +122,25 @@ final class SupplierSummaryCardsTest extends CIUnitTestCase
         $this->assertStringContainsString('<div class="title">No archived suppliers</div>', $html);
         $this->assertStringContainsString('Suppliers you archive will appear here.', $html);
     }
+
+    public function testRealSuppliersComeFirstThenTheSampleOnesAndTheTabCountMatchesTheCards(): void
+    {
+        // Two sample suppliers whose names sort BEFORE the real ones, plus one archived sample.
+        $this->db->table('suppliers')->insert(['supplier_id' => 'SMP-001', 'company_name' => 'Aaa Sample Works', 'lead_time_days' => 3, 'is_active' => 1, 'is_sample' => 1]);
+        $this->db->table('suppliers')->insert(['supplier_id' => 'SMP-002', 'company_name' => 'Bbb Sample Mills', 'lead_time_days' => 4, 'is_active' => 1, 'is_sample' => 1]);
+        $this->db->table('suppliers')->insert(['supplier_id' => 'SMP-003', 'company_name' => 'Ccc Old Sample', 'lead_time_days' => 4, 'is_active' => 0, 'is_sample' => 1]);
+
+        $html = (string) $this->asOwner()->get('admin/suppliers')->getBody();
+        preg_match_all('#<div class="name">([^<]+)#', $html, $m);
+        $this->assertSame(['Quiapo Patches Co', 'Tactical Gear Inc', 'Aaa Sample Works', 'Bbb Sample Mills'], $m[1], 'Real suppliers first (by name), then samples.');
+        $this->assertStringContainsString('Active (2 + 2 sample)</a>', $html, 'The tab count matches the cards: 2 real + 2 sample.');
+        $this->assertStringContainsString('Archived (1 + 1 sample)</a>', $html);
+        $this->assertSame(1, substr_count($html, 'id="sampleSuppliers"'), 'One heading starts the sample group.');
+        $this->assertLessThan(strpos($html, 'Aaa Sample Works'), strpos($html, 'id="sampleSuppliers"'));
+        $this->assertGreaterThan(strpos($html, 'Quiapo Patches Co'), strpos($html, 'id="sampleSuppliers"'));
+        $this->assertSame(4, preg_match_all('/<div class="sup-card ?(archived)?">/', $html), 'The number of cards equals 2 + 2.');
+
+        // The summary cards still leave the samples out.
+        $this->assertSame('3', $this->cards('admin/suppliers')['Total suppliers'], '2 active + 1 archived real suppliers; no sample counted.');
+    }
 }

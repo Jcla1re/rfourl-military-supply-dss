@@ -22,6 +22,9 @@ class ProcurementReport
 
     public const CLASSES = ['A', 'B', 'C'];
 
+    /** The statuses that need the owner's attention (the Suppliers tab's "needs action"; Out of Stock is not one). */
+    public const NEEDS_ACTION = ['Reorder Now', 'Low Stock'];
+
     /**
      * The filters from the query string: search (name or item ID, Inventory's rules),
      * class (A/B/C) and status. Unknown values are ignored.
@@ -102,6 +105,10 @@ class ProcurementReport
 
             $rows[] = [
                 'item_id'           => (string) $p['item_id'],
+                // For the Suppliers tab (grouped by main supplier; items = sizes grouped by name + category, as Inventory does).
+                'supplier_id'       => ($p['supplier_id'] ?? '') !== '' ? (string) $p['supplier_id'] : null,
+                'category'          => (string) ($p['category'] ?? ''),
+                'unit_cost'         => (float) ($p['unit_cost'] ?? 0),
                 'item_name'         => (string) $p['item_name'],
                 'size'              => ($p['size'] ?? '') !== '' ? (string) $p['size'] : null,
                 'class'             => $class,
