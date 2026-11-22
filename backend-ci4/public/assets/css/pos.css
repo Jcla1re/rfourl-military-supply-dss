@@ -62,11 +62,30 @@
     flex: none; position: relative; z-index: 2;
     background: #F2F0EA; border-bottom: 1px solid #E3E0D7; padding-bottom: 10px;
 }
-.pos-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+/* Category chips: always one line. The row scrolls sideways with no visible scrollbar (trackpad,
+   Shift+wheel, touch); a 32px fade in the toolbar colour shows on a side with more chips
+   (pos-chips.js sets is-scroll-left / is-scroll-right). The row's 4px padding, taken back by the
+   wrapper's negative margin, keeps the focus ring from being cut off by the scroll area. */
+.pos-chips-wrap { position: relative; margin: -4px -4px 8px; }
+.pos-chips-wrap::before,
+.pos-chips-wrap::after {
+    content: ""; position: absolute; top: 0; bottom: 0; z-index: 1; width: 32px;
+    pointer-events: none; opacity: 0; transition: opacity .15s ease;
+}
+.pos-chips-wrap::before { left: 0; background: linear-gradient(to left, rgba(242, 240, 234, 0), #F2F0EA); }
+.pos-chips-wrap::after { right: 0; background: linear-gradient(to right, rgba(242, 240, 234, 0), #F2F0EA); }
+.pos-chips-wrap.is-scroll-left::before,
+.pos-chips-wrap.is-scroll-right::after { opacity: 1; }
+.pos-chips {
+    display: flex; flex-wrap: nowrap; gap: 6px; padding: 4px;
+    overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+    scrollbar-width: none; -ms-overflow-style: none;
+}
+.pos-chips::-webkit-scrollbar { display: none; }
 .pos-chips button {
-    display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 16px; box-sizing: border-box;
+    flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px; box-sizing: border-box;
     border: 1px solid #D6D2C6; border-radius: 999px; background: #fff; color: #1F2617;
-    font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer;
+    font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer;
     transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
 .pos-chips button:hover:not(.active) { background: #F5F3EE; }
@@ -125,58 +144,228 @@
 .size-pick-btn .st { color: #777; font-size: 12.5px; flex: 1; }
 .size-pick-btn .pr { font-weight: 700; }
 
-/* ---- Cart: always in view, scrolls inside itself ---- */
+/* ---- Cart column: always in view, scrolls inside itself ----
+   No panel of its own: separate white cards on the page background, 14px apart (the PIN setup card
+   while there is no PIN, then the Current order card). */
 .cart-panel {
     align-self: start; max-height: 100%; min-height: 0; overflow-y: auto; box-sizing: border-box;
-    background: #fff; border-radius: var(--radius-card); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    display: flex; flex-direction: column; gap: 14px;
 }
-.cart-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
-.cart-head .count { background: var(--sidebar-bg); color: #fff; border-radius: var(--radius-pill); padding: 2px 10px; font-size: 12px; margin-left: 6px; }
+.cart-panel > * { flex-shrink: 0; }
+.cart-panel > .pin-card, .cart-panel > .pos-lock-bar { margin: 0; }
+.cart-card { background: #fff; border: 1px solid #E3E0D7; border-radius: 14px; padding: 20px; box-sizing: border-box; min-width: 0; }
+.cart-pay[hidden] { display: none; }
+.cart-reason { margin: 6px 0 0; font-size: 12px; color: #5C6152; text-align: center; }
+.cart-reason:empty { display: none; }
+
+/* ---- The Current order card: titles 15.5/600, labels 13/500, body 13.5-14, hints 12 gray; no 700 ---- */
+.cart-card, .cart-card :is(input, button, select) { font-family: 'Poppins', 'Segoe UI', sans-serif; }
+.cart-card { color: #1F2617; font-size: 13.5px; }
+.cart-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+.cart-title { margin: 0; font-size: 15.5px; font-weight: 600; line-height: 1.3; color: #1F2617; }
+.cart-count { font-size: 12.5px; font-weight: 400; color: #7A7E70; margin-left: 6px; }
+/* Clear: the app's white secondary button with red text (like Suppliers' Archive). */
 .pos-clear {
-    height: 32px; padding: 0 12px; border: 1px solid #E2B8B2; border-radius: 8px; background: #fff; color: #A1261B;
-    font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color .15s ease;
+    height: 30px; padding: 0 12px; border: 1px solid #D6D2C6; border-radius: 8px; background: #fff; color: #B3261E;
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color .15s ease;
+    -webkit-tap-highlight-color: transparent;
 }
-.pos-clear:hover:not(:disabled) { background: #F8E3E0; }
-.pos-clear:disabled { background: #F5F3EE; border-color: #E3E0D7; color: #A9AB9F; cursor: not-allowed; }
-.cart-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 14px; }
-.cart-line .info { flex: 1; min-width: 0; }
-.cart-line .name { font-weight: 600; font-size: 14px; }
-.cart-line .price { color: #777; font-size: 12px; }
-.cart-line .badge-disc { display: inline-block; background: #fff3cd; color: #8a6300; border-radius: var(--radius-pill); padding: 1px 8px; font-size: 11px; font-weight: 700; margin-left: 6px; }
-/* − [qty] + in one 34px box; the number can be typed. */
+.pos-clear:hover:not(:disabled) { background: #FDF1EF; }
+.pos-clear:disabled, .pos-clear:disabled:is(:hover, :active, :focus) { background: #fff; border-color: #E3E0D7; color: #A9AB9F; cursor: not-allowed; }
+.cart-card { container: cart / inline-size; }
+/* One line: name | stepper | total + ✕. The name gets all the room left and wraps only when it is
+   really long; the stepper and total keep their own small widths. */
+.cart-line {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center;
+    gap: 4px 10px; margin-bottom: 14px;
+}
+.cart-line .info { min-width: 0; }
+.cart-line .name { font-weight: 500; font-size: 14px; line-height: 1.35; overflow-wrap: break-word; }
+.cart-line .sub { color: #7A7E70; font-size: 12px; line-height: 1.35; margin-top: 1px; }
+/* − [qty] + in one 30px box; the number can be typed. */
 .cart-line .qty-ctrl {
-    display: inline-flex; align-items: stretch; height: 34px; box-sizing: border-box;
+    display: inline-flex; align-items: stretch; height: 30px; box-sizing: border-box;
     border: 1px solid #D6D2C6; border-radius: 8px; overflow: hidden; background: #fff;
 }
-.cart-line .qty-ctrl button { width: 28px; border: 0; background: #fff; color: #1F2617; font-size: 16px; line-height: 1; cursor: pointer; }
+.cart-line .qty-ctrl button {
+    width: 28px; height: 28px; padding: 0; border: 0; background: #fff; color: #1F2617;
+    font-size: 14px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
 .cart-line .qty-ctrl button:hover:not(:disabled) { background: #EAF1E3; }
-.cart-line .qty-ctrl button:disabled { color: #B9B6AC; cursor: not-allowed; }
+.cart-line .qty-ctrl button:disabled, .cart-line .qty-ctrl button:disabled:is(:hover, :active) { background: #fff; color: #B9B6AC; cursor: not-allowed; }
 .cart-line .qty-input {
-    width: 46px; padding: 0 4px; border: 0; border-inline: 1px solid #E3E0D7; border-radius: 0;
-    text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; color: #1F2617; background: #fff;
+    width: 32px; height: 28px; padding: 0; border: 0; border-inline: 1px solid #E3E0D7; border-radius: 0; box-sizing: border-box;
+    text-align: center; font-size: 13.5px; font-variant-numeric: tabular-nums; color: #1F2617; background: #fff;
 }
 :root .cart-line .qty-input:focus:not(#focus-boost) { outline: none; box-shadow: inset 0 0 0 2px #4A6741; border-color: transparent; }
-.cart-line .line-total { font-weight: 700; text-align: right; min-width: 64px; }
-.cart-line .line-total .line-disc { display: block; color: #b3261e; font-size: 11px; font-weight: 600; }
-.cart-line-note { flex-basis: 100%; color: #8A5A0B; font-size: 12px; }
-.cart-empty { text-align: center; color: #999; padding: 30px 0; }
-.cart-totals { border-top: 1px solid #333; padding-top: 10px; margin-top: 10px; }
-.cart-totals .row-line { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
-.cart-totals .row-line.total { font-weight: 800; font-size: 17px; }
-.cart-totals .row-line.muted { color: #777; font-size: 12.5px; }
-.cart-totals .row-line.discount-row { color: #b3261e; }
-.cart-note { font-size: 11.5px; color: #888; margin: 8px 0 4px; line-height: 1.4; }
-.cart-change { background: var(--green-bg); border-radius: var(--radius-control); padding: 10px 14px; display: flex; justify-content: space-between; margin: 12px 0; }
+.cart-line .line-end { display: flex; align-items: center; gap: 6px; }
+.cart-line .line-total { font-size: 14px; font-weight: 500; text-align: right; min-width: 64px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* ✕: removes the line (the same as taking its quantity to 0). */
+.cart-remove {
+    flex: 0 0 22px; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #9A9C8F;
+    font-size: 12px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.cart-remove:hover { background: #F5F3EE; color: #5C6152; }
+.cart-line-note { grid-column: 1 / -1; color: #8A5A0B; font-size: 12px; }
+/* A card too narrow for one row: the stepper, total and ✕ go to a second row under the name. */
+@container cart (max-width: 300px) {
+    .cart-line { grid-template-columns: auto minmax(0, 1fr); }
+    .cart-line .info { grid-column: 1 / -1; }
+    .cart-line .line-end { justify-self: end; }
+}
+.cart-empty { text-align: center; color: #7A7E70; padding: 26px 0; }
+.cart-totals { border-top: 1px solid #E3E0D7; padding-top: 10px; margin-top: 10px; font-variant-numeric: tabular-nums; }
+.cart-totals .row-line { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; font-weight: 400; margin-bottom: 4px; }
+.cart-totals .row-line.discount-row { color: #2F5A27; }
+.cart-totals .row-line.total { font-size: 16px; font-weight: 600; border-top: 1px solid #E3E0D7; padding-top: 8px; margin-top: 6px; margin-bottom: 0; }
+.cart-note { display: flex; gap: 6px; align-items: baseline; font-size: 12px; color: #7A7E70; margin: 10px 0 4px; line-height: 1.4; }
+.cart-label { display: block; font-size: 13px; font-weight: 500; color: #1F2617; margin: 12px 0 5px; }
+.cart-optional { color: #7A7E70; font-weight: 400; }
+.cart-hint { font-size: 12px; color: #7A7E70; margin-top: 4px; }
+.cart-field-error { font-size: 12px; color: #B3261E; margin-top: 4px; }
+.cart-field-error:empty { display: none; }
+.cart-input { height: 38px; font-size: 14px; border: 1px solid #D6D2C6; border-radius: 8px; font-variant-numeric: tabular-nums; }
+.cart-input[readonly] { background: #F5F3EE; }
+.cart-input[aria-invalid="true"] { border-color: #B3261E; }
+.cart-input:focus { border-color: #71AA60; box-shadow: 0 0 0 3px rgba(113, 170, 96, .25); }
+.cart-due { display: flex; justify-content: space-between; margin-top: 10px; font-size: 13.5px; }
+/* Change: neutral before cash is typed, light green when enough, light red "Short by" when not. */
+.cart-change {
+    display: flex; justify-content: space-between; align-items: baseline; margin: 12px 0;
+    padding: 10px 14px; border-radius: 8px; background: #F5F3EE; color: #5C6152; font-size: 13.5px;
+}
+.cart-change strong { font-weight: 600; font-variant-numeric: tabular-nums; }
+.cart-change.is-ready { background: var(--green-bg); color: #1F2617; }
+.cart-change.is-short { background: #FDF1EF; color: #8C1D18; }
 
-.pay-method-toggle { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
-.pay-btn { padding: 10px 4px; border: 1px solid #ccc; border-radius: var(--radius-control); background: #fff; font-weight: 600; font-size: 13px; cursor: pointer; }
-.pay-btn.active { background: #3d5230; color: #fff; border-color: #3d5230; }
-.quick-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.quick-chip { border: 1px solid #ccc; background: #f7f6f2; border-radius: var(--radius-pill); padding: 4px 12px; font-size: 12.5px; cursor: pointer; }
-.quick-chip:hover { background: #eef0ea; }
+.pay-method-toggle { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 4px; }
+.pay-btn {
+    padding: 9px 4px; border: 1px solid #D6D2C6; border-radius: 8px; background: #fff; color: #1F2617;
+    font-size: 13px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.pay-btn:hover:not(.active) { background: #F5F3EE; }
+.pay-btn.active { background: #EAF1E3; border-color: #4A6741; color: #2F5A27; font-weight: 600; }
+.quick-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+.quick-chips:empty { display: none; }
+.quick-chip { border: 1px solid #D6D2C6; background: #fff; color: #1F2617; border-radius: var(--radius-pill); padding: 4px 12px; font-size: 12.5px; cursor: pointer; }
+.quick-chip:hover { background: #F5F3EE; }
+
+/* A disabled Checkout uses the app's one disabled look in every state (admin-theme.css). */
+/* Checkout & Print Receipt: text only, 44px, 14.5px / 600. Colours (also disabled) stay the theme's. */
+.cart-card #checkoutBtn {
+    --bs-btn-font-size: 14.5px; --bs-btn-font-weight: 600; --bs-btn-border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; width: 100%; height: 44px;
+    margin-top: 16px; padding-top: 0; padding-bottom: 0; line-height: 1.2;
+    -webkit-tap-highlight-color: transparent;
+}
 
 /* Narrow page: the cart under the grid, both still scrolling inside themselves. */
 @container pos (max-width: 700px) {
     .pos-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 12px; }
     .cart-panel { align-self: stretch; max-height: 36vh; }
 }
+
+/* ---- Checkout PIN and Lock POS (partials/_pos_tab.php, _pos_locked.php, pos-pin.js) ---- */
+.pos-lock-bar { display: flex; justify-content: flex-end; margin: 0 0 10px; }
+/* Lock POS: white, 34px, a small lock; hover goes green. */
+.pos-lock {
+    display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; box-sizing: border-box;
+    border: 1px solid #D6D2C6; border-radius: 10px; background: #fff; color: #1F2617;
+    font-family: inherit; font-size: 13px; font-weight: 500; line-height: 1; cursor: pointer;
+    transition: border-color .15s ease, color .15s ease; -webkit-tap-highlight-color: transparent;
+}
+.pos-lock .lock-icon { display: block; flex: 0 0 auto; }
+.pos-lock:hover:not(:disabled) { border-color: #4A6741; color: #2F5A27; }
+/* ---- The checkout PIN dialog, "Confirm this sale" (#pinModal, PosPinPromptV1). Scoped to #pinModal:
+   the shared .inv-modal / .inv-modal-card look of the other dialogs is untouched. ---- */
+#pinModal { background: rgba(31, 38, 23, .38); }
+#pinModal .pos-pin-card {
+    width: 400px; max-width: calc(100% - 32px); max-height: none; box-sizing: border-box; overflow: visible;
+    padding: 24px; border-radius: 14px; background: #fff; text-align: left; color: #1F2617;
+    box-shadow: 0 12px 32px rgba(31, 38, 23, .18), 0 2px 6px rgba(31, 38, 23, .08);
+}
+#pinModal .pin-prompt-head { display: flex; align-items: flex-start; gap: 12px; }
+#pinModal .pin-prompt-icon {
+    flex: 0 0 38px; width: 38px; height: 38px; border-radius: 10px; background: #EAF1E3; color: #2F5A27;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+#pinModal .pin-prompt-title { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.3; color: #1F2617; }
+#pinModal .pin-prompt-sub { margin: 2px 0 0; font-size: 13px; color: #5C6152; }
+/* What is being confirmed: the total and payment method from the cart on screen. */
+#pinModal .pin-prompt-summary {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px;
+    padding: 10px 14px; border-radius: 10px; background: #F7F5F0;
+}
+#pinModal .pin-prompt-method { font-size: 13px; color: #5C6152; }
+#pinModal .pin-prompt-total { font-size: 18px; font-weight: 600; color: #1F2617; font-variant-numeric: tabular-nums; }
+#pinModal .pin-prompt-label { display: block; margin: 16px 0 6px; font-size: 13px; font-weight: 500; color: #1F2617; }
+/* The PIN box: letter-spacing also adds space after the last dot, so the same .6em on the left keeps the
+   dots truly centred. */
+#pinModal .pos-pin-input {
+    display: block; width: 100%; max-width: none; height: 42px; margin: 0; box-sizing: border-box; padding: 0 0 0 .6em;
+    border: 1px solid #D6D2C6; border-radius: 10px; background: #fff; color: #1F2617;
+    font-family: inherit; font-size: 22px; letter-spacing: .6em; text-align: center; font-variant-numeric: tabular-nums;
+}
+#pinModal .pos-pin-input::placeholder { color: #B5B8AC; letter-spacing: .6em; }
+#pinModal .pos-pin-input:focus { outline: none; border-color: #71AA60; box-shadow: 0 0 0 3px rgba(113, 170, 96, .25); }
+#pinModal .pos-pin-input[aria-invalid="true"] { border-color: #B3261E; }
+#pinModal .pos-pin-input:disabled { background: #F5F3EE; cursor: not-allowed; }
+#pinModal .pin-prompt-msg { margin-top: 6px; font-size: 12px; color: #5C6152; }
+#pinModal .pin-prompt-msg.is-error { color: #B3261E; }
+#pinModal .pin-prompt-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+/* Cancel: white, 1px #D6D2C6, 500. Confirm sale: the theme green (and its one disabled look). */
+#pinModal .pin-prompt-cancel {
+    --bs-btn-bg: #fff; --bs-btn-color: #1F2617; --bs-btn-border-color: #D6D2C6;
+    --bs-btn-hover-bg: #F5F3EE; --bs-btn-hover-color: #1F2617; --bs-btn-hover-border-color: #D6D2C6;
+    --bs-btn-active-bg: #EFECE4; --bs-btn-active-color: #1F2617; --bs-btn-active-border-color: #D6D2C6;
+    --bs-btn-font-weight: 500;
+}
+
+/* ---- One size for the main POS buttons: 44px, radius 10px, 14.5px (600; Cancel 500). Colours stay the
+   theme's and the shared disabled look. (Checkout & Print Receipt: .cart-card #checkoutBtn above.) ---- */
+#pinModal .pin-prompt-btn,
+.pos-locked-card .pos-unlock-btn {
+    --bs-btn-font-size: 14.5px; --bs-btn-border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; width: 100%; height: 44px;
+    padding-top: 0; padding-bottom: 0; line-height: 1.2; -webkit-tap-highlight-color: transparent;
+}
+#pinModal .pin-prompt-btn.btn-success,
+.pos-locked-card .pos-unlock-btn { --bs-btn-font-weight: 600; }
+/* No browser "reveal" eye on a PIN typed at the counter (Edge). */
+.pos-pin-input::-ms-reveal, .pos-unlock-input::-ms-reveal { display: none; }
+
+/* ---- The Lock POS screen (partials/_pos_locked.php) ---- */
+.pos-locked { display: flex; justify-content: center; padding: 48px 16px; }
+.pos-locked-card {
+    width: 380px; max-width: 100%; box-sizing: border-box; padding: 26px 26px 20px;
+    background: #fff; border: 1px solid #E3E0D7; border-radius: 14px; text-align: center; color: #1F2617;
+}
+.pos-locked-icon {
+    width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 12px; background: #EAF1E3; color: #2F5A27;
+    display: flex; align-items: center; justify-content: center; font-size: 20px; line-height: 1;
+}
+.pos-locked-title { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.3; color: #1F2617; }
+.pos-locked-by { margin: 4px 0 0; font-size: 13.5px; color: #5C6152; }
+.pos-locked-name { font-weight: 500; color: #3A4030; }
+.pos-unlock-form { margin-top: 18px; text-align: left; }
+.pos-unlock-label { display: block; margin: 0 0 6px; font-size: 13px; font-weight: 500; color: #1F2617; }
+/* The same box as the PIN setup cards. letter-spacing also adds space after the last dot, so the
+   same .6em on the left keeps the dots truly centred. */
+.pos-unlock-input {
+    display: block; width: 100%; height: 42px; box-sizing: border-box; padding: 0 0 0 .6em;
+    border: 1px solid #D6D2C6; border-radius: 10px; background: #fff; color: #1F2617;
+    font-family: inherit; font-size: 22px; letter-spacing: .6em; text-align: center; font-variant-numeric: tabular-nums;
+}
+.pos-unlock-input::placeholder { color: #B5B8AC; letter-spacing: .6em; }
+.pos-unlock-input:focus { outline: none; border-color: #71AA60; box-shadow: 0 0 0 3px rgba(113, 170, 96, .25); }
+.pos-unlock-input[aria-invalid="true"] { border-color: #B3261E; }
+.pos-unlock-msg { margin-top: 6px; font-size: 12px; color: #5C6152; }
+.pos-unlock-msg.is-error { color: #B3261E; }
+/* Unlock: the app's green (and its one disabled look until 4 digits are typed), text only. */
+.pos-locked-card .pos-unlock-btn {
+    --bs-btn-font-size: 14.5px; --bs-btn-font-weight: 600; --bs-btn-border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; width: 100%; height: 44px;
+    margin-top: 14px; padding-top: 0; padding-bottom: 0; line-height: 1.2;
+    -webkit-tap-highlight-color: transparent;
+}
+.pos-locked-note { margin: 14px 0 0; font-size: 12px; color: #5C6152; }

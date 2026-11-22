@@ -78,6 +78,8 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->get('sales/check-or', 'SalesController::checkOr');
     $routes->get('sales/export-pdf', 'SalesController::exportPdf');
     $routes->get('sales/export-csv', 'SalesController::exportCsv');
+    $routes->post('sales/lock', 'SalesController::lock');       // Lock POS (PosPinActions)
+    $routes->post('sales/unlock', 'SalesController::unlock');   // unlock with own checkout PIN
 
     $routes->get('reports', 'ReportsController::index');
     $routes->get('reports/pdf', 'ReportsController::pdf');
@@ -96,6 +98,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->post('settings/staff-accounts/resend/(:segment)', 'SettingsController::resendStaffInvite/$1');
     $routes->post('settings/staff-accounts/toggle/(:segment)', 'SettingsController::deactivateStaff/$1');
     $routes->post('settings/staff-accounts/delete/(:segment)', 'SettingsController::deleteStaff/$1');
+    $routes->post('settings/staff-accounts/reset-pin/(:segment)', 'SettingsController::resetStaffPin/$1');
 
     $routes->get('notifications', 'NotificationController::index');
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');
@@ -129,6 +132,9 @@ $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'ro
     $routes->get('sales/check-or', 'SalesController::checkOr');
     $routes->get('sales/export-pdf', 'SalesController::exportPdf');
     $routes->get('sales/export-csv', 'SalesController::exportCsv');
+    $routes->post('sales/pin', 'AccountController::setPinFromPos');   // first checkout PIN, from the POS page
+    $routes->post('sales/lock', 'SalesController::lock');            // Lock POS (PosPinActions)
+    $routes->post('sales/unlock', 'SalesController::unlock');        // unlock with own checkout PIN
 
     $routes->get('notifications', 'NotificationController::index');
     $routes->post('notifications/mark-read/(:segment)', 'NotificationController::markRead/$1');
@@ -141,6 +147,7 @@ $routes->group('staff', ['namespace' => 'App\Controllers\Staff', 'filter' => 'ro
     $routes->post('account/profile', 'AccountController::updateProfile');
     $routes->post('account/email/confirm', 'AccountController::confirmEmail');
     $routes->post('account/email/cancel', 'AccountController::cancelEmail');
+    $routes->post('account/pin', 'AccountController::setPin');      // checkout PIN, confirmed with the password
 
     // Only page open to a staff member who signed in with a temporary password.
     $routes->get('set-password', 'SetPasswordController::index');

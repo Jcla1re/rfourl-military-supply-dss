@@ -14,4 +14,5 @@ $__demoLogins = [
     <?php foreach ($__demoLogins as [$__label, $__user, $__pass]): ?>
         <div><?= esc($__label) ?>: <code><?= esc($__user) ?></code> / <code><?= esc((string) $__pass) ?></code></div>
     <?php endforeach; ?>
+    <div>Checkout PIN (Owner and Staff): <code><?= esc(\App\Libraries\DemoSetup::pin()) ?></code></div>
 </div>

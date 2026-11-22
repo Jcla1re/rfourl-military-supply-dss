@@ -88,16 +88,22 @@
 
 <div class="page-wrap<?= $tab === 'pos' ? ' pos-page' : '' ?>">
     <?php if (!empty($success)): ?><div class="alert alert-success"><?= esc($success) ?></div><?php endif; ?>
-    <?php if (!empty($error)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
+    <?php if (!empty($error) && empty($posFieldError)): ?><div class="alert alert-danger"><?= esc($error) ?></div><?php endif; ?>
 
+    <?php if (! empty($posLock)): ?>
+        <?php // Lock POS: the lock screen only, until the signed-in user's checkout PIN is entered (PosPinActions). ?>
+        <?= view('partials/_pos_locked', ['base' => 'admin', 'posLock' => $posLock, 'posHasPin' => $posHasPin ?? false, 'posUserName' => $posUserName ?? '', 'posUsername' => $posUsername ?? '', 'posUnlockError' => $posUnlockError ?? null]) ?>
+    <?php else: ?>
     <div class="pos-tabs sticky-tabs">
-        <a href="?tab=pos" class="<?= $tab === 'pos' ? 'active' : '' ?>">Point of Sale</a>
+        <a href="?tab=pos" class="<?= $tab === 'pos' ? 'active' : '' ?>">Checkout</a>
         <a href="?tab=receipts" class="<?= $tab === 'receipts' ? 'active' : '' ?>">Sales &amp; Receipts</a>
     </div>
 
 
     <?php if ($tab === 'pos'): ?>
-        <?= view('partials/_pos_tab', ['base' => 'admin', 'groups' => $groups ?? [], 'categories' => $categories ?? []]) ?>
+        <?= view('partials/_pos_tab', ['base' => 'admin', 'groups' => $groups ?? [], 'categories' => $categories ?? [],
+            'posPinReady' => $posPinReady ?? true, 'posHasPin' => $posHasPin ?? false, 'posPinReset' => $posPinReset ?? false, 'posPinError' => $posPinError ?? null, 'posFieldError' => $posFieldError ?? null, 'posCheckoutPinError' => $posCheckoutPinError ?? null, 'posCheckoutPinLocked' => $posCheckoutPinLocked ?? false,
+            'posUsername' => $posUsername ?? null, 'posPinErrorField' => $posPinErrorField ?? null, 'posUserPhone' => $posUserPhone ?? null]) ?>
     <?php else: ?>
         <?php $transactions = $transactions ?? []; ?>
         <div class="rec-stats">
@@ -209,6 +215,7 @@
             </div>
         </div>
     <?php endif; ?>
+    <?php endif; // Lock POS ?>
 </div>
 
 <?php $receipt = $receipt ?? null; ?>

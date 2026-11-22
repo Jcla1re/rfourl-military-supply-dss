@@ -199,8 +199,25 @@ $tabs = [
 .pf-tab .pf-save.btn { height: 40px; padding: 0 18px; border-radius: var(--radius-control); font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; }
 .pf-cancel { border: 1px solid #D6D2C6; background: #fff; color: #1F2617; cursor: pointer; transition: background-color .15s ease; }
 .pf-cancel:hover { background: #F7F5F0; }
-/* Save changes while it can't be used (nothing changed yet, an error, saving): light green, still readable. */
-:root .pf-tab .pf-save.btn:disabled { background-color: #B9D3AE; border-color: #B9D3AE; color: #fff; opacity: 1; }
+/* Save changes while it can't be used (nothing changed yet, an error, saving): the app's one disabled
+   look in every state (admin-theme.css), no colours of its own. */
+/* The live PIN checklist sits under the PIN boxes (the control column: label 180px + gap 16px). */
+.pf-pin-checklist { margin: -6px 0 16px 196px; min-width: 0; }
+/* Sign-in & security: group headings in the one form; a light line above each group but the first. */
+.pf-group-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 12px; }
+.pf-group-head.is-divided { margin-top: 20px; padding-top: 18px; border-top: 1px solid #F0EDE6; }
+.pf-group-title { margin: 0; font-size: 14px; font-weight: 600; color: #1F2617; }
+.pf-group-hint { font-size: 12.5px; color: #7A7E70; }
+/* The checkout PIN boxes: 180px, centred dots (letter-spacing adds space after the last dot too, so the
+   same .6em on the left keeps them centred). */
+.pf-form .pf-field input.pf-pin-input { width: 180px; max-width: 100%; padding: 0 0 0 .6em; font-size: 20px; letter-spacing: .6em; text-align: center; }
+.pf-form .pf-field input.pf-pin-input::placeholder { color: #B5B8AC; letter-spacing: .6em; }
+.pf-form .pf-field input.pf-pin-input::-ms-reveal { display: none; }
+/* View mode: an empty value in gray; a set PIN as a green "Set" pill and the date (never the PIN). */
+.pf-rows .pf-empty { color: #7A7E70; }
+.pf-pin-set { display: inline-block; padding: 2px 9px; border-radius: 999px; background: #EAF1E3; color: #2F5A27; font-size: 12px; font-weight: 600; line-height: 1.5; }
+.pf-pin-date { margin-left: 6px; font-size: 13px; color: #7A7E70; }
+.pf-pin-checklist .pin-checklist { margin: 0; }
 
 @media (max-width: 576px) {
     .pf-rows > div,
@@ -209,6 +226,7 @@ $tabs = [
     .pf-form .pf-field > label,
     .pf-form .im-label-row { padding-top: 0; }
     .pf-cancel, .pf-tab .pf-save.btn { min-height: 44px; }
+    .pf-pin-checklist { margin-left: 0; }
 }
 /* Account status pills (My Profile and Manage Accounts): the shared .status-pill, sized 13px. */
 .status-pill.acct { font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: var(--radius-pill); gap: 6px; white-space: nowrap; }
@@ -289,8 +307,10 @@ $tabs = [
             $phoneDisplay = preg_match('/^09\d{9}$/', $phoneDigits) ? substr($phoneDigits, 0, 4) . ' ' . substr($phoneDigits, 4, 3) . ' ' . substr($phoneDigits, 7) : $phone;
 
             $pfEdit = $openForm === 'personal';
-            $siEdit = $openForm === 'signin';
-            $siEmail        = (string) $typed('email', $admin['email'] ?? '');
+            // ?edit=signin (a deep link; #siNewPin lands on the Checkout PIN group) opens Sign-in & security too.
+            $siEdit = $openForm === 'signin' || ($openForm === null && service('request')->getGet('edit') === 'signin');
+            $siHasPin = ! empty($admin['pos_pin_hash']);
+            $siEmail       = (string) $typed('email', $admin['email'] ?? '');
             $siEmailChanged = mb_strtolower(trim($siEmail)) !== mb_strtolower(trim((string) ($admin['email'] ?? '')));
             ?>
             <div class="pf-tab pf-layout">
@@ -362,18 +382,22 @@ $tabs = [
                             <h2 class="pf-title" id="siTitle">Sign-in &amp; security</h2>
                             <button type="button" class="pf-edit" id="siEditBtn" aria-label="Edit sign-in and security"<?= $siEdit ? ' hidden' : '' ?><?= demo_lock_attr($admin ?? null) ?>><?= view('partials/_pen_icon', ['penIconSize' => 16], ['saveData' => false]) ?>Edit</button>
                         </div>
-                        <p class="pf-sub">Changing your username, email or password asks for your current password.</p>
+                        <p class="pf-sub">Your sign-in details and checkout PIN. Changes need your current password.</p>
 
                         <dl class="pf-view pf-rows" id="siView"<?= $siEdit ? ' hidden' : '' ?>>
                             <div><dt>Username</dt><dd><?= esc($admin['username'] ?? '—') ?></dd></div>
                             <div><dt>Email</dt><dd><?= ($admin['email'] ?? '') !== '' ? esc($admin['email']) : '—' ?></dd></div>
                             <div><dt>Password</dt><dd><span class="sec-dots" role="img" aria-label="Hidden">••••••••</span></dd></div>
+                            <?php // Never the PIN itself: a "Set" pill and the day it was set, or "Not set yet" in gray. ?>
+                            <div><dt>Checkout PIN</dt><dd><?php if ($siHasPin): ?><span class="pf-pin-set">Set</span><?php if (! empty($admin['pos_pin_set_at'])): ?> <span class="pf-pin-date"><?= esc(date('M j, Y', strtotime($admin['pos_pin_set_at']))) ?></span><?php endif; ?><?php else: ?><span class="pf-empty">Not set yet</span><?php endif; ?></dd></div>
                         </dl>
 
                         <?php // Username, email and password in one form; the current password is asked for once (SettingsController::updateSignIn). ?>
                         <form method="post" action="<?= site_url('admin/settings/sign-in') ?>" class="pf-form" id="siForm" data-submit-once data-busy-label="Saving…"<?= $siEdit ? '' : ' hidden' ?>>
                             <?= csrf_field() ?>
                             <?php if (($m = $err('signin', 'form')) !== null): ?><div class="alert alert-danger" role="alert"><?= esc($m) ?></div><?php endif; ?>
+                            <?php // Three groups in the one form (one current password, one Save): Sign-in, Password, Checkout PIN. ?>
+                            <div class="pf-group-head"><h3 class="pf-group-title">Sign-in</h3></div>
                             <div class="pf-field">
                                 <label for="siUsername">Username</label>
                                 <div class="pf-control">
@@ -397,11 +421,12 @@ $tabs = [
                                     <?= $errLine('signin', 'email_confirm', 'siEmailConfirm') ?>
                                 </div>
                             </div>
+                            <?php // The group's hint keeps the id the New password box points to (aria-describedby). ?>
+                            <div class="pf-group-head is-divided"><h3 class="pf-group-title">Password</h3><span class="pf-group-hint" id="siNewPasswordHint">Leave blank to keep your current password.</span></div>
                             <div class="pf-field">
                                 <label for="siNewPassword">New password</label>
                                 <div class="pf-control">
                                     <input id="siNewPassword" name="new_password" type="password" placeholder="<?= esc(\App\Libraries\PasswordPolicy::HINT) ?>" autocomplete="new-password"<?= $invalid('signin', 'new_password', 'siNewPassword', true) ?>>
-                                    <div class="pf-hint" id="siNewPasswordHint">Leave blank to keep your current password.</div>
                                     <?= $errLine('signin', 'new_password', 'siNewPassword') ?>
                                 </div>
                             </div>
@@ -411,6 +436,29 @@ $tabs = [
                                     <input id="siNewPasswordConfirm" name="new_password_confirm" type="password" autocomplete="new-password"<?= $invalid('signin', 'new_password_confirm', 'siNewPasswordConfirm') ?>>
                                     <?= $errLine('signin', 'new_password_confirm', 'siNewPasswordConfirm') ?>
                                 </div>
+                            </div>
+                            <?php // The checkout PIN (App\Libraries\PosPin): optional, blank = keep. Never filled in again after an error.
+                            // 180px boxes with centred dots, no show/hide eye (data-no-pw-toggle), as the PIN setup card. ?>
+                            <div class="pf-group-head is-divided" id="siPinGroup"><h3 class="pf-group-title">Checkout PIN</h3><span class="pf-group-hint" id="siNewPinHint">Needed for every checkout on the Point of Sale.</span></div>
+                            <div class="pf-field">
+                                <label for="siNewPin">New PIN</label>
+                                <div class="pf-control">
+                                    <input id="siNewPin" name="<?= \App\Libraries\PosPin::NEW_FIELD ?>" type="password" class="pf-pin-input" inputmode="numeric" pattern="\d{4}" maxlength="4" title="4 digits" placeholder="••••" autocomplete="off" data-no-pw-toggle<?= $invalid('signin', \App\Libraries\PosPin::NEW_FIELD, 'siNewPin', true) ?>>
+                                    <?= $errLine('signin', \App\Libraries\PosPin::NEW_FIELD, 'siNewPin') ?>
+                                </div>
+                            </div>
+                            <div class="pf-field">
+                                <label for="siNewPinConfirm">Repeat PIN</label>
+                                <div class="pf-control">
+                                    <input id="siNewPinConfirm" name="<?= \App\Libraries\PosPin::REPEAT_FIELD ?>" type="password" class="pf-pin-input" inputmode="numeric" pattern="\d{4}" maxlength="4" title="4 digits" placeholder="••••" autocomplete="off" data-no-pw-toggle<?= $invalid('signin', \App\Libraries\PosPin::REPEAT_FIELD, 'siNewPinConfirm') ?>>
+                                    <?= $errLine('signin', \App\Libraries\PosPin::REPEAT_FIELD, 'siNewPinConfirm') ?>
+                                </div>
+                            </div>
+                            <?php // The live PIN checklist (same as the staff card); it never blocks Save here: a blank PIN keeps the current one. ?>
+                            <div class="pf-pin-checklist">
+                                <link href="/assets/css/pin-setup.css" rel="stylesheet">
+                                <?= view('partials/_pin_checklist', ['pinId' => 'siNewPin', 'repeatId' => 'siNewPinConfirm', 'phone' => $admin['phone'] ?? null], ['saveData' => false]) ?>
+                                <script src="/assets/js/pin-checklist.js" defer></script>
                             </div>
                             <div class="pf-current">
                                 <div class="pf-field">
@@ -532,10 +580,15 @@ $tabs = [
                     || phoneDigits(phone.value) !== phoneDigits(phone.dataset.original);
                 const username = document.getElementById('siUsername');
                 const newPass = document.getElementById('siNewPassword'), newPass2 = document.getElementById('siNewPasswordConfirm');
-                // A new password counts as a change; the current password alone does not.
-                const signInChanged = () => username.value.trim() !== username.dataset.original
+                const newPin = document.getElementById('siNewPin'), newPin2 = document.getElementById('siNewPinConfirm');
+                // A new password counts as a change; the current password alone does not. The checkout PIN
+                // counts once both boxes are filled; while only one of them is, Save stays disabled.
+                const pinChanged = () => newPin.value !== '' && newPin2.value !== '';
+                const pinHalfTyped = () => (newPin.value === '') !== (newPin2.value === '');
+                const otherSignInChanged = () => username.value.trim() !== username.dataset.original
                     || email.value.trim().toLowerCase() !== (email.dataset.original || '').trim().toLowerCase()
                     || newPass.value !== '' || newPass2.value !== '';
+                const signInChanged = () => !pinHalfTyped() && (pinChanged() || otherSignInChanged());
 
                 // Full name counter, as in Add item (Item name): "n / 60" counted in characters, amber from 50,
                 // red past 60 with the message under the field and Save disabled. Typing is never blocked.
@@ -561,6 +614,15 @@ $tabs = [
                 syncName(false);
                 cards.forEach((c) => c.sync());
                 lockOthers();
+                // ?edit=signin#siNewPin: straight to the Checkout PIN group, scrolled inside the content area
+                // (.main-scroll) only, so the green header and the sidebar stay where they are.
+                if (window.location.hash === '#siNewPin' && !document.getElementById('siForm').hidden) {
+                    const pinGroup = document.getElementById('siPinGroup'), area = pinGroup.closest('.main-scroll');
+                    if (area) {
+                        area.scrollTop += pinGroup.getBoundingClientRect().top - area.getBoundingClientRect().top - 16;
+                    }
+                    document.getElementById('siNewPin').focus({ preventScroll: true });
+                }
             })();
             </script>
         <?php elseif ($tab === 'accounts'): ?>
@@ -615,6 +677,18 @@ $tabs = [
                         <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#staffUsernameModal"
                                 data-action="<?= site_url('admin/settings/staff-accounts/username/' . $s['user_id']) ?>"
                                 data-name="<?= esc($s['full_name'], 'attr') ?>" data-username="<?= esc($s['username'], 'attr') ?>"<?= demo_lock_attr($s) ?>>Edit Username</button>
+                        <?php // Checkout PIN (App\Libraries\PosPin): the owner can only clear it; the staff member sets a new one. ?>
+                        <?php if (empty($s['pos_pin_hash'])): ?>
+                        <span class="status-pill acct gray">No checkout PIN yet</span>
+                        <?php else: ?>
+                        <form method="post" action="<?= site_url('admin/settings/staff-accounts/reset-pin/' . $s['user_id']) ?>"
+                              data-confirm="Their checkout PIN is cleared. They set a new one, with their own password, before their next sale. You never see it."
+                              data-confirm-title="Reset <?= esc($s['full_name'], 'attr') ?>'s checkout PIN?"
+                              data-confirm-ok="Reset PIN" data-confirm-variant="danger">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-sm btn-outline-dark"<?= demo_lock_attr($s) ?>>Reset PIN</button>
+                        </form>
+                        <?php endif; ?>
                         <form method="post" action="<?= site_url('admin/settings/staff-accounts/toggle/' . $s['user_id']) ?>"
                               data-confirm="<?= $s['is_active'] ? "They won't be able to sign in until you reactivate the account." : 'They will be able to sign in again with their password.' ?>"
                               data-confirm-title="<?= ($s['is_active'] ? 'Deactivate ' : 'Reactivate ') . esc($s['full_name'], 'attr') ?>?"

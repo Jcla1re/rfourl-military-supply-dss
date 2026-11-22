@@ -120,7 +120,7 @@ final class DuplicateSubmitTest extends CIUnitTestCase
     {
         return $this->as($role)->post($role . '/sales/checkout', $extra + [
             'item_id' => [$itemId], 'quantity' => [(string) $qty], 'payment_method' => 'Cash', 'cash_received' => '5000',
-        ] + ($key ? [OnceToken::FIELD => $key] : []));
+        ] + ($key ? [OnceToken::FIELD => $key] : []) + \Tests\Support\PosPinFixture::field());
     }
 
     private function orderStatus(string $soId): string
@@ -179,7 +179,7 @@ final class DuplicateSubmitTest extends CIUnitTestCase
         $key = $this->key();
         $this->asOwner()->post('admin/sales/checkout', [
             'item_id' => ['P-LAST', 'P-LAST'], 'quantity' => ['1', '1'], 'payment_method' => 'Cash', 'cash_received' => '5000', OnceToken::FIELD => $key,
-        ]);
+        ] + \Tests\Support\PosPinFixture::field());
 
         $this->assertSame(['Not enough stock', 'Not enough stock for Brass Medal (only 1 left). Nothing was saved.'], [$_SESSION['toast']['title'] ?? null, $_SESSION['toast']['message'] ?? null], 'The "Not enough stock" toast.');
         $this->assertSame(1, $this->stock('P-LAST'));
@@ -409,18 +409,18 @@ final class DuplicateSubmitTest extends CIUnitTestCase
     public function testTheOrNumberGoesThroughTheSharedCheckoutAndOnTheFirstReceipt(string $role): void
     {
         $key = $this->key();
-        $this->checkout($role, 'P-1', 1, $key, ['or_number' => 'OR-0457']);
-        $this->assertSame('OR-0457', $_SESSION['receipt']['or_number'] ?? null);
-        $this->assertSame('OR-0457', $this->db->table('sales_transaction')->get()->getRow()->or_number);
+        $this->checkout($role, 'P-1', 1, $key, ['or_number' => '0457']);
+        $this->assertSame('0457', $_SESSION['receipt']['or_number'] ?? null);
+        $this->assertSame('0457', $this->db->table('sales_transaction')->get()->getRow()->or_number);
 
         // The same form again: still one sale, and the first receipt keeps its OR number.
-        $this->checkout($role, 'P-1', 1, $key, ['or_number' => 'OR-0457']);
-        $this->assertSame('OR-0457', $_SESSION['receipt']['or_number'] ?? null);
+        $this->checkout($role, 'P-1', 1, $key, ['or_number' => '0457']);
+        $this->assertSame('0457', $_SESSION['receipt']['or_number'] ?? null);
         $this->assertSame(1, $this->rows('sales_transaction'));
 
         // A bad OR number is refused before anything is saved.
         $this->checkout($role, 'P-1', 1, $this->key(), ['or_number' => '<bad>']);
-        $this->assertStringStartsWith('Official receipt / invoice no. can only have', $_SESSION['error'] ?? '');
+        $this->assertSame('Use numbers only (up to 20 digits).', $_SESSION['error'] ?? '');
         $this->assertSame(1, $this->rows('sales_transaction'));
         $this->assertSame(4, $this->stock('P-1'));
     }

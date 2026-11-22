@@ -3,6 +3,7 @@
 namespace App\Filters;
 
 use App\Libraries\OnceToken;
+use App\Libraries\PosPin;
 use App\Libraries\ReturnTo;
 use App\Libraries\SignedOut;
 use App\Libraries\Toast;
@@ -22,7 +23,7 @@ use CodeIgniter\Security\Exceptions\SecurityException;
  *                         to that step, "This page needed a refresh. Please try again.";
  *  - fetch / AJAX         419 JSON {"csrfExpired": true}: the page gets a fresh token (session/csrf);
  *  - any other form       back to the page it was on, everything typed kept (old input: never the
- *                         token, the one-time key or a password), with "This page needed a refresh.
+ *                         token, the one-time key, a password or a checkout PIN), with "This page needed a refresh.
  *                         Nothing was saved. Please click <button> again."
  *
  * Nothing is ever sent again automatically: the controller did not run, nothing was saved, and the
@@ -107,10 +108,10 @@ class CsrfFilter extends CSRF
         return $label !== '' ? '"' . mb_substr($label, 0, 40) . '"' : 'the button';
     }
 
-    /** Old input for the page to show again: never the token, the one-time key or a password. */
+    /** Old input for the page to show again: never the token, the one-time key, a password or a checkout PIN. */
     private function keepInput(RequestInterface $request): void
     {
-        $post = (array) $request->getPost();
+        $post = PosPin::strip((array) $request->getPost());
         foreach (array_keys($post) as $key) {
             if ($key === config('Security')->tokenName || $key === OnceToken::FIELD || $key === self::LABEL_FIELD || stripos((string) $key, 'pass') !== false) {
                 unset($post[$key]);

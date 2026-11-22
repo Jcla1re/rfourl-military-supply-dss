@@ -182,7 +182,8 @@ if (document.getElementById('posGrid')) {
         const linesEl = document.getElementById('cartLines');
         // A line being typed in stays while its box is empty or 0 (it goes back to 1 on blur).
         const ids = Object.keys(cart).filter(id => cart[id].qty > 0 || cart[id].editing);
-        document.getElementById('cartCount').textContent = ids.length;
+        cartLineCount = ids.length;
+        document.getElementById('cartCount').textContent = ids.length + (ids.length === 1 ? ' item' : ' items');
 
         const pricing = priceCart(ids);
         const active = document.activeElement && document.activeElement.classList.contains('qty-input')
@@ -195,10 +196,15 @@ if (document.getElementById('posGrid')) {
             linesEl.innerHTML = pricing.lines.map(l => {
                 const item = l.item;
                 const shown = item.editing && item.draft !== undefined ? item.draft : String(item.qty);
+                // "Size S · ₱400 each" (no size: "₱400 each"), plus the discount this line gets.
+                const sub = [item.size ? 'Size ' + esc(item.size) : '', esc(peso(item.price)) + ' each']
+                    .filter(Boolean).join(' &middot; ')
+                    + (l.badge === 'Bundle -5%' ? ' &middot; 5% off' : (l.badge === 'Set -2%' ? ' &middot; set 2% off' : ''));
+                const label = item.name + (item.size ? ', size ' + item.size : '');
                 return `<div class="cart-line">
                     <div class="info">
-                        <div class="name">${esc(item.name)}${item.size ? ' &middot; ' + esc(item.size) : ''}${l.badge ? '<span class="badge-disc">' + l.badge + '</span>' : ''}</div>
-                        <div class="price">₱${esc(item.price)}</div>
+                        <div class="name">${esc(item.name)}</div>
+                        <div class="sub">${sub}</div>
                     </div>
                     <div class="qty-ctrl">
                         <button type="button" onclick="posDec(${jsArg(l.id)})" aria-label="One less">&minus;</button>
@@ -206,7 +212,10 @@ if (document.getElementById('posGrid')) {
                                data-id="${esc(l.id)}" value="${esc(shown)}" aria-label="Quantity">
                         <button type="button" onclick="posInc(${jsArg(l.id)})" aria-label="One more"${item.qty >= item.stock ? ' disabled' : ''}>+</button>
                     </div>
-                    <div class="line-total">₱${l.lineTotal.toLocaleString()}${(l.lineDiscount > 0 && l.badge !== 'Set -2%') ? '<span class="line-disc">-₱' + l.lineDiscount.toLocaleString() + '</span>' : ''}</div>
+                    <div class="line-end">
+                        <div class="line-total">${esc(peso(l.lineTotal))}</div>
+                        <button type="button" class="cart-remove" onclick="posRemove(${jsArg(l.id)})" aria-label="Remove ${esc(label)}" title="Remove">&#x2715;</button>
+                    </div>
                     <input type="hidden" name="item_id[]" value="${esc(l.id)}">
                     <input type="hidden" name="quantity[]" value="${esc(item.qty)}">
                     ${item.capped ? `<div class="cart-line-note">Only ${esc(item.stock)} in stock, so the quantity is set to ${esc(item.stock)}.</div>` : ''}
@@ -219,23 +228,77 @@ if (document.getElementById('posGrid')) {
         }
         rendering = false;
 
-        document.getElementById('cartSubtotal').textContent = '₱' + pricing.subtotal.toLocaleString();
+        // Subtotal − Discount = Total, the amounts priceCart() gives (the same as PosPricing on the server).
+        document.getElementById('cartSubtotal').textContent = peso(pricing.subtotal);
         document.getElementById('discountRow').style.display = pricing.discount > 0 ? '' : 'none';
-        document.getElementById('cartDiscountOut').textContent = '- ₱' + pricing.discount.toLocaleString();
-        document.getElementById('cartTotal').textContent = '₱' + pricing.total.toLocaleString();
-        // While the sale is on its way (submit-once.js), the button stays disabled and says "Processing sale…".
+        document.getElementById('cartDiscountLabel').textContent = discountLabel(pricing.lines);
+        document.getElementById('cartDiscountOut').textContent = '−' + peso(pricing.discount);
+        document.getElementById('cartTotal').textContent = peso(pricing.total);
+        cartTotal = pricing.total;
         if (!(window.SubmitOnce && window.SubmitOnce.isBusy(document.getElementById('cartForm')))) {
-            document.getElementById('checkoutBtn').disabled = ids.length === 0;
             document.getElementById('clearCart').disabled = ids.length === 0;
         }
+        // An empty cart shows only the totals and the disabled Checkout: the payment part (method, cash,
+        // change, GCash, OR no.) comes with the first item, with the method chosen before still selected.
+        document.getElementById('cartPay').hidden = ids.length === 0;
 
         renderChips('cashChips', pricing.total, 'cashReceived');
         renderChips('splitChips', null, 'splitCashReceived');
         updateGcashPanel(pricing.total);
         updateSplitPanel(pricing.total);
-        updateChange();
+        updateChange(); // also syncCheckout()
         updateCardAvailability();
         cartChanged();
+    }
+
+    // ---- Shown amounts, the discount label and why Checkout is disabled ----
+    let cartLineCount = 0;
+    let cartTotal = 0;
+
+    /** "₱1,234" or "₱1,234.50". */
+    function peso(amount) {
+        const n = Math.round((Number(amount) || 0) * 100) / 100;
+        return '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: n % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 });
+    }
+
+    /** The rule(s) behind the discount: the same badges priceCart() gives each line. */
+    function discountLabel(lines) {
+        const bulk = lines.some(l => l.badge === 'Bundle -5%');
+        const set = lines.some(l => l.badge === 'Set -2%');
+        if (bulk && set) return 'Discount (10+ of one item 5% · matching set 2%)';
+        if (bulk) return 'Discount (10+ of one item, 5%)';
+        if (set) return 'Discount (matching set, 2%)';
+        return 'Discount';
+    }
+
+    /** A typed amount as a number (commas were already dropped as it was typed); '' is 0. */
+    function amountOf(id) {
+        return parseFloat(document.getElementById(id).value) || 0;
+    }
+
+    /**
+     * Checkout is enabled only when nothing is missing; otherwise the first missing thing is said
+     * under it: no PIN, an empty cart, not enough cash for a cash sale, a box marked in red. The
+     * server checks all of it again. While the sale is on its way (submit-once.js) the button is left alone.
+     */
+    function syncCheckout() {
+        const form = document.getElementById('cartForm');
+        const method = document.getElementById('paymentMethod').value;
+        let reason = '';
+        if (form.dataset.noPin === '1') {
+            reason = form.dataset.reasonNoPin;
+        } else if (cartLineCount === 0) {
+            reason = form.dataset.reasonEmpty;
+        } else if (method === 'Cash' && amountOf('cashReceived') < cartTotal) {
+            reason = form.dataset.reasonCash;
+        } else if (form.querySelector('#cartPay [aria-invalid="true"]:not(:disabled)')) {
+            reason = form.dataset.reasonField;
+        }
+        if (!(window.SubmitOnce && window.SubmitOnce.isBusy(form))) {
+            document.getElementById('checkoutBtn').disabled = reason !== '';
+        }
+        const reasonEl = document.getElementById('checkoutReason');
+        if (reasonEl.textContent !== reason) reasonEl.textContent = reason;
     }
 
     // Typing a quantity: digits only; above the stock it is set to the stock with a note.
@@ -324,40 +387,98 @@ if (document.getElementById('posGrid')) {
         const amounts = [dueAmount, roundUpTo(dueAmount, 100), roundUpTo(dueAmount, 500), roundUpTo(dueAmount, 1000)];
         const seen = new Set();
         const chips = amounts.filter(a => { if (seen.has(a)) return false; seen.add(a); return true; });
-        el.innerHTML = chips.map(a => `<button type="button" class="quick-chip" data-amt="${a}">₱${a.toLocaleString()}</button>`).join('');
+        el.innerHTML = chips.map(a => `<button type="button" class="quick-chip" data-amt="${a}">${esc(peso(a))}</button>`).join('');
         el.querySelectorAll('.quick-chip').forEach(chip => {
             chip.addEventListener('click', () => {
-                document.getElementById(targetInputId).value = chip.dataset.amt;
+                const input = document.getElementById(targetInputId);
+                input.value = chip.dataset.amt;
+                setFieldError(input, '');
                 updateChange();
             });
         });
     }
 
     function updateGcashPanel(total) {
-        document.getElementById('gcashAmountDisplay').value = '₱' + total.toLocaleString();
+        document.getElementById('gcashAmountDisplay').value = peso(total);
         document.getElementById('gcashAmountHidden').value = total.toFixed(2);
     }
 
     function updateSplitPanel(total) {
-        const gcashAmt = parseFloat(document.getElementById('splitGcashAmount').value) || 0;
-        const cashDue = Math.max(0, total - gcashAmt);
-        document.getElementById('splitCashDue').textContent = '₱' + cashDue.toLocaleString();
+        const cashDue = Math.max(0, total - amountOf('splitGcashAmount'));
+        document.getElementById('splitCashDue').textContent = peso(cashDue);
         renderChips('splitChips', cashDue, 'splitCashReceived');
     }
 
+    /** One Change box: neutral "Change ₱0" before cash is typed, "Change ₱X" when enough, "Short by ₱X" when not. */
+    function showChange(boxId, labelId, valueId, typed, received, due) {
+        const box = document.getElementById(boxId);
+        const short = typed && received < due;
+        box.classList.toggle('is-ready', typed && !short);
+        box.classList.toggle('is-short', short);
+        document.getElementById(labelId).textContent = short ? 'Short by' : 'Change';
+        document.getElementById(valueId).textContent = peso(!typed ? 0 : (short ? due - received : received - due));
+    }
+
     function updateChange() {
-        const total = parseFloat(document.getElementById('cartTotal').textContent.replace(/[^0-9.]/g, '')) || 0;
+        const total = cartTotal;
         const method = document.getElementById('paymentMethod').value;
         if (method === 'Split') {
-            const gcashAmt = parseFloat(document.getElementById('splitGcashAmount').value) || 0;
-            const cashDue = Math.max(0, total - gcashAmt);
-            const received = parseFloat(document.getElementById('splitCashReceived').value) || 0;
-            document.getElementById('splitChange').textContent = '₱' + Math.max(0, received - cashDue).toLocaleString();
+            const cashDue = Math.max(0, total - amountOf('splitGcashAmount'));
+            const typed = document.getElementById('splitCashReceived').value !== '';
+            showChange('splitChangeBox', 'splitChangeLabel', 'splitChange', typed, amountOf('splitCashReceived'), cashDue);
         } else {
-            const received = parseFloat(document.getElementById('cashReceived').value) || 0;
-            document.getElementById('cartChange').textContent = '₱' + Math.max(0, received - total).toLocaleString();
+            const typed = document.getElementById('cashReceived').value !== '';
+            showChange('cashChangeBox', 'cartChangeLabel', 'cartChange', typed, amountOf('cashReceived'), total);
         }
+        syncCheckout();
     }
+
+    // ---- What may be typed in the payment and OR boxes (the server checks the same: PosCheckout) ----
+    const MAX_CASH = 1000000;
+    const FIELD_MSG = {
+        maxCash: 'Cash received can be up to ₱1,000,000.',
+        gcashRef: 'The GCash reference no. is exactly 13 digits.',
+    };
+
+    /** The message under a box ('' clears it). */
+    function setFieldError(input, message) {
+        const el = document.getElementById(input.id + 'Err');
+        if (el) el.textContent = message;
+        if (message) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
+    }
+
+    /** Amounts: digits and one point, at most 2 decimals; commas, letters and minus signs are dropped. */
+    function cleanAmount(value) {
+        const plain = value.replace(/[^0-9.]/g, '');
+        const dot = plain.indexOf('.');
+        if (dot === -1) return plain;
+        return plain.slice(0, dot + 1) + plain.slice(dot + 1).replace(/\./g, '').slice(0, 2);
+    }
+
+    document.querySelectorAll('#cartForm [data-money]').forEach(input => {
+        input.addEventListener('input', () => {
+            const clean = cleanAmount(input.value);
+            if (input.value !== clean) input.value = clean;
+            const isCash = input.name === 'cash_received';
+            setFieldError(input, isCash && (parseFloat(clean) || 0) > MAX_CASH ? FIELD_MSG.maxCash : '');
+        });
+    });
+    document.querySelectorAll('#cartForm [data-digits]').forEach(input => {
+        const max = parseInt(input.getAttribute('maxlength'), 10) || 20;
+        const exact = parseInt(input.dataset.exact, 10) || 0;
+        input.addEventListener('input', () => {
+            const clean = input.value.replace(/\D/g, '').slice(0, max);
+            if (input.value !== clean) input.value = clean;
+            // A message (the server's, or "13 digits" below) goes once the box is right or empty.
+            if (!exact || clean === '' || clean.length === exact) setFieldError(input, '');
+            syncCheckout();
+        });
+        if (exact) {
+            input.addEventListener('blur', () => {
+                if (input.value !== '' && input.value.length !== exact) { setFieldError(input, FIELD_MSG.gcashRef); syncCheckout(); }
+            });
+        }
+    });
 
     window.posStockLimit = line => {
         let el = document.getElementById('stockLimitMsg');
@@ -372,13 +493,13 @@ if (document.getElementById('posGrid')) {
         window.posStockLimitTimer = setTimeout(() => el.remove(), 3000);
     };
     window.posInc = id => { cart[id].capped = false; if (cart[id].qty < cart[id].stock) { cart[id].qty++; } else { window.posStockLimit(cart[id]); } renderCart(); };
+    window.posRemove = id => { cart[id].capped = false; cart[id].editing = false; delete cart[id].draft; cart[id].qty = 0; renderCart(); };
     window.posDec = id => { cart[id].capped = false; cart[id].editing = false; delete cart[id].draft; cart[id].qty = Math.max(0, cart[id].qty - 1); renderCart(); };
 
     document.getElementById('cashReceived').addEventListener('input', updateChange);
     document.getElementById('splitCashReceived').addEventListener('input', updateChange);
     document.getElementById('splitGcashAmount').addEventListener('input', () => {
-        const total = parseFloat(document.getElementById('cartTotal').textContent.replace(/[^0-9.]/g, '')) || 0;
-        updateSplitPanel(total);
+        updateSplitPanel(cartTotal);
         updateChange();
     });
 
@@ -393,7 +514,7 @@ if (document.getElementById('posGrid')) {
         btn.addEventListener('click', () => {
             const method = btn.dataset.method;
             document.getElementById('paymentMethod').value = method;
-            document.querySelectorAll('.pay-btn').forEach(b => b.classList.toggle('active', b === btn));
+            document.querySelectorAll('.pay-btn').forEach(b => { b.classList.toggle('active', b === btn); b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
             Object.entries(payPanels).forEach(([m, panelId]) => {
                 const panel = document.getElementById(panelId);
                 panel.style.display = m === method ? '' : 'none';
@@ -526,4 +647,8 @@ if (document.getElementById('posGrid')) {
 
     renderCart();
     cartReady = true; // from here on, every render is a change of the cart, and is saved
+    // The "Unlocked" toast (PosPinActions::unlock): if none of the kept items could come back (sold out
+    // meanwhile), it says just "Unlocked." while it is still showing.
+    const unlockedToast = document.querySelector('.app-toast[data-toast-key="pos-unlocked"] .toast-title');
+    if (unlockedToast && cartLineCount === 0) unlockedToast.textContent = 'Unlocked.';
 }

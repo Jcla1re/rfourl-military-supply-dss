@@ -44,6 +44,7 @@ class DemoSetup extends BaseCommand
         foreach ($logins as $l) {
             CLI::write(sprintf('  %-9s username: %-14s password: %s', $l['label'], $l['username'], $l['password']));
         }
+        CLI::write('  Checkout PIN (Owner and Staff): ' . DemoAccounts::pin());
 
         return EXIT_SUCCESS;
     }

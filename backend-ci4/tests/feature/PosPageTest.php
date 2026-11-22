@@ -95,8 +95,47 @@ final class PosPageTest extends CIUnitTestCase
         // (The page's HTML is re-serialized on output: viewBox is written lower-case, which
         // browsers read as viewBox inside SVG, and <path/> gets a closing tag.)
         foreach (ProductModel::CATEGORIES as $c) {
-            $this->assertMatchesRegularExpression('#<button type="button" data-cat="' . $c . '" aria-pressed="false"><svg class="pos-icon" width="16" height="16"[^>]*><path d="' . preg_quote(PosIcon::PATHS[$c], '#') . '"></path></svg>' . $c . '</button>#', $html);
+            $this->assertMatchesRegularExpression('#<button type="button" data-cat="' . $c . '" aria-pressed="false"><svg class="pos-icon" width="14" height="14"[^>]*><path d="' . preg_quote(PosIcon::PATHS[$c], '#') . '"></path></svg>' . $c . '</button>#', $html);
         }
+    }
+
+    /** @dataProvider roles */
+    public function testTheCategoryChipsStayOnOneLine(string $role): void
+    {
+        $html = $this->page($role);
+        $css  = str_replace("\r\n", "\n", file_get_contents(FCPATH . 'assets/css/pos.css'));
+
+        // The row sits in its fade wrapper; the chips' own markup is unchanged.
+        $this->assertMatchesRegularExpression('#<div class="pos-chips-wrap" id="posChipsWrap">\s*<div class="pos-chips" role="group" aria-label="Category">\s*<button type="button" class="active" data-cat="" aria-pressed="true">All Items</button>#', $html);
+        $this->assertStringContainsString('<script src="/assets/js/pos-chips.js" defer></script>', $html);
+
+        // Never wraps: one scrolling line, no visible scrollbar, chips that never shrink.
+        $this->assertStringContainsString(".pos-chips {\n    display: flex; flex-wrap: nowrap; gap: 6px; padding: 4px;\n    overflow-x: auto; overflow-y: hidden;", $css);
+        $this->assertStringContainsString('scrollbar-width: none;', $css);
+        $this->assertStringContainsString('.pos-chips::-webkit-scrollbar { display: none; }', $css);
+        $this->assertDoesNotMatchRegularExpression('/\.pos-chips \{[^}]*flex-wrap: wrap/', $css);
+        // The board's chip: 36px tall (easy to tap), 0 10px, 13px / 500, 6px icon gap; active and hover unchanged.
+        $this->assertStringContainsString("flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px; box-sizing: border-box;", $css);
+        $this->assertStringContainsString('font-size: 13px; font-weight: 500; white-space: nowrap;', $css);
+        $this->assertStringContainsString('.pos-chips button.active { background: #26331F; border-color: #26331F; color: #fff; }', $css);
+        $this->assertStringContainsString('.pos-chips button:hover:not(.active) { background: #F5F3EE; }', $css);
+        // Room for the focus ring inside the scroll area.
+        $this->assertStringContainsString('.pos-chips-wrap { position: relative; margin: -4px -4px 8px; }', $css);
+
+        // Fades: 32px, the toolbar colour, only when there is more to scroll that way.
+        $this->assertStringContainsString("content: \"\"; position: absolute; top: 0; bottom: 0; z-index: 1; width: 32px;\n    pointer-events: none; opacity: 0;", $css);
+        $this->assertStringContainsString('.pos-chips-wrap::before { left: 0; background: linear-gradient(to left, rgba(242, 240, 234, 0), #F2F0EA); }', $css);
+        $this->assertStringContainsString('.pos-chips-wrap::after { right: 0; background: linear-gradient(to right, rgba(242, 240, 234, 0), #F2F0EA); }', $css);
+        $this->assertStringContainsString(".pos-chips-wrap.is-scroll-left::before,\n.pos-chips-wrap.is-scroll-right::after { opacity: 1; }", $css);
+
+        $js = file_get_contents(FCPATH . 'assets/js/pos-chips.js');
+        foreach (["wrap.classList.toggle('is-scroll-left', row.scrollLeft > 1);", "wrap.classList.toggle('is-scroll-right', max - row.scrollLeft > 1);",
+            'new ResizeObserver(update).observe(row);', "chip.scrollIntoView({ block: 'nearest', inline: 'nearest' });", "row.addEventListener('focusin'", "row.addEventListener('click'"] as $needle) {
+            $this->assertStringContainsString($needle, $js);
+        }
+        // Filtering stays in pos.js.
+        $this->assertStringNotContainsString('filterCards', $js);
+        $this->assertStringContainsString("const chips = document.querySelectorAll('.pos-chips button');", file_get_contents(FCPATH . 'assets/js/pos.js'));
     }
 
     /** @dataProvider roles */
@@ -144,7 +183,7 @@ final class PosPageTest extends CIUnitTestCase
         $session = $role === 'admin' ? $this->asOwner() : $this->asStaff();
         $response = $session->post($role . '/sales/checkout', [
             'item_id' => ['0290'], 'quantity' => ['6'], 'payment_method' => 'Cash', 'cash_received' => '5000',
-        ]);
+        ] + \Tests\Support\PosPinFixture::field());
 
         $this->assertSame(site_url($role . '/sales'), $response->getRedirectUrl());
         $this->assertSame(['Not enough stock', 'Not enough stock for Tactical Pants · Size S (only 5 left). Nothing was saved.'], [$_SESSION['toast']['title'] ?? null, $_SESSION['toast']['message'] ?? null], 'The "Not enough stock" toast.');

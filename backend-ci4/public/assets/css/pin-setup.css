@@ -1,0 +1,65 @@
+/* public/assets/css/pin-setup.css
+ * The staff "Set up your checkout PIN" card (partials/_pin_setup.php) and the live PIN checklist
+ * (partials/_pin_checklist.php, also under the owner's PIN fields in My Profile).
+ */
+
+/* ---- Card ---- */
+.pin-card {
+    background: #fff; border: 1px solid #E3E0D7; border-radius: 14px; padding: 18px;
+    margin: 0 0 14px; box-sizing: border-box; min-width: 0;
+}
+.pin-card-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.pin-card-head:last-child { margin-bottom: 0; }
+a.pin-save { text-align: center; }
+.pin-card-icon {
+    flex: 0 0 38px; width: 38px; height: 38px; border-radius: 10px; background: #EAF1E3; color: #2F5A27;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 17px;
+}
+.pin-card-title { font-size: 15.5px; font-weight: 600; color: #1F2617; margin: 0 0 2px; line-height: 1.3; }
+.pin-card-sub { font-size: 12.5px; color: #5C6152; margin: 0; line-height: 1.4; }
+
+.pin-field { margin-bottom: 12px; min-width: 0; }
+.pin-field label { display: block; font-size: 13px; font-weight: 600; color: #1F2617; margin: 0 0 5px; }
+.pin-input {
+    display: block; width: 100%; height: 42px; box-sizing: border-box; padding: 0 10px 0 calc(10px + .6em);
+    border: 1px solid #ccc; border-radius: var(--radius-control, 8px); background: #fff;
+    font-size: 22px; letter-spacing: .6em; text-align: center; font-variant-numeric: tabular-nums;
+}
+.pin-input::placeholder { color: #B5B8AC; letter-spacing: .6em; }
+.pin-password {
+    display: block; width: 100%; height: 42px; box-sizing: border-box; padding: 0 11px;
+    border: 1px solid #ccc; border-radius: var(--radius-control, 8px); background: #fff; font-size: 14px;
+}
+.pin-input:focus, .pin-password:focus { outline: none; border-color: #71AA60; box-shadow: 0 0 0 3px rgba(113, 170, 96, .25); }
+.pin-input[aria-invalid="true"], .pin-password[aria-invalid="true"] { border-color: #B3261E; }
+.pin-hint { margin-top: 4px; font-size: 12px; color: #5C6152; }
+.pin-error { margin-top: 5px; font-size: 12.5px; color: #B3261E; }
+.pin-error-form { margin: 0 0 12px; }
+
+/* Save PIN: the POS main button size (44px, radius 10px, 14.5px / 600); colours stay the theme's. */
+.pin-card .pin-save {
+    --bs-btn-font-size: 14.5px; --bs-btn-font-weight: 600; --bs-btn-border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; width: 100%; height: 44px; margin-top: 4px;
+    padding-top: 0; padding-bottom: 0; line-height: 1.2;
+}
+/* A disabled Save PIN uses the app's one disabled look in every state (admin-theme.css). */
+.pin-card .pin-save { -webkit-tap-highlight-color: transparent; }
+
+/* ---- Live checklist ---- */
+.pin-checklist { list-style: none; margin: 2px 0 14px; padding: 0; display: grid; gap: 6px; }
+/* position: relative keeps each item's screen-reader-only state (.visually-hidden, absolute) inside
+   the item; otherwise it is placed relative to the page and can make the page taller than the window. */
+.pin-checklist li { position: relative; display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; line-height: 1.35; color: #77796F; min-width: 0; }
+.pin-check-text { min-width: 0; overflow-wrap: anywhere; }
+.pin-check-mark {
+    flex: 0 0 16px; width: 16px; height: 16px; margin-top: 1px; box-sizing: border-box;
+    /* Dashed until the rule is met or broken, so the list doesn't read as radio buttons. */
+    border: 1.5px dashed #C9CCBF; border-radius: 50%; background: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; line-height: 1;
+}
+.pin-checklist li.is-met { color: #2F5A27; }
+.pin-checklist li.is-met .pin-check-mark { background: #4E9A45; border-color: #4E9A45; border-style: solid; color: #fff; }
+.pin-checklist li.is-met .pin-check-mark::before { content: "\2713"; }
+.pin-checklist li.is-broken { color: #B3261E; }
+.pin-checklist li.is-broken .pin-check-mark { border-color: #B3261E; border-style: solid; color: #B3261E; }
+.pin-checklist li.is-broken .pin-check-mark::before { content: "\2715"; }

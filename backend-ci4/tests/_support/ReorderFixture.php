@@ -38,7 +38,7 @@ trait ReorderFixture
         $when = ['type' => 'DATETIME', 'null' => true];
         $real = ['type' => 'REAL', 'default' => 0];
 
-        $table('users', ['user_id' => $id, 'username' => $str, 'full_name' => $str, 'email' => $str, 'role' => $str, 'supplier_id' => $str, 'is_active' => ['type' => 'INTEGER', 'default' => 1], 'password_hash' => $str, 'last_login' => $when, 'deleted_at' => $when, 'must_change_password' => ['type' => 'INTEGER', 'default' => 0], 'is_demo' => ['type' => 'INTEGER', 'default' => 0], 'temporary_password' => $str], 'user_id');
+        $table('users', ['user_id' => $id, 'username' => $str, 'full_name' => $str, 'email' => $str, 'role' => $str, 'supplier_id' => $str, 'is_active' => ['type' => 'INTEGER', 'default' => 1], 'password_hash' => $str, 'last_login' => $when, 'deleted_at' => $when, 'must_change_password' => ['type' => 'INTEGER', 'default' => 0], 'is_demo' => ['type' => 'INTEGER', 'default' => 0], 'temporary_password' => $str] + PosPinFixture::forgeFields(), 'user_id');
         $table('suppliers', ['supplier_id' => ['type' => 'VARCHAR', 'constraint' => 10], 'company_name' => $str, 'contact_person' => $str, 'contact_email' => $str, 'contact_number' => $str, 'lead_time_days' => ['type' => 'INTEGER', 'default' => 7], 'payment_terms' => $str, 'is_sample' => ['type' => 'INTEGER', 'default' => 0], 'is_active' => ['type' => 'INTEGER', 'default' => 1]], 'supplier_id');
         $table('products', ['item_id' => ['type' => 'VARCHAR', 'constraint' => 15], 'product_code' => $str, 'supplier_id' => $str, 'supplier_min_qty' => $int, 'item_name' => $str, 'category' => $str, 'size' => $str, 'unit_cost' => $real, 'selling_price' => $real, 'current_stock' => ['type' => 'INTEGER', 'default' => 0], 'manual_rop_warning' => $int, 'rop_source' => $str, 'abc_category' => $str, 'is_active' => ['type' => 'INTEGER', 'default' => 1], 'created_at' => $when, 'updated_at' => $when], 'item_id');
         $table('stock_order', ['so_id' => ['type' => 'VARCHAR', 'constraint' => 15], 'supplier_id' => $str, 'user_id' => $int, 'priority' => $str, 'status' => $str, 'order_date' => $when, 'expected_delivery_date' => $when, 'actual_delivery_date' => $when, 'tracking_no' => $str, 'decline_reason' => $str, 'cancel_reason' => $str, 'cancelled_by' => $int, 'cancelled_at' => $when, 'po_number' => $str, 'so_number' => $str, 'dr_number' => $str, 'accepted_at' => $when, 'shipped_at' => $when, 'received_by' => $int, 'received_at' => $when], 'so_id');
@@ -60,11 +60,13 @@ trait ReorderFixture
             ['supplier_id' => 'SUP-002', 'company_name' => 'Quiapo Patches Co'],
         ]);
 
-        $this->db->table('users')->insert(['username' => 'owner1', 'full_name' => 'Owner One', 'role' => 'Admin', 'password_hash' => 'x']);
+        // The owner and staff have the fixture's checkout PIN (PosPinFixture::PIN), so test checkouts can post it.
+        $this->db->table('users')->insert(['username' => 'owner1', 'full_name' => 'Owner One', 'role' => 'Admin', 'password_hash' => 'x', 'pos_pin_hash' => PosPinFixture::hash()]);
         $this->ownerId = (int) $this->db->insertID();
-        $this->db->table('users')->insert(['username' => 'staff1', 'full_name' => 'Ana Cruz', 'role' => 'Staff', 'password_hash' => 'x']);
+        $this->db->table('users')->insert(['username' => 'staff1', 'full_name' => 'Ana Cruz', 'role' => 'Staff', 'password_hash' => 'x', 'pos_pin_hash' => PosPinFixture::hash()]);
         $this->staffId = (int) $this->db->insertID();
         $this->db->table('users')->insert(['username' => 'tgi', 'full_name' => 'Tactical Gear', 'role' => 'Supplier', 'supplier_id' => 'SUP-001', 'email' => 'supplier@example.test', 'password_hash' => 'x']);
+        PosPinFixture::clearLocks(); // no checkout-PIN lock left over from another test
 
         Services::injectMock('email', new class () {
             public function __call(string $name, array $args)

@@ -45,6 +45,10 @@
       "value": "Test1234"
     },
     {
+      "key": "posPin",
+      "value": "4826"
+    },
+    {
       "key": "staffUser",
       "value": "staff1"
     },
@@ -541,6 +545,11 @@
                   "type": "text"
                 },
                 {
+                  "key": "pos_pin",
+                  "value": "{{posPin}}",
+                  "type": "text"
+                },
+                {
                   "key": "item_id[]",
                   "value": "{{itemIdA}}",
                   "type": "text"
@@ -648,6 +657,11 @@
                 {
                   "key": "csrf_test_name",
                   "value": "{{csrf}}",
+                  "type": "text"
+                },
+                {
+                  "key": "pos_pin",
+                  "value": "{{posPin}}",
                   "type": "text"
                 },
                 {

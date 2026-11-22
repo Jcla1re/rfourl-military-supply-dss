@@ -15,7 +15,7 @@ class DemoGuard
     public const MESSAGE = 'Disabled in the demo version.';
 
     /** User columns a demo account may not change (login-time columns like last_login stay writable). */
-    public const PROTECTED_FIELDS = ['username', 'email', 'full_name', 'password_hash', 'role', 'is_active', 'deleted_at'];
+    public const PROTECTED_FIELDS = ['username', 'email', 'full_name', 'password_hash', 'role', 'is_active', 'deleted_at', 'pos_pin_hash'];
 
     private static int $bypass = 0;
 

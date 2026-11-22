@@ -36,7 +36,7 @@ $username    = (string) (session()->getFlashdata('login_username') ?? old('usern
                     <div class="field-group">
                         <label for="loginPassword">Password</label>
                         <div class="input-icon-wrap">
-                            <i class="bi bi-lock" aria-hidden="true"></i>
+                            <i aria-hidden="true"><?= view('partials/_lock_icon', ['lockIconSize' => 16, 'lockIconStroke' => 1.5], ['saveData' => false]) ?></i>
                             <input type="password" id="loginPassword" name="password" placeholder="Enter your password" autocomplete="current-password" required<?= $username !== '' ? ' autofocus' : '' ?>>
                             <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" tabindex="-1"><i class="bi bi-eye"></i></button>
                         </div>

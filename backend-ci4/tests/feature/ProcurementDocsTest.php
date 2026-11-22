@@ -520,7 +520,7 @@ final class ProcurementDocsTest extends CIUnitTestCase
     {
         $session = $role === 'admin' ? $this->asOwner() : $this->asStaff();
 
-        return $session->post($role . '/sales/checkout', $extra + ['item_id' => ['0290'], 'quantity' => ['1'], 'payment_method' => 'Cash', 'cash_received' => '5000']);
+        return $session->post($role . '/sales/checkout', $extra + ['item_id' => ['0290'], 'quantity' => ['1'], 'payment_method' => 'Cash', 'cash_received' => '5000'] + \Tests\Support\PosPinFixture::field());
     }
 
     /** @return array<string, array{0:string}> */
@@ -538,20 +538,22 @@ final class ProcurementDocsTest extends CIUnitTestCase
         $input = $x->query('//form[@id="cartForm"]//input[@name="or_number"]');
         $this->assertSame(1, $input->length);
         $this->assertFalse($input->item(0)->hasAttribute('required'), 'Optional');
-        $this->assertStringContainsString("Official receipt / invoice no.", $x->query('//label[@for="orNumber"]')->item(0)->textContent);
-        $this->assertStringContainsString('BIR booklet', $x->query('//label[@for="orNumber"]')->item(0)->textContent);
+        $this->assertStringContainsString('Official receipt no. (optional)', $x->query('//label[@for="orNumber"]')->item(0)->textContent);
+        $this->assertStringContainsString("From the store's BIR booklet.", $x->query('//div[@id="orNumberHint"]')->item(0)->textContent);
+        // Digits only, up to 20 (pos.js drops anything else as it is typed; the server checks again).
+        $this->assertSame(['numeric', '20', '\d{1,20}'], [$input->item(0)->getAttribute('inputmode'), $input->item(0)->getAttribute('maxlength'), $input->item(0)->getAttribute('pattern')]);
     }
 
     /** @dataProvider roles */
     public function testTheOrNumberIsSavedWithTheSale(string $role): void
     {
-        $result = $this->checkout($role, ['or_number' => '  A-001234 ']);
+        $result = $this->checkout($role, ['or_number' => '  0001234 ']);
 
         $result->assertRedirectTo(site_url($role . '/sales'));
         $sale = $this->db->table('sales_transaction')->get()->getRowArray();
-        $this->assertSame('A-001234', $sale['or_number'], 'Trimmed and saved.');
+        $this->assertSame('0001234', $sale['or_number'], 'Trimmed and saved as text: leading zeros kept.');
         $this->assertSame('1001', $sale['receipt_no'], "The system's own receipt number is separate.");
-        $this->assertSame('A-001234', $_SESSION['receipt']['or_number'] ?? null);
+        $this->assertSame('0001234', $_SESSION['receipt']['or_number'] ?? null);
     }
 
     /** @dataProvider roles */
@@ -561,9 +563,15 @@ final class ProcurementDocsTest extends CIUnitTestCase
         $this->assertNull($this->db->table('sales_transaction')->get()->getRowArray()['or_number']);
 
         $this->checkout($role, ['or_number' => '<script>alert(1)</script>']);
-        $this->assertStringContainsString('Official receipt / invoice no.', (string) ($_SESSION['error'] ?? ''));
-        $this->checkout($role, ['or_number' => str_repeat('1', 31)]);
-        $this->assertStringContainsString('up to 30 characters', (string) ($_SESSION['error'] ?? ''));
+        $this->assertSame('Use numbers only (up to 20 digits).', (string) ($_SESSION['error'] ?? ''));
+        $this->assertSame(['field' => 'or_number', 'message' => 'Use numbers only (up to 20 digits).'], $_SESSION['pos_field_error'] ?? null, 'Shown under the OR box.');
+        foreach (['A-001234', '12 34', '-1', str_repeat('1', 21)] as $bad) {
+            $this->checkout($role, ['or_number' => $bad]);
+            $this->assertSame('Use numbers only (up to 20 digits).', (string) ($_SESSION['error'] ?? ''), $bad);
+        }
+        $this->checkout($role, ['or_number' => str_repeat('9', 20)]);
+        $this->assertSame(str_repeat('9', 20), $this->db->table('sales_transaction')->orderBy('sales_id', 'DESC')->get()->getRowArray()['or_number'], '20 digits is fine.');
+        $this->db->table('sales_transaction')->where('or_number', str_repeat('9', 20))->delete();
         $this->assertSame(1, $this->db->table('sales_transaction')->countAllResults(), 'Nothing was sold by the refused checkouts.');
     }
 
@@ -609,12 +617,12 @@ final class ProcurementDocsTest extends CIUnitTestCase
     /** @dataProvider roles */
     public function testTheReceiptsTabCarriesTheOrNumberForReprinting(string $role): void
     {
-        $this->checkout($role, ['or_number' => 'A-001234']);
+        $this->checkout($role, ['or_number' => '0001234']);
         $html = (string) ($role === 'admin' ? $this->asOwner() : $this->asStaff())->get($role . '/sales?tab=receipts')->response()->getBody();
         $x    = $this->html($html);
 
         $link = $x->query('//a[contains(@class,"view-receipt-link")]')->item(0);
-        $this->assertSame('A-001234', json_decode($link->getAttribute('data-receipt'), true)['or_number']);
+        $this->assertSame('0001234', json_decode($link->getAttribute('data-receipt'), true)['or_number']);
         $this->assertNotNull($x->query('//*[@id="hrOrNo"]')->item(0), 'The reprint dialog has the OR line.');
         $this->assertStringContainsString('SALES RECEIPT', $html);
     }

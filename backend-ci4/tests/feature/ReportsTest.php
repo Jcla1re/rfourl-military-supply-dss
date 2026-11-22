@@ -527,13 +527,13 @@ final class ReportsTest extends CIUnitTestCase
     /** @dataProvider posRoles */
     public function testAUsedOrNumberIsOnlyAWarningTheSaleStillGoesThrough(string $role): void
     {
-        $this->db->table('sales_transaction')->insert(['receipt_no' => '1733', 'or_number' => 'Z-9', 'user_id' => $this->staffId, 'sale_date' => '2026-12-03 10:00:00', 'payment_method' => 'Cash', 'cash_amount' => 100, 'subtotal' => 100, 'total_amount' => 100]);
+        $this->db->table('sales_transaction')->insert(['receipt_no' => '1733', 'or_number' => '909', 'user_id' => $this->staffId, 'sale_date' => '2026-12-03 10:00:00', 'payment_method' => 'Cash', 'cash_amount' => 100, 'subtotal' => 100, 'total_amount' => 100]);
         $this->db->table('products')->where('item_id', 'P-1')->update(['selling_price' => 100]);
         $session = $role === 'admin' ? $this->asOwner() : $this->asStaff();
 
-        $session->post($role . '/sales/checkout', ['item_id' => ['P-1'], 'quantity' => ['1'], 'payment_method' => 'Cash', 'cash_received' => '500', 'or_number' => 'Z-9']);
+        $session->post($role . '/sales/checkout', ['item_id' => ['P-1'], 'quantity' => ['1'], 'payment_method' => 'Cash', 'cash_received' => '500', 'or_number' => '909'] + \Tests\Support\PosPinFixture::field());
 
-        $this->assertSame(2, $this->db->table('sales_transaction')->where('or_number', 'Z-9')->countAllResults(), 'The new sale was saved with the repeated number.');
+        $this->assertSame(2, $this->db->table('sales_transaction')->where('or_number', '909')->countAllResults(), 'The new sale was saved with the repeated number.');
         $this->assertArrayNotHasKey('error', $_SESSION, 'No refusal.');
         $this->assertSame(9, (int) $this->db->table('products')->where('item_id', 'P-1')->get()->getRow()->current_stock, 'Stock was taken as usual.');
     }

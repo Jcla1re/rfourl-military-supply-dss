@@ -208,7 +208,7 @@ a.dash-stat:hover { box-shadow: 0 2px 8px rgba(31, 38, 23, .08); cursor: pointer
                 <h6>Quick Actions</h6>
                 <div class="qa-grid">
                     <a href="<?= site_url('staff/log-transaction') ?>" class="qa-btn primary"><i class="bi bi-plus-circle"></i> Log New Transaction</a>
-                    <a href="<?= site_url('staff/sales') ?>" class="qa-btn outline"><i class="bi bi-cart3"></i> POS &amp; Sales</a>
+                    <a href="<?= site_url('staff/sales') ?>" class="qa-btn outline"><i class="bi bi-cart3"></i> Point of Sale</a>
                     <a href="<?= site_url('staff/inventory') ?>" class="qa-btn outline"><i class="bi bi-box-seam"></i> Check Inventory</a>
                     <a href="<?= site_url('staff/reorder-alerts') ?>" class="qa-btn outline"><i class="bi bi-bell"></i> Reorder Alerts</a>
                 </div>

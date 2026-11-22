@@ -6,6 +6,8 @@ $account      = $account ?? [];
 $error        = $error ?? null;
 $notice       = $notice ?? null;
 $pendingEmail = $pendingEmail ?? null;
+$pinError     = $pinError ?? null;
+$hasPin       = ! empty($account['pos_pin_hash']);
 $suggestion   = session()->getFlashdata('password_suggestion');
 $dash    = '—';
 ?>
@@ -27,6 +29,7 @@ $dash    = '—';
 .acct-stack { display: flex; flex-direction: column; gap: 16px; }
 .acct-hint { margin: 4px 0 0; font-size: 12px; color: #5C6152; }
 .acct-use { margin-left: 8px; }
+#acctPinCard .pin-card { margin: 0; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
 </style>
 
 <div class="page-wrap">
@@ -77,6 +80,7 @@ $dash    = '—';
                 <h5 class="acct-title">Edit Profile</h5>
                 <form method="post" action="<?= site_url('staff/account/profile') ?>">
                     <?= csrf_field() ?>
+                    <?= view('partials/_username_hint', ['username' => $account['username'] ?? ''], ['saveData' => false]) ?>
                     <div class="acct-field">
                         <label for="acctName">Full Name</label>
                         <input id="acctName" name="full_name" maxlength="100" value="<?= esc($account['full_name'] ?? '', 'attr') ?>" required>
@@ -102,11 +106,13 @@ $dash    = '—';
         </div>
 
         <div class="col-lg-6">
+          <div class="acct-stack">
             <div class="acct-card">
                 <h5 class="acct-title">Change Password</h5>
                 <p class="acct-note" style="margin:-8px 0 16px;">For security, the owner is notified whenever you change your password.</p>
                 <form method="post" action="<?= site_url('staff/account/password') ?>">
                     <?= csrf_field() ?>
+                    <?= view('partials/_username_hint', ['username' => $account['username'] ?? ''], ['saveData' => false]) ?>
                     <div class="acct-field">
                         <label for="acctCurrent">Current Password</label>
                         <input id="acctCurrent" name="current_password" type="password" required autocomplete="current-password">
@@ -122,6 +128,24 @@ $dash    = '—';
                     <div class="acct-actions"><button type="submit" class="btn btn-success acct-save"<?= demo_lock_attr($account ?? null) ?>>Change Password</button></div>
                 </form>
             </div>
+
+            <?php // The checkout PIN (App\Libraries\PosPin, AccountController::setPin): the same card as on the Point of Sale page. ?>
+            <div id="acctPinCard">
+                <?= view('partials/_pin_setup', [
+                    'pinAction'     => site_url('staff/account/pin'),
+                    'pinPrefix'     => 'acct',
+                    'pinTitle'      => $hasPin ? 'Change your checkout PIN' : 'Set up your checkout PIN',
+                    'pinSub'        => $hasPin
+                        ? "You'll type it at every checkout. Only you should know it."
+                        : (! empty($account['pos_pin_reset_at']) ? 'The owner reset your PIN. Set a new one before your next sale.' : null),
+                    'pinError'      => $pinError,
+                    'pinErrorField' => $pinErrorField ?? null,
+                    'pinUsername'   => $account['username'] ?? null,
+                    'pinPhone'      => $account['phone'] ?? null,
+                    'pinLocked'     => \App\Libraries\DemoGuard::locksUser($account ?? null),
+                ], ['saveData' => false]) ?>
+            </div>
+          </div>
         </div>
     </div>
 </div>

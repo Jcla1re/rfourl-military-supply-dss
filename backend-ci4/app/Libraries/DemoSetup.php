@@ -14,6 +14,18 @@ class DemoSetup
 {
     public const SUPPLIER_ID = 'SUP-001';
 
+    /**
+     * The demo owner's and staff's checkout PIN (App\Libraries\PosPin), shown with the demo logins.
+     * It passes the weak-PIN rules (tests/unit/PosPinPolicyTest.php); DEMO_POS_PIN in .env can replace it.
+     */
+    public const DEMO_PIN = '4826';
+
+    /** The checkout PIN the demo accounts get: DEMO_POS_PIN, else DEMO_PIN. */
+    public static function pin(): string
+    {
+        return demo_setting('POS_PIN', self::DEMO_PIN);
+    }
+
     /** [username, role, label, env key, full name, email tag] */
     private const ACCOUNTS = [
         ['demo_owner',    'Admin',    'Owner',    'OWNER_PASSWORD',    'Demo Owner',    'owner'],
@@ -39,6 +51,10 @@ class DemoSetup
                 throw new \RuntimeException("DEMO_{$key} is not set in .env.");
             }
             $passwords[$key] = $value;
+        }
+
+        if ($weak = PosPin::weakReason(self::pin())) {
+            throw new \RuntimeException('DEMO_POS_PIN is not allowed: ' . $weak);
         }
 
         if (! $db->table('suppliers')->where('supplier_id', self::SUPPLIER_ID)->countAllResults()) {
@@ -106,6 +122,11 @@ class DemoSetup
                 'reset_otp_hash'           => null,
                 'reset_otp_expires'        => null,
             ];
+            // The demo owner and staff can check out with the known PIN (the supplier has no POS).
+            // Only once the AddPosPinToUsers migration has run.
+            if ($role !== 'Supplier' && PosPin::ready()) {
+                $row += PosPin::columnsFor(self::pin());
+            }
 
             // The data is ours, so the form rules (e.g. is_unique on the username being updated) are skipped,
             // and a failed write must stop setup rather than leave an account half-prepared.

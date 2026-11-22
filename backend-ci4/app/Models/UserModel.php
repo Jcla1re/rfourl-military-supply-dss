@@ -33,6 +33,9 @@ class UserModel extends Model
         'temp_password_expires_at',
         'deleted_at',
         'is_demo',
+        'pos_pin_hash',
+        'pos_pin_set_at',
+        'pos_pin_reset_at',
     ];
 
     // Demo-mode backstop: see DemoGuard. Does nothing unless DEMO_MODE is true.
