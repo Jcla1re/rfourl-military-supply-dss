@@ -37,7 +37,8 @@ class SupplierController extends BaseController
             $builder = $builder->like('company_name', $search);
         }
 
-        $suppliers = $builder->orderBy('company_name', 'ASC')->findAll();
+        // Real suppliers first, then the sample ones (each by name).
+        $suppliers = $builder->orderBy('is_sample', 'ASC')->orderBy('company_name', 'ASC')->findAll();
 
         $stockOrderModel = new StockOrderModel();
 
@@ -60,6 +61,9 @@ class SupplierController extends BaseController
         // Summary cards: the same on both tabs and with any search (not the listed suppliers).
         $activeCount   = $this->supplierModel->real()->where('is_active', 1)->countAllResults();
         $archivedCount = $this->supplierModel->real()->where('is_active', 0)->countAllResults();
+        // The tabs also say how many sample suppliers they list, so their counts match the cards below them.
+        $activeSampleCount   = $this->supplierModel->where('is_sample', 1)->where('is_active', 1)->countAllResults();
+        $archivedSampleCount = $this->supplierModel->where('is_sample', 1)->where('is_active', 0)->countAllResults();
         $avgRow        = $this->supplierModel->real()->selectAvg('lead_time_days', 'avg_lead')->where('is_active', 1)->get()->getRowArray();
         $avgLeadTime   = $activeCount > 0 ? round((float) ($avgRow['avg_lead'] ?? 0), 1) : 0;
 
@@ -75,6 +79,8 @@ class SupplierController extends BaseController
             'status'         => $status,
             'activeCount'    => $activeCount,
             'archivedCount'  => $archivedCount,
+            'activeSampleCount'   => $activeSampleCount,
+            'archivedSampleCount' => $archivedSampleCount,
             'success'       => session()->getFlashdata('success'),
             'error'         => session()->getFlashdata('error'),
         ];

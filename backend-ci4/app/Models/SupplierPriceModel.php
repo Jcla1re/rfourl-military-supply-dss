@@ -30,6 +30,33 @@ class SupplierPriceModel extends Model
     ];
 
     /**
+     * One supplier's price-list offers (the sample suppliers' detail): item, size, the main supplier's cost for
+     * comparison, this offer's price, its delivery days (its own, else the supplier's) and minimum.
+     *
+     * @return list<array{item_id: string, item_name: string, size: string, main_cost: float, unit_price: float, lead_time_days: int, min_order_qty: int|null}>
+     */
+    public function offersBySupplier(string $supplierId): array
+    {
+        $rows = $this->select('supplier_prices.*, products.item_name, products.size, products.unit_cost AS main_cost, suppliers.lead_time_days AS supplier_lead_time')
+            ->join('suppliers', 'suppliers.supplier_id = supplier_prices.supplier_id')
+            ->join('products', 'products.item_id = supplier_prices.item_id')
+            ->where('supplier_prices.supplier_id', $supplierId)
+            ->orderBy('products.item_name', 'ASC')
+            ->orderBy('products.size', 'ASC')
+            ->findAll();
+
+        return array_map(static fn ($r) => [
+            'item_id'        => (string) $r['item_id'],
+            'item_name'      => (string) $r['item_name'],
+            'size'           => (string) ($r['size'] ?? ''),
+            'main_cost'      => (float) $r['main_cost'],
+            'unit_price'     => (float) $r['unit_price'],
+            'lead_time_days' => $r['lead_time_days'] !== null ? (int) $r['lead_time_days'] : (int) $r['supplier_lead_time'],
+            'min_order_qty'  => $r['min_order_qty'] !== null ? (int) $r['min_order_qty'] : null,
+        ], $rows);
+    }
+
+    /**
      * Every offer for one item: the main supplier's first (its cost, its lead time and the item's supplier
      * minimum, from products and suppliers), then the price-list offers, cheapest first.
      *

@@ -7,6 +7,7 @@ use App\Libraries\DssRunner;
 use App\Libraries\ProcurementComparison;
 use App\Libraries\ProcurementReport;
 use App\Libraries\ReorderBoard;
+use App\Libraries\SupplierProcurement;
 use App\Libraries\Toast;
 use App\Models\DssParameterModel;
 use App\Models\ProductModel;
@@ -57,8 +58,12 @@ class ReorderAlertController extends BaseController
         $filters = ProcurementReport::filters($this->request->getGet() ?? []);
         $dss     = $this->dssParameterModel->current();
 
-        if ($this->isComparisonTab()) {
+        $tab = $this->pageTab();
+        if ($tab === 'comparison') {
             return $this->comparison($filters, $dss);
+        }
+        if ($tab === 'suppliers') {
+            return $this->suppliersTab($dss);
         }
         $rows    = ProcurementReport::rows($filters, $dss);
 
@@ -96,6 +101,58 @@ class ReorderAlertController extends BaseController
     private function isComparisonTab(): bool
     {
         return $this->request->getGet('tab') === 'comparison';
+    }
+
+    private function isSuppliersTab(): bool
+    {
+        return $this->request->getGet('tab') === 'suppliers';
+    }
+
+    /**
+     * Which tab the page opens: ?tab=suppliers | items | comparison. With no tab it is Suppliers, unless the URL
+     * carries Items parameters (search, class, status, page, per_page): an old Items link still opens Items.
+     * (The PDF and CSV exports are separate routes: with no tab they export Items, as they always did.)
+     */
+    private function pageTab(): string
+    {
+        $tab = (string) $this->request->getGet('tab');
+        if (in_array($tab, ['suppliers', 'items', 'comparison'], true)) {
+            return $tab;
+        }
+        foreach (['search', 'class', 'status', 'page', 'per_page'] as $itemsParam) {
+            if ($this->request->getGet($itemsParam) !== null) {
+                return 'items';
+            }
+        }
+
+        return 'suppliers';
+    }
+
+    /**
+     * The Suppliers tab: one row per active supplier, with a supplier's detail (?supplier=ID, ?needs=1 for "needs
+     * action only") and the weekly / monthly report of real orders (?period=weekly|monthly&date=YYYY-MM-DD).
+     */
+    private function suppliersTab(array $dss)
+    {
+        $period     = SupplierProcurement::period($this->request->getGet('period'), $this->request->getGet('date'));
+        $sizes      = ProcurementReport::rows(ProcurementReport::filters([]), $dss);
+        $supplierId = (string) $this->request->getGet('supplier');
+        $detail     = $supplierId !== '' ? SupplierProcurement::detail($supplierId, $this->request->getGet('needs') === '1', $dss, $sizes) : null;
+        $filters    = ProcurementReport::filters([]);
+
+        return view('admin/procurement_report', $filters + [
+            'title'         => 'Procurement Report',
+            'active'        => 'procurement_report',
+            'tab'           => 'suppliers',
+            'detail'        => $detail,
+            'supplierRows'  => $detail === null ? SupplierProcurement::suppliers($dss, $sizes) : [],
+            'period'        => $period,
+            'periodReport'  => $detail === null ? SupplierProcurement::report($period) : null,
+            'lastRunAt'     => (new DssRunner())->lastRunAt(),
+            'activeFilters' => 0,
+            // The exports on this tab are the weekly / monthly supplier report.
+            'exportQuery'   => ['tab' => 'suppliers', 'period' => $period['type'], 'date' => $period['anchor']],
+        ]);
     }
 
     /** The Cost comparison tab: the owner's usual order quantity against the system's Order Qty, per size with sales. */
@@ -144,6 +201,21 @@ class ReorderAlertController extends BaseController
         $dompdf = new \Dompdf\Dompdf($options);
         $dompdf->setPaper('a4', 'landscape');
 
+        if ($this->isSuppliersTab()) {
+            $period = SupplierProcurement::period($this->request->getGet('period'), $this->request->getGet('date'));
+            $dompdf->loadHtml(view('reports/procurement_suppliers_pdf', [
+                'period'      => $period,
+                'report'      => SupplierProcurement::report($period),
+                'generatedAt' => date('M j, Y g:i A'),
+            ]));
+            $dompdf->render();
+
+            return $this->response
+                ->setHeader('Content-Type', 'application/pdf')
+                ->setHeader('Content-Disposition', 'attachment; filename="supplier-report-' . $period['type'] . '-' . $period['from'] . '.pdf"')
+                ->setBody($dompdf->output());
+        }
+
         if ($this->isComparisonTab()) {
             $rows = ProcurementComparison::rows($filters, $dss);
             $dompdf->loadHtml(view('reports/procurement_comparison_pdf', [
@@ -181,6 +253,15 @@ class ReorderAlertController extends BaseController
     {
         $filters = ProcurementReport::filters($this->request->getGet() ?? []);
         $dss     = $this->dssParameterModel->current();
+
+        if ($this->isSuppliersTab()) {
+            $period = SupplierProcurement::period($this->request->getGet('period'), $this->request->getGet('date'));
+
+            return $this->response
+                ->setHeader('Content-Type', 'text/csv; charset=utf-8')
+                ->setHeader('Content-Disposition', 'attachment; filename="supplier-report-' . $period['type'] . '-' . $period['from'] . '.csv"')
+                ->setBody(SupplierProcurement::csv($period, SupplierProcurement::report($period)));
+        }
 
         if ($this->isComparisonTab()) {
             return $this->response

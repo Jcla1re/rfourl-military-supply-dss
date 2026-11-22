@@ -186,7 +186,7 @@ final class SizeOrderPagesTest extends CIUnitTestCase
 
         $this->assertSame($expected, $ids('admin/procurement-report?per_page=25'));
         // Sorted before the page is cut: page 2 of 10 continues the same order.
-        $this->assertSame(array_slice($expected, 0, 10), $ids('admin/procurement-report'));
+        $this->assertSame(array_slice($expected, 0, 10), $ids('admin/procurement-report?tab=items'));
         $this->assertSame(array_slice($expected, 10), $ids('admin/procurement-report?page=2'));
     }
 }
