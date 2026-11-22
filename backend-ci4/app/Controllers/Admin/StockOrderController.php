@@ -134,7 +134,7 @@ class StockOrderController extends BaseController
         // The shared purchase order dialog in "empty start" mode: the owner picks a supplier,
         // then adds that supplier's items. Each item's line is built like on Inventory and
         // Reorder Alerts (App\Libraries\PurchaseOrderLine), grouped by supplier_id.
-        $suppliers = $this->supplierModel->where('is_active', 1)->findAll();
+        $suppliers = $this->supplierModel->real()->where('is_active', 1)->findAll(); // no sample suppliers in the order dialog
         $catalog   = $this->orderCatalog();
 
         // "Reorder" on a cancelled order opens that dialog with the same supplier, items,
@@ -459,6 +459,9 @@ class StockOrderController extends BaseController
         }
 
         $orderSupplier = $this->supplierModel->find($supplierId);
+        if ($orderSupplier && ! empty($orderSupplier['is_sample'])) {
+            return $fail('Sample suppliers are only for price comparison. Choose a real supplier.');
+        }
         if (! $orderSupplier || ! $orderSupplier['is_active']) {
             return $fail('This supplier is archived. Restore it before sending an order.');
         }

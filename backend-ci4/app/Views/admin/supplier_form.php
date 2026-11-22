@@ -9,6 +9,7 @@ $action = $isEdit ? site_url('admin/suppliers/update/' . $supplier['supplier_id'
 ?>
 
 <style>
+.sf-sample-note { background: #FFF1CC; border: 1px solid #EAD58A; border-radius: var(--radius-control); padding: 12px 16px; margin-bottom: 16px; color: #5C4500; }
 .sf-page { padding: 24px; background: var(--content-bg); min-height: calc(100vh - 88px); }
 .sf-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .sf-back { background: #fff; border: 1px solid #ccc; border-radius: var(--radius-control); padding: 10px 18px; text-decoration: none; color: #1c1c1c; font-weight: 600; }
@@ -42,6 +43,10 @@ $action = $isEdit ? site_url('admin/suppliers/update/' . $supplier['supplier_id'
 
     <form method="post" action="<?= $action ?>">
         <?= csrf_field() ?>
+
+        <?php if (! empty($supplier['is_sample'])): ?>
+            <div class="sf-sample-note" role="note"><strong>Sample supplier.</strong> Its prices are only for comparison. You can edit its details and terms or archive it, but it can never be an item's main supplier or receive an order.</div>
+        <?php endif; ?>
 
         <div class="sf-section">
             <span class="sf-section-title">Business Information</span>

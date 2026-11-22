@@ -58,9 +58,9 @@ class SupplierController extends BaseController
         $pendingOrders   = $stockOrderModel->whereNotIn('status', ['Delivered', 'Cancelled'])->countAllResults();
 
         // Summary cards: the same on both tabs and with any search (not the listed suppliers).
-        $activeCount   = $this->supplierModel->where('is_active', 1)->countAllResults();
-        $archivedCount = $this->supplierModel->where('is_active', 0)->countAllResults();
-        $avgRow        = $this->supplierModel->selectAvg('lead_time_days', 'avg_lead')->where('is_active', 1)->get()->getRowArray();
+        $activeCount   = $this->supplierModel->real()->where('is_active', 1)->countAllResults();
+        $archivedCount = $this->supplierModel->real()->where('is_active', 0)->countAllResults();
+        $avgRow        = $this->supplierModel->real()->selectAvg('lead_time_days', 'avg_lead')->where('is_active', 1)->get()->getRowArray();
         $avgLeadTime   = $activeCount > 0 ? round((float) ($avgRow['avg_lead'] ?? 0), 1) : 0;
 
         $data = [
@@ -117,7 +117,7 @@ class SupplierController extends BaseController
     public function store()
     {
         $rules = [
-            'payment_terms' => 'permit_empty|in_list[Cash,Check,Other]',
+            'payment_terms' => 'permit_empty|in_list[' . implode(',', \App\Models\SupplierModel::PAYMENT_TERMS) . ']',
             'company_name'   => 'required|max_length[100]',
             'lead_time_days' => 'required|integer|greater_than_equal_to[1]',
             'contact_email'  => 'permit_empty|valid_email',
@@ -195,7 +195,7 @@ class SupplierController extends BaseController
         }
 
         $rules = [
-            'payment_terms' => 'permit_empty|in_list[Cash,Check,Other]',
+            'payment_terms' => 'permit_empty|in_list[' . implode(',', \App\Models\SupplierModel::PAYMENT_TERMS) . ']',
             'company_name'   => 'required|max_length[100]',
             'lead_time_days' => 'required|integer|greater_than_equal_to[1]',
             'contact_email'  => 'permit_empty|valid_email',

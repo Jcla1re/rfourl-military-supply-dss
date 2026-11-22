@@ -653,7 +653,7 @@ final class ProcurementOptimizationTest extends CIUnitTestCase
 
     public function testThePaymentTermsChoices(): void
     {
-        $this->assertSame(['Cash', 'Check', 'Other'], \App\Models\SupplierModel::PAYMENT_TERMS);
+        $this->assertSame(['Cash', 'Check', 'Cash or Check', 'Other'], \App\Models\SupplierModel::PAYMENT_TERMS, 'The three original options still work; Cash or Check is the fourth.');
         $this->assertStringContainsString("'payment_terms' => ['type' => 'VARCHAR', 'constraint' => 30, 'null' => true", file_get_contents(APPPATH . 'Database/Migrations/2026-11-18-100200_AddPaymentTermsToSuppliers.php'));
         $this->assertStringContainsString("'default' => null", file_get_contents(APPPATH . 'Database/Migrations/2026-11-18-100000_AddSupplierMinQtyToProducts.php'), 'Blank = no supplier minimum.');
     }
@@ -668,6 +668,6 @@ final class ProcurementOptimizationTest extends CIUnitTestCase
         $this->assertStringContainsString('Payment terms (optional)', $form);
         $this->assertStringContainsString('SupplierModel::PAYMENT_TERMS', $form);
         $this->assertStringContainsString('Terms</span>', $card);
-        $this->assertSame(2, substr_count($ctrl, "'payment_terms' => 'permit_empty|in_list[Cash,Check,Other]',"), 'Checked on Add and on Edit.');
+        $this->assertSame(2, substr_count($ctrl, "'payment_terms' => 'permit_empty|in_list[' . implode(',', \App\Models\SupplierModel::PAYMENT_TERMS) . ']',"), 'Checked on Add and on Edit, against the one list.');
     }
 }

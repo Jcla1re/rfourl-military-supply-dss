@@ -38,7 +38,7 @@ class ReorderAlertController extends BaseController
             'title'     => 'Reorder Alerts',
             'active'    => 'reorder_alerts',
             'role'      => 'admin',
-            'suppliers' => $this->supplierModel->where('is_active', 1)->findAll(),
+            'suppliers' => $this->supplierModel->real()->where('is_active', 1)->findAll(), // the order dialog: no sample suppliers
             'success'   => session()->getFlashdata('success'),
             'error'     => session()->getFlashdata('error'),
         ];

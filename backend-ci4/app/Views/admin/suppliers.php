@@ -46,6 +46,7 @@ $formatPhone = static function (?string $phone): string {
 .sup-card-top .cat { color: #666; font-size: 13px; }
 .sup-badge { margin-left: auto; background: #e9e7e1; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 600; }
 .sup-badge.portal { background: var(--green-bg); color: var(--green-text); }
+.sup-sample { display: inline-block; margin-left: 8px; padding: 2px 9px; border-radius: var(--radius-pill); background: #FFF1CC; color: #7A5A00; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; vertical-align: middle; }
 .sup-card-foot { display: flex; gap: 32px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #eee; font-size: 14px; }
 .sup-card-foot span { display: block; color: #888; font-size: 12px; }
 
@@ -113,7 +114,7 @@ $formatPhone = static function (?string $phone): string {
                     <div class="sup-card-top">
                         <div class="sup-thumb placeholder"><i class="bi bi-truck"></i></div>
                         <div>
-                            <div class="name"><?= esc($s['company_name']) ?></div>
+                            <div class="name"><?= esc($s['company_name']) ?><?php if (! empty($s['is_sample'])): ?><span class="sup-sample" title="Sample supplier: its prices are only for comparison">Sample</span><?php endif; ?></div>
                             <div class="cat"><?= esc($s['category'] ?? 'General supplier') ?></div>
                         </div>
                         <?php if ($archived): ?>
