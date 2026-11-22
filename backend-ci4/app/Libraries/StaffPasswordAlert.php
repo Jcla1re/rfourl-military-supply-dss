@@ -61,6 +61,26 @@ class StaffPasswordAlert
     }
 
     /**
+     * 3 wrong checkout PINs in a row (App\Libraries\PosPin): checkout is locked for 60 seconds. The
+     * owner is told in the app only, with Lock this account. Never contains the PIN.
+     */
+    public static function checkoutLocked(array $staff): void
+    {
+        try {
+            self::pushLockable(
+                $staff,
+                "Checkout locked for {$staff['full_name']} on " . self::now(),
+                PosPin::MAX_ATTEMPTS . ' wrong checkout PINs from ' . self::deviceName() . '. Checkout was locked for '
+                    . PosPin::LOCK_SECONDS . " seconds. If this wasn't {$staff['full_name']}, lock the account.",
+                'Security',
+                false
+            );
+        } catch (\Throwable $e) {
+            log_message('error', 'Checkout lock alert failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * After Forgot password: the staff member used the emailed temporary password and set a new one.
      * One in-app alert and one email, both with Accept and Lock this account.
      */

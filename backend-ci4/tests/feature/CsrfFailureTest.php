@@ -79,7 +79,7 @@ final class CsrfFailureTest extends CIUnitTestCase
         return $this->withSession($this->staff())
             ->withHeaders(['Referer' => site_url('staff/sales')])
             ->post('staff/sales/checkout', [
-                'csrf_test_name' => 'expired-token', OnceToken::FIELD => $key, '_submit_label' => 'Checkout & Print Receipt',
+                'csrf_test_name' => 'expired-token', OnceToken::FIELD => $key, '_submit_label' => 'Checkout & Print Receipt', 'pos_pin' => \Tests\Support\PosPinFixture::PIN,
                 'item_id' => ['P-1', 'P-2'], 'quantity' => ['2', '1'], 'payment_method' => 'Cash', 'cash_received' => '700', 'or_number' => 'A-77',
             ]);
     }
@@ -98,7 +98,7 @@ final class CsrfFailureTest extends CIUnitTestCase
         $this->assertSame(['info', 'This page needed a refresh', 'Nothing was saved. Please click "Checkout & Print Receipt" again.'], [$_SESSION['toast']['type'], $_SESSION['toast']['title'], $_SESSION['toast']['message']]);
         $old = $_SESSION['_ci_old_input']['post'];
         $this->assertSame([['P-1', 'P-2'], ['2', '1'], 'A-77'], [$old['item_id'], $old['quantity'], $old['or_number']], 'What was typed is kept.');
-        foreach (['csrf_test_name', OnceToken::FIELD, '_submit_label'] as $never) {
+        foreach (['csrf_test_name', OnceToken::FIELD, '_submit_label', 'pos_pin'] as $never) {
             $this->assertArrayNotHasKey($never, $old);
         }
         $this->assertSame([0, 0, 0], [$this->rows('sales_transaction'), $this->rows('sales_item'), $this->rows('form_submissions')], 'Nothing saved, the one-time key not used.');
@@ -124,7 +124,7 @@ final class CsrfFailureTest extends CIUnitTestCase
 
         // The cashier's own next click (fresh key, valid page): exactly one sale.
         config('Filters')->globals['before'] = array_values(array_diff(config('Filters')->globals['before'], ['csrf']));
-        $this->withSession($this->staff())->post('staff/sales/checkout', ['item_id' => ['P-1', 'P-2'], 'quantity' => ['2', '1'], 'payment_method' => 'Cash', 'cash_received' => '700', OnceToken::FIELD => $fresh[1]]);
+        $this->withSession($this->staff())->post('staff/sales/checkout', ['item_id' => ['P-1', 'P-2'], 'quantity' => ['2', '1'], 'payment_method' => 'Cash', 'cash_received' => '700', OnceToken::FIELD => $fresh[1]] + \Tests\Support\PosPinFixture::field());
         $this->assertSame(1, $this->rows('sales_transaction'));
         $this->assertSame([3, 8], [$this->stock('P-1'), $this->stock('P-2')]);
     }
@@ -191,7 +191,7 @@ final class CsrfFailureTest extends CIUnitTestCase
 
         $this->withSession($this->staff())->post('staff/sales/checkout', [
             'csrf_test_name' => $token, OnceToken::FIELD => bin2hex(random_bytes(16)), 'item_id' => ['P-2'], 'quantity' => ['1'], 'payment_method' => 'Cash', 'cash_received' => '500',
-        ]);
+        ] + \Tests\Support\PosPinFixture::field());
 
         $this->assertSame(1, $this->rows('sales_transaction'), 'CodeIgniter accepted it; the sale was saved.');
     }
@@ -212,7 +212,7 @@ final class CsrfFailureTest extends CIUnitTestCase
             : $this->staff();
         $posted = bin2hex(random_bytes(16));
 
-        $this->withSession($session)->post($role . '/sales/checkout', ['item_id' => ['P-1'], 'quantity' => ['7'], 'payment_method' => 'Cash', 'cash_received' => '5000', OnceToken::FIELD => $posted]);
+        $this->withSession($session)->post($role . '/sales/checkout', ['item_id' => ['P-1'], 'quantity' => ['7'], 'payment_method' => 'Cash', 'cash_received' => '5000', OnceToken::FIELD => $posted] + \Tests\Support\PosPinFixture::field());
 
         $this->assertSame(['error', 'Not enough stock'], [$_SESSION['toast']['type'], $_SESSION['toast']['title']]);
         $this->assertStringContainsString('Not enough stock for Patrol Shirt', $_SESSION['toast']['message']);
@@ -225,8 +225,8 @@ final class CsrfFailureTest extends CIUnitTestCase
         preg_match('/name="' . OnceToken::FIELD . '" value="([0-9a-f]{32})"/', $html, $fresh);
         $this->assertNotSame($posted, $fresh[1]);
 
-        $this->withSession($session)->post($role . '/sales/checkout', ['item_id' => ['P-1'], 'quantity' => ['5'], 'payment_method' => 'Cash', 'cash_received' => '5000', OnceToken::FIELD => $fresh[1]]);
-        $this->withSession($session)->post($role . '/sales/checkout', ['item_id' => ['P-1'], 'quantity' => ['5'], 'payment_method' => 'Cash', 'cash_received' => '5000', OnceToken::FIELD => $fresh[1]]);
+        $this->withSession($session)->post($role . '/sales/checkout', ['item_id' => ['P-1'], 'quantity' => ['5'], 'payment_method' => 'Cash', 'cash_received' => '5000', OnceToken::FIELD => $fresh[1]] + \Tests\Support\PosPinFixture::field());
+        $this->withSession($session)->post($role . '/sales/checkout', ['item_id' => ['P-1'], 'quantity' => ['5'], 'payment_method' => 'Cash', 'cash_received' => '5000', OnceToken::FIELD => $fresh[1]] + \Tests\Support\PosPinFixture::field());
         $this->assertSame([1, 0], [$this->rows('sales_transaction'), $this->stock('P-1')], 'The fresh key still stops a double submit.');
     }
 

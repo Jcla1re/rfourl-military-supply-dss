@@ -321,8 +321,11 @@ final class OwnerProfileTabTest extends DemoTestCase
         $this->assertStringContainsString('const text = n > 0 ? `Fix ${n} ${n === 1 ? \'error\' : \'errors\'} to save` : \'\';', $html);
         // Only one card edits at a time: the other card's Edit is disabled meanwhile.
         $this->assertStringContainsString('const locked = !!open && open !== c;', $html);
-        // The readable disabled look.
-        $this->assertStringContainsString(':root .pf-tab .pf-save.btn:disabled { background-color: #B9D3AE; border-color: #B9D3AE; color: #fff; opacity: 1; }', $html);
+        // The app's one disabled look (admin-theme.css: hover, press and focus change nothing); no override here.
+        $this->assertStringNotContainsString('#B9D3AE', $html);
+        $this->assertDoesNotMatchRegularExpression('/\.pf-save[^{]*:disabled/', $html);
+        $this->assertStringContainsString(':root :is(.btn-success, .inv-action-btn, .lt-submit):is(:disabled, .disabled):is(:hover, :active, :focus, :focus-visible) {', file_get_contents(FCPATH . 'assets/css/admin-theme.css'));
+        $this->assertMatchesRegularExpression('#<button type="submit" class="btn btn-success pf-save"#', $html, 'Save changes is a .btn-success, so the shared rule applies.');
     }
 
     // ---------------------------------------------------------------- a refused save reopens only its own form
@@ -413,9 +416,9 @@ final class OwnerProfileTabTest extends DemoTestCase
         $this->assertNotNull($card);
         $this->assertSame('Sign-in & security', trim($x->query('.//h2', $card)->item(0)->textContent));
 
-        $this->assertSame(['Username' => 'owner_normal', 'Email' => 'owner@real.test', 'Password' => '••••••••'], $this->rows($x, $x->query('.//dl[@id="siView"]', $card)->item(0)));
+        $this->assertSame(['Username' => 'owner_normal', 'Email' => 'owner@real.test', 'Password' => '••••••••', 'Checkout PIN' => 'Not set yet'], $this->rows($x, $x->query('.//dl[@id="siView"]', $card)->item(0)));
         // The one gray line under the title.
-        $this->assertSame('Changing your username, email or password asks for your current password.', trim($x->query('./p[contains(@class,"pf-sub")]', $card)->item(0)->textContent));
+        $this->assertSame('Your sign-in details and checkout PIN. Changes need your current password.', trim($x->query('./p[contains(@class,"pf-sub")]', $card)->item(0)->textContent));
 
         // One Edit button for the whole card; no dialogs any more.
         $this->assertSame(1, $x->query('.//button[@type="button"][contains(@class,"pf-edit")]', $card)->length);
@@ -462,16 +465,21 @@ final class OwnerProfileTabTest extends DemoTestCase
 
         // Sentence-case labels; the current password last, in its light box with its hint.
         $this->assertSame(
-            ['Username', 'Email', 'Confirm email', 'New password', 'Repeat new password', 'Current password'],
+            ['Username', 'Email', 'Confirm email', 'New password', 'Repeat new password', 'New PIN', 'Repeat PIN', 'Current password'],
             array_map(static fn ($l) => trim($l->textContent), iterator_to_array($x->query('.//label', $form)))
         );
+        // B1: the optional checkout PIN (blank = keep), never filled in and never kept as old input (PosPin::strip()).
+        foreach (['new_pin', 'new_pin_confirm'] as $name) {
+            $input = $x->query(".//input[@name=\"{$name}\"]", $form)->item(0);
+            $this->assertSame(['password', 'off', false, false], [$input->getAttribute('type'), $input->getAttribute('autocomplete'), $input->hasAttribute('value'), $input->hasAttribute('required')], $name);
+        }
         $box = $x->query('.//div[contains(@class,"pf-current")]', $form)->item(0);
         $this->assertSame(1, $x->query('.//input[@name="current_password"]', $box)->length);
         $this->assertSame(0, $x->query('following-sibling::div[contains(@class,"pf-field")]', $box)->length, 'nothing after the current password');
 
-        // Hints under the fields, read out with them.
+        // Hints under the fields (the password's sits in its group heading now), read out with them.
         foreach (['siUsername' => '4–50 letters, numbers, - or _', 'siNewPassword' => 'Leave blank to keep your current password.', 'siCurrentPassword' => 'Needed to save any change in this section.'] as $id => $hint) {
-            $this->assertSame($hint, trim($x->query("//div[@id=\"{$id}Hint\"]")->item(0)->textContent), $id);
+            $this->assertSame($hint, trim($x->query("//*[@id=\"{$id}Hint\"]")->item(0)->textContent), $id);
             $this->assertSame("{$id}Hint", $x->query("//input[@id=\"{$id}\"]")->item(0)->getAttribute('aria-describedby'), $id);
         }
     }
@@ -510,7 +518,7 @@ final class OwnerProfileTabTest extends DemoTestCase
         $this->assertStringContainsString('<script src="/assets/js/pw-toggle.js"></script>', $html);
         $this->assertStringContainsString('<link href="/assets/css/pw-toggle.css" rel="stylesheet">', $html);
         $this->assertSame(0, substr_count($html, 'class="pw-toggle"'));
-        $this->assertSame(3, substr_count($html, 'type="password"'), 'new password, its confirm, and the current password');
+        $this->assertSame(5, substr_count($html, 'type="password"'), 'new password, its confirm, the checkout PIN, its repeat, and the current password');
     }
 
     // ---------------------------------------------------------------- sidebar footer and Manage Accounts

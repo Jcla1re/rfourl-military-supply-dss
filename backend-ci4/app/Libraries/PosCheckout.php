@@ -29,8 +29,33 @@ final class PosCheckout
     /** 'code' of a refusal because an item doesn't have enough stock (the cart is kept: SalesController). */
     public const NOT_ENOUGH_STOCK = 'not_enough_stock';
 
+    /** The most cash one sale may record as received (pesos). */
+    public const MAX_CASH = 1000000;
+
+    public const OR_ERROR        = 'Use numbers only (up to 20 digits).';
+    public const MONEY_ERROR     = 'Use numbers only, with up to 2 decimals.';
+    public const MAX_CASH_ERROR  = 'Cash received can be up to ₱1,000,000.';
+    public const GCASH_REF_ERROR = 'The GCash reference no. is exactly 13 digits.';
+
     /**
-     * @return array{error?: string, code?: string, receipt?: ?array, repeat?: bool, receipt_no?: ?string}
+     * A typed peso amount: commas and spaces dropped, then digits with up to 2 decimals (no sign).
+     * '' is 0. Null when it is not an amount (letters, a minus, 3 decimals...).
+     */
+    public static function money($typed): ?float
+    {
+        $value = str_replace([',', ' '], '', trim((string) $typed));
+        if ($value === '') {
+            return 0.0;
+        }
+
+        return preg_match('/^\d+(\.\d{1,2})?$/', $value) === 1 ? round((float) $value, 2) : null;
+    }
+
+    /**
+     * A refusal names the payment or OR field it is about ('field': cash_received, gcash_amount,
+     * gcash_reference_no, or_number) so the form can show it under that box (SalesController keeps the cart).
+     *
+     * @return array{error?: string, code?: string, field?: string, receipt?: ?array, repeat?: bool, receipt_no?: ?string}
      */
     public static function run(IncomingRequest $request, ?int $userId, string $staffName): array
     {
@@ -87,9 +112,10 @@ final class PosCheckout
 
         // The official receipt / invoice no. from the store's BIR booklet: optional. A number used
         // before is only warned about in the form (SalesController::checkOr), never refused here.
+        // Digits only, 1-20, kept as text (leading zeros stay).
         $orNumber = trim((string) $request->getPost('or_number'));
         if ($orNumber !== '' && ! SalesTransactionModel::validOrNumber($orNumber)) {
-            return ['error' => 'Official receipt / invoice no. can only have letters, numbers, dashes and slashes (up to 30 characters).'];
+            return ['error' => self::OR_ERROR, 'field' => 'or_number'];
         }
         $orNumber = $orNumber !== '' ? $orNumber : null;
 
@@ -195,39 +221,67 @@ final class PosCheckout
         return 'Not enough stock for ' . ProductModel::nameWithSize($product) . " (only {$left} left). Nothing was saved.";
     }
 
-    /** Checks the payment fields; returns the amounts, or ['error' => ...]. */
+    /**
+     * Checks the payment fields; returns the amounts, or ['error' => ..., 'field' => ...].
+     * Amounts: commas dropped, digits with up to 2 decimals, never negative (money()); cash received
+     * up to MAX_CASH. GCash reference no.: exactly 13 digits. Cash: at least the total. Cash+GCash:
+     * GCash more than 0 and less than the total, cash at least the rest (so cash + GCash cover the
+     * total exactly; anything over is change).
+     */
     private static function payment(IncomingRequest $request, string $method, float $total): array
     {
         $gcashRef = trim((string) ($request->getPost('gcash_reference_no') ?: ''));
+        $refError = static function () use ($gcashRef): ?array {
+            if ($gcashRef === '') {
+                return ['error' => 'GCash reference number is required.', 'field' => 'gcash_reference_no'];
+            }
+
+            return preg_match('/^\d{13}$/', $gcashRef) === 1 ? null : ['error' => self::GCASH_REF_ERROR, 'field' => 'gcash_reference_no'];
+        };
+        $cashReceived = self::money($request->getPost('cash_received'));
+        $cashError    = static function () use ($cashReceived): ?array {
+            if ($cashReceived === null) {
+                return ['error' => self::MONEY_ERROR, 'field' => 'cash_received'];
+            }
+
+            return $cashReceived > self::MAX_CASH ? ['error' => self::MAX_CASH_ERROR, 'field' => 'cash_received'] : null;
+        };
 
         if ($method === 'Split') {
-            $gcashAmount = round((float) ($request->getPost('gcash_amount') ?: 0), 2);
+            $gcashAmount = self::money($request->getPost('gcash_amount'));
+            if ($gcashAmount === null) {
+                return ['error' => self::MONEY_ERROR, 'field' => 'gcash_amount'];
+            }
             if ($gcashAmount <= 0 || $gcashAmount >= $total) {
-                return ['error' => "GCash amount can't be more than the total."];
+                return ['error' => "GCash amount can't be more than the total.", 'field' => 'gcash_amount'];
             }
-            if ($gcashRef === '') {
-                return ['error' => 'GCash reference number is required.'];
+            if ($error = $refError()) {
+                return $error;
             }
-            $cashDue      = round($total - $gcashAmount, 2);
-            $cashReceived = round((float) ($request->getPost('cash_received') ?: 0), 2);
+            if ($error = $cashError()) {
+                return $error;
+            }
+            $cashDue = round($total - $gcashAmount, 2);
             if ($cashReceived < $cashDue) {
-                return ['error' => 'Insufficient cash received for the remaining balance.'];
+                return ['error' => 'Insufficient cash received for the remaining balance.', 'field' => 'cash_received'];
             }
 
             return ['cash_amount' => $cashDue, 'gcash_amount' => $gcashAmount, 'gcash_ref' => $gcashRef, 'cash_received' => $cashReceived, 'change' => round($cashReceived - $cashDue, 2)];
         }
 
         if ($method === 'GCash') {
-            if ($gcashRef === '') {
-                return ['error' => 'GCash reference number is required.'];
+            if ($error = $refError()) {
+                return $error;
             }
 
             return ['cash_amount' => 0.0, 'gcash_amount' => $total, 'gcash_ref' => $gcashRef, 'cash_received' => $total, 'change' => 0.0];
         }
 
-        $cashReceived = round((float) ($request->getPost('cash_received') ?: 0), 2);
+        if ($error = $cashError()) {
+            return $error;
+        }
         if ($cashReceived < $total) {
-            return ['error' => 'Insufficient cash received.'];
+            return ['error' => 'Insufficient cash received.', 'field' => 'cash_received'];
         }
 
         return ['cash_amount' => $total, 'gcash_amount' => 0.0, 'gcash_ref' => null, 'cash_received' => $cashReceived, 'change' => round($cashReceived - $total, 2)];

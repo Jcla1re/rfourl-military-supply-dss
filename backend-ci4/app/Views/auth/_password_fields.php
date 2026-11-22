@@ -5,7 +5,7 @@
                     <div class="field-group">
                         <label for="newPassword">New password</label>
                         <div class="input-icon-wrap">
-                            <i class="bi bi-lock" aria-hidden="true"></i>
+                            <i aria-hidden="true"><?= view('partials/_lock_icon', ['lockIconSize' => 16, 'lockIconStroke' => 1.5], ['saveData' => false]) ?></i>
                             <input type="password" id="newPassword" name="new_password" placeholder="Enter a new password" minlength="<?= \App\Libraries\PasswordPolicy::MIN_LENGTH ?>" autocomplete="new-password" required autofocus data-pw-rules-for="pwRules">
                             <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" tabindex="-1"><i class="bi bi-eye"></i></button>
                         </div>
@@ -13,7 +13,7 @@
                     <div class="field-group">
                         <label for="confirmPassword">Confirm new password</label>
                         <div class="input-icon-wrap">
-                            <i class="bi bi-lock" aria-hidden="true"></i>
+                            <i aria-hidden="true"><?= view('partials/_lock_icon', ['lockIconSize' => 16, 'lockIconStroke' => 1.5], ['saveData' => false]) ?></i>
                             <input type="password" id="confirmPassword" name="confirm_password" placeholder="Type it again" minlength="<?= \App\Libraries\PasswordPolicy::MIN_LENGTH ?>" autocomplete="new-password" required>
                             <button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" tabindex="-1"><i class="bi bi-eye"></i></button>
                         </div>

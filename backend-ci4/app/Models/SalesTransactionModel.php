@@ -94,12 +94,13 @@ class SalesTransactionModel extends Model
     }
 
     /**
-     * The official receipt / invoice number typed from the store's BIR booklet: optional, up to
-     * 30 letters, digits, dashes, slashes or spaces. The system's own receipt_no is not an official receipt.
+     * The official receipt number typed from the store's BIR booklet: optional, digits only, 1 to 20
+     * (kept as text, so leading zeros stay). Sales saved before this rule keep what they have.
+     * The system's own receipt_no is not an official receipt.
      */
     public static function validOrNumber(string $value): bool
     {
-        return (bool) preg_match('~^[A-Za-z0-9][A-Za-z0-9 /-]{0,29}$~', $value);
+        return (bool) preg_match('~^[0-9]{1,20}$~', $value);
     }
 
     /**

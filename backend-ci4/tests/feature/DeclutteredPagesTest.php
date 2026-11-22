@@ -370,7 +370,7 @@ final class DeclutteredPagesTest extends CIUnitTestCase
     {
         $html = $this->staff('staff/dashboard');
 
-        foreach (['Items Sold Today', 'Recent Transactions', 'Low Stock Items', 'Quick Actions', 'Log New Transaction', 'POS &amp; Sales', 'Check Inventory', 'Reorder Alerts'] as $text) {
+        foreach (['Items Sold Today', 'Recent Transactions', 'Low Stock Items', 'Quick Actions', 'Log New Transaction', 'Point of Sale', 'Check Inventory', 'Reorder Alerts'] as $text) {
             $this->assertStringContainsString($text, $html);
         }
     }

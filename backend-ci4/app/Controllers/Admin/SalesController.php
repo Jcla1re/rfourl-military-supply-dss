@@ -3,7 +3,10 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Controllers\PosPinActions;
 use App\Libraries\PosCheckout;
+use App\Libraries\PosLock;
+use App\Libraries\PosPin;
 use App\Libraries\Toast;
 use App\Models\ProductModel;
 use App\Models\SalesItemModel;
@@ -11,6 +14,8 @@ use App\Models\SalesTransactionModel;
 
 class SalesController extends BaseController
 {
+    use PosPinActions;
+
     protected $salesTransactionModel;
     protected $salesItemModel;
     protected $productModel;
@@ -22,18 +27,30 @@ class SalesController extends BaseController
         $this->productModel          = new ProductModel();
     }
 
+    protected function posBase(): string
+    {
+        return 'admin';
+    }
+
     public function index()
     {
         $tab = $this->request->getGet('tab') === 'receipts' ? 'receipts' : 'pos';
 
         $data = [
-            'title'  => 'POS & Sales',
+            'title'  => 'Point of Sale',
             'active' => 'sales',
             'tab'    => $tab,
             'success'=> session()->getFlashdata('success'),
             'error'  => session()->getFlashdata('error'),
             'receipt' => session()->getFlashdata('receipt'),
-        ];
+            // ['field' => ..., 'message' => ...]: shown under that box instead of at the top.
+            'posFieldError' => session()->getFlashdata('pos_field_error'),
+        ] + $this->posPinData();
+
+        // Lock POS: only the lock screen (partials/_pos_locked.php) until the PIN is entered.
+        if ($data['posLock'] !== null) {
+            return view('admin/sales', $data);
+        }
 
         if ($tab === 'pos') {
             $groups = $this->productModel->groupedActive();
@@ -96,6 +113,10 @@ class SalesController extends BaseController
 
     public function exportCsv()
     {
+        if ($locked = $this->refuseWhileLocked()) {
+            return $locked;
+        }
+
         [$from, $to, $label] = \App\Libraries\SalesCsvExport::range(
             $this->request->getGet('date'),
             $this->request->getGet('month')
@@ -109,6 +130,10 @@ class SalesController extends BaseController
 
     public function exportPdf()
     {
+        if ($locked = $this->refuseWhileLocked()) {
+            return $locked;
+        }
+
         $date         = $this->request->getGet('date') ?: date('Y-m-d');
         $transactions = $this->transactionsForDate($date);
 
@@ -135,17 +160,27 @@ class SalesController extends BaseController
      */
     public function checkOr()
     {
+        if (PosLock::isLocked()) {
+            return $this->response->setStatusCode(423)->setJSON(['locked' => true]);
+        }
+
         $used = $this->salesTransactionModel->findByOrNumber((string) $this->request->getGet('or_number'));
 
         return $this->response->setJSON($used ? ['used' => true, 'receipt_no' => (string) $used['receipt_no']] : ['used' => false]);
     }
 
     /**
-     * Checkout & Print Receipt. The sale itself (one-time key, stock locked and decreased in one
+     * Checkout & Print Receipt. First the POS must not be locked and the cashier's own checkout PIN
+     * must be right (PosPinActions::checkoutGate(); a refusal touches nothing: no one-time key, stock
+     * or receipt number). The sale itself (one-time key, stock locked and decreased in one
      * transaction) is App\Libraries\PosCheckout, shared with the other role's POS.
      */
     public function checkout()
     {
+        if ($refused = $this->checkoutGate()) {
+            return $refused;
+        }
+
         $result = PosCheckout::run(
             $this->request,
             session()->get('user_id') !== null ? (int) session()->get('user_id') : null,
@@ -155,9 +190,19 @@ class SalesController extends BaseController
 
         if (isset($result['error'])) {
             // Not enough stock: nothing was sold; the cart comes back (the posted items and quantities,
-            // as old input; prices are read again from the server) with an accurate title.
+            // as old input without the PIN; prices are read again from the server) with an accurate title.
             if (($result['code'] ?? null) === PosCheckout::NOT_ENOUGH_STOCK) {
-                return $back->withInput()->with('toast', Toast::error('Not enough stock', $result['error']));
+                PosPin::keepInput($this->request); // old input, never the PIN
+
+                return $back->with('toast', Toast::error('Not enough stock', $result['error']));
+            }
+
+            // A payment or OR field that isn't right: nothing was sold; the cart and what was typed come
+            // back (never the PIN), and the message shows under that box.
+            if (isset($result['field'])) {
+                PosPin::keepInput($this->request);
+
+                return $back->with('error', $result['error'])->with('pos_field_error', ['field' => $result['field'], 'message' => $result['error']]);
             }
 
             return $back->with('error', $result['error']);

@@ -103,12 +103,13 @@ class HelpGuides
             [
                 'title' => 'Record a sale',
                 'steps' => [
-                    'Open POS & Sales in the menu.',
+                    'Open Point of Sale in the menu.',
                     'Click each item the customer is buying. Pick the size if asked.',
                     'Check the items and quantities in Current order.',
                     'Choose Cash, GCash or Cash+GCash.',
                     'Type the amount received. For GCash, type the reference number.',
                     'Click Checkout & Print Receipt.',
+                    'Type your 4-digit checkout PIN and click Confirm.',
                 ],
             ],
             [

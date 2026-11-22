@@ -8,6 +8,7 @@ use App\Libraries\DemoGuard;
 use App\Libraries\EmailNotifier;
 use App\Libraries\PasswordHistory;
 use App\Libraries\PasswordPolicy;
+use App\Libraries\PosPin;
 use App\Libraries\StaffPasswordAlert;
 use App\Libraries\Toast;
 use App\Models\SecurityLogModel;
@@ -45,6 +46,8 @@ class AccountController extends BaseController
             'account'  => $this->userModel->find((int) session()->get('user_id')),
             'error'    => session()->getFlashdata('error'),
             'notice'   => session()->getFlashdata('notice'),
+            'pinError' => session()->getFlashdata('pin_error'),
+            'pinErrorField' => session()->getFlashdata('pin_error_field'),
             'pendingEmail' => $this->pending()['email'] ?? null,
         ]);
     }
@@ -287,5 +290,72 @@ class AccountController extends BaseController
             'Password updated.',
             'Use your new password next time you sign in.'
         ));
+    }
+
+    /** My Account, Checkout PIN: set or change the PIN. */
+    public function setPin()
+    {
+        return $this->savePin('/staff/account');
+    }
+
+    /** The Point of Sale page, "Set your checkout PIN" (shown while there is none): the same rules. */
+    public function setPinFromPos()
+    {
+        return $this->savePin('/staff/sales');
+    }
+
+    /**
+     * New checkout PIN + repeat, confirmed with the account password. Order: field checks (never
+     * counted) -> the password-change attempt counter (shared with Change Password, so this form
+     * gives no extra password guesses) -> current password -> save the hash. Errors go back as
+     * 'pin_error', with 'pin_error_field' naming the box it is about (new_pin, new_pin_confirm,
+     * current_password, or form for the whole card); nothing typed here is ever kept, so every PIN
+     * and password box comes back empty.
+     */
+    private function savePin(string $back)
+    {
+        $userId = (int) session()->get('user_id');
+        $user   = $this->userModel->activeStaff()->find($userId);
+        $refuse = static fn (string $message, string $field = 'form') => redirect()->to($back)
+            ->with('pin_error', $message)->with('pin_error_field', $field);
+
+        if (! $user) {
+            return $refuse('Account not found.');
+        }
+        if (DemoGuard::locksUser($user)) {
+            return $refuse(DemoGuard::MESSAGE);
+        }
+        if (! PosPin::ready()) {
+            return $refuse("The checkout PIN can't be saved yet: the database needs updating (php spark migrate).");
+        }
+
+        $pin     = (string) $this->request->getPost(PosPin::NEW_FIELD);
+        $repeat  = (string) $this->request->getPost(PosPin::REPEAT_FIELD);
+        $current = (string) $this->request->getPost('current_password');
+        if ($errors = PosPin::newPinErrors($pin, $repeat, $user['phone'] ?? null)) {
+            return $refuse(implode(' ', $errors), (string) array_key_first($errors));
+        }
+        if ($current === '') {
+            return $refuse('Enter your current password to save your PIN.', 'current_password');
+        }
+
+        if (AttemptStore::hit('staff_pw_change_' . $userId, self::WINDOW_SECONDS) > self::MAX_ATTEMPTS) {
+            return $refuse('Too many attempts. Please wait a few minutes and try again.');
+        }
+        if (! password_verify($current, $user['password_hash'])) {
+            SecurityLogModel::log('pos_pin_set_failed', $user, 'wrong current password');
+
+            return $refuse('Current password is incorrect.', 'current_password');
+        }
+        AttemptStore::forget('staff_pw_change_' . $userId);
+
+        $first = ! PosPin::hasPin($user);
+        $this->userModel->update($userId, PosPin::columnsFor($pin));
+        // Confirmed with the account password, so any checkout lock on this account ends too.
+        PosPin::clearLock($userId);
+        SecurityLogModel::log('pos_pin_set', $user, $first ? 'staff set checkout PIN' : 'staff changed checkout PIN');
+
+        // The app's usual success toast (hides itself); the setup card is gone on the next page.
+        return redirect()->to($back)->with('toast', Toast::success('Checkout PIN saved'));
     }
 }

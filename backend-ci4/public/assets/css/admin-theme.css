@@ -351,6 +351,21 @@ select.cs-native.cs-plain {
 /* Bootstrap turns off pointer events on disabled buttons, which would hide
    the not-allowed cursor; the button stays disabled. */
 .btn-success:disabled { pointer-events: auto; }
+/* ...so a disabled primary button could still be hovered and pressed, and Bootstrap's press colour
+   (.btn:first-child:active, stronger than .btn:disabled) showed on a long press. One disabled look in
+   every state: hover, press and focus change nothing. (Staff "Owner notified" .notify-btn keeps its
+   own quiet disabled box, below.) */
+:root :is(.btn-success, .inv-action-btn, .lt-submit):is(:disabled, .disabled),
+:root :is(.btn-success, .inv-action-btn, .lt-submit):is(:disabled, .disabled):is(:hover, :active, :focus, :focus-visible) {
+    background-color: var(--btn-disabled-bg);
+    border-color: var(--btn-disabled-bg);
+    color: var(--btn-disabled-text);
+    cursor: not-allowed;
+    opacity: 1;
+    box-shadow: none;
+    transform: none;
+    outline: none;
+}
 
 body {
     background-color: var(--content-bg);
@@ -363,7 +378,10 @@ body {
    content pane, regardless of how long a page's content is. */
 .app-shell {
     height: 100vh;
-    overflow: hidden;
+    overflow: hidden; /* fallback */
+    /* clip, not just hidden: a hidden box can still be scrolled by a #link or focus(), which slid the
+       whole page up (green header gone, sidebar cut off, blank space at the bottom). Only .main-scroll scrolls. */
+    overflow: clip;
 }
 
 .app-shell .sidebar {
@@ -375,7 +393,8 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: hidden; /* fallback */
+    overflow: clip; /* see .app-shell */
 }
 
 .app-shell .main-panel .topbar {

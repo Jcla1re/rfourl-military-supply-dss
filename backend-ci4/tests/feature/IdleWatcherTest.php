@@ -203,7 +203,7 @@ final class IdleWatcherTest extends CIUnitTestCase
         $html = $this->page($this->owner(), 'admin/sales');
         preg_match('/name="' . OnceToken::FIELD . '" value="([0-9a-f]{32})"/', $html, $key);
 
-        $this->withSession($this->owner())->post('admin/sales/checkout', ['item_id' => ['P-1'], 'quantity' => ['1'], 'payment_method' => 'Cash', 'cash_received' => '500', OnceToken::FIELD => $key[1]]);
+        $this->withSession($this->owner())->post('admin/sales/checkout', ['item_id' => ['P-1'], 'quantity' => ['1'], 'payment_method' => 'Cash', 'cash_received' => '500', OnceToken::FIELD => $key[1]] + \Tests\Support\PosPinFixture::field());
         $this->assertSame(1, $this->db->table('sales_transaction')->countAllResults());
 
         $after = $this->page($_SESSION, 'admin/sales');

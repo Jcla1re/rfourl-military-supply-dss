@@ -46,7 +46,7 @@ trait AuthFixture
             'password_hash' => $str, 'temp_password_hash' => $str, 'last_login' => $when, 'created_at' => $when, 'deleted_at' => $when,
             'must_change_password' => ['type' => 'INTEGER', 'default' => 0], 'temp_password_kind' => $str, 'temp_password_expires_at' => $when,
             'reset_otp_hash' => $str, 'reset_otp_expires' => $when,
-        ]);
+        ] + PosPinFixture::forgeFields());
         $forge->addKey('user_id', true);
         $forge->createTable('users');
 
@@ -109,6 +109,7 @@ trait AuthFixture
             AttemptStore::forget('otp_attempts_' . $id);
             AttemptStore::forget('staff_forgot_acct_' . $id);
         }
+        PosPinFixture::clearLocks();
     }
 
     protected function makeAccount(string $username, string $name, string $role, string $password, ?string $email, ?string $supplierId = null): int

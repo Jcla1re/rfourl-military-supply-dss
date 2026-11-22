@@ -11,10 +11,12 @@ use App\Libraries\EmailNotifier;
 use App\Libraries\OnceToken;
 use App\Libraries\PasswordHistory;
 use App\Libraries\PasswordPolicy;
+use App\Libraries\PosPin;
 use App\Libraries\StaffPasswordReset;
 use App\Libraries\Toast;
 use App\Models\SecurityLogModel;
 use App\Models\DssParameterModel;
+use App\Models\NotificationModel;
 use App\Models\NotificationPreferenceModel;
 use App\Models\UserModel;
 
@@ -178,6 +180,13 @@ class SettingsController extends BaseController
 
     private const PROFILE_BACK = '/admin/settings?tab=profile';
 
+    /**
+     * Where Sign-in & security may send the owner back to instead of My Profile: a posted 'return'
+     * value looked up here, never a URL (no open redirect). 'pos': the owner's first checkout PIN,
+     * set on the Point of Sale page (partials/_pin_setup.php).
+     */
+    private const SIGNIN_RETURNS = ['pos' => '/admin/sales'];
+
     /** Sign-in form: saves that reach the current-password check, per window (format errors don't count). */
     private const SIGNIN_TRIES  = 5;
     private const SIGNIN_WINDOW = 600;
@@ -280,38 +289,53 @@ class SettingsController extends BaseController
     }
 
     /**
-     * Sign-in & security: username, email and password in one form, with the current password asked
-     * for once. Order: nothing changed -> field checks -> attempt limit -> current password -> new
-     * password not the current one -> save. Format errors never count as an attempt.
+     * Sign-in & security: username, email, password and the checkout PIN (optional: blank = keep) in
+     * one form, with the current password asked for once. Order: nothing changed -> field checks ->
+     * attempt limit -> current password -> new password not the current one -> save. Format errors
+     * never count as an attempt. The PIN is saved only as a hash and never kept as old input.
+     *
+     * A field that is not posted at all is left as it is: the Point of Sale's owner PIN card posts only
+     * the PIN, its repeat and the current password (with return=pos). Its errors and success then go
+     * back to the Point of Sale (refuseSignIn()), through the same checks and the same attempt counter.
      */
     public function updateSignIn()
     {
         $id   = (int) session()->get('user_id');
         $user = $this->userModel->find($id);
+        $back = self::SIGNIN_RETURNS[(string) $this->request->getPost('return')] ?? null; // null: My Profile
 
         if (! $user) {
             return redirect()->to('/admin/settings')->with('error', 'Account not found.');
         }
         if (DemoGuard::locksUser($user)) {
-            return DemoGuard::refuse(self::PROFILE_BACK);
+            return $back === null ? DemoGuard::refuse(self::PROFILE_BACK) : $this->refuseSignIn(['form' => DemoGuard::MESSAGE], $back);
         }
 
-        $post     = fn (string $key) => (string) $this->request->getPost($key);
-        $username = trim($post('username'));
-        $email    = mb_strtolower(trim($post('email')));
-        $confirm  = mb_strtolower(trim($post('email_confirm')));
+        $post        = fn (string $key) => (string) $this->request->getPost($key);
+        $postedName  = $this->request->getPost('username');
+        $postedEmail = $this->request->getPost('email');
+        $username    = $postedName === null ? (string) $user['username'] : trim((string) $postedName);
+        $email       = $postedEmail === null ? mb_strtolower(trim((string) ($user['email'] ?? ''))) : mb_strtolower(trim((string) $postedEmail));
+        $confirm     = mb_strtolower(trim($post('email_confirm')));
         $newPass  = $post('new_password');
         $newPass2 = $post('new_password_confirm');
         $current  = $post('current_password');
+        $newPin   = $post(PosPin::NEW_FIELD);
+        $newPin2  = $post(PosPin::REPEAT_FIELD);
 
         $oldEmail        = $user['email'] ?? null;
         $usernameChanged = $username !== (string) $user['username'];
         $emailChanged    = $email !== mb_strtolower(trim((string) $oldEmail));
         $passwordChanged = $newPass !== '' || $newPass2 !== '';
+        $pinChanged      = $newPin !== '' || $newPin2 !== '';
 
         // a) Nothing to do: no attempt counted.
-        if (! $usernameChanged && ! $emailChanged && ! $passwordChanged) {
-            return redirect()->to(self::PROFILE_BACK)->with('toast', Toast::info('Nothing changed yet.', 'Change your username, email or password, then click Save.'));
+        if (! $usernameChanged && ! $emailChanged && ! $passwordChanged && ! $pinChanged) {
+            if ($back !== null) {
+                return $this->refuseSignIn([PosPin::NEW_FIELD => 'Type your new PIN in both boxes, then click Save PIN.'], $back);
+            }
+
+            return redirect()->to(self::PROFILE_BACK)->with('toast', Toast::info('Nothing changed yet.', 'Change your username, email, password or checkout PIN, then click Save.'));
         }
 
         // b) Field checks (never counted as an attempt).
@@ -322,7 +346,7 @@ class SettingsController extends BaseController
                 $errors['username'] = $this->validator->getError('username');
             }
         }
-        if ($emailChanged || $email === '') {
+        if ($emailChanged || ($postedEmail !== null && $email === '')) {
             if ($error = $this->emailError($email, $id)) {
                 $errors['email'] = $error;
             } elseif ($confirm !== $email) {
@@ -336,30 +360,37 @@ class SettingsController extends BaseController
                 $errors['new_password_confirm'] = 'Passwords do not match.';
             }
         }
+        if ($pinChanged) {
+            if (! PosPin::ready()) {
+                $errors[PosPin::NEW_FIELD] = "The checkout PIN can't be saved yet: the database needs updating (php spark migrate).";
+            } else {
+                $errors += PosPin::newPinErrors($newPin, $newPin2, $user['phone'] ?? null);
+            }
+        }
         if ($current === '') {
             $errors['current_password'] = 'Enter your current password to save these changes.';
         }
         if ($errors !== []) {
-            return $this->refuseForm('signin', $errors);
+            return $this->refuseSignIn($errors, $back);
         }
 
         // c) One attempt counter for the whole form, counted before the password is checked.
         $limitKey = 'owner_signin_change_' . $id;
         if (AttemptStore::hit($limitKey, self::SIGNIN_WINDOW) > self::SIGNIN_TRIES) {
-            return $this->refuseForm('signin', ['form' => 'Too many attempts. Please wait a few minutes and try again.']);
+            return $this->refuseSignIn(['form' => 'Too many attempts. Please wait a few minutes and try again.'], $back);
         }
 
         // d) The current password.
         if (! password_verify($current, $user['password_hash'])) {
             SecurityLogModel::log('signin_change_failed', null, 'owner sign-in details: wrong current password');
 
-            return $this->refuseForm('signin', ['current_password' => 'Current password is incorrect.']);
+            return $this->refuseSignIn(['current_password' => 'Current password is incorrect.'], $back);
         }
         AttemptStore::forget($limitKey);
 
         // e) A new password must really be new.
         if ($passwordChanged && password_verify($newPass, $user['password_hash'])) {
-            return $this->refuseForm('signin', ['new_password' => 'Your new password must be different from your current one.']);
+            return $this->refuseSignIn(['new_password' => 'Your new password must be different from your current one.'], $back);
         }
 
         // f) Save what changed. Checked above; the model's own username rule can't tell "this account"
@@ -374,10 +405,13 @@ class SettingsController extends BaseController
         if ($passwordChanged) {
             $changes['password_hash'] = password_hash($newPass, PASSWORD_DEFAULT);
         }
+        if ($pinChanged) {
+            $changes += PosPin::columnsFor($newPin);
+        }
         $saved = $this->userModel->skipValidation(true)->update($id, $changes);
         $this->userModel->skipValidation(false);
         if (! $saved) {
-            return $this->refuseForm('signin', ['form' => "Your changes couldn't be saved. Please try again."]);
+            return $this->refuseSignIn(['form' => "Your changes couldn't be saved. Please try again."], $back);
         }
 
         if ($usernameChanged) {
@@ -399,15 +433,42 @@ class SettingsController extends BaseController
             session()->regenerate(true);
             SecurityLogModel::log('password_changed', null, 'owner changed own password');
         }
+        if ($pinChanged) {
+            // Confirmed with the account password above, so any checkout lock on this account ends too.
+            PosPin::clearLock($id);
+            SecurityLogModel::log('pos_pin_set', null, 'owner set own checkout PIN');
+        }
 
         // g) Say what changed.
-        $what    = array_keys(array_filter(['Username' => $usernameChanged, 'Email' => $emailChanged, 'Password' => $passwordChanged]));
+        $what    = array_keys(array_filter(['Username' => $usernameChanged, 'Email' => $emailChanged, 'Password' => $passwordChanged, 'Checkout PIN' => $pinChanged]));
         $message = count($what) === 1 ? "{$what[0]} changed." : 'Sign-in details updated.';
         if ($usernameChanged) {
             $message .= ' Use your new username the next time you sign in.';
         }
 
+        if ($back !== null) {
+            // The Point of Sale: the usual toast; the setup card is gone now that there is a PIN.
+            return redirect()->to($back)->with('toast', Toast::success($what === ['Checkout PIN'] ? 'Checkout PIN saved.' : $message));
+        }
+
         return redirect()->to(self::PROFILE_BACK)->with('success', $message);
+    }
+
+    /**
+     * A refused Sign-in & security save. From My Profile (no $back): back there with one message per
+     * field (refuseForm()). From the Point of Sale's PIN card: back there with the first message and the
+     * box it is about (pin_error / pin_error_field, the same as the staff card); nothing typed is kept.
+     */
+    private function refuseSignIn(array $errors, ?string $back)
+    {
+        if ($back === null) {
+            return $this->refuseForm('signin', $errors);
+        }
+        $field = (string) array_key_first($errors);
+
+        return redirect()->to($back)
+            ->with('pin_error', (string) reset($errors))
+            ->with('pin_error_field', in_array($field, [PosPin::NEW_FIELD, PosPin::REPEAT_FIELD, 'current_password'], true) ? $field : 'form');
     }
 
     /** Null when $email (already trimmed and lowercased) can be the owner's sign-in email. */
@@ -433,12 +494,12 @@ class SettingsController extends BaseController
 
     /**
      * Back to My Profile with one message per field ('form' = a message for the whole form), the
-     * form reopened, and what was typed kept, except the token, the one-time key and every field
-     * whose name contains "pass".
+     * form reopened, and what was typed kept, except the token, the one-time key, every field
+     * whose name contains "pass" and every checkout PIN field (never flashed, so never shown again).
      */
     private function refuseForm(string $form, array $errors)
     {
-        $post = (array) $this->request->getPost();
+        $post = PosPin::strip((array) $this->request->getPost());
         foreach (array_keys($post) as $key) {
             if ($key === config('Security')->tokenName || $key === OnceToken::FIELD || $key === \App\Filters\CsrfFilter::LABEL_FIELD
                 || stripos((string) $key, 'pass') !== false) {
@@ -552,6 +613,52 @@ class SettingsController extends BaseController
         return redirect()->to($back)->with('toast', Toast::success(
             'Password reset',
             "{$staff['full_name']} must create their own password when they sign in with it." . ($wasLocked ? ' The account is unlocked.' : '')
+        ));
+    }
+
+    /**
+     * The Owner resets a staff member's checkout PIN (staff only, never another owner). The PIN is
+     * then empty: the owner never sees or chooses one. The staff member sets a new one, confirmed with
+     * their own account password, on the Point of Sale page or in My Account. Any checkout lock on
+     * their account ends. They are told in the app.
+     */
+    public function resetStaffPin($userId)
+    {
+        $back  = '/admin/settings?tab=accounts';
+        $staff = $this->userModel->activeStaff()->find((int) $userId);
+
+        if (! $staff) {
+            return redirect()->to($back)->with('error', 'Staff account not found.');
+        }
+        if (DemoGuard::locksUser($staff)) {
+            return DemoGuard::refuse($back);
+        }
+        if (! PosPin::ready()) {
+            return redirect()->to($back)->with('error', "Checkout PINs aren't set up yet: the database needs updating (php spark migrate).");
+        }
+
+        $this->userModel->skipValidation(true)->update((int) $staff['user_id'], PosPin::resetColumns());
+        $this->userModel->skipValidation(false);
+        PosPin::clearLock((int) $staff['user_id']);
+        SecurityLogModel::log('pos_pin_reset', null, 'staff: ' . $staff['username'] . ' checkout PIN reset by owner');
+
+        try {
+            (new NotificationModel())->push(
+                'Staff',
+                'Security',
+                'Your checkout PIN was reset',
+                'The owner reset your checkout PIN. Set a new 4-digit PIN on the Point of Sale page or in My Account before your next sale.',
+                (int) $staff['user_id'],
+                'security',
+                '/staff/account'
+            );
+        } catch (\Throwable $e) {
+            log_message('error', 'PIN reset notice failed: ' . $e->getMessage());
+        }
+
+        return redirect()->to($back)->with('toast', Toast::success(
+            'Checkout PIN reset',
+            "{$staff['full_name']} must set a new PIN before their next sale."
         ));
     }
 

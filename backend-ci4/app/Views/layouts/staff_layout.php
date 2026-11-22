@@ -98,12 +98,12 @@ $__unreadNotifications = (new \App\Models\NotificationModel())->unreadCount('Sta
             </nav>
 
             <div class="nav-section-label">SALES</div>
-            <a href="<?= site_url('staff/sales') ?>" class="nav-link <?= ($active ?? '') === 'sales' ? 'active' : '' ?>" data-tooltip="POS & Sales">
+            <a href="<?= site_url('staff/sales') ?>" class="nav-link <?= ($active ?? '') === 'sales' ? 'active' : '' ?>" data-tooltip="Point of Sale">
                 <span class="nav-icon">
                     <i class="bi bi-cart icon-outline"></i>
                     <i class="bi bi-cart-fill icon-fill"></i>
                 </span>
-                <span class="nav-label">POS &amp; Sales</span>
+                <span class="nav-label">Point of Sale</span>
             </a>
 
             <div class="nav-section-label">ACCOUNT</div>

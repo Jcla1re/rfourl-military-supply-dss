@@ -247,6 +247,8 @@ body.auth-body {
     font-size: 1rem;
     pointer-events: none;
 }
+/* The padlock (partials/_lock_icon.php) sits in the same <i>: no baseline gap under the SVG. */
+.input-icon-wrap > i > svg { display: block; }
 .input-icon-wrap input {
     width: 100%;
     height: 41px;
