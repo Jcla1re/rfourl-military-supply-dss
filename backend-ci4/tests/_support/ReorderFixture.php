@@ -16,7 +16,7 @@ trait ReorderFixture
     protected int $ownerId;
     protected int $staffId;
 
-    private static array $reorderTables = ['users', 'suppliers', 'products', 'stock_order', 'so_item', 'reorder_alert', 'reorder_notices', 'notifications', 'notification_preferences', 'security_log', 'pdss_computation', 'dss_parameters', 'cluster_segments'];
+    private static array $reorderTables = ['users', 'suppliers', 'products', 'supplier_prices', 'stock_order', 'so_item', 'reorder_alert', 'reorder_notices', 'notifications', 'notification_preferences', 'security_log', 'pdss_computation', 'dss_parameters', 'cluster_segments'];
 
     protected function setUpReorderFixture(): void
     {
@@ -39,9 +39,10 @@ trait ReorderFixture
         $real = ['type' => 'REAL', 'default' => 0];
 
         $table('users', ['user_id' => $id, 'username' => $str, 'full_name' => $str, 'email' => $str, 'role' => $str, 'supplier_id' => $str, 'is_active' => ['type' => 'INTEGER', 'default' => 1], 'password_hash' => $str, 'last_login' => $when, 'deleted_at' => $when, 'must_change_password' => ['type' => 'INTEGER', 'default' => 0], 'is_demo' => ['type' => 'INTEGER', 'default' => 0], 'temporary_password' => $str] + PosPinFixture::forgeFields(), 'user_id');
-        $table('suppliers', ['supplier_id' => ['type' => 'VARCHAR', 'constraint' => 10], 'company_name' => $str, 'contact_person' => $str, 'contact_email' => $str, 'contact_number' => $str, 'lead_time_days' => ['type' => 'INTEGER', 'default' => 7], 'payment_terms' => $str, 'is_active' => ['type' => 'INTEGER', 'default' => 1]], 'supplier_id');
+        $table('suppliers', ['supplier_id' => ['type' => 'VARCHAR', 'constraint' => 10], 'company_name' => $str, 'contact_person' => $str, 'contact_email' => $str, 'contact_number' => $str, 'lead_time_days' => ['type' => 'INTEGER', 'default' => 7], 'payment_terms' => $str, 'is_sample' => ['type' => 'INTEGER', 'default' => 0], 'is_active' => ['type' => 'INTEGER', 'default' => 1]], 'supplier_id');
         $table('products', ['item_id' => ['type' => 'VARCHAR', 'constraint' => 15], 'product_code' => $str, 'supplier_id' => $str, 'supplier_min_qty' => $int, 'item_name' => $str, 'category' => $str, 'size' => $str, 'unit_cost' => $real, 'selling_price' => $real, 'current_stock' => ['type' => 'INTEGER', 'default' => 0], 'manual_rop_warning' => $int, 'rop_source' => $str, 'abc_category' => $str, 'is_active' => ['type' => 'INTEGER', 'default' => 1], 'created_at' => $when, 'updated_at' => $when], 'item_id');
         $table('stock_order', ['so_id' => ['type' => 'VARCHAR', 'constraint' => 15], 'supplier_id' => $str, 'user_id' => $int, 'priority' => $str, 'status' => $str, 'order_date' => $when, 'expected_delivery_date' => $when, 'actual_delivery_date' => $when, 'tracking_no' => $str, 'decline_reason' => $str, 'cancel_reason' => $str, 'cancelled_by' => $int, 'cancelled_at' => $when, 'po_number' => $str, 'so_number' => $str, 'dr_number' => $str, 'accepted_at' => $when, 'shipped_at' => $when, 'received_by' => $int, 'received_at' => $when], 'so_id');
+        $table('supplier_prices', ['id' => $id, 'supplier_id' => $str, 'item_id' => $str, 'unit_price' => $real, 'lead_time_days' => $int, 'min_order_qty' => $int, 'is_sample' => ['type' => 'INTEGER', 'default' => 0], 'created_at' => $when, 'updated_at' => $when], 'id');
         $table('so_item', ['so_item_id' => $id, 'so_id' => $str, 'item_id' => $str, 'order_quantity' => $int, 'shipped_quantity' => $int, 'unit_price' => $real], 'so_item_id');
         $table('reorder_alert', ['alert_id' => $id, 'item_id' => $str, 'computation_id' => $int, 'so_id' => $str, 'alert_timestamp' => $when, 'trigger_reason' => $str, 'recommended_eoq' => $int, 'stock_at_trigger' => $int, 'status' => ['type' => 'VARCHAR', 'constraint' => 20, 'default' => 'Active'], 'hidden_until_recovered' => ['type' => 'INTEGER', 'default' => 0]], 'alert_id');
         $table('reorder_notices', ['notice_id' => $id, 'item_id' => $str, 'notified_by' => $int, 'notification_id' => $int, 'created_at' => $when, 'cleared_at' => $when, 'cleared_reason' => $str], 'notice_id');

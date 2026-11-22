@@ -14,11 +14,10 @@ $activeFilters = (int) ($activeFilters ?? 0);
 $exportQuery   = $exportQuery ?? [];
 $exportSuffix  = $exportQuery ? '?' . http_build_query($exportQuery) : '';
 $keepPer       = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' => $_GET['per_page']]) : '';
-$tab           = ($tab ?? 'table') === 'comparison' ? 'comparison' : 'table';
-$tabLink       = static fn (string $t): string => site_url('admin/procurement-report') . ($t === 'comparison' ? '?tab=comparison' : '');
-if ($tab === 'comparison') {
-    $keepPer = '?tab=comparison'; // "Clear all" stays on this tab
-}
+$tab           = in_array($tab ?? 'table', ['suppliers', 'comparison'], true) ? $tab : 'table'; // 'table' = the Items tab
+$tabLink       = static fn (string $t): string => site_url('admin/procurement-report') . '?tab=' . $t;
+// "Clear all" and the live search stay on this tab (the bare URL now opens Suppliers).
+$keepPer       = $tab === 'comparison' ? '?tab=comparison' : '?' . http_build_query(['tab' => 'items'] + (isset($_GET['per_page']) ? ['per_page' => $_GET['per_page']] : []));
 ?>
 
 <link href="/assets/css/inventory-table.css" rel="stylesheet">
@@ -80,6 +79,51 @@ if ($tab === 'comparison') {
 .pr-tab:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; }
 .pr-tab.active { color: #2F5A27; border-bottom-color: #4b6a3f; }
 
+/* Suppliers tab */
+.sp-badge { display: inline-block; margin-left: 8px; padding: 2px 9px; border-radius: 999px; background: #FFF1CC; color: #7A5A00; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; vertical-align: middle; }
+/* Columns size to their content (inventory-table.css fixes every column to the same width, which made the text overlap),
+   and the table scrolls sideways inside its card when it still does not fit. */
+.inv-table-card .sp-scroll { overflow-x: auto; }
+.data-table.inv-table.sp-table { table-layout: auto; width: 100%; }
+.sp-table td, .sp-table th { white-space: nowrap; padding-left: 8px; padding-right: 8px; }
+.sp-table td.sp-name { white-space: normal; min-width: 200px; max-width: 300px; line-height: 1.3; }
+.sp-table th.sp-c-supplier { min-width: 220px; }
+.sp-table th.sp-c-order, .sp-table td.sp-c-order { min-width: 128px; } /* a PO number (PO-2026-0001) never wraps or runs into the date */
+.sp-table th.sp-c-date, .sp-table td.sp-c-date { min-width: 108px; }
+.sp-table th.sp-c-item, .sp-table td.sp-c-item { min-width: 170px; white-space: normal; }
+.sp-stack { display: block; font-weight: 600; }
+.sp-stack + .sp-sub, .sp-sub.sp-line2 { display: block; margin-top: 1px; color: #8A8D7E; font-size: 12px; font-weight: 400; }
+.sp-table .sp-link { font-weight: 600; color: #1F2617; text-decoration: none; }
+.sp-table .sp-link:hover { text-decoration: underline; color: #2F5A27; }
+.sp-table .sp-link:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; border-radius: 3px; }
+.sp-needs { color: #8A1C1C; font-weight: 700; }
+.sp-sample-note { color: #7A5A00; font-weight: 600; }
+.sp-muted { color: #8A8D7E; }
+.sp-sub { color: #5C6152; font-size: 12px; font-weight: 400; }
+.sp-section { background: #fff; border-radius: var(--radius-card); box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 16px 18px; margin-top: 18px; }
+.sp-section h3 { font-size: 16px; font-weight: 800; margin: 0; }
+.sp-period { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 10px 0 14px; }
+.sp-seg { display: inline-flex; border: 1px solid #D6D2C6; border-radius: 10px; overflow: hidden; }
+.sp-seg a { padding: 7px 14px; font-size: 13px; font-weight: 600; color: #5C6152; text-decoration: none; background: #fff; }
+.sp-seg a.active { background: #3d5230; color: #fff; }
+.sp-seg a:focus-visible { outline: 2px solid #4b6a3f; outline-offset: -2px; }
+.sp-nav { display: inline-flex; align-items: center; gap: 6px; }
+.sp-nav a { padding: 6px 10px; border: 1px solid #D6D2C6; border-radius: 8px; background: #fff; color: #1F2617; text-decoration: none; font-size: 13px; }
+.sp-nav a:hover { background: #F2F0EA; }
+.sp-nav strong { min-width: 150px; text-align: center; }
+.sp-supplier { margin-top: 16px; }
+.sp-supplier h4 { font-size: 14px; font-weight: 700; margin: 0 0 6px; }
+.sp-scroll { overflow-x: auto; }
+tr.sp-total td { background: #E4EFDF; font-weight: 800; }
+tr.sp-subtotal td { background: #F7F6F2; font-weight: 700; }
+.sp-detail-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 12px; }
+.sp-detail-head h2 { font-size: 20px; font-weight: 800; margin: 0; }
+.sp-facts { display: flex; flex-wrap: wrap; gap: 8px 22px; color: #3d4333; font-size: 14px; margin-bottom: 10px; }
+.sp-facts span b { color: #1F2617; }
+.sp-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border: 1px solid #D6D2C6; border-radius: 10px; background: #fff; color: #1F2617; font-size: 13px; font-weight: 600; text-decoration: none; }
+.sp-toggle.active { background: #3d5230; border-color: #3d5230; color: #fff; }
+.sp-toggle:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; }
+
 /* Cost comparison */
 .pc-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 4px 0 16px; }
 @media (max-width: 1100px) { .pc-cards { grid-template-columns: repeat(2, 1fr); } }
@@ -111,7 +155,8 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
 
 <div class="page-wrap">
     <nav class="pr-tabs" aria-label="Procurement Report">
-        <a class="pr-tab<?= $tab === 'table' ? ' active' : '' ?>" href="<?= $tabLink('table') ?>"<?= $tab === 'table' ? ' aria-current="page"' : '' ?>>Report</a>
+        <a class="pr-tab<?= $tab === 'suppliers' ? ' active' : '' ?>" href="<?= $tabLink('suppliers') ?>"<?= $tab === 'suppliers' ? ' aria-current="page"' : '' ?>>Suppliers</a>
+        <a class="pr-tab<?= $tab === 'table' ? ' active' : '' ?>" href="<?= $tabLink('items') ?>"<?= $tab === 'table' ? ' aria-current="page"' : '' ?>>Items</a>
         <a class="pr-tab<?= $tab === 'comparison' ? ' active' : '' ?>" href="<?= $tabLink('comparison') ?>"<?= $tab === 'comparison' ? ' aria-current="page"' : '' ?>>Cost comparison</a>
     </nav>
 
@@ -133,6 +178,7 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
         </div>
     </div>
 
+    <?php if ($tab !== 'suppliers'): ?>
     <div class="inv-toolbar">
         <div class="inv-search-field">
             <div class="inv-search<?= $searchError ? ' is-invalid' : '' ?>">
@@ -166,8 +212,15 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
             Clear all <span class="clear-filters-count" id="clearFiltersCount" aria-hidden="true"><?= $activeFilters ?></span>
         </a>
     </div>
+    <?php endif; ?>
 
-    <?= $tab === 'comparison' ? view('admin/_procurement_comparison', get_defined_vars()) : view('admin/_procurement_table', get_defined_vars()) ?>
+    <?php if ($tab === 'suppliers'): ?>
+        <?= view('admin/_procurement_suppliers', get_defined_vars()) ?>
+    <?php elseif ($tab === 'comparison'): ?>
+        <?= view('admin/_procurement_comparison', get_defined_vars()) ?>
+    <?php else: ?>
+        <?= view('admin/_procurement_table', get_defined_vars()) ?>
+    <?php endif; ?>
 </div>
 
 <script>
@@ -196,7 +249,9 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
     }
 
     ['classFilter', 'statusFilter'].forEach(id => {
-        document.getElementById(id).addEventListener('change', event => {
+        const filter = document.getElementById(id);
+        if (!filter) return; // the Suppliers tab has no filters
+        filter.addEventListener('change', event => {
             const url = new URL(window.location.href);
             const key = id.replace('Filter', '');
             if (event.target.value) url.searchParams.set(key, event.target.value);
@@ -215,8 +270,9 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
         window.location.href = url.toString();
     });
 
-    const searchInput = document.getElementById('searchInput');
-    const searchBox = searchInput.closest('.inv-search');
+    // (On the Suppliers tab there is no search box: these stand-ins keep the shared script below harmless.)
+    const searchInput = document.getElementById('searchInput') || document.createElement('input');
+    const searchBox = searchInput.closest('.inv-search') || document.createElement('div');
     const searchError = document.getElementById('searchError');
     const searchClear = document.getElementById('searchClear');
     // Same rule as ProductModel::SEARCH_PATTERN on the server.

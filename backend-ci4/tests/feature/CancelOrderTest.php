@@ -52,7 +52,7 @@ final class CancelOrderTest extends CIUnitTestCase
             'supplier_id' => ['type' => 'VARCHAR', 'constraint' => 10], 'company_name' => ['type' => 'VARCHAR', 'constraint' => 100],
             'contact_person' => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true], 'contact_email' => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
             'contact_number' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true], 'lead_time_days' => ['type' => 'INTEGER', 'default' => 7],
-            'is_active' => ['type' => 'INTEGER', 'default' => 1],
+            'is_active' => ['type' => 'INTEGER', 'default' => 1], 'is_sample' => ['type' => 'INTEGER', 'default' => 0],
         ], 'supplier_id');
         $table('products', [
             'item_id' => ['type' => 'VARCHAR', 'constraint' => 15], 'item_name' => ['type' => 'VARCHAR', 'constraint' => 100],

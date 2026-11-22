@@ -33,6 +33,8 @@ $formatPhone = static function (?string $phone): string {
 .sup-archive-note { margin: 0 0 14px; font-size: 13px; color: #5C6152; }
 
 .sup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.sup-group { grid-column: 1 / -1; margin: 8px 0 0; font-size: 13px; font-weight: 700; color: #7A5A00; text-transform: uppercase; letter-spacing: .04em; }
+.sup-group small { font-weight: 400; text-transform: none; letter-spacing: 0; color: #5C6152; }
 @media (max-width: 900px) { .sup-grid { grid-template-columns: 1fr; } }
 
 .sup-card { background: #fff; border-radius: var(--radius-card); padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
@@ -46,6 +48,7 @@ $formatPhone = static function (?string $phone): string {
 .sup-card-top .cat { color: #666; font-size: 13px; }
 .sup-badge { margin-left: auto; background: #e9e7e1; border-radius: var(--radius-pill); padding: 5px 14px; font-size: 12px; font-weight: 600; }
 .sup-badge.portal { background: var(--green-bg); color: var(--green-text); }
+.sup-sample { display: inline-block; margin-left: 8px; padding: 2px 9px; border-radius: var(--radius-pill); background: #FFF1CC; color: #7A5A00; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; vertical-align: middle; }
 .sup-card-foot { display: flex; gap: 32px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #eee; font-size: 14px; }
 .sup-card-foot span { display: block; color: #888; font-size: 12px; }
 
@@ -96,8 +99,8 @@ $formatPhone = static function (?string $phone): string {
 
     <div class="sup-tabrow sticky-tabs">
         <div class="underline-tabs">
-            <a href="<?= site_url('admin/suppliers') ?>" class="<?= $archived ? '' : 'active' ?>"<?= $archived ? '' : ' aria-current="page"' ?>>Active (<?= esc($activeCount ?? 0) ?>)</a>
-            <a href="<?= site_url('admin/suppliers?status=archived') ?>" class="<?= $archived ? 'active' : '' ?>"<?= $archived ? ' aria-current="page"' : '' ?>><i class="bi bi-archive" aria-hidden="true"></i> Archived (<?= esc($archivedCount ?? 0) ?>)</a>
+            <a href="<?= site_url('admin/suppliers') ?>" class="<?= $archived ? '' : 'active' ?>"<?= $archived ? '' : ' aria-current="page"' ?>>Active (<?= esc($activeCount ?? 0) ?><?= ! empty($activeSampleCount) ? ' + ' . esc($activeSampleCount) . ' sample' : '' ?>)</a>
+            <a href="<?= site_url('admin/suppliers?status=archived') ?>" class="<?= $archived ? 'active' : '' ?>"<?= $archived ? ' aria-current="page"' : '' ?>><i class="bi bi-archive" aria-hidden="true"></i> Archived (<?= esc($archivedCount ?? 0) ?><?= ! empty($archivedSampleCount) ? ' + ' . esc($archivedSampleCount) . ' sample' : '' ?>)</a>
         </div>
         <a href="<?= site_url('admin/suppliers/create') ?>" class="btn btn-success sup-add"><i class="bi bi-plus-lg"></i> Add Supplier</a>
     </div>
@@ -108,12 +111,16 @@ $formatPhone = static function (?string $phone): string {
 
     <?php if (!empty($suppliers)): ?>
     <div class="sup-grid">
+            <?php $sampleHeadingShown = false; ?>
             <?php foreach ($suppliers as $s): ?>
+                <?php if (! empty($s['is_sample']) && ! $sampleHeadingShown): $sampleHeadingShown = true; ?>
+                    <h2 class="sup-group" id="sampleSuppliers">Sample suppliers <small>&middot; for price comparison only; they never receive orders</small></h2>
+                <?php endif; ?>
                 <div class="sup-card <?= $archived ? 'archived' : '' ?>">
                     <div class="sup-card-top">
                         <div class="sup-thumb placeholder"><i class="bi bi-truck"></i></div>
                         <div>
-                            <div class="name"><?= esc($s['company_name']) ?></div>
+                            <div class="name"><?= esc($s['company_name']) ?><?php if (! empty($s['is_sample'])): ?><span class="sup-sample" title="Sample supplier: its prices are only for comparison">Sample</span><?php endif; ?></div>
                             <div class="cat"><?= esc($s['category'] ?? 'General supplier') ?></div>
                         </div>
                         <?php if ($archived): ?>

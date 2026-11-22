@@ -37,7 +37,7 @@ final class ProcurementReportTest extends CIUnitTestCase
 
     private function page(string $query = ''): string
     {
-        return (string) $this->asOwner()->get('admin/procurement-report' . $query)->getBody();
+        return (string) $this->asOwner()->get('admin/procurement-report' . ($query === '' ? '?tab=items' : $query))->getBody();
     }
 
     private function xpath(string $html): \DOMXPath

@@ -222,7 +222,7 @@ final class ProcurementOptimizationTest extends CIUnitTestCase
         $this->assertStringContainsString('supplier_note', html_entity_decode($alerts), 'The dialog gets it with the line.');
 
         // Procurement Report
-        $report = $this->html($this->owner('admin/procurement-report'));
+        $report = $this->html($this->owner('admin/procurement-report?tab=items'));
         $note   = $report->query('//span[contains(@class,"pr-min-note")]')->item(0);
         $this->assertNotNull($note);
         $this->assertSame($text, trim($note->textContent));
@@ -237,7 +237,7 @@ final class ProcurementOptimizationTest extends CIUnitTestCase
         $this->alertFor('P-2');
 
         $this->assertStringNotContainsString('ra-min-note', $this->owner('admin/reorder-alerts'));
-        $this->assertStringNotContainsString('pr-min-note', preg_replace('/\.pr-min-note[^}]*\}/', '', $this->owner('admin/procurement-report')) ?? '');
+        $this->assertStringNotContainsString('pr-min-note', preg_replace('/\.pr-min-note[^}]*\}/', '', $this->owner('admin/procurement-report?tab=items')) ?? '');
         $this->assertNull(PurchaseOrderLine::build($this->row('P-1'), [])['supplier_note']);
         $this->assertSame(50, PurchaseOrderLine::build($this->row('P-1'), [])['supplier_min']);
     }
@@ -251,7 +251,7 @@ final class ProcurementOptimizationTest extends CIUnitTestCase
         $this->assertStringContainsString('ra-min-note is-warning', $alerts);
         $this->assertStringContainsString('This minimum is more than 6 months of sales. Consider a smaller order from another supplier.', $alerts);
         $this->assertStringNotContainsString('Supplier minimum is 300', $alerts, 'A warning instead of the plain note.');
-        $this->assertStringContainsString('pr-min-note is-warning', $this->owner('admin/procurement-report'));
+        $this->assertStringContainsString('pr-min-note is-warning', $this->owner('admin/procurement-report?tab=items'));
     }
 
     // ================================================================ the item form
@@ -392,14 +392,14 @@ final class ProcurementOptimizationTest extends CIUnitTestCase
     public function testTheProcurementReportHasTwoTabsAndTheSidebarLink(): void
     {
         $this->seedComparison();
-        $html = $this->owner('admin/procurement-report');
+        $html = $this->owner('admin/procurement-report?tab=items');
         $x    = $this->html($html);
 
         $tabs = array_map(static fn ($a) => trim($a->textContent), iterator_to_array($x->query('//nav[contains(@class,"pr-tabs")]/a')));
-        $this->assertSame(['Report', 'Cost comparison'], $tabs);
-        $this->assertStringContainsString('active', $x->query('//nav[contains(@class,"pr-tabs")]/a')->item(0)->getAttribute('class'));
-        $this->assertNotNull($x->query('//table[contains(@class,"pr-table")]')->item(0), 'The existing table is still the first tab.');
-        $this->assertStringContainsString('tab=comparison', $x->query('//nav[contains(@class,"pr-tabs")]/a')->item(1)->getAttribute('href'));
+        $this->assertSame(['Suppliers', 'Items', 'Cost comparison'], $tabs); // was ['Report', 'Cost comparison']: Suppliers is new, "Report" is now "Items"
+        $this->assertStringContainsString('active', $x->query('//nav[contains(@class,"pr-tabs")]/a')->item(1)->getAttribute('class'));
+        $this->assertNotNull($x->query('//table[contains(@class,"pr-table")]')->item(0), 'The existing table is still there (the Items tab).');
+        $this->assertStringContainsString('tab=comparison', $x->query('//nav[contains(@class,"pr-tabs")]/a')->item(2)->getAttribute('href'));
 
         // the sidebar: under ORDERING, active here
         $ordering = strpos($html, 'nav-section-label">ORDERING');
@@ -653,7 +653,7 @@ final class ProcurementOptimizationTest extends CIUnitTestCase
 
     public function testThePaymentTermsChoices(): void
     {
-        $this->assertSame(['Cash', 'Check', 'Other'], \App\Models\SupplierModel::PAYMENT_TERMS);
+        $this->assertSame(['Cash', 'Check', 'Cash or Check', 'Other'], \App\Models\SupplierModel::PAYMENT_TERMS, 'The three original options still work; Cash or Check is the fourth.');
         $this->assertStringContainsString("'payment_terms' => ['type' => 'VARCHAR', 'constraint' => 30, 'null' => true", file_get_contents(APPPATH . 'Database/Migrations/2026-11-18-100200_AddPaymentTermsToSuppliers.php'));
         $this->assertStringContainsString("'default' => null", file_get_contents(APPPATH . 'Database/Migrations/2026-11-18-100000_AddSupplierMinQtyToProducts.php'), 'Blank = no supplier minimum.');
     }
@@ -668,6 +668,6 @@ final class ProcurementOptimizationTest extends CIUnitTestCase
         $this->assertStringContainsString('Payment terms (optional)', $form);
         $this->assertStringContainsString('SupplierModel::PAYMENT_TERMS', $form);
         $this->assertStringContainsString('Terms</span>', $card);
-        $this->assertSame(2, substr_count($ctrl, "'payment_terms' => 'permit_empty|in_list[Cash,Check,Other]',"), 'Checked on Add and on Edit.');
+        $this->assertSame(2, substr_count($ctrl, "'payment_terms' => 'permit_empty|in_list[' . implode(',', \App\Models\SupplierModel::PAYMENT_TERMS) . ']',"), 'Checked on Add and on Edit, against the one list.');
     }
 }
