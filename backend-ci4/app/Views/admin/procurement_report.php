@@ -14,7 +14,7 @@ $activeFilters = (int) ($activeFilters ?? 0);
 $exportQuery   = $exportQuery ?? [];
 $exportSuffix  = $exportQuery ? '?' . http_build_query($exportQuery) : '';
 $keepPer       = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' => $_GET['per_page']]) : '';
-$tab           = in_array($tab ?? 'table', ['suppliers', 'comparison'], true) ? $tab : 'table'; // 'table' = the Items tab
+$tab           = in_array($tab ?? 'table', ['suppliers', 'comparison', 'best'], true) ? $tab : 'table'; // 'table' = the Items tab
 $tabLink       = static fn (string $t): string => site_url('admin/procurement-report') . '?tab=' . $t;
 // "Clear all" and the live search stay on this tab (the bare URL now opens Suppliers).
 $keepPer       = $tab === 'comparison' ? '?tab=comparison' : '?' . http_build_query(['tab' => 'items'] + (isset($_GET['per_page']) ? ['per_page' => $_GET['per_page']] : []));
@@ -169,6 +169,7 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
         <a class="pr-tab<?= $tab === 'suppliers' ? ' active' : '' ?>" href="<?= $tabLink('suppliers') ?>"<?= $tab === 'suppliers' ? ' aria-current="page"' : '' ?>>Suppliers</a>
         <a class="pr-tab<?= $tab === 'table' ? ' active' : '' ?>" href="<?= $tabLink('items') ?>"<?= $tab === 'table' ? ' aria-current="page"' : '' ?>>Items</a>
         <a class="pr-tab<?= $tab === 'comparison' ? ' active' : '' ?>" href="<?= $tabLink('comparison') ?>"<?= $tab === 'comparison' ? ' aria-current="page"' : '' ?>>Cost comparison</a>
+        <a class="pr-tab<?= $tab === 'best' ? ' active' : '' ?>" href="<?= $tabLink('best') ?>"<?= $tab === 'best' ? ' aria-current="page"' : '' ?>>Best supplier</a>
     </nav>
 
     <div class="pr-top">
@@ -184,12 +185,14 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
         </span>
         </div>
         <div class="pr-exports">
+            <?php if ($tab !== 'best'): ?>
             <a class="btn btn-outline-secondary pr-export-btn" id="exportPdf" data-base="<?= site_url('admin/procurement-report/pdf') ?>" href="<?= site_url('admin/procurement-report/pdf') . $exportSuffix ?>"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Export PDF</a>
+            <?php endif; ?>
             <a class="btn btn-outline-secondary pr-export-btn" id="exportCsv" data-base="<?= site_url('admin/procurement-report/csv') ?>" href="<?= site_url('admin/procurement-report/csv') . $exportSuffix ?>"><i class="bi bi-filetype-csv" aria-hidden="true"></i> Export CSV</a>
         </div>
     </div>
 
-    <?php if ($tab !== 'suppliers'): ?>
+    <?php if (! in_array($tab, ['suppliers', 'best'], true)): ?>
     <div class="inv-toolbar">
         <div class="inv-search-field">
             <div class="inv-search<?= $searchError ? ' is-invalid' : '' ?>">
@@ -229,6 +232,8 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
         <?= view('admin/_procurement_suppliers', get_defined_vars()) ?>
     <?php elseif ($tab === 'comparison'): ?>
         <?= view('admin/_procurement_comparison', get_defined_vars()) ?>
+    <?php elseif ($tab === 'best'): ?>
+        <?= view('admin/_procurement_best', get_defined_vars()) ?>
     <?php else: ?>
         <?= view('admin/_procurement_table', get_defined_vars()) ?>
     <?php endif; ?>
@@ -255,6 +260,7 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
         const suffix = params.toString() ? '?' + params.toString() : '';
         ['exportPdf', 'exportCsv'].forEach(id => {
             const a = document.getElementById(id);
+            if (!a) return;
             a.href = a.dataset.base + suffix;
         });
     }

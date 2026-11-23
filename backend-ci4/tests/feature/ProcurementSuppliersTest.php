@@ -127,7 +127,7 @@ final class ProcurementSuppliersTest extends CIUnitTestCase
     {
         $bare = $this->html($this->owner());
 
-        $this->assertSame(['Suppliers', 'Items', 'Cost comparison'], array_map(fn ($a) => $this->clean($a->textContent), iterator_to_array($bare->query('//nav[contains(@class,"pr-tabs")]/a'))));
+        $this->assertSame(['Suppliers', 'Items', 'Cost comparison', 'Best supplier'], array_map(fn ($a) => $this->clean($a->textContent), iterator_to_array($bare->query('//nav[contains(@class,"pr-tabs")]/a'))));
         $this->assertStringContainsString('active', $bare->query('//nav[contains(@class,"pr-tabs")]/a')->item(0)->getAttribute('class'), 'Suppliers is the default tab.');
         $this->assertNotNull($bare->query('//table[@id="supplierList"]')->item(0));
         $this->assertNull($bare->query('//table[contains(@class,"pr-table")]')->item(0), 'Not the Items table.');

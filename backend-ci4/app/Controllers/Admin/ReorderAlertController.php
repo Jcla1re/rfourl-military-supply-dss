@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Libraries\BestSupplier;
 use App\Libraries\DssRunner;
 use App\Libraries\ProcurementComparison;
 use App\Libraries\ProcurementReport;
@@ -66,6 +67,9 @@ class ReorderAlertController extends BaseController
         if ($tab === 'suppliers') {
             return $this->suppliersTab($dss);
         }
+        if ($tab === 'best') {
+            return $this->bestTab($filters, $dss);
+        }
         $rows    = ProcurementReport::rows($filters, $dss);
 
         $perPage = (int) ($this->request->getGet('per_page') ?? self::PER_PAGE_OPTIONS[0]);
@@ -104,20 +108,25 @@ class ReorderAlertController extends BaseController
         return $this->request->getGet('tab') === 'comparison';
     }
 
+    private function isBestTab(): bool
+    {
+        return $this->request->getGet('tab') === 'best';
+    }
+
     private function isSuppliersTab(): bool
     {
         return $this->request->getGet('tab') === 'suppliers';
     }
 
     /**
-     * Which tab the page opens: ?tab=suppliers | items | comparison. With no tab it is Suppliers, unless the URL
+     * Which tab the page opens: ?tab=suppliers | items | comparison | best. With no tab it is Suppliers, unless the URL
      * carries Items parameters (search, class, status, page, per_page): an old Items link still opens Items.
      * (The PDF and CSV exports are separate routes: with no tab they export Items, as they always did.)
      */
     private function pageTab(): string
     {
         $tab = (string) $this->request->getGet('tab');
-        if (in_array($tab, ['suppliers', 'items', 'comparison'], true)) {
+        if (in_array($tab, ['suppliers', 'items', 'comparison', 'best'], true)) {
             return $tab;
         }
         foreach (['search', 'class', 'status', 'page', 'per_page'] as $itemsParam) {
@@ -157,6 +166,65 @@ class ReorderAlertController extends BaseController
         ]);
     }
 
+    /**
+     * The Best supplier tab (a read-only comparison, see App\Libraries\BestSupplier): the list of sizes with each tag's
+     * supplier, and one size's full comparison (?item=ID). ?show=other (default) | warn | all, plus search and class.
+     */
+    private function bestTab(array $filters, array $dss)
+    {
+        $filters['status'] = ''; // the Items status filter does not apply here
+        $show              = (string) $this->request->getGet('show');
+        $show              = array_key_exists($show, BestSupplier::SHOW) ? $show : 'other';
+        $base              = $filters + [
+            'title'         => 'Procurement Report',
+            'active'        => 'procurement_report',
+            'tab'           => 'best',
+            'lastRunAt'     => (new DssRunner())->lastRunAt(),
+            'activeFilters' => 0,
+            'detail'        => null,
+            'bestShow'      => $show,
+            'bestCounts'    => [],
+            'rows'          => [],
+            'exportQuery'   => ['tab' => 'best'] + ProcurementReport::query($filters) + ($show !== 'other' ? ['show' => $show] : []),
+        ];
+
+        $itemId = (string) $this->request->getGet('item');
+        if ($itemId !== '') {
+            $size = array_values(array_filter(ProcurementReport::rows(ProcurementReport::filters([]), $dss), static fn ($r) => $r['item_id'] === $itemId));
+            if ($size !== []) {
+                return view('admin/procurement_report', ['detail' => BestSupplier::forItems($size, $dss)[$itemId], 'exportQuery' => ['tab' => 'best']] + $base);
+            }
+        }
+
+        $results = BestSupplier::forItems(ProcurementReport::rows($filters, $dss), $dss);
+        $counts  = [];
+        foreach (array_keys(BestSupplier::SHOW) as $key) {
+            $counts[$key] = count(BestSupplier::filter($results, $key));
+        }
+        $shown = array_values(BestSupplier::filter($results, $show));
+        if ($show === 'other') {
+            usort($shown, static fn ($a, $b) => ($b['saving_vs_main'] ?? -1) <=> ($a['saving_vs_main'] ?? -1)); // the biggest yearly saving first
+        }
+
+        $perPage = (int) ($this->request->getGet('per_page') ?? self::PER_PAGE_OPTIONS[0]);
+        if (! in_array($perPage, self::PER_PAGE_OPTIONS, true)) {
+            $perPage = self::PER_PAGE_OPTIONS[0];
+        }
+        $totalPages = max(1, (int) ceil(count($shown) / $perPage));
+        $page       = min(max(1, (int) ($this->request->getGet('page') ?? 1)), $totalPages);
+
+        return view('admin/procurement_report', [
+            'rows'           => array_slice($shown, ($page - 1) * $perPage, $perPage),
+            'bestCounts'     => $counts,
+            'totalItems'     => count($shown),
+            'currentPage'    => $page,
+            'totalPages'     => $totalPages,
+            'perPage'        => $perPage,
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+            'activeFilters'  => ProcurementReport::activeFilterCount($filters),
+        ] + $base);
+    }
+
     /** The Cost comparison tab: the owner's usual order quantity against the system's Order Qty, per size with sales. */
     private function comparison(array $filters, array $dss)
     {
@@ -190,6 +258,10 @@ class ReorderAlertController extends BaseController
         // Web requests only: under the CLI (PHPUnit) set_time_limit() would cap the rest of the whole test run.
         if (! is_cli()) {
             @set_time_limit(120);
+        }
+
+        if ($this->isBestTab()) {
+            return redirect()->to('/admin/procurement-report?tab=best')->with('toast', Toast::info('No PDF for this tab', 'Use Export CSV.'));
         }
 
         $filters   = ProcurementReport::filters($this->request->getGet() ?? []);
@@ -263,6 +335,19 @@ class ReorderAlertController extends BaseController
                 ->setHeader('Content-Type', 'text/csv; charset=utf-8')
                 ->setHeader('Content-Disposition', 'attachment; filename="supplier-report-' . $period['type'] . '-' . $period['from'] . '.csv"')
                 ->setBody(SupplierProcurement::csv($period, SupplierProcurement::report($period)));
+        }
+
+        if ($this->isBestTab()) {
+            // One line per item and supplier, for what the list shows (same search, class and "show" filters).
+            $filters['status'] = '';
+            $show              = (string) $this->request->getGet('show');
+            $show              = array_key_exists($show, BestSupplier::SHOW) ? $show : 'other';
+            $results           = BestSupplier::filter(BestSupplier::forItems(ProcurementReport::rows($filters, $dss), $dss), $show);
+
+            return $this->response
+                ->setHeader('Content-Type', 'text/csv; charset=utf-8')
+                ->setHeader('Content-Disposition', 'attachment; filename="best-supplier-' . date('Y-m-d') . '.csv"')
+                ->setBody(BestSupplier::csv($results));
         }
 
         if ($this->isComparisonTab()) {
