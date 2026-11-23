@@ -46,7 +46,8 @@ $clearUrl      = site_url('admin/procurement-report') . (isset($_GET['per_page']
                         $pillTitle = \App\Models\ProductModel::statusTitle($r['status']);
                         ?>
                         <tr class="pr-row" data-item-id="<?= esc($r['item_id'], 'attr') ?>">
-                            <td><strong><?= esc($r['item_name']) ?></strong><?php if (! empty($r['supplier_note'])): ?>
+                            <td><strong><?= esc($r['item_name']) ?></strong><?php if (($r['lead_time_days'] ?? null) !== null && $r['lead_time_days'] >= \App\Libraries\ProcurementReport::LONG_LEAD_TIME_DAYS): ?>
+                                <span class="pr-lead-badge" title="Supplier lead time: <?= (int) $r['lead_time_days'] ?> days">Long lead time</span><?php endif; ?><?php if (! empty($r['supplier_note'])): ?>
                                 <span class="pr-min-note<?= $r['supplier_note']['level'] === 'warning' ? ' is-warning' : '' ?>"><?= esc($r['supplier_note']['text']) ?></span><?php endif; ?></td>
                             <td class="col-center"><?= $r['size'] !== null ? esc($r['size']) : '&mdash;' ?></td>
                             <td class="col-center">

@@ -182,6 +182,21 @@ final class ProcurementReportTest extends CIUnitTestCase
         $this->assertSame('—', trim($x->query('./td[2]', $tr)->item(0)->textContent));
     }
 
+    /** Display only: a "Long lead time" badge when the item's supplier lead time is 14 days or more. */
+    public function testLongLeadTimeBadgeShowsFromFourteenDays(): void
+    {
+        $this->addSize('W-1', 'Whistle', null, 20, 3);
+        $badge = '//tr[@data-item-id="W-1"]//span[contains(@class,"pr-lead-badge")]';
+
+        $this->db->table('suppliers')->where('supplier_id', 'SUP-001')->update(['lead_time_days' => 13]);
+        $this->assertSame(0, $this->xpath($this->page())->query($badge)->length);
+
+        $this->db->table('suppliers')->where('supplier_id', 'SUP-001')->update(['lead_time_days' => 14]);
+        $found = $this->xpath($this->page())->query($badge);
+        $this->assertSame(1, $found->length);
+        $this->assertSame('Long lead time', trim($found->item(0)->textContent));
+    }
+
     public function testClassBadgeAndStatusBadgeLikeInventory(): void
     {
         $this->addSize('P-S', 'Pants', 'S', 1, 3);

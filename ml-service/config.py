@@ -2,12 +2,28 @@
 
 K = 3
 
+# The 2 features K-Means clusters on: how fast an item sells and how much that
+# varies. Both are right-skewed (most items sell well below 1/day, a few sell
+# much more), so log1p is applied before min-max scaling.
+#
+# Not clustered on, on purpose:
+#  - lead_time_days: set per supplier and shared by a whole category, so it
+#    would group items by category instead of by sales.
+#  - unit_cost: it split the classes by price (the "lowest demand" class
+#    became the expensive items) instead of by demand.
+# Lead time is still used for Safety Stock / ROP.
 FEATURES = [
-    "unit_cost",
     "avg_daily_demand",
     "demand_std_dev",
-    "lead_time_days",
 ]
+
+# Features that get log1p before min-max scaling (all of them).
+LOG_FEATURES = list(FEATURES)
+
+# Fields every item in the request must carry. The CI4 side keeps sending
+# unit_cost and lead_time_days (API contract unchanged), so they are still
+# validated, but they are not used for clustering.
+REQUIRED_FIELDS = FEATURES + ["unit_cost", "lead_time_days"]
 
 RANDOM_STATE = 42
 N_INIT = 10

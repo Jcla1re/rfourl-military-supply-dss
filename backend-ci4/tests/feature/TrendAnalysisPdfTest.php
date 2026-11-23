@@ -184,7 +184,7 @@ final class TrendAnalysisPdfTest extends CIUnitTestCase
         $this->assertSame(['3', '5', '5'], array_column($classes, 'items'));
         $this->assertCount(3, $classes[0]['top']);
         $this->assertCount(5, $classes[1]['top']);
-        $this->assertStringContainsString('Items are grouped by unit cost, daily demand, demand variability and lead time together. The class is a group, not a sales rank, so a best seller can be in any class.', $d['report']['abc']['sentence']);
+        $this->assertStringContainsString('Items are grouped by daily demand and demand variability. Class A holds the fastest-moving items, class B the steady sellers, and class C the slow or non-moving items.', $d['report']['abc']['sentence']);
         $this->assertStringContainsString('1 item sold', $d['report']['abc']['unclassedNote']);
     }
 

@@ -945,7 +945,7 @@ foreach ($products as $p) {
                 <div class="card-head">
                     <div>
                         <h6>ABC classification (K-Means) <?= \App\Libraries\Glossary::tip('abc') ?></h6>
-                        <p class="card-sub">Grouped by cost, demand, demand variability and lead time.</p>
+                        <p class="card-sub">Grouped by daily demand and demand variability.</p>
                     </div>
                 </div>
                 <?php if (empty($abcItems)): ?>

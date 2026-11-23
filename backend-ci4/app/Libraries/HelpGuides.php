@@ -79,7 +79,7 @@ class HelpGuides
                     'A: Group with the highest average demand · 95% availability target',
                     'B: Group with medium average demand · 90% availability target',
                     'C: Group with the lowest average demand · 85% availability target',
-                    'Items are grouped by unit cost, daily demand, demand variability and lead time together. The class is a group, not a sales rank, so a best seller can be in any class.',
+                    'Items are grouped by daily demand and demand variability. Class A holds the fastest-moving items, class B the steady sellers, and class C the slow or non-moving items.',
                     'Click All, A, B or C above the list to see one group.',
                     'The number on the left is the rank. 1 sells the most.',
                 ],

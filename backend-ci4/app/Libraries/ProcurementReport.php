@@ -64,6 +64,9 @@ class ProcurementReport
         ], static fn ($v) => $v !== '');
     }
 
+    /** Supplier lead time (days) from which the Items tab shows a "Long lead time" badge. */
+    public const LONG_LEAD_TIME_DAYS = 14;
+
     /**
      * Every active size matching the filters, sorted by item name then size.
      *
@@ -83,6 +86,15 @@ class ProcurementReport
             $computations[$c['item_id']] = $c;
         }
         $classByItem = (new ClusterSegmentModel())->classByItem();
+
+        // Main supplier's lead time per supplier_id (display only: the "Long lead time" badge).
+        $leadBySupplier = [];
+        $db             = db_connect();
+        if ($db->tableExists('suppliers')) {
+            foreach ($db->table('suppliers')->select('supplier_id, lead_time_days')->get()->getResultArray() as $s) {
+                $leadBySupplier[(string) $s['supplier_id']] = (int) $s['lead_time_days'];
+            }
+        }
 
         $rows = [];
         foreach ($productModel->where('is_active', 1)->findAll() as $p) {
@@ -124,6 +136,8 @@ class ProcurementReport
                 'eoq_raw'           => $c !== null && isset($c['eoq_raw']) ? (int) $c['eoq_raw'] : null,
                 'supplier_min'      => ! empty($p['supplier_min_qty']) ? (int) $p['supplier_min_qty'] : null,
                 'supplier_note'     => SupplierMinimum::forProduct($p, $c, $dss),
+                // Display only (Items tab badge); not used by any formula.
+                'lead_time_days'    => $leadBySupplier[(string) ($p['supplier_id'] ?? '')] ?? null,
             ];
         }
 

@@ -6,11 +6,12 @@ from config import (
     CLUSTER_NAMES_BY_RANK,
     FEATURES,
     K,
+    REQUIRED_FIELDS,
     SERVICE_LEVEL_BY_CLASS,
     Z_SCORE_MAP,
 )
 from kmeans_model import KMeansClusterModel
-from preprocessing import normalize_features, to_feature_frame
+from preprocessing import normalize_features, to_feature_frame, to_original_units
 
 app = Flask(__name__)
 
@@ -32,6 +33,13 @@ def cluster_inventory():
         ],
         "n_clusters": 3
     }
+    Items are clustered on 2 features (avg_daily_demand, demand_std_dev;
+    both log1p-transformed before min-max scaling). unit_cost and
+    lead_time_days must still be sent and are validated, but they are not
+    used for clustering: lead time is a per-supplier value that would group
+    items by category, and unit cost made the classes follow price instead
+    of demand.
+
     Returns each item's cluster assignment, ranked and named by demand
     level (highest-demand cluster = "Fast-Moving", etc.), plus the
     cluster centroids in original (unscaled) units.
@@ -51,7 +59,7 @@ def cluster_inventory():
     if len(items) < n_clusters:
         return jsonify({"error": f"need at least {n_clusters} items to form {n_clusters} clusters"}), 400
 
-    missing_fields = [f for f in FEATURES if any(f not in item for item in items)]
+    missing_fields = [f for f in REQUIRED_FIELDS if any(f not in item for item in items)]
     if missing_fields:
         return jsonify({"error": f"items missing required feature(s): {missing_fields}"}), 400
 
@@ -85,7 +93,7 @@ def cluster_inventory():
             "z_score": z_score,
         })
 
-    centers_original = scaler.inverse_transform(centers_scaled)
+    centers_original = to_original_units(scaler, centers_scaled)
     centers = [
         {FEATURES[j]: float(centers_original[i][j]) for j in range(len(FEATURES))}
         for i in range(n_clusters)
