@@ -14,7 +14,7 @@ $activeFilters = (int) ($activeFilters ?? 0);
 $exportQuery   = $exportQuery ?? [];
 $exportSuffix  = $exportQuery ? '?' . http_build_query($exportQuery) : '';
 $keepPer       = isset($_GET['per_page']) ? '?' . http_build_query(['per_page' => $_GET['per_page']]) : '';
-$tab           = in_array($tab ?? 'table', ['suppliers', 'comparison'], true) ? $tab : 'table'; // 'table' = the Items tab
+$tab           = in_array($tab ?? 'table', ['suppliers', 'comparison', 'best'], true) ? $tab : 'table'; // 'table' = the Items tab
 $tabLink       = static fn (string $t): string => site_url('admin/procurement-report') . '?tab=' . $t;
 // "Clear all" and the live search stay on this tab (the bare URL now opens Suppliers).
 $keepPer       = $tab === 'comparison' ? '?tab=comparison' : '?' . http_build_query(['tab' => 'items'] + (isset($_GET['per_page']) ? ['per_page' => $_GET['per_page']] : []));
@@ -107,6 +107,27 @@ $keepPer       = $tab === 'comparison' ? '?tab=comparison' : '?' . http_build_qu
 .sp-po-btn.is-disabled { background: #F3F1EA; border-color: #D6D2C6; color: #8A8F85; cursor: not-allowed; }
 .sp-po-count { display: inline-block; min-width: 18px; padding: 0 6px; border-radius: 999px; background: #fff; color: #3d5230; font-size: 11.5px; font-weight: 800; text-align: center; }
 .sp-po-btn.is-disabled .sp-po-count { background: #E4E1D6; color: #6B6E60; }
+/* Supplier scorecard (SupplierScorecard) */
+.sp-score-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid #D6D2C6; border-radius: 10px; overflow: hidden; }
+.sp-score-seg a { padding: 7px 14px; font-size: 13px; font-weight: 600; color: #5C6152; text-decoration: none; background: #fff; }
+.sp-score-seg a.active { background: #3d5230; color: #fff; }
+.sp-score-seg a:focus-visible { outline: 2px solid #4b6a3f; outline-offset: -2px; }
+.sp-score-wrap { display: block; margin-top: 4px; }
+.sp-score-line { display: block; font-size: 12px; line-height: 1.3; color: #3A4030; font-weight: 600; white-space: normal; }
+.sp-score-line.is-muted { color: #8A8F85; font-weight: 500; }
+.sp-score-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 12px; }
+.sp-score-label { font-size: 13px; font-weight: 700; color: #3A4030; }
+.sp-score-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin: 0 0 6px; }
+.sp-score-head h3 { font-size: 17px; font-weight: 800; margin: 0; }
+.sp-score { margin: 0 0 18px; }
+.sp-score-note { border: 1px solid #D6D2C6; background: #FAF9F5; border-radius: 12px; padding: 9px 14px; margin: 0 0 12px; font-size: 13.5px; color: #3A4030; }
+.sp-score-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.sp-tile { background: #fff; border-radius: var(--radius-card); box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sp-tile-label { color: #5C6152; font-size: 12.5px; }
+.sp-tile-value { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.sp-tile-value .sp-muted { font-size: 13px; font-weight: 600; }
+.sp-tile-sub { color: #6B6E60; font-size: 12px; line-height: 1.3; }
+.sp-foot { color: #6B6E60; font-size: 12.5px; margin: 10px 0 0; }
 .sp-sample-note { color: #7A5A00; font-weight: 600; }
 .sp-muted { color: #8A8D7E; }
 .sp-sub { color: #5C6152; font-size: 12px; font-weight: 400; }
@@ -169,6 +190,7 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
         <a class="pr-tab<?= $tab === 'suppliers' ? ' active' : '' ?>" href="<?= $tabLink('suppliers') ?>"<?= $tab === 'suppliers' ? ' aria-current="page"' : '' ?>>Suppliers</a>
         <a class="pr-tab<?= $tab === 'table' ? ' active' : '' ?>" href="<?= $tabLink('items') ?>"<?= $tab === 'table' ? ' aria-current="page"' : '' ?>>Items</a>
         <a class="pr-tab<?= $tab === 'comparison' ? ' active' : '' ?>" href="<?= $tabLink('comparison') ?>"<?= $tab === 'comparison' ? ' aria-current="page"' : '' ?>>Cost comparison</a>
+        <a class="pr-tab<?= $tab === 'best' ? ' active' : '' ?>" href="<?= $tabLink('best') ?>"<?= $tab === 'best' ? ' aria-current="page"' : '' ?>>Best supplier</a>
     </nav>
 
     <div class="pr-top">
@@ -184,12 +206,14 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
         </span>
         </div>
         <div class="pr-exports">
+            <?php if ($tab !== 'best'): ?>
             <a class="btn btn-outline-secondary pr-export-btn" id="exportPdf" data-base="<?= site_url('admin/procurement-report/pdf') ?>" href="<?= site_url('admin/procurement-report/pdf') . $exportSuffix ?>"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Export PDF</a>
+            <?php endif; ?>
             <a class="btn btn-outline-secondary pr-export-btn" id="exportCsv" data-base="<?= site_url('admin/procurement-report/csv') ?>" href="<?= site_url('admin/procurement-report/csv') . $exportSuffix ?>"><i class="bi bi-filetype-csv" aria-hidden="true"></i> Export CSV</a>
         </div>
     </div>
 
-    <?php if ($tab !== 'suppliers'): ?>
+    <?php if (! in_array($tab, ['suppliers', 'best'], true)): ?>
     <div class="inv-toolbar">
         <div class="inv-search-field">
             <div class="inv-search<?= $searchError ? ' is-invalid' : '' ?>">
@@ -229,6 +253,8 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
         <?= view('admin/_procurement_suppliers', get_defined_vars()) ?>
     <?php elseif ($tab === 'comparison'): ?>
         <?= view('admin/_procurement_comparison', get_defined_vars()) ?>
+    <?php elseif ($tab === 'best'): ?>
+        <?= view('admin/_procurement_best', get_defined_vars()) ?>
     <?php else: ?>
         <?= view('admin/_procurement_table', get_defined_vars()) ?>
     <?php endif; ?>
@@ -255,6 +281,7 @@ th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }
         const suffix = params.toString() ? '?' + params.toString() : '';
         ['exportPdf', 'exportCsv'].forEach(id => {
             const a = document.getElementById(id);
+            if (!a) return;
             a.href = a.dataset.base + suffix;
         });
     }

@@ -51,7 +51,7 @@
             <span class="pf-badge">RfourL Military</span>
         </div>
         <div class="pf-meta">
-            <div><div class="v"><?= esc($stats['on_time_rate'] ?? 0) ?>%</div><div class="l">On-time delivery</div></div>
+            <div><div class="v" id="pfOnTimeTop"<?= ($stats['on_time_rate'] ?? null) === null ? ' title="' . esc((string) ($stats['on_time_message'] ?? ''), 'attr') . '"' : '' ?>><?= ($stats['on_time_rate'] ?? null) !== null ? esc($stats['on_time_rate']) . '%' : '&mdash;' ?></div><div class="l">On-time delivery</div></div>
             <div><div class="v"><?= esc($stats['total_fulfilled'] ?? '0 / 0') ?></div><div class="l">Orders fulfilled</div></div>
         </div>
     </div>
@@ -79,8 +79,9 @@
                     <span class="ic"><i class="bi bi-graph-up-arrow"></i></span>
                     <h6>Performance Summary</h6>
                 </div>
-                <div class="pf-perf-label"><span>On-Time Delivery Rate</span><strong><?= esc($stats['on_time_rate'] ?? 0) ?>%</strong></div>
-                <div class="pf-perf-track"><span style="width: <?= esc($stats['on_time_rate'] ?? 0) ?>%"></span></div>
+                <div class="pf-perf-label"><span>On-Time Delivery Rate</span><strong id="pfOnTime"><?= ($stats['on_time_rate'] ?? null) !== null ? esc($stats['on_time_rate']) . '%' : 'Not enough orders yet' ?></strong></div>
+                <div class="pf-perf-track"><span style="width: <?= (int) ($stats['on_time_rate'] ?? 0) ?>%"></span></div>
+                <?php if (($stats['on_time_rate'] ?? null) === null && ! empty($stats['on_time_message'])): ?><div class="small text-muted" id="pfOnTimeNote"><?= esc($stats['on_time_message']) ?></div><?php endif; ?>
 
                 <div class="pf-perf-label"><span>Orders Completed (Month)</span><strong><?= esc($stats['orders_completed'] ?? '0 / 0') ?></strong></div>
                 <div class="pf-perf-track"><span style="width: <?= (int) ($stats['orders_completed_pct'] ?? 0) ?>%"></span></div>

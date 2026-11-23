@@ -130,8 +130,9 @@
         <h6><i class="bi bi-speedometer2"></i> My Performance</h6>
         <div class="row g-4 align-items-center">
             <div class="col-lg-5">
-                <div class="d-flex justify-content-between small"><span>On Time Delivery Rate</span><strong><?= esc($onTimeRate ?? 0) ?>%</strong></div>
-                <div class="sd-perf-track"><span style="width: <?= esc($onTimeRate ?? 0) ?>%"></span></div>
+                <div class="d-flex justify-content-between small"><span>On Time Delivery Rate</span><strong id="sdOnTime"><?= ($onTimeRate ?? null) !== null ? esc($onTimeRate) . '%' : 'Not enough orders yet' ?></strong></div>
+                <div class="sd-perf-track"><span style="width: <?= (int) ($onTimeRate ?? 0) ?>%"></span></div>
+                <?php if (($onTimeRate ?? null) === null && ! empty($onTimeMessage)): ?><div class="small text-muted mt-1" id="sdOnTimeNote"><?= esc($onTimeMessage) ?></div><?php endif; ?>
             </div>
             <div class="col-lg-7">
                 <div class="sd-minis">

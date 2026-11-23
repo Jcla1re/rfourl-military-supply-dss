@@ -396,7 +396,7 @@ final class ProcurementOptimizationTest extends CIUnitTestCase
         $x    = $this->html($html);
 
         $tabs = array_map(static fn ($a) => trim($a->textContent), iterator_to_array($x->query('//nav[contains(@class,"pr-tabs")]/a')));
-        $this->assertSame(['Suppliers', 'Items', 'Cost comparison'], $tabs); // was ['Report', 'Cost comparison']: Suppliers is new, "Report" is now "Items"
+        $this->assertSame(['Suppliers', 'Items', 'Cost comparison', 'Best supplier'], $tabs); // was ['Report', 'Cost comparison']: Suppliers is new, "Report" is now "Items"
         $this->assertStringContainsString('active', $x->query('//nav[contains(@class,"pr-tabs")]/a')->item(1)->getAttribute('class'));
         $this->assertNotNull($x->query('//table[contains(@class,"pr-table")]')->item(0), 'The existing table is still there (the Items tab).');
         $this->assertStringContainsString('tab=comparison', $x->query('//nav[contains(@class,"pr-tabs")]/a')->item(2)->getAttribute('href'));

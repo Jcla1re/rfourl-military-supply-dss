@@ -23,7 +23,7 @@
     <div class="row g-3 mb-3">
         <div class="col-md-4"><div class="cp-stat"><span class="icon-box"><i class="bi bi-check-lg"></i></span><div><div class="value"><?= esc($completedCount ?? 0) ?></div><div class="text-muted small">Completed Orders</div></div></div></div>
         <div class="col-md-4"><div class="cp-stat"><span class="icon-box"><i class="bi bi-box-seam"></i></span><div><div class="value"><?= number_format($itemsDelivered ?? 0) ?></div><div class="text-muted small">Items Delivered</div></div></div></div>
-        <div class="col-md-4"><div class="cp-stat"><span class="icon-box"><i class="bi bi-clock-history"></i></span><div><div class="value"><?= esc($onTimeRate ?? 0) ?>%</div><div class="text-muted small">On-Time Rate (<?= esc($onTimeCount ?? 0) ?>/<?= count($orders) ?>)</div></div></div></div>
+        <div class="col-md-4"><div class="cp-stat"><span class="icon-box"><i class="bi bi-clock-history"></i></span><div><div class="value" id="cpOnTime"><?php if (($onTimeRate ?? null) !== null): ?><?= esc($onTimeRate) ?>%<?php else: ?><span style="font-size:15px">Not enough orders yet</span><?php endif; ?></div><div class="text-muted small"><?php if (($onTimeRate ?? null) !== null): ?>On-Time Rate (<?= esc($onTimeCount ?? 0) ?>/<?= esc($onTimeJudged ?? 0) ?>)<?php else: ?>On-Time Rate &middot; <?= esc(preg_replace('/^Not enough orders yet /', '', (string) ($onTimeMessage ?? ''))) ?><?php endif; ?></div></div></div></div>
     </div>
 
     <div class="page-panel">
@@ -38,7 +38,9 @@
                             <td><?= esc($o['total_units']) ?></td>
                             <td><?= esc(date('M j, Y', strtotime($o['actual_delivery_date']))) ?></td>
                             <td>
-                                <?php if ($o['on_time']): ?>
+                                <?php if ($o['on_time'] === null): ?>
+                                    <span class="status-pill gray" title="Not enough dates to judge this delivery">&mdash;</span>
+                                <?php elseif ($o['on_time']): ?>
                                     <span class="status-pill green">On Time</span>
                                 <?php else: ?>
                                     <span class="status-pill red"><?= $o['days_late'] >= 7 ? round($o['days_late'] / 7) . ' week' . (round($o['days_late'] / 7) === 1 ? '' : 's') : $o['days_late'] . ' day' . ($o['days_late'] === 1 ? '' : 's') ?> late</span>

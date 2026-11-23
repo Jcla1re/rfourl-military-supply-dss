@@ -3,8 +3,10 @@
 namespace App\Controllers\Supplier;
 
 use App\Controllers\BaseController;
+use App\Libraries\SupplierScorecard;
 use App\Models\SoItemModel;
 use App\Models\StockOrderModel;
+use App\Models\SupplierModel;
 
 class DashboardController extends BaseController
 {
@@ -21,6 +23,7 @@ class DashboardController extends BaseController
     {
         $supplierId = session()->get('supplier_id');
         $orders     = $this->stockOrderModel->forSupplier($supplierId);
+        $stated     = (int) ((new SupplierModel())->find($supplierId)['lead_time_days'] ?? 0);
 
         foreach ($orders as &$o) {
             $o['lines']       = $this->soItemModel->forOrder($o['so_id']);
@@ -37,13 +40,13 @@ class DashboardController extends BaseController
                 && ! empty($o['actual_delivery_date'])
                 && date('Y-m', strtotime($o['actual_delivery_date'])) === date('Y-m');
         }));
-        $onTimeThisMonth = count(array_filter($deliveredThisMonth, fn ($o) => strtotime($o['actual_delivery_date']) <= strtotime($o['expected_delivery_date'] ?? $o['actual_delivery_date'])));
+        // On time is the one judgement the scorecard uses too (App\Libraries\SupplierScorecard::judge()).
+        $onTimeThisMonth = count(array_filter($deliveredThisMonth, fn ($o) => SupplierScorecard::judge($o, $stated)['on_time'] === true));
 
         $totalUnitsThisMonth = array_sum(array_map(fn ($o) => $o['total_units'], $deliveredThisMonth));
 
-        $allDelivered = array_values(array_filter($orders, fn ($o) => $o['status'] === 'Delivered' && ! empty($o['actual_delivery_date'])));
-        $allOnTime    = count(array_filter($allDelivered, fn ($o) => strtotime($o['actual_delivery_date']) <= strtotime($o['expected_delivery_date'] ?? $o['actual_delivery_date'])));
-        $onTimeRate   = $allDelivered ? round(($allOnTime / count($allDelivered)) * 100) : 0;
+        // Fewer than 5 received orders: no percentage, "Not enough orders yet" (the same rule as the Procurement Report scorecard).
+        $rate         = SupplierScorecard::portalRate(array_values(array_filter($orders, fn ($o) => $o['status'] === 'Delivered')), $stated);
 
         $today = date('Y-m-d');
         $dueTodayOrSoon = array_values(array_filter($orders, function ($o) use ($today) {
@@ -68,10 +71,11 @@ class DashboardController extends BaseController
             'onTimeMonth'     => $onTimeThisMonth,
             'totalUnits'      => $totalUnitsThisMonth,
             'schedule'        => array_slice($schedule, 0, 5),
-            'onTimeRate'      => $onTimeRate,
-            'deliveredTotal'  => count($allDelivered),
-            'onTimeCount'     => $allOnTime,
-            'leadTimeDays'    => (new \App\Models\SupplierModel())->find($supplierId)['lead_time_days'] ?? null,
+            'onTimeRate'      => $rate['pct'],
+            'onTimeMessage'   => $rate['message'],
+            'deliveredTotal'  => $rate['received'],
+            'onTimeCount'     => $rate['on_time'],
+            'leadTimeDays'    => (new SupplierModel())->find($supplierId)['lead_time_days'] ?? null,
             'today'           => $today,
         ];
 
