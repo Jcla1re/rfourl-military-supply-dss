@@ -107,6 +107,27 @@ $keepPer       = $tab === 'comparison' ? '?tab=comparison' : '?' . http_build_qu
 .sp-po-btn.is-disabled { background: #F3F1EA; border-color: #D6D2C6; color: #8A8F85; cursor: not-allowed; }
 .sp-po-count { display: inline-block; min-width: 18px; padding: 0 6px; border-radius: 999px; background: #fff; color: #3d5230; font-size: 11.5px; font-weight: 800; text-align: center; }
 .sp-po-btn.is-disabled .sp-po-count { background: #E4E1D6; color: #6B6E60; }
+/* Supplier scorecard (SupplierScorecard) */
+.sp-score-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid #D6D2C6; border-radius: 10px; overflow: hidden; }
+.sp-score-seg a { padding: 7px 14px; font-size: 13px; font-weight: 600; color: #5C6152; text-decoration: none; background: #fff; }
+.sp-score-seg a.active { background: #3d5230; color: #fff; }
+.sp-score-seg a:focus-visible { outline: 2px solid #4b6a3f; outline-offset: -2px; }
+.sp-score-wrap { display: block; margin-top: 4px; }
+.sp-score-line { display: block; font-size: 12px; line-height: 1.3; color: #3A4030; font-weight: 600; white-space: normal; }
+.sp-score-line.is-muted { color: #8A8F85; font-weight: 500; }
+.sp-score-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 12px; }
+.sp-score-label { font-size: 13px; font-weight: 700; color: #3A4030; }
+.sp-score-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin: 0 0 6px; }
+.sp-score-head h3 { font-size: 17px; font-weight: 800; margin: 0; }
+.sp-score { margin: 0 0 18px; }
+.sp-score-note { border: 1px solid #D6D2C6; background: #FAF9F5; border-radius: 12px; padding: 9px 14px; margin: 0 0 12px; font-size: 13.5px; color: #3A4030; }
+.sp-score-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.sp-tile { background: #fff; border-radius: var(--radius-card); box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sp-tile-label { color: #5C6152; font-size: 12.5px; }
+.sp-tile-value { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.sp-tile-value .sp-muted { font-size: 13px; font-weight: 600; }
+.sp-tile-sub { color: #6B6E60; font-size: 12px; line-height: 1.3; }
+.sp-foot { color: #6B6E60; font-size: 12.5px; margin: 10px 0 0; }
 .sp-sample-note { color: #7A5A00; font-weight: 600; }
 .sp-muted { color: #8A8D7E; }
 .sp-sub { color: #5C6152; font-size: 12px; font-weight: 400; }

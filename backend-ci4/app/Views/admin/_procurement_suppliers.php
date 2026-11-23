@@ -8,7 +8,10 @@ $detail       = $detail ?? null;
 $supplierRows = $supplierRows ?? [];
 $period       = $period ?? \App\Libraries\SupplierProcurement::period(null, null);
 $base         = site_url('admin/procurement-report');
-$url          = static fn (array $params): string => $base . '?' . http_build_query(['tab' => 'suppliers'] + $params);
+$scores       = $scores ?? [];
+$scorePeriod  = $scorePeriod ?? \App\Libraries\SupplierScorecard::period(null);
+// ?score= (3, 6, 12 months or all) stays on every link of this tab; 12 is the default.
+$url          = static fn (array $params): string => $base . '?' . http_build_query(['tab' => 'suppliers'] + $params + ($scorePeriod['key'] !== \App\Libraries\SupplierScorecard::DEFAULT_PERIOD ? ['score' => $scorePeriod['key']] : []));
 $date         = static fn (?string $d): string => $d ? date('M j, Y', strtotime($d)) : '—';
 $peso         = static fn (float $n): string => '₱' . number_format($n, 2);
 $plural       = static fn (int $n, string $word): string => $n . ' ' . $word . ($n === 1 ? '' : 's');
@@ -32,6 +35,16 @@ $poButton     = static function (string $supplierId) use ($poCounts): string {
     $title = 'Items at or below the reorder point that are not already on order. Low Stock items can be added on the next page.';
 
     return '<a class="sp-po-btn" href="' . esc(site_url('admin/procurement-report/po/' . rawurlencode($supplierId)), 'attr') . '" title="' . esc($title, 'attr') . '">' . $label . '</a>';
+};
+// The scorecard's period switch (App\Libraries\SupplierScorecard): the same links on the list and on a supplier's page.
+$scoreSeg     = static function (array $params) use ($url, $scorePeriod): string {
+    $html = '<div class="sp-score-seg" role="group" aria-label="Scorecard period">';
+    foreach (\App\Libraries\SupplierScorecard::PERIODS as $key => $label) {
+        $active = $scorePeriod['key'] === (string) $key;
+        $html  .= '<a href="' . esc($url($params + ['score' => (string) $key]), 'attr') . '" class="' . ($active ? 'active' : '') . '"' . ($active ? ' aria-current="true"' : '') . '>' . esc($label) . '</a>';
+    }
+
+    return $html . '</div>';
 };
 ?>
 <div id="supplierTab">
@@ -62,6 +75,50 @@ $poButton     = static function (string $supplierId) use ($poCounts): string {
             <span><b>Stock on hand</b> <?= number_format($c['stock']) ?></span>
         <?php endif; ?>
     </div>
+
+    <?php // ------------------------------------------------------------ the scorecard (App\Libraries\SupplierScorecard) ?>
+    <?php
+    $card  = $scores[$detail['id']] ?? null;
+    $tile  = static fn (string $key, string $label, string $value, string $sub = '', string $tip = ''): string => '<div class="sp-tile" data-tile="' . esc($key, 'attr') . '"><div class="sp-tile-label">' . esc($label) . $tip . '</div><div class="sp-tile-value">' . $value . '</div>' . ($sub !== '' ? '<div class="sp-tile-sub">' . esc($sub) . '</div>' : '') . '</div>';
+    $na    = '<span class="sp-muted">Not enough orders yet</span>';
+    ?>
+    <?php if ($card !== null): ?>
+    <section class="sp-section sp-score" id="supplierScorecard" aria-labelledby="spScoreTitle">
+        <div class="sp-score-head">
+            <h3 id="spScoreTitle">Scorecard</h3>
+            <?php if ($card['status'] === 'ok'): ?><?= $scoreSeg(['supplier' => $detail['id']] + ($detail['needs_only'] ? ['needs' => 1] : [])) ?><?php endif; ?>
+        </div>
+        <?php if ($card['status'] === 'sample'): ?>
+            <p class="sp-sample-note" id="spScoreSample"><?= esc($card['message']) ?></p>
+        <?php else: ?>
+            <?php $n = $card['counts']; ?>
+            <p class="sp-sub">Real orders placed in the <?= esc(strtolower($card['period']['label'])) ?>, from the PO to the received date. Nothing here is typed in or estimated.</p>
+            <?php if (! $card['enough']): ?>
+                <p class="sp-score-note" id="spScoreNotEnough" role="note"><?= esc($card['message']) ?>. The counts and the ordered value are shown; percentages and averages need at least <?= (int) $card['min_received'] ?> received orders in the period.</p>
+            <?php endif; ?>
+            <div class="sp-score-grid">
+                <?= $tile('placed', 'Orders placed', number_format($n['placed'])) ?>
+                <?= $tile('received', 'Received', number_format($n['received']), 'of ' . number_format($n['placed']) . ' placed') ?>
+                <?= $tile('in_progress', 'In progress', number_format($n['in_progress']), 'Order Confirmed, Preparing or Shipped') ?>
+                <?= $tile('cancelled', 'Cancelled by RfourL', number_format($n['cancelled_by_owner']), $n['cancelled_after_accept'] > 0 ? $n['cancelled_after_accept'] . ' after the supplier accepted it' : '') ?>
+                <?= $tile('declined', 'Declined by supplier', number_format($n['declined'])) ?>
+                <?= $tile('on_time', 'On-time delivery', $card['on_time']['pct'] !== null ? $card['on_time']['pct'] . '%' : $na, $card['on_time']['pct'] !== null ? $card['on_time']['on_time'] . ' of ' . $card['on_time']['of'] . ' received on or before the promised date' : '', help_tip('On-time delivery', 'Received on or before the promised date: the PO\'s expected delivery date, or the PO date plus the supplier\'s stated delivery time when the PO has none. The same day is on time.')) ?>
+                <?= $tile('late', 'Received late', number_format($n['received_late']), 'after the promised date') ?>
+                <?= $tile('overdue', 'Open and overdue now', number_format($n['open_overdue']), 'not received and past the promised date') ?>
+                <?= $tile('lead', 'Average actual lead time', $card['lead']['avg'] !== null ? rtrim(rtrim(number_format($card['lead']['avg'], 1), '0'), '.') . ' days' : $na, 'Stated delivery time: ' . (int) $card['lead']['stated'] . ' days' . ($card['lead']['diff'] !== null ? ' (' . ($card['lead']['diff'] > 0 ? '+' : '') . rtrim(rtrim(number_format($card['lead']['diff'], 1), '0'), '.') . ' days)' : '')) ?>
+                <?= $tile('fill', 'Shipped vs ordered', $card['fill']['pct'] !== null ? $card['fill']['pct'] . '%' : $na, $card['fill']['pct'] !== null ? number_format($card['fill']['filled']) . ' of ' . number_format($card['fill']['ordered']) . ' ordered units shipped' : '', help_tip('Shipped vs ordered', 'Receiving records the quantity the supplier says it shipped (and adds exactly that to stock), so this compares what the supplier shipped with what was ordered. It is not a separate count at the door.')) ?>
+                <?= $tile('value', 'Ordered value', $peso($card['ordered_value']), 'orders placed in the period, cancelled ones left out') ?>
+            </div>
+            <?php $notes = array_filter([
+                $card['notes']['no_received_date'] > 0 ? $plural((int) $card['notes']['no_received_date'], 'order') . ' received with no date, left out of the timing' : null,
+                $card['notes']['date_problems'] > 0 ? $plural((int) $card['notes']['date_problems'], 'order') . ' dated received before they were ordered, left out of the timing' : null,
+                $card['notes']['no_promised_date'] > 0 ? $plural((int) $card['notes']['no_promised_date'], 'order') . ' with no promised date, not judged on time' : null,
+                $card['fill']['left_out'] > 0 ? $plural((int) $card['fill']['left_out'], 'order') . ' with no shipped quantity recorded, left out of Shipped vs ordered' : null,
+            ]); ?>
+            <p class="sp-foot" id="spScoreFoot">The supplier's stated delivery time is its current value, so past comparisons move if it is edited.<?= $notes !== [] ? ' ' . esc(implode('; ', $notes)) . '.' : '' ?></p>
+        <?php endif; ?>
+    </section>
+    <?php endif; ?>
 
     <?php if ($detail['is_sample']): ?>
         <p class="sp-sample-note" id="spSampleNote">Sample supplier: these are price-list offers for comparison. It has no items of its own, no orders and no stock.</p>
@@ -114,6 +171,7 @@ $poButton     = static function (string $supplierId) use ($poCounts): string {
 <?php else: ?>
 
     <?php // ------------------------------------------------------------ the list ?>
+    <div class="sp-score-bar"><span class="sp-score-label">Scorecard <?= help_tip('Scorecard', 'How each supplier did on the real orders placed in this period. Fewer than 5 received orders: not enough to show percentages.') ?></span> <?= $scoreSeg([]) ?></div>
     <div class="inv-table-card"><div class="data-table-wrap sp-scroll">
         <table class="data-table inv-table sp-table" id="supplierList">
             <thead>
@@ -132,7 +190,7 @@ $poButton     = static function (string $supplierId) use ($poCounts): string {
             <tbody>
                 <?php foreach ($supplierRows as $s): ?>
                     <tr class="sp-row<?= $s['is_sample'] ? ' is-sample' : '' ?>" data-supplier="<?= esc($s['id'], 'attr') ?>">
-                        <td class="sp-name"><a class="sp-link" href="<?= esc($url(['supplier' => $s['id'], 'period' => $period['type'], 'date' => $period['anchor']]), 'attr') ?>"><?= esc($s['name']) ?></a><?= $s['is_sample'] ? $sampleBadge : '' ?><?php if (! $s['is_sample']): ?><span class="sp-po-wrap"><?= $poButton((string) $s['id']) ?></span><?php endif; ?></td>
+                        <td class="sp-name"><a class="sp-link" href="<?= esc($url(['supplier' => $s['id'], 'period' => $period['type'], 'date' => $period['anchor']]), 'attr') ?>"><?= esc($s['name']) ?></a><?= $s['is_sample'] ? $sampleBadge : '' ?><?php if (! $s['is_sample']): ?><span class="sp-po-wrap"><?= $poButton((string) $s['id']) ?></span><?php endif; ?><?php if (isset($scores[$s['id']])): ?> <span class="sp-score-wrap"><span class="sp-score-line<?= $scores[$s['id']]['status'] === 'ok' && $scores[$s['id']]['enough'] ? '' : ' is-muted' ?>"><?= esc(\App\Libraries\SupplierScorecard::summary($scores[$s['id']])) ?></span></span><?php endif; ?></td>
                         <td><?= $s['category'] !== '' ? esc($s['category']) : '&mdash;' ?></td>
                         <?php if ($s['is_sample']): ?>
                             <td colspan="5" class="sp-sample-note">Sample offers: <?= $plural($s['offers'], 'item') ?></td>

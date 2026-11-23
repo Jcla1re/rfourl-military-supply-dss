@@ -9,6 +9,7 @@ use App\Libraries\ProcurementComparison;
 use App\Libraries\ProcurementReport;
 use App\Libraries\ReorderBoard;
 use App\Libraries\SupplierPo;
+use App\Libraries\SupplierScorecard;
 use App\Libraries\SupplierProcurement;
 use App\Libraries\Toast;
 use App\Models\DssParameterModel;
@@ -157,6 +158,9 @@ class ReorderAlertController extends BaseController
             'detail'        => $detail,
             'supplierRows'  => $detail === null ? SupplierProcurement::suppliers($dss, $sizes) : [],
             'poCounts'      => SupplierPo::countsBySupplier($sizes), // for "Create PO for low items"
+            // The supplier scorecard (read-only, from real orders only): ?score=3|6|12|all, 12 by default.
+            'scorePeriod'   => SupplierScorecard::period($this->request->getGet('score')),
+            'scores'        => SupplierScorecard::forSuppliers($this->request->getGet('score')),
             'period'        => $period,
             'periodReport'  => $detail === null ? SupplierProcurement::report($period) : null,
             'lastRunAt'     => (new DssRunner())->lastRunAt(),

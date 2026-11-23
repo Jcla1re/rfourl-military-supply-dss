@@ -3,8 +3,10 @@
 namespace App\Controllers\Supplier;
 
 use App\Controllers\BaseController;
+use App\Libraries\SupplierScorecard;
 use App\Models\SoItemModel;
 use App\Models\StockOrderModel;
+use App\Models\SupplierModel;
 
 class CompletedController extends BaseController
 {
@@ -23,6 +25,7 @@ class CompletedController extends BaseController
         $range      = $this->request->getGet('range') ?: 'month';
 
         $orders = $this->stockOrderModel->forSupplier($supplierId, ['Delivered']);
+        $stated = (int) ((new SupplierModel())->find($supplierId)['lead_time_days'] ?? 0);
 
         $cutoff = match ($range) {
             '3months' => date('Y-m-d', strtotime('-3 months')),
@@ -38,10 +41,10 @@ class CompletedController extends BaseController
             $lines             = $this->soItemModel->forOrder($o['so_id']);
             $o['lines']        = $lines;
             $o['total_units']  = array_sum(array_column($lines, 'order_quantity'));
-            $expected          = $o['expected_delivery_date'] ?? $o['actual_delivery_date'];
-            $diffDays          = (strtotime($o['actual_delivery_date']) - strtotime($expected)) / 86400;
-            $o['on_time']      = $diffDays <= 0;
-            $o['days_late']    = max(0, (int) round($diffDays));
+            // The same judgement the Procurement Report scorecard uses: on time (true), late (false) or not judged (null).
+            $judged            = SupplierScorecard::judge($o, $stated);
+            $o['on_time']      = $judged['on_time'];
+            $o['days_late']    = $judged['days_late'];
         }
         unset($o);
 
@@ -59,7 +62,7 @@ class CompletedController extends BaseController
         }
         unset($c);
 
-        $onTimeCount = count(array_filter($orders, fn ($o) => $o['on_time']));
+        $rate = SupplierScorecard::portalRate($orders, $stated); // the orders of the chosen range
 
         $data = [
             'title'         => 'Completed',
@@ -69,8 +72,10 @@ class CompletedController extends BaseController
             'range'         => $range,
             'completedCount'=> count($orders),
             'itemsDelivered'=> array_sum(array_column($orders, 'total_units')),
-            'onTimeRate'    => $orders ? round(($onTimeCount / count($orders)) * 100) : 0,
-            'onTimeCount'   => $onTimeCount,
+            'onTimeRate'    => $rate['pct'],
+            'onTimeMessage' => $rate['message'],
+            'onTimeCount'   => $rate['on_time'],
+            'onTimeJudged'  => $rate['judged'],
         ];
 
         return view('supplier/completed', $data);

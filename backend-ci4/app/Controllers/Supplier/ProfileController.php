@@ -5,6 +5,7 @@ namespace App\Controllers\Supplier;
 use App\Controllers\BaseController;
 use App\Libraries\DemoGuard;
 use App\Libraries\PasswordPolicy;
+use App\Libraries\SupplierScorecard;
 use App\Models\SecurityLogModel;
 use App\Models\SoItemModel;
 use App\Models\StockOrderModel;
@@ -39,7 +40,8 @@ class ProfileController extends BaseController
         unset($o);
 
         $delivered     = array_values(array_filter($orders, fn ($o) => $o['status'] === 'Delivered'));
-        $onTime        = count(array_filter($delivered, fn ($o) => strtotime($o['actual_delivery_date']) <= strtotime($o['expected_delivery_date'] ?? $o['actual_delivery_date'])));
+        // The one on-time judgement the Procurement Report scorecard uses, and its rule: fewer than 5 received orders is "Not enough orders yet".
+        $rate          = SupplierScorecard::portalRate($delivered, (int) ($supplier['lead_time_days'] ?? 0));
         // "Fulfilled" is delivered out of the orders the supplier was given: everything except
         // the ones the OWNER cancelled (cancelled_by set). An order the supplier declined
         // (decline_reason, also stored as Cancelled) stays in, as not fulfilled.
@@ -54,7 +56,8 @@ class ProfileController extends BaseController
             'active'   => 'profile',
             'supplier' => $supplier,
             'stats'    => [
-                'on_time_rate'     => $delivered ? round(($onTime / count($delivered)) * 100) : 0,
+                'on_time_rate'     => $rate['pct'],
+                'on_time_message'  => $rate['message'],
                 'orders_completed' => count($monthDelivered) . ' / ' . count($monthOrders),
                 // The bar under it: the same ratio (no orders: empty), never past 100%.
                 'orders_completed_pct' => $monthOrders ? (int) min(100, round(count($monthDelivered) / count($monthOrders) * 100)) : 0,

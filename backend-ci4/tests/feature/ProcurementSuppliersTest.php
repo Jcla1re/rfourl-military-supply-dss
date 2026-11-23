@@ -111,8 +111,8 @@ final class ProcurementSuppliersTest extends CIUnitTestCase
         $x    = $this->html($html);
         $rows = [];
         foreach ($x->query('//table[@id="supplierList"]//tr[contains(@class,"sp-row")]') as $tr) {
-            // The "Create PO for low items" button (SupplierPoTest) sits in the supplier cell; these cells are the data.
-            foreach (iterator_to_array($x->query('.//*[contains(@class,"sp-po-wrap")]', $tr)) as $button) {
+            // The "Create PO for low items" button (SupplierPoTest) and the scorecard line (SupplierScorecardTest) sit in the supplier cell; these cells are the data.
+            foreach (iterator_to_array($x->query('.//*[contains(@class,"sp-po-wrap") or contains(@class,"sp-score-wrap")]', $tr)) as $button) {
                 $button->parentNode->removeChild($button);
             }
             $rows[$tr->getAttribute('data-supplier')] = array_map(fn ($td) => $this->clean($td->textContent), iterator_to_array($x->query('./td', $tr)));
@@ -238,7 +238,8 @@ final class ProcurementSuppliersTest extends CIUnitTestCase
         $row  = $x->query('//tr[@data-supplier="SMP-001"]')->item(0);
         $cells = array_map(fn ($td) => $this->clean($td->textContent), iterator_to_array($x->query('./td', $row)));
 
-        $this->assertSame(['Sample Stitch Works Sample', 'Patches', 'Sample offers: 2 items', '3 days', 'Cash or Check'], $cells);
+        // The name cell also carries the scorecard line: a sample supplier is never scored (SupplierScorecardTest).
+        $this->assertSame(['Sample Stitch Works Sample Sample – no order history', 'Patches', 'Sample offers: 2 items', '3 days', 'Cash or Check'], $cells);
         $this->assertSame('5', $x->query('./td[3]', $row)->item(0)->getAttribute('colspan'), 'One cell in place of the five count and order columns.');
         $this->assertSame('Sample', $this->clean($x->query('.//span[contains(@class,"sp-badge")]', $row)->item(0)->textContent));
         $this->assertNull($x->query('.//*[contains(@class,"sp-needs")]', $row)->item(0));
