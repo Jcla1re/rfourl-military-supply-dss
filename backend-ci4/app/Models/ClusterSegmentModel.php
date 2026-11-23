@@ -34,8 +34,8 @@ class ClusterSegmentModel extends Model
     ];
 
     /** How the classes are made; shown with the ABC ⓘ (Glossary 'abc'), Help and the Trend Analysis PDF. */
-    public const GROUP_NOTE = 'Items are grouped by unit cost, daily demand, demand variability and lead time together. '
-        . 'The class is a group, not a sales rank, so a best seller can be in any class.';
+    public const GROUP_NOTE = 'Items are grouped by daily demand and demand variability. '
+        . 'Class A holds the fastest-moving items, class B the steady sellers, and class C the slow or non-moving items.';
 
     /** "Group with the highest average demand · 95% availability target" */
     public static function description(string $class): string

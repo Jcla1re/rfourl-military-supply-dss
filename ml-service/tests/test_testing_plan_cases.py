@@ -57,27 +57,76 @@ def test_ut12_service_level_z_scores_per_class():
 # --- UT-19 ---------------------------------------------------------------
 
 def test_ut19_min_max_normalization_midpoint_is_half():
+    # demand 0, 2, 8 -> log1p = 0, ln 3, 2 ln 3 -> the middle item scales to exactly 0.5
     items = [
-        {"item_id": "a", "unit_cost": 10, "avg_daily_demand": 1, "demand_std_dev": 1, "lead_time_days": 5},
+        {"item_id": "a", "unit_cost": 10, "avg_daily_demand": 0, "demand_std_dev": 0, "lead_time_days": 5},
         {"item_id": "b", "unit_cost": 50, "avg_daily_demand": 2, "demand_std_dev": 2, "lead_time_days": 5},
-        {"item_id": "c", "unit_cost": 90, "avg_daily_demand": 3, "demand_std_dev": 3, "lead_time_days": 5},
+        {"item_id": "c", "unit_cost": 90, "avg_daily_demand": 8, "demand_std_dev": 8, "lead_time_days": 5},
     ]
     scaled, _ = normalize_features(to_feature_frame(items))
 
-    assert scaled[1][FEATURES.index("unit_cost")] == pytest.approx(0.5)
+    assert scaled[1][FEATURES.index("avg_daily_demand")] == pytest.approx(0.5)
+    assert scaled[1][FEATURES.index("demand_std_dev")] == pytest.approx(0.5)
 
 
 def test_ut19_identical_values_normalize_to_zero_without_error():
+    # demand_std_dev identical for every product -> that column scales to 0, no NaN / divide-by-zero
     items = [
         {"item_id": str(i), "unit_cost": 100 + i, "avg_daily_demand": 1 + i,
-         "demand_std_dev": 1 + i, "lead_time_days": 7}
+         "demand_std_dev": 2, "lead_time_days": 7}
         for i in range(3)
     ]
     scaled, _ = normalize_features(to_feature_frame(items))
-    lead = scaled[:, FEATURES.index("lead_time_days")]
+    std = scaled[:, FEATURES.index("demand_std_dev")]
 
-    assert np.all(lead == 0)
+    assert np.all(std == 0)
     assert not np.isnan(scaled).any()
+
+
+def test_ut19_only_demand_features_are_used_for_clustering():
+    assert FEATURES == ["avg_daily_demand", "demand_std_dev"]
+    assert "lead_time_days" not in FEATURES
+    assert "unit_cost" not in FEATURES
+
+
+def test_ut19_demand_features_use_log1p_before_scaling():
+    items = [
+        {"item_id": "a", "unit_cost": 10, "avg_daily_demand": 0, "demand_std_dev": 0, "lead_time_days": 5},
+        {"item_id": "b", "unit_cost": 50, "avg_daily_demand": 1, "demand_std_dev": 1, "lead_time_days": 5},
+        {"item_id": "c", "unit_cost": 90, "avg_daily_demand": 9, "demand_std_dev": 9, "lead_time_days": 5},
+    ]
+    scaled, _ = normalize_features(to_feature_frame(items))
+
+    assert scaled[1][FEATURES.index("avg_daily_demand")] == pytest.approx(np.log1p(1) / np.log1p(9))
+
+
+def test_lead_time_does_not_change_the_clusters(client):
+    items = make_items(60)
+    base = post_cluster(client, items).get_json()
+    for i, item in enumerate(items):
+        item["lead_time_days"] = 3 + (i * 7) % 20
+    changed = post_cluster(client, items).get_json()
+
+    assert [c["abc_class"] for c in base["clusters"]] == [c["abc_class"] for c in changed["clusters"]]
+
+
+def test_unit_cost_does_not_change_the_clusters(client):
+    items = make_items(60)
+    base = post_cluster(client, items).get_json()
+    for i, item in enumerate(items):
+        item["unit_cost"] = 5 + (i * 937) % 3000
+    changed = post_cluster(client, items).get_json()
+
+    assert [c["abc_class"] for c in base["clusters"]] == [c["abc_class"] for c in changed["clusters"]]
+
+
+def test_centers_are_in_original_units_with_only_the_clustering_features(client):
+    body = post_cluster(client, make_items(60)).get_json()
+
+    for center in body["centers"]:
+        assert set(center) == set(FEATURES)
+    a = [c for c in body["clusters"] if c["abc_class"] == "A"][0]
+    assert 10 < body["centers"][a["cluster_label"]]["avg_daily_demand"] < 30  # tier A is about 20 a day
 
 
 # --- UT-20 ---------------------------------------------------------------
