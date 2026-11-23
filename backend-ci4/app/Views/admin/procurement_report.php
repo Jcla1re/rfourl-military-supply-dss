@@ -98,6 +98,15 @@ $keepPer       = $tab === 'comparison' ? '?tab=comparison' : '?' . http_build_qu
 .sp-table .sp-link:hover { text-decoration: underline; color: #2F5A27; }
 .sp-table .sp-link:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; border-radius: 3px; }
 .sp-needs { color: #8A1C1C; font-weight: 700; }
+/* Create PO for low items (SupplierPoController) */
+.sp-po-wrap { display: block; margin-top: 5px; }
+.sp-detail-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sp-po-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1px solid #3d5230; border-radius: 999px; background: #3d5230; color: #fff; font-size: 12.5px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.sp-po-btn:hover { background: #2F5A27; color: #fff; }
+.sp-po-btn:focus-visible { outline: 2px solid #4b6a3f; outline-offset: 2px; }
+.sp-po-btn.is-disabled { background: #F3F1EA; border-color: #D6D2C6; color: #8A8F85; cursor: not-allowed; }
+.sp-po-count { display: inline-block; min-width: 18px; padding: 0 6px; border-radius: 999px; background: #fff; color: #3d5230; font-size: 11.5px; font-weight: 800; text-align: center; }
+.sp-po-btn.is-disabled .sp-po-count { background: #E4E1D6; color: #6B6E60; }
 .sp-sample-note { color: #7A5A00; font-weight: 600; }
 .sp-muted { color: #8A8D7E; }
 .sp-sub { color: #5C6152; font-size: 12px; font-weight: 400; }
@@ -136,8 +145,9 @@ tr.sp-subtotal td { background: #F7F6F2; font-weight: 700; }
 .pc-card.is-negative .pc-card-value { color: #8A1C1C; }
 .pc-scroll { max-height: 520px; overflow: auto; }
 .pc-table { table-layout: auto; }
-.pc-table thead th { position: sticky; top: 0; z-index: 1; background: #3d5230; color: #fff; white-space: nowrap; }
-.pc-sort { all: unset; cursor: pointer; font-weight: 600; }
+/* Headers wrap onto two lines instead of being cut off ("Yearly cost (owner's qty)" at 1366px). */
+.pc-table thead th { position: sticky; top: 0; z-index: 1; background: #3d5230; color: #fff; white-space: normal; line-height: 1.25; vertical-align: bottom; overflow-wrap: anywhere; }
+.pc-sort { all: unset; display: block; cursor: pointer; font-weight: 600; text-align: inherit; }
 .pc-sort:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 th[aria-sort="ascending"] .pc-sort::after { content: ' ▲'; font-size: 10px; }
 th[aria-sort="descending"] .pc-sort::after { content: ' ▼'; font-size: 10px; }

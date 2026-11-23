@@ -89,6 +89,7 @@ class HelpGuides
                 'steps' => [
                     'Open Reorder Alerts or Inventory and click Order on an item, or open Orders and click Add New Order.',
                     'On Orders, choose the supplier first. Then click + Add item and choose their items.',
+                    'To order everything one supplier is low on in one order, open Procurement Report, then Suppliers, and click Create PO for low items on that supplier. Untick a line to leave it out or change its quantity, then click Create purchase order.',
                     'Check the quantity and the unit cost of each item.',
                     'An order with an item out of stock is Urgent. On Orders you can change it to Normal or Planned.',
                     'Check the expected delivery date, then click Create order. The supplier is told about the order.',

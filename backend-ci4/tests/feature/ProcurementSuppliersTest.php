@@ -111,6 +111,10 @@ final class ProcurementSuppliersTest extends CIUnitTestCase
         $x    = $this->html($html);
         $rows = [];
         foreach ($x->query('//table[@id="supplierList"]//tr[contains(@class,"sp-row")]') as $tr) {
+            // The "Create PO for low items" button (SupplierPoTest) sits in the supplier cell; these cells are the data.
+            foreach (iterator_to_array($x->query('.//*[contains(@class,"sp-po-wrap")]', $tr)) as $button) {
+                $button->parentNode->removeChild($button);
+            }
             $rows[$tr->getAttribute('data-supplier')] = array_map(fn ($td) => $this->clean($td->textContent), iterator_to_array($x->query('./td', $tr)));
         }
 
