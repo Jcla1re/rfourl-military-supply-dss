@@ -60,6 +60,7 @@ $keepPer       = $tab === 'comparison' ? '?tab=comparison' : '?' . http_build_qu
 /* The supplier's minimum order is above the EOQ: a line under the item, red when it is very large. */
 .pr-min-note { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: #6B6E60; white-space: normal; }
 .pr-min-note.is-warning { color: #8A1C1C; font-weight: 600; }
+.pr-lead-badge { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: #F3E9CF; color: #6B4E0E; font-size: 11px; font-weight: 600; white-space: nowrap; vertical-align: middle; }
 /* Default values (no reorder point yet / only the minimum order): muted gray. */
 .pr-table td.pr-default { color: #8A8D7E; }
 

@@ -176,7 +176,7 @@ final class KMeansClassTest extends CIUnitTestCase
 
         $body = $x->document->saveHTML();
         $this->assertStringContainsString('ABC classification (K-Means)', $body);
-        $this->assertStringContainsString('Grouped by cost, demand, demand variability and lead time.', $body);
+        $this->assertStringContainsString('Grouped by daily demand and demand variability.', $body);
         $this->assertStringContainsString('Number of items in each class', $body);
         $legend = [];
         foreach ($x->query('//ul[contains(@class,"abc-meanings")]/li') as $li) {
@@ -191,7 +191,7 @@ final class KMeansClassTest extends CIUnitTestCase
         $tip = $x->query('//h6[contains(.,"ABC classification (K-Means)")]/button[contains(@class,"help-tip")]')->item(0);
         $this->assertNotNull($tip);
         $tipBody = html_entity_decode($tip->getAttribute('data-help-body'), ENT_QUOTES, 'UTF-8');
-        $this->assertStringContainsString('Items are grouped by unit cost, daily demand, demand variability and lead time together. The class is a group, not a sales rank, so a best seller can be in any class.', $tipBody);
+        $this->assertStringContainsString('Items are grouped by daily demand and demand variability. Class A holds the fastest-moving items, class B the steady sellers, and class C the slow or non-moving items.', $tipBody);
         $this->assertStringContainsString('C: Group with the lowest average demand · 85% availability target', $tipBody);
         $this->assertStringNotContainsStringIgnoringCase('priority', $body);
         $this->assertStringNotContainsString('service level', $body);

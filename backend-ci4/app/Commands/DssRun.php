@@ -16,9 +16,12 @@ use CodeIgniter\CLI\CLI;
  * the latest sale_date in the data (not today's server date), since this
  * runs against a historical/synthetic dataset rather than a live feed.
  *
- * Multi-criteria classification: K-Means (unit_cost, avg_daily_demand,
- * demand_std_dev, lead_time_days) groups items into 3 clusters via the
- * Python ml-service. The cluster ranked highest by demand becomes Class
+ * Demand-based classification: K-Means (avg_daily_demand, demand_std_dev,
+ * both log-scaled) groups items into 3 clusters via the Python ml-service.
+ * unit_cost and lead_time_days are still sent (the service validates them)
+ * but are not clustering features; the lead time is used below for Safety
+ * Stock and Reorder Point.
+ * The cluster ranked highest by demand becomes Class
  * A (95% service level), the middle B (90%), and the lowest C (85%) —
  * that per-item class and Z-score is what drives Safety Stock/ROP below,
  * not a single global Z-score. If the ml-service is unreachable, the
@@ -113,8 +116,9 @@ class DssRun extends BaseCommand
             ];
         }
 
-        // --- Multi-criteria K-Means classification (unit_cost, demand rate, ---
-        // --- demand variability, lead time) -> per-item ABC class + Z-score ---
+        // --- K-Means classification on demand rate and demand variability ---
+        // --- (unit_cost and lead time are sent but not clustered) -> ---
+        // --- per-item ABC class + Z-score ---
         $unitCostByItem = array_column($products, 'unit_cost', 'item_id');
         $clusterItems = [];
         foreach ($demandStats as $itemId => $stat) {

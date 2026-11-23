@@ -159,7 +159,7 @@ final class TrendReportTest extends CIUnitTestCase
             'Group with the lowest average demand · 85% availability target',
         ], array_column($abc['classes'], 'group'));
         $this->assertSame(['60.5%', '30.0%', '9.5%'], array_column($abc['classes'], 'share'));
-        $this->assertStringContainsString('The class is a group, not a sales rank, so a best seller can be in any class.', $abc['sentence']);
+        $this->assertStringContainsString('Class A holds the fastest-moving items, class B the steady sellers, and class C the slow or non-moving items.', $abc['sentence']);
         $this->assertStringNotContainsStringIgnoringCase('priority', json_encode($abc['classes']));
         $this->assertSame('Patrol Shirt (M)', $abc['classes'][0]['top'][0]['label']);
         $this->assertSame('30.3%', $abc['classes'][0]['top'][0]['pct']);
