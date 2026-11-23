@@ -7,6 +7,7 @@ use App\Libraries\DssRunner;
 use App\Libraries\ProcurementComparison;
 use App\Libraries\ProcurementReport;
 use App\Libraries\ReorderBoard;
+use App\Libraries\SupplierPo;
 use App\Libraries\SupplierProcurement;
 use App\Libraries\Toast;
 use App\Models\DssParameterModel;
@@ -146,6 +147,7 @@ class ReorderAlertController extends BaseController
             'tab'           => 'suppliers',
             'detail'        => $detail,
             'supplierRows'  => $detail === null ? SupplierProcurement::suppliers($dss, $sizes) : [],
+            'poCounts'      => SupplierPo::countsBySupplier($sizes), // for "Create PO for low items"
             'period'        => $period,
             'periodReport'  => $detail === null ? SupplierProcurement::report($period) : null,
             'lastRunAt'     => (new DssRunner())->lastRunAt(),

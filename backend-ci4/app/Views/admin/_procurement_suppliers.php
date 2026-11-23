@@ -16,6 +16,23 @@ $itemsText    = static fn (int $items, int $sizes): string => $plural($items, 'i
 // The same two numbers on two lines in the table: "140 items" with "286 sizes" small and grey under it.
 $twoLines     = static fn (int $items, int $sizes, string $class = ''): string => '<span class="sp-stack' . ($class !== '' ? ' ' . $class : '') . '">' . esc($plural($items, 'item')) . '</span> <span class="sp-sub sp-line2">' . esc($plural($sizes, 'size')) . '</span>';
 $sampleBadge  = ' <span class="sp-badge" title="Sample supplier: its prices are only for comparison">Sample</span>';
+// "Create PO for low items": one purchase order for everything a real supplier's items are low on (SupplierPoController).
+// $poCounts: supplier id => ['now' => sizes at Reorder Now, 'low' => sizes at Low Stock, both not already on order, 'on_order' => ...].
+$poCounts     = $poCounts ?? [];
+$poButton     = static function (string $supplierId) use ($poCounts): string {
+    $c     = $poCounts[$supplierId] ?? ['now' => 0, 'low' => 0, 'on_order' => 0];
+    $ready = $c['now'] + $c['low'] > 0;
+    $label = 'Create PO for low items' . ($c['now'] > 0 ? ' <span class="sp-po-count">' . $c['now'] . '</span>' : '');
+    if (! $ready) {
+        $why = $c['on_order'] > 0 ? 'Everything low is already on an open order.' : 'Nothing is at or below its reorder point.';
+
+        return '<span class="sp-po-btn is-disabled" role="link" aria-disabled="true" title="' . esc($why, 'attr') . '">' . $label . '</span>';
+    }
+    // The number on the button is not "Needs action" (which also counts Low Stock and items already on order).
+    $title = 'Items at or below the reorder point that are not already on order. Low Stock items can be added on the next page.';
+
+    return '<a class="sp-po-btn" href="' . esc(site_url('admin/procurement-report/po/' . rawurlencode($supplierId)), 'attr') . '" title="' . esc($title, 'attr') . '">' . $label . '</a>';
+};
 ?>
 <div id="supplierTab">
 <?php if ($detail !== null): ?>
@@ -29,7 +46,10 @@ $sampleBadge  = ' <span class="sp-badge" title="Sample supplier: its prices are 
         </div>
         <?php if (! $detail['is_sample']): ?>
             <?php $toggle = $url(['supplier' => $detail['id']] + ($detail['needs_only'] ? [] : ['needs' => 1])); ?>
-            <a href="<?= esc($toggle, 'attr') ?>" class="sp-toggle<?= $detail['needs_only'] ? ' active' : '' ?>" id="spNeedsToggle" role="switch" aria-checked="<?= $detail['needs_only'] ? 'true' : 'false' ?>"><i class="bi bi-funnel" aria-hidden="true"></i> Needs action only</a>
+            <div class="sp-detail-actions">
+                <?= $poButton((string) $detail['id']) ?>
+                <a href="<?= esc($toggle, 'attr') ?>" class="sp-toggle<?= $detail['needs_only'] ? ' active' : '' ?>" id="spNeedsToggle" role="switch" aria-checked="<?= $detail['needs_only'] ? 'true' : 'false' ?>"><i class="bi bi-funnel" aria-hidden="true"></i> Needs action only</a>
+            </div>
         <?php endif; ?>
     </div>
     <div class="sp-facts">
@@ -112,7 +132,7 @@ $sampleBadge  = ' <span class="sp-badge" title="Sample supplier: its prices are 
             <tbody>
                 <?php foreach ($supplierRows as $s): ?>
                     <tr class="sp-row<?= $s['is_sample'] ? ' is-sample' : '' ?>" data-supplier="<?= esc($s['id'], 'attr') ?>">
-                        <td class="sp-name"><a class="sp-link" href="<?= esc($url(['supplier' => $s['id'], 'period' => $period['type'], 'date' => $period['anchor']]), 'attr') ?>"><?= esc($s['name']) ?></a><?= $s['is_sample'] ? $sampleBadge : '' ?></td>
+                        <td class="sp-name"><a class="sp-link" href="<?= esc($url(['supplier' => $s['id'], 'period' => $period['type'], 'date' => $period['anchor']]), 'attr') ?>"><?= esc($s['name']) ?></a><?= $s['is_sample'] ? $sampleBadge : '' ?><?php if (! $s['is_sample']): ?><span class="sp-po-wrap"><?= $poButton((string) $s['id']) ?></span><?php endif; ?></td>
                         <td><?= $s['category'] !== '' ? esc($s['category']) : '&mdash;' ?></td>
                         <?php if ($s['is_sample']): ?>
                             <td colspan="5" class="sp-sample-note">Sample offers: <?= $plural($s['offers'], 'item') ?></td>

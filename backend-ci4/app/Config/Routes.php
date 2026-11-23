@@ -61,6 +61,8 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin', 'filter' => 'ro
     $routes->get('procurement-report', 'ReorderAlertController::report');
     $routes->get('procurement-report/pdf', 'ReorderAlertController::reportPdf');
     $routes->get('procurement-report/csv', 'ReorderAlertController::reportCsv');
+    $routes->get('procurement-report/po/(:segment)', 'SupplierPoController::review/$1');   // Create PO for low items: review
+    $routes->post('procurement-report/po/(:segment)', 'SupplierPoController::store/$1');   // ...and the one order
     $routes->post('reorder-alerts/order', 'ReorderAlertController::createOrder');
     $routes->post('reorder-alerts/dismiss/(:segment)', 'ReorderAlertController::dismiss/$1');
     $routes->post('reorder-alerts/restore/(:segment)', 'ReorderAlertController::restore/$1');
